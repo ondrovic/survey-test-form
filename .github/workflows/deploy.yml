@@ -44,6 +44,27 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
           VITE_ADMIN_PASSWORD: ${{ secrets.VITE_ADMIN_PASSWORD }}
 
+      - name: Debug build output
+        run: |
+          echo "Checking if dist folder exists:"
+          ls -la
+          echo "Checking dist folder contents:"
+          ls -la dist/ || echo "dist folder not found"
+          echo "Checking if index.html exists in dist:"
+          cat dist/index.html || echo "index.html not found in dist"
+
+      - name: Verify build success
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist folder not found"
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ Build failed: index.html not found in dist"
+            exit 1
+          fi
+          echo "✅ Build successful: dist folder and index.html found"
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
@@ -51,6 +72,13 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./dist"
+
+      - name: Show uploaded files
+        run: |
+          echo "Files that will be deployed:"
+          find dist -type f -name "*.html" -o -name "*.js" -o -name "*.css" | head -20
+          echo "Total files in dist:"
+          find dist -type f | wc -l
 
   deploy:
     environment:
