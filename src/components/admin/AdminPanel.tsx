@@ -33,6 +33,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
 
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
 
+    // Debug logging
+    console.log('Admin password configured:', !!adminPassword);
+    console.log('Environment variables:', {
+        VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? 'SET' : 'NOT SET',
+        VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'SET' : 'NOT SET',
+        VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'SET' : 'NOT SET',
+        NODE_ENV: import.meta.env.NODE_ENV,
+        MODE: import.meta.env.MODE,
+        BASE_URL: import.meta.env.BASE_URL
+    });
+
     const handlePasswordSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
