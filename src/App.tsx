@@ -1,10 +1,12 @@
+import { AdminPanel } from '@/components/admin';
 import { ConnectionStatus, SurveyForm } from '@/components/survey';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
 import { useFirebaseStorage } from '@/hooks/useFirebaseStorage';
 import { SurveyData, SurveyFormData } from '@/types';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { isDevelopment } from '@/utils/env.utils';
-import { useCallback, useState } from 'react';
+import { Settings } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Main App component that integrates all survey functionality
@@ -15,8 +17,22 @@ function App() {
         message: string;
     } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAdminPanel, setShowAdminPanel] = useState(false);
 
     const { loading, error, connected, save, refresh } = useFirebaseStorage<SurveyData>();
+
+    // Keyboard shortcut for admin panel (Ctrl+Shift+A)
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+                event.preventDefault();
+                setShowAdminPanel(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const handleSubmit = useCallback(async (formData: SurveyFormData) => {
         setIsSubmitting(true);
@@ -55,6 +71,14 @@ function App() {
         refresh();
     }, [refresh]);
 
+    const handleAdminButtonClick = useCallback(() => {
+        setShowAdminPanel(true);
+    }, []);
+
+    const handleCloseAdminPanel = useCallback(() => {
+        setShowAdminPanel(false);
+    }, []);
+
     return (
         <div className="min-h-screen bg-amber-50/30">
             {/* Header */}
@@ -70,15 +94,27 @@ function App() {
                             </p>
                         </div>
 
-                        {/* Only show connection status in development mode */}
-                        {isDevelopment() && (
-                            <ConnectionStatus
-                                connected={connected}
-                                loading={loading}
-                                error={error}
-                                onRetry={handleRetryConnection}
-                            />
-                        )}
+                        <div className="flex items-center space-x-4">
+                            {/* Only show connection status in development mode */}
+                            {isDevelopment() && (
+                                <ConnectionStatus
+                                    connected={connected}
+                                    loading={loading}
+                                    error={error}
+                                    onRetry={handleRetryConnection}
+                                />
+                            )}
+
+                            {/* Hidden admin button - accessible via keyboard or developer tools */}
+                            <button
+                                onClick={handleAdminButtonClick}
+                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors opacity-20 hover:opacity-100"
+                                title="Admin Panel (Ctrl+Shift+A)"
+                                aria-label="Open admin panel"
+                            >
+                                <Settings className="h-5 w-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -105,6 +141,12 @@ function App() {
                     </div>
                 </div>
             </footer>
+
+            {/* Admin Panel */}
+            <AdminPanel
+                isVisible={showAdminPanel}
+                onClose={handleCloseAdminPanel}
+            />
         </div>
     );
 }

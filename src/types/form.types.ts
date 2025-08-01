@@ -5,7 +5,7 @@ export interface InputProps<T = string> {
   value?: T;
   onChange?: (value: T) => void;
   register?: any; // react-hook-form register function
-  type?: "text" | "email" | "number";
+  type?: "text" | "email" | "number" | "password";
   label?: string;
   placeholder?: string;
   required?: boolean;
