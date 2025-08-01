@@ -1,0 +1,144 @@
+import { clsx } from 'clsx';
+import React from 'react';
+import { InputProps } from './Input.types';
+
+/**
+ * Generic Input component with validation and accessibility support
+ * Works with both controlled and react-hook-form patterns
+ * 
+ * @example
+ * ```tsx
+ * // Controlled usage
+ * <Input
+ *   name="email"
+ *   value={email}
+ *   onChange={setEmail}
+ *   type="email"
+ *   label="Email Address"
+ *   required
+ *   error={errors.email}
+ * />
+ * 
+ * // react-hook-form usage
+ * <Input
+ *   name="email"
+ *   register={register}
+ *   type="email"
+ *   label="Email Address"
+ *   required
+ *   error={errors.email}
+ * />
+ * ```
+ */
+export const Input = <T extends string | number = string>({
+    name,
+    value,
+    onChange,
+    register,
+    type = 'text',
+    label,
+    placeholder,
+    required = false,
+    error,
+    disabled = false,
+    'data-testid': testId,
+    className,
+    ...props
+}: InputProps<T>) => {
+    const inputId = `${name}-input`;
+    const errorId = `${name}-error`;
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = type === 'number' ? Number(e.target.value) as T : e.target.value as T;
+        onChange?.(newValue);
+    };
+
+    const baseClasses = 'block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed';
+
+    const stateClasses = error
+        ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500'
+        : 'border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500';
+
+    const inputClasses = clsx(baseClasses, stateClasses, className);
+
+    // If register is provided, use react-hook-form pattern
+    if (register) {
+        return (
+            <div className="space-y-1">
+                {label && (
+                    <label
+                        htmlFor={inputId}
+                        className="block text-sm font-semibold text-gray-800 mb-2"
+                    >
+                        {label}
+                        {required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                )}
+
+                <input
+                    id={inputId}
+                    type={type}
+                    placeholder={placeholder}
+                    disabled={disabled}
+                    aria-invalid={error ? 'true' : 'false'}
+                    aria-describedby={error ? errorId : undefined}
+                    data-testid={testId}
+                    className={inputClasses}
+                    {...(typeof register === 'function' ? register(name) : register)}
+                    {...props}
+                />
+
+                {error && (
+                    <p
+                        id={errorId}
+                        className="text-sm text-red-600"
+                        role="alert"
+                    >
+                        {error}
+                    </p>
+                )}
+            </div>
+        );
+    }
+
+    // Controlled pattern
+    return (
+        <div className="space-y-1">
+            {label && (
+                <label
+                    htmlFor={inputId}
+                    className="block text-sm font-semibold text-gray-800 mb-2"
+                >
+                    {label}
+                    {required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+            )}
+
+            <input
+                id={inputId}
+                name={name}
+                type={type}
+                value={value}
+                onChange={handleChange}
+                placeholder={placeholder}
+                required={required}
+                disabled={disabled}
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? errorId : undefined}
+                data-testid={testId}
+                className={inputClasses}
+                {...props}
+            />
+
+            {error && (
+                <p
+                    id={errorId}
+                    className="text-sm text-red-600"
+                    role="alert"
+                >
+                    {error}
+                </p>
+            )}
+        </div>
+    );
+}; 
