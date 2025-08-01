@@ -33,17 +33,6 @@ let authInstance: any = null;
 // Initialize Firebase (singleton)
 function initializeFirebase() {
   if (!firebaseApp) {
-    console.log("Initializing Firebase...");
-    console.log("Firebase config:", {
-      apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
-      authDomain: firebaseConfig.authDomain ? "***" : "MISSING",
-      projectId: firebaseConfig.projectId ? "***" : "MISSING",
-      storageBucket: firebaseConfig.storageBucket ? "***" : "MISSING",
-      messagingSenderId: firebaseConfig.messagingSenderId ? "***" : "MISSING",
-      appId: firebaseConfig.appId ? "***" : "MISSING",
-      measurementId: firebaseConfig.measurementId ? "***" : "MISSING",
-    });
-
     firebaseApp = initializeApp(firebaseConfig);
     firestoreDb = getFirestore(firebaseApp);
     authInstance = getAuth(firebaseApp);
@@ -52,7 +41,6 @@ function initializeFirebase() {
     // Disable real-time listeners to prevent connection spam
     // We only need one-time reads and writes
     console.log("Firebase initialized with real-time listeners disabled");
-    console.log("Auth instance created:", !!authInstance);
   }
   return {
     app: firebaseApp,
@@ -78,9 +66,7 @@ export const authHelpers = {
   // Sign in anonymously
   async signInAnonymously() {
     try {
-      console.log("Signing in anonymously...");
       const userCredential = await signInAnonymously(authInstanceExport);
-      console.log("Anonymous sign-in successful:", userCredential.user.uid);
       return userCredential.user;
     } catch (error) {
       console.error("Error signing in anonymously:", error);

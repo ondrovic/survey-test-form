@@ -26,9 +26,7 @@ function App() {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-                console.log('Starting anonymous authentication...');
-                const user = await authHelpers.signInAnonymously();
-                console.log('Authentication successful:', user.uid);
+                await authHelpers.signInAnonymously();
                 setIsAuthenticated(true);
             } catch (error) {
                 console.error('Failed to sign in anonymously:', error);
@@ -38,13 +36,11 @@ function App() {
 
         // Listen for auth state changes
         const unsubscribe = authHelpers.onAuthStateChanged((user) => {
-            console.log('Auth state changed:', user ? user.uid : 'No user');
             setIsAuthenticated(!!user);
         });
 
         // Initialize auth if not already authenticated
         const currentUser = authHelpers.getCurrentUser();
-        console.log('Current user on init:', currentUser ? currentUser.uid : 'No user');
 
         if (!currentUser) {
             initializeAuth();
