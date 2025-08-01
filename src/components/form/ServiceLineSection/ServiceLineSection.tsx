@@ -145,7 +145,7 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
                                                 {openDropdown?.categoryIndex === categoryIndex &&
                                                     openDropdown?.itemIndex === itemIndex &&
                                                     isChecked && (
-                                                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px]">
+                                                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px] transform-gpu">
                                                             {ratingOptions.map((rating) => (
                                                                 <button
                                                                     key={rating}

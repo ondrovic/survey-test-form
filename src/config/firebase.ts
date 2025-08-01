@@ -90,14 +90,12 @@ export const firestoreHelpers = {
   // Get all surveys
   async getSurveys() {
     try {
-      console.log("Fetching surveys from Firebase...");
       const q = query(surveysCollection, orderBy("submittedAt", "desc"));
       const querySnapshot = await getDocs(q);
       const surveys = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...(doc.data() as any),
       }));
-      console.log(`Fetched ${surveys.length} surveys from Firebase`);
       return surveys;
     } catch (error) {
       console.error("Error getting surveys:", error);

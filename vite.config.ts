@@ -34,4 +34,10 @@ export default defineConfig({
     port: 30021,
     open: true,
   },
+  optimizeDeps: {
+    exclude: ['@vitejs/plugin-react']
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+  }
 });

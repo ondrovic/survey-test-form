@@ -13,6 +13,7 @@ export interface InputProps<T = string> {
   disabled?: boolean;
   "data-testid"?: string;
   maxLength?: number;
+  autocomplete?: string;
 }
 
 export interface BaseButtonProps {

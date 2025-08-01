@@ -4,6 +4,7 @@ import { authHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
 import { useFirebaseStorage } from '@/hooks/useFirebaseStorage';
 import { SurveyData, SurveyFormData } from '@/types';
+import { suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { Settings } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -12,6 +13,11 @@ import { useCallback, useEffect, useState } from 'react';
  * Main App component that integrates all survey functionality
  */
 function App() {
+    // Suppress console warnings for passive event listeners
+    useEffect(() => {
+        suppressConsoleWarnings();
+    }, []);
+
     const [alert, setAlert] = useState<{
         type: 'success' | 'error';
         message: string;

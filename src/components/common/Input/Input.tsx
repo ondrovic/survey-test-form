@@ -43,6 +43,7 @@ export const Input = <T extends string | number = string>({
     disabled = false,
     'data-testid': testId,
     className,
+    autocomplete,
     ...props
 }: InputProps<T>) => {
     const inputId = `${name}-input`;
@@ -51,6 +52,28 @@ export const Input = <T extends string | number = string>({
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = type === 'number' ? Number(e.target.value) as T : e.target.value as T;
         onChange?.(newValue);
+    };
+
+    // Auto-generate autocomplete value if not provided
+    const getAutocompleteValue = () => {
+        if (autocomplete) return autocomplete;
+
+        // Auto-generate based on type and name
+        switch (type) {
+            case 'email':
+                return 'email';
+            case 'password':
+                return 'new-password'; // For admin password, use new-password
+            case 'number':
+                return 'off';
+            default:
+                // Auto-generate based on field name
+                if (name.toLowerCase().includes('email')) return 'email';
+                if (name.toLowerCase().includes('name')) return 'name';
+                if (name.toLowerCase().includes('phone')) return 'tel';
+                if (name.toLowerCase().includes('url')) return 'url';
+                return 'off';
+        }
     };
 
     const baseClasses = 'block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -84,6 +107,7 @@ export const Input = <T extends string | number = string>({
                     aria-describedby={error ? errorId : undefined}
                     data-testid={testId}
                     className={inputClasses}
+                    autoComplete={getAutocompleteValue()}
                     {...(typeof register === 'function' ? register(name) : register)}
                     {...props}
                 />
@@ -127,6 +151,7 @@ export const Input = <T extends string | number = string>({
                 aria-describedby={error ? errorId : undefined}
                 data-testid={testId}
                 className={inputClasses}
+                autoComplete={getAutocompleteValue()}
                 {...props}
             />
 

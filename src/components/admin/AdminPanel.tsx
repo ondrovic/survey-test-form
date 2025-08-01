@@ -1,5 +1,5 @@
-import { CheckCircle, Download, Eye, EyeOff, Lock } from 'lucide-react';
-import React, { useState } from 'react';
+import { Download, Eye, EyeOff, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../config/firebase';
 import { SurveyData } from '../../types/survey.types';
 import { downloadSurveyDataAsExcel } from '../../utils/excel.utils';
@@ -18,6 +18,8 @@ interface AdminPanelState {
     success: string | null;
     surveys: SurveyData[];
     showPassword: boolean;
+    surveyCount: number | null;
+    isCheckingCount: boolean;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) => {
@@ -29,6 +31,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
         success: null,
         surveys: [],
         showPassword: false,
+        surveyCount: null,
+        isCheckingCount: false,
     });
 
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
@@ -113,18 +117,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
             success: null,
             surveys: [],
             showPassword: false,
+            surveyCount: null,
+            isCheckingCount: false,
         });
+    };
+
+    const handleCheckSurveyCount = async () => {
+        setState(prev => ({ ...prev, isCheckingCount: true, error: null }));
+
+        try {
+            const surveys = await firestoreHelpers.getSurveys();
+            setState(prev => ({
+                ...prev,
+                surveyCount: surveys.length,
+                isCheckingCount: false,
+                success: `Found ${surveys.length} survey records in the database.`
+            }));
+        } catch (error) {
+            console.error('Error checking survey count:', error);
+            setState(prev => ({
+                ...prev,
+                isCheckingCount: false,
+                error: 'Failed to check survey count. Please try again.'
+            }));
+        }
     };
 
     const togglePasswordVisibility = () => {
         setState(prev => ({ ...prev, showPassword: !prev.showPassword }));
     };
 
+    // Auto-load survey count when admin panel becomes visible
+    useEffect(() => {
+        if (isVisible && state.isAuthenticated) {
+            handleCheckSurveyCount();
+        }
+    }, [isVisible, state.isAuthenticated]);
+
     if (!isVisible) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto overscroll-contain">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-2">
@@ -150,6 +184,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                             </p>
 
                             <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                {/* Hidden username field for accessibility */}
+                                <input
+                                    type="text"
+                                    name="username"
+                                    autoComplete="username"
+                                    style={{ display: 'none' }}
+                                    aria-hidden="true"
+                                />
                                 <div className="relative">
                                     <Input
                                         name="adminPassword"
@@ -159,6 +201,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                                         placeholder="Enter admin password"
                                         required
                                         className="pr-10"
+                                        autocomplete="new-password"
                                     />
                                     <button
                                         type="button"
@@ -198,20 +241,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <div className="flex items-center">
-                                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                                    <span className="text-green-800 font-medium">
-                                        Authenticated successfully
-                                    </span>
-                                </div>
-                            </div>
-
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                 <h3 className="font-medium text-blue-900 mb-2">Download Survey Data</h3>
                                 <p className="text-blue-700 text-sm">
                                     Download all survey responses as an Excel file (.xlsx) with comprehensive data including personal info, business details, and service line ratings.
                                 </p>
+                            </div>
+
+                            {/* Survey Count Section */}
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                <h3 className="font-medium text-amber-900 mb-2">Survey Count</h3>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        {state.isCheckingCount ? (
+                                            <div className="flex items-center text-amber-700 text-sm">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600 mr-2" />
+                                                Loading survey count...
+                                            </div>
+                                        ) : state.surveyCount !== null ? (
+                                            <p className="text-amber-700 text-sm">
+                                                Currently {state.surveyCount} survey records in the database
+                                            </p>
+                                        ) : (
+                                            <p className="text-amber-700 text-sm">
+                                                Failed to load survey count
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {state.error && (
