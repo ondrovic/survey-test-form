@@ -232,7 +232,7 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                             <Input
                                 name="businessInfo.otherMarket"
                                 register={register}
-                                label="Other (optional)"
+                                label="Other Markets (optional)"
                                 placeholder="Please specify"
                                 maxLength={100}
                                 className="bg-white border-amber-200 focus:border-amber-400 focus:ring-amber-400"
