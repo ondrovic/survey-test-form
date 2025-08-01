@@ -4,7 +4,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/service-line-survey/", // Update with your repo name
+  base: "/survey-test-form/", // Update with your repo name
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
