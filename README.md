@@ -28,7 +28,7 @@ A modern, professional survey application built with React 18, TypeScript, and V
 
 ## 📋 Prerequisites
 
-- Node.js 18+
+- Node.js 20+ (required for Firebase compatibility)
 - npm or yarn
 - Firebase account (for data storage)
 - Firebase project setup
@@ -123,8 +123,10 @@ npm run build        # Build for production
 npm run preview      # Preview production build
 
 # Code Quality
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint errors
+npm run lint         # Run ESLint (fails on errors)
+npm run lint:check   # Run ESLint (never fails, shows issues)
+npm run lint:strict  # Run ESLint (fails on warnings)
+npm run lint:fix     # Fix ESLint errors automatically
 npm run type-check   # Run TypeScript type checking
 
 # Testing
@@ -293,7 +295,8 @@ npm run test:coverage
 2. **Build Errors**
 
    - Run `npm run type-check` to identify TypeScript issues
-   - Run `npm run lint` to check for code quality issues
+   - Run `npm run lint:check` to check for code quality issues (non-blocking)
+   - Run `npm run lint` to check for code quality issues (blocking)
    - Ensure all dependencies are installed
 
 3. **Form State Issues**
@@ -331,6 +334,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Latest Updates
 
+- **Updated Node.js Requirement**: Upgraded to Node.js 20+ for Firebase compatibility
+- **Enhanced Linting Options**: Added multiple lint commands for different workflow needs
+  - `npm run lint:check` - Non-blocking linting for development workflows
+  - `npm run lint:strict` - Strict linting that fails on warnings
+  - `npm run lint` - Standard linting that fails on errors
 - **Fixed Checkbox Functionality**: Resolved issue where checkboxes couldn't be unchecked after being selected
 - **Improved State Management**: Implemented robust state synchronization between local component state and form state
 - **Enhanced User Experience**: Better handling of complex form interactions with proper race condition prevention
