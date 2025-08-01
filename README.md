@@ -1,6 +1,8 @@
-# Service Line Survey App
+# Service Line Survey
 
-A modern, professional survey application built with React 18, TypeScript, and Vite. The app features expandable rating sections, Firebase Firestore integration for data storage, and a responsive design optimized for all devices.
+A professional survey application for collecting service line feedback with Firebase integration and Excel export functionality.
+
+<!-- Last updated: 2025-01-08 -->
 
 ## 🚀 Features
 
