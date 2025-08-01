@@ -1,7 +1,7 @@
 import { RatingValue } from '@/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 export interface ServiceLineItem {
     name: string;
@@ -38,31 +38,11 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
     error
 }) => {
     const [openDropdown, setOpenDropdown] = useState<{ categoryIndex: number; itemIndex: number } | null>(null);
-    const [localCheckboxStates, setLocalCheckboxStates] = useState<Record<string, boolean>>({});
-    const recentChangesRef = useRef<Record<string, boolean>>({});
-
-    // Sync local checkbox states with categories
-    useEffect(() => {
-        const newStates: Record<string, boolean> = {};
-        categories.forEach((category, categoryIndex) => {
-            category.items.forEach((item, itemIndex) => {
-                const key = `${categoryIndex}-${itemIndex}`;
-                // Don't override if this was a recent local change
-                if (recentChangesRef.current[key] !== undefined) {
-                    newStates[key] = recentChangesRef.current[key];
-                    delete recentChangesRef.current[key];
-                } else {
-                    newStates[key] = item.selected;
-                }
-            });
-        });
-        setLocalCheckboxStates(newStates);
-    }, [categories]);
 
     const ratingOptions: Array<RatingValue | 'N/A'> = ['N/A', 'High', 'Medium', 'Low'];
 
     const handleDropdownToggle = (categoryIndex: number, itemIndex: number) => {
-        const isSelected = localCheckboxStates[`${categoryIndex}-${itemIndex}`] || false;
+        const isSelected = categories[categoryIndex]?.items[itemIndex]?.selected || false;
         if (!isSelected) return; // Don't open if not selected
 
         const currentKey = { categoryIndex, itemIndex };
@@ -75,21 +55,7 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
     };
 
     const handleItemChange = (categoryIndex: number, itemIndex: number, selected: boolean) => {
-        const key = `${categoryIndex}-${itemIndex}`;
-
-        // Track this as a recent change
-        recentChangesRef.current[key] = selected;
-
-        setLocalCheckboxStates(prev => {
-            const newState = { ...prev, [key]: selected };
-            return newState;
-        });
-
         onItemChange(categoryIndex, itemIndex, selected);
-        if (!selected) {
-            // Reset rating to N/A when unchecked
-            onRatingChange(categoryIndex, itemIndex, 'N/A');
-        }
     };
 
     const classes = clsx('bg-amber-50 rounded-xl shadow-sm border border-amber-100 p-3', className);
@@ -128,8 +94,7 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
                             )}
                             <div className="space-y-2">
                                 {category.items.map((item, itemIndex) => {
-                                    const checkboxKey = `${categoryIndex}-${itemIndex}`;
-                                    const isChecked = localCheckboxStates[checkboxKey] || false;
+                                    const isChecked = item.selected;
 
                                     return (
                                         <div

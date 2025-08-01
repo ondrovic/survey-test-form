@@ -112,6 +112,11 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
         // Update the specific item
         currentServiceLines[section][categoryIndex].items[itemIndex].selected = selected;
 
+        // Reset rating to N/A when unchecked
+        if (!selected) {
+            currentServiceLines[section][categoryIndex].items[itemIndex].rating = 'N/A';
+        }
+
         // Set the entire service lines object
         setValue('serviceLines', currentServiceLines);
     };

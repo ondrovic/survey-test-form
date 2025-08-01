@@ -4,7 +4,6 @@ import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
 import { useFirebaseStorage } from '@/hooks/useFirebaseStorage';
 import { SurveyData, SurveyFormData } from '@/types';
 import { getCurrentTimestamp } from '@/utils/date.utils';
-import { isDevelopment } from '@/utils/env.utils';
 import { Settings } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -95,15 +94,12 @@ function App() {
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            {/* Only show connection status in development mode */}
-                            {isDevelopment() && (
-                                <ConnectionStatus
-                                    connected={connected}
-                                    loading={loading}
-                                    error={error}
-                                    onRetry={handleRetryConnection}
-                                />
-                            )}
+                            <ConnectionStatus
+                                connected={connected}
+                                loading={loading}
+                                error={error}
+                                onRetry={handleRetryConnection}
+                            />
 
                             {/* Hidden admin button - accessible via keyboard or developer tools */}
                             <button
