@@ -286,7 +286,7 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 
                 {/* Service Line Sections */}
                 <ServiceLineSection
-                    title="Residential Services"
+                    title="Residential Service Lines"
                     categories={values.serviceLines.residentialServices}
                     onItemChange={(categoryIndex, itemIndex, selected) => handleServiceLineChange('residentialServices', categoryIndex, itemIndex, selected)}
                     onRatingChange={(categoryIndex, itemIndex, rating) => handleServiceLineRatingChange('residentialServices', categoryIndex, itemIndex, rating)}
@@ -297,7 +297,7 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                 />
 
                 <ServiceLineSection
-                    title="Commercial Services"
+                    title="Commercial Service Lines"
                     categories={values.serviceLines.commercialServices}
                     onItemChange={(categoryIndex, itemIndex, selected) => handleServiceLineChange('commercialServices', categoryIndex, itemIndex, selected)}
                     onRatingChange={(categoryIndex, itemIndex, rating) => handleServiceLineRatingChange('commercialServices', categoryIndex, itemIndex, rating)}
@@ -324,7 +324,7 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                 <div className="flex flex-col items-end space-y-2">
                     {!connected && (
                         <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md border border-red-200">
-                            ❌ No Firebase connection available. Please check your connection.
+                            ❌ No Database connection available. Please check your connection.
                         </div>
                     )}
                     <Button

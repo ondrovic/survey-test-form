@@ -61,7 +61,7 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
     // Add Residential Services - dynamically based on constants
     RESIDENTIAL_SERVICE_LINES.forEach((category) => {
       category.items.forEach((itemName) => {
-        const prefix = `Residential_${category.heading}_${itemName}`;
+        const prefix = `Residential ${category.heading} ${itemName}`;
 
         // Find the corresponding item in the survey data
         const categoryData = survey.serviceLines.residentialServices.find(
@@ -71,15 +71,18 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
           (item) => item.name === itemName
         );
 
-        flatData[`${prefix}_Selected`] = itemData?.selected ? "Yes" : "No";
-        flatData[`${prefix}_Rating`] = itemData?.rating || "N/A";
+        flatData[`${prefix} Selected`] = itemData?.selected ? "Yes" : "No";
+        // For rating, if not selected, show N/A, otherwise show the actual rating
+        flatData[`${prefix} Rating`] = itemData?.selected
+          ? itemData?.rating || "N/A"
+          : "N/A";
       });
     });
 
     // Add Commercial Services - dynamically based on constants
     COMMERCIAL_SERVICE_LINES.forEach((category) => {
       category.items.forEach((itemName) => {
-        const prefix = `Commercial_${category.heading}_${itemName}`;
+        const prefix = `Commercial ${category.heading} ${itemName}`;
 
         // Find the corresponding item in the survey data
         const categoryData = survey.serviceLines.commercialServices.find(
@@ -89,15 +92,18 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
           (item) => item.name === itemName
         );
 
-        flatData[`${prefix}_Selected`] = itemData?.selected ? "Yes" : "No";
-        flatData[`${prefix}_Rating`] = itemData?.rating || "N/A";
+        flatData[`${prefix} Selected`] = itemData?.selected ? "Yes" : "No";
+        // For rating, if not selected, show N/A, otherwise show the actual rating
+        flatData[`${prefix} Rating`] = itemData?.selected
+          ? itemData?.rating || "N/A"
+          : "N/A";
       });
     });
 
     // Add Industries - dynamically based on constants
     INDUSTRIES.forEach((category) => {
       category.items.forEach((itemName) => {
-        const prefix = `Industries_${category.heading}_${itemName}`;
+        const prefix = `Industries ${category.heading} ${itemName}`;
 
         // Find the corresponding item in the survey data
         const categoryData = survey.serviceLines.industries.find(
@@ -107,8 +113,11 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
           (item) => item.name === itemName
         );
 
-        flatData[`${prefix}_Selected`] = itemData?.selected ? "Yes" : "No";
-        flatData[`${prefix}_Rating`] = itemData?.rating || "N/A";
+        flatData[`${prefix} Selected`] = itemData?.selected ? "Yes" : "No";
+        // For rating, if not selected, show N/A, otherwise show the actual rating
+        flatData[`${prefix} Rating`] = itemData?.selected
+          ? itemData?.rating || "N/A"
+          : "N/A";
       });
     });
 

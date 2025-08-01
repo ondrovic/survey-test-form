@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { AlertCircle, Loader2, UserX, Wifi, WifiOff } from 'lucide-react';
 import React from 'react';
 import { ConnectionStatusProps } from './ConnectionStatus.types';
 
@@ -13,6 +13,7 @@ import { ConnectionStatusProps } from './ConnectionStatus.types';
  *   loading={isLoading}
  *   error={error}
  *   onRetry={handleRetry}
+ *   isAuthenticated={isAuthenticated}
  * />
  * ```
  */
@@ -21,10 +22,9 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     loading,
     error,
     onRetry,
+    isAuthenticated = true,
     className
 }) => {
-
-
 
     const getStatusInfo = () => {
         if (loading) {
@@ -35,6 +35,17 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                 bgColor: 'bg-blue-50',
                 borderColor: 'border-blue-200',
                 animate: true
+            };
+        }
+
+        if (!isAuthenticated) {
+            return {
+                icon: UserX,
+                text: 'Authentication required',
+                color: 'text-orange-600',
+                bgColor: 'bg-orange-50',
+                borderColor: 'border-orange-200',
+                animate: false
             };
         }
 

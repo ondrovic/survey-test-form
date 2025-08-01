@@ -1,5 +1,6 @@
 import { AdminPanel } from '@/components/admin';
 import { ConnectionStatus, SurveyForm } from '@/components/survey';
+import { authHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
 import { useFirebaseStorage } from '@/hooks/useFirebaseStorage';
 import { SurveyData, SurveyFormData } from '@/types';
@@ -17,8 +18,42 @@ function App() {
     } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const { loading, error, connected, save, refresh } = useFirebaseStorage<SurveyData>();
+
+    // Initialize anonymous authentication
+    useEffect(() => {
+        const initializeAuth = async () => {
+            try {
+                console.log('Starting anonymous authentication...');
+                const user = await authHelpers.signInAnonymously();
+                console.log('Authentication successful:', user.uid);
+                setIsAuthenticated(true);
+            } catch (error) {
+                console.error('Failed to sign in anonymously:', error);
+                setIsAuthenticated(false);
+            }
+        };
+
+        // Listen for auth state changes
+        const unsubscribe = authHelpers.onAuthStateChanged((user) => {
+            console.log('Auth state changed:', user ? user.uid : 'No user');
+            setIsAuthenticated(!!user);
+        });
+
+        // Initialize auth if not already authenticated
+        const currentUser = authHelpers.getCurrentUser();
+        console.log('Current user on init:', currentUser ? currentUser.uid : 'No user');
+
+        if (!currentUser) {
+            initializeAuth();
+        } else {
+            setIsAuthenticated(true);
+        }
+
+        return unsubscribe;
+    }, []);
 
     // Keyboard shortcut for admin panel (Ctrl+Shift+A)
     useEffect(() => {
@@ -99,6 +134,7 @@ function App() {
                                 loading={loading}
                                 error={error}
                                 onRetry={handleRetryConnection}
+                                isAuthenticated={isAuthenticated}
                             />
 
                             {/* Hidden admin button - accessible via keyboard or developer tools */}
