@@ -122,6 +122,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
         });
     };
 
+    const handleClose = () => {
+        // Clear success message when closing the panel
+        setState(prev => ({ ...prev, success: null }));
+        onClose();
+    };
+
     const handleCheckSurveyCount = async () => {
         setState(prev => ({ ...prev, isCheckingCount: true, error: null }));
 
@@ -130,8 +136,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
             setState(prev => ({
                 ...prev,
                 surveyCount: surveys.length,
-                isCheckingCount: false,
-                success: `Found ${surveys.length} survey records in the database.`
+                isCheckingCount: false
             }));
         } catch (error) {
             console.error('Error checking survey count:', error);
@@ -168,7 +173,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                             </h2>
                         </div>
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -232,7 +237,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                                     <Button
                                         type="button"
                                         variant="secondary"
-                                        onClick={onClose}
+                                        onClick={handleClose}
                                     >
                                         Cancel
                                     </Button>
