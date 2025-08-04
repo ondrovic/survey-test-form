@@ -178,7 +178,9 @@ export const COMMERCIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
       "Corrosion Control",
       "Electronic Restoration",
       "Ultrasonic Cleaning",
-      "Semiconductor Decontamination & Decommissioning",
+      "Commerical Disinfection",
+      "Marine & Offshore Restoration (Thermographic Inspection, Contamination Level Assessment, HCL Testing, Corrosion Control, Machinery and Electronics Restoration, Generator Cleaning, Inventory of Hazardous Materials)",
+      "Semiconductor Decontamination & Decommissioning (Parts Harvesting, Reclamation and Recycling, Consignment Services, Destruction Services)",
     ],
   },
   {
