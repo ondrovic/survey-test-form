@@ -1,4 +1,4 @@
-export type RatingValue = "High" | "Medium" | "Low" | "N/A";
+export type RatingValue = "High" | "Medium" | "Low" | "Not Important";
 
 export interface PersonalInfo {
   fullName: string;
@@ -15,8 +15,7 @@ export interface BusinessInfo {
 
 export interface ServiceLineItem {
   name: string;
-  selected: boolean;
-  rating: RatingValue | "N/A";
+  rating: RatingValue | "Not Important";
 }
 
 export interface ServiceLineCategory {

@@ -55,31 +55,13 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 
 
 
-    const { values, errors, handleSubmit, setValue, resetForm, register, trigger, setError } = useForm({
+    const { values, errors, handleSubmit, setValue, resetForm, register, trigger } = useForm({
         initialValues,
         onSubmit: async (formData: SurveyFormData) => {
             // Trigger validation for all fields
             const isValid = await trigger();
 
-            // Check service lines validation manually
-            const residentialSelected = values.serviceLines.residentialServices.some(category =>
-                category.items.some(item => item.selected)
-            );
-            const commercialSelected = values.serviceLines.commercialServices.some(category =>
-                category.items.some(item => item.selected)
-            );
-            const industriesSelected = values.serviceLines.industries.some(category =>
-                category.items.some(item => item.selected)
-            );
-
-            const serviceLinesValid = residentialSelected || commercialSelected || industriesSelected;
-
-            if (!isValid || !serviceLinesValid) {
-                // Set service lines error if not valid
-                if (!serviceLinesValid) {
-                    setError('serviceLines', { message: 'At least one service line selection is required' });
-                }
-
+            if (!isValid) {
                 return;
             }
 
@@ -104,22 +86,6 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
             [field]: value
         });
     }, [values.businessInfo, setValue]);
-
-    const handleServiceLineChange = (section: 'residentialServices' | 'commercialServices' | 'industries', categoryIndex: number, itemIndex: number, selected: boolean) => {
-        // Create a deep copy of the current service lines
-        const currentServiceLines = JSON.parse(JSON.stringify(values.serviceLines));
-
-        // Update the specific item
-        currentServiceLines[section][categoryIndex].items[itemIndex].selected = selected;
-
-        // Reset rating to N/A when unchecked
-        if (!selected) {
-            currentServiceLines[section][categoryIndex].items[itemIndex].rating = 'N/A';
-        }
-
-        // Set the entire service lines object
-        setValue('serviceLines', currentServiceLines);
-    };
 
     const handleServiceLineRatingChange = (section: 'residentialServices' | 'commercialServices' | 'industries', categoryIndex: number, itemIndex: number, rating: any) => {
         const updatedCategories = [...values.serviceLines[section]];
@@ -288,7 +254,6 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                 <ServiceLineSection
                     title="Residential Service Lines"
                     categories={values.serviceLines.residentialServices}
-                    onItemChange={(categoryIndex, itemIndex, selected) => handleServiceLineChange('residentialServices', categoryIndex, itemIndex, selected)}
                     onRatingChange={(categoryIndex, itemIndex, rating) => handleServiceLineRatingChange('residentialServices', categoryIndex, itemIndex, rating)}
                     onAdditionalNotesChange={(notes) => handleServiceLineAdditionalNotesChange('residentialServices', notes)}
                     additionalNotes={values.serviceLines.residentialAdditionalNotes || ''}
@@ -299,7 +264,6 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                 <ServiceLineSection
                     title="Commercial Service Lines"
                     categories={values.serviceLines.commercialServices}
-                    onItemChange={(categoryIndex, itemIndex, selected) => handleServiceLineChange('commercialServices', categoryIndex, itemIndex, selected)}
                     onRatingChange={(categoryIndex, itemIndex, rating) => handleServiceLineRatingChange('commercialServices', categoryIndex, itemIndex, rating)}
                     onAdditionalNotesChange={(notes) => handleServiceLineAdditionalNotesChange('commercialServices', notes)}
                     additionalNotes={values.serviceLines.commercialAdditionalNotes || ''}
@@ -309,7 +273,6 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                 <ServiceLineSection
                     title="Industries"
                     categories={values.serviceLines.industries}
-                    onItemChange={(categoryIndex, itemIndex, selected) => handleServiceLineChange('industries', categoryIndex, itemIndex, selected)}
                     onRatingChange={(categoryIndex, itemIndex, rating) => handleServiceLineRatingChange('industries', categoryIndex, itemIndex, rating)}
                     onAdditionalNotesChange={(notes) => handleServiceLineAdditionalNotesChange('industries', notes)}
                     additionalNotes={values.serviceLines.industriesAdditionalNotes || ''}

@@ -20,16 +20,8 @@ export const BUSINESS_FOCUS_OPTIONS = [
 ] as const;
 
 export const RATING_OPTIONS = [
-  { value: "N/A", label: "N/A", color: "default" as const },
   { value: "High", label: "High", color: "success" as const },
   { value: "Medium", label: "Medium", color: "warning" as const },
   { value: "Low", label: "Low", color: "error" as const },
-] as const;
-
-export const RATING_CATEGORIES = [
-  { key: "customerService", label: "Customer Service" },
-  { key: "productQuality", label: "Product Quality" },
-  { key: "pricing", label: "Pricing" },
-  { key: "marketKnowledge", label: "Market Knowledge" },
-  { key: "responseTime", label: "Response Time" },
+  { value: "Not Important", label: "Not Important", color: "default" as const },
 ] as const;

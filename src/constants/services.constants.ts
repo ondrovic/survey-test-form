@@ -3,21 +3,6 @@ export interface ServiceLineCategoryData {
   items: string[];
 }
 
-// these are going to map to the item section headings
-export const BASE_SERVICE_LINES = [
-  "Emergency Response",
-  "Water",
-  "Fire",
-  "Construction",
-  "Roofing",
-  "Mold",
-  "Storm",
-  "Contents",
-  "General Cleaning",
-  "Specialty Cleaning",
-  "Other", // going to map to the text block of Antyhing we missed
-] as const;
-
 // each of theses need to map to fields residential_
 export const RESIDENTIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
   {
@@ -25,9 +10,8 @@ export const RESIDENTIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
     items: ["Emergency Response"],
   },
   {
-    heading: "Water",
+    heading: "Water Damage",
     items: [
-      "Water Damage (General)",
       "Water Extraction and Clean Up (Drying, Dehumidification)",
       "Water Damage Repair & Restoration",
       "Flood Damage Cleanup & Restoration",
@@ -35,86 +19,81 @@ export const RESIDENTIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
     ],
   },
   {
-    heading: "Fire",
+    heading: "Fire Damage",
     items: [
-      "Fire Damage (General)",
       "Fire Damage Cleanup & Restoration",
       "Smoke Damage & Soot Removal Services",
       "Deodorization",
       "Roof Tarp / Board Up",
+      "Roofing (Birmingham & Nasvhille) - all other markets 2026",
     ],
   },
   {
     heading: "Construction",
     items: [
-      "Construction (General)",
       "Construction, Remodeling, Restoration",
       "Home Contractor",
       "Post construction cleaning services",
     ],
   },
   {
-    heading: "Roofing",
-    items: ["Roofing (General)", "Repair, Replacement"],
-  },
-  {
-    heading: "Mold",
+    heading: "Mold Damage",
     items: [
-      "Mold Damage (General)",
       "Mold Removal & Remediation",
       "Attic Mold Removal",
       "Bathroom Mold Cleaning",
       "Air Sampling Services",
+      "Crawlspace Encapsulation",
     ],
   },
   {
-    heading: "Storm",
+    heading: "Storm Damage Recovery",
     items: [
-      "Storm Damage Recovery",
-      "Flooding",
-      "Wildfires",
-      "Hurricane/Fire/Flood/Wind/Hail/Ice Storm Damage",
       "Emergency Roof Tarp / Board Up",
       "Demolition & Reconstruction Services",
     ],
   },
   {
     heading: "Contents",
-    items: ["Contents (General)", "Pack Out Services & Storage"],
+    items: ["Pack Out Services & Storage"],
+  },
+  {
+    heading: "Biohazard Cleaning Services",
+    items: [
+      "Biohazard Remediation",
+      "Crime Scene, Trauma, Death Cleaning",
+      "Hoarding Cleanup",
+      "Rodent Infestation Cleanup",
+      "Illicit Substance Cleanup & Destruction (Narcotics Remediation)",
+      "Chemical & Residues (tear gas, pepper spray, fire extinguisher, fingerprint dust, etc.)",
+      "Virus, pathogens & Covid 19 Cleanup",
+    ],
+  },
+  {
+    heading: "Sewage & Black Water",
+    items: ["Sewage & Black Water"],
+  },
+  {
+    heading: "Specialty Cleaning",
+    items: [
+      "Document Restoration",
+      "Vandalism & Graffiti Cleanup",
+      "Asbestos & Lead Paint Abatement",
+      "Crawlspace Encapsulation",
+    ],
   },
   {
     heading: "General Cleaning",
     items: [
-      "General Cleaning",
       "Air Duct Cleaning",
       "Spring Cleaning",
       "Professional Cleaning Home for Sale",
       "Construction & Post Renovation Cleaning",
       "Upholstery & Carpet Cleaning",
       "Floors, Walls & Ceilings",
+      "Drapes, Blinds & Window Treatment Cleaning",
       "Odor Removal",
       "Pet Stain / Odor Removal",
-    ],
-  },
-  {
-    heading: "Specialty Cleaning",
-    items: [
-      "Specialty Cleaning",
-      "Biohazard Cleaning Services",
-      "Crime Scene & Trauma Cleaning",
-      "Suicide & Death Cleanup",
-      "Hoarding Cleanup",
-      "Illicit Substance Cleanup & Destruction",
-      "Jail Cell & Squad Car Remediation",
-      "Chemicals & Residues (tear gas, pepper spray, fire extinguisher, etc.)",
-      "Virus, pathogens & Covid 19 Cleanup",
-      "Sewage & Black Water",
-      "Document Restoration",
-      "Contents Restoration Services",
-      "Document & Media Recovery",
-      "Vandalism & Graffiti Cleanup",
-      "Asbestos & Lead Paint Abatement",
-      "Crawlspace Encapsulation",
     ],
   },
 ];
@@ -123,21 +102,19 @@ export const RESIDENTIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
 export const COMMERCIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
   {
     heading: "Emergency Response",
-    items: ["Emergency Response", "Emergency Readiness Plan"],
+    items: ["Emergency Readiness Plan"],
   },
   {
-    heading: "Water",
+    heading: "Water Damage",
     items: [
-      "Water Damage (General)",
       "Water Extraction and Clean Up (Drying, Dehumidification)",
       "Water Damage Repair & Restoration",
       "Flood Damage Cleanup & Restoration",
     ],
   },
   {
-    heading: "Fire",
+    heading: "Fire Damage",
     items: [
-      "Fire Damage (General)",
       "Fire Damage Cleanup & Restoration",
       "Smoke Damage & Soot Removal Services",
       "Deodorization",
@@ -149,7 +126,6 @@ export const COMMERCIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
   {
     heading: "Construction",
     items: [
-      "Construction (General)",
       "General Contracting & Reconstruction",
       "Construction, Remodeling, Restoration",
       "Restaurants, Hotels, Motels, Retail, Manufacturing, Industrial Complexes, Government & Military Buildings",
@@ -158,30 +134,56 @@ export const COMMERCIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
     ],
   },
   {
-    heading: "Mold",
-    items: ["Mold Damage (General)", "Mold Removal & Remediation"],
+    heading: "Mold Damage",
+    items: ["Mold Removal & Remediation"],
   },
   {
-    heading: "Storm",
+    heading: "Storm Damage Recovery",
     items: [
-      "Storm Damage Recovery",
-      "Flooding",
-      "Wildfires",
-      "Hurricane/Fire/Flood/Wind/Hail/Ice Storm Damage",
       "Roof Tarp / Board Up",
       "Perimeter Fencing",
       "Building Shrink Wrap",
       "Emergency Security Personnel",
+      "Demolition & Reconstruction Services",
     ],
   },
   {
     heading: "Contents",
-    items: ["Contents (General)", "Pack Out Services & Storage"],
+    items: ["Pack Out Services & Storage"],
+  },
+  {
+    heading: "Biohazard Cleaning Services",
+    items: [
+      "Biohazard Remediation",
+      "Crime Scene, Trauma, Death Cleaning",
+      "Hoarding Cleanup",
+      "Rodent Infestation Cleanup",
+      "Illicit Substance Cleanup & Destruction (Narcotics Remediation)",
+      "Jail Cell & Squad Car Remediation",
+      "Chemical & Residues (tear gas, pepper spray, fire extinguisher, fingerprint dust, etc.)",
+      "Virus, pathogens & Covid 19 Cleanup",
+    ],
+  },
+  {
+    heading: "Sewage & Black Water",
+    items: ["Sewage & Black Water"],
+  },
+  {
+    heading: "Specialty Cleaning",
+    items: [
+      "Document Restoration",
+      "Vandalism & Graffiti Cleanup",
+      "Environmental Services",
+      "Asbestos & Lead Paint Abatement",
+      "Corrosion Control",
+      "Electronic Restoration",
+      "Ultrasonic Cleaning",
+      "Semiconductor Decontamination & Decommissioning",
+    ],
   },
   {
     heading: "General Cleaning",
     items: [
-      "General Cleaning",
       "Commercial Cleaning & Janitorial Services",
       "Air Duct Cleaning",
       "Odor Removal",
@@ -191,45 +193,6 @@ export const COMMERCIAL_SERVICE_LINES: ServiceLineCategoryData[] = [
       "Drapes, Blinds & Window Treatment Cleaning",
     ],
   },
-  {
-    heading: "Specialty Cleaning",
-    items: [
-      "Specialty Cleaning",
-      "Biohazard Cleaning Services",
-      "Crime Scene & Trauma Cleaning",
-      "Suicide & Death Cleanup",
-      "Hoarding Cleanup",
-      "Illicit Substance Cleanup & Destruction",
-      "Jail Cell & Squad Car Remediation",
-      "Chemicals & Residues (tear gas, pepper spray, fire extinguisher, etc.)",
-      "Virus, pathogens & Covid 19 Cleanup",
-      "Sewage & Black Water",
-      "Document Restoration",
-      "Contents Restoration Services",
-      "Document & Media Recovery",
-      "Vandalism & Graffiti Cleanup",
-      "Corrosion Control",
-      "Electronic Restoration",
-      "Ultrasonic Cleaning",
-      "Commercial Disinfection",
-      "Marine & Offshore Restoration",
-      "Thermographic Inspection",
-      "Contamination Level Assessment",
-      "HCL Testing",
-      "Machinery & Electronics Restoration",
-      "Generator Cleaning",
-      "Inventory of Hazardous Materials",
-      "Semiconductor Decontamination & Decommissioning",
-      "Parts Harvesting",
-      "Reclamation & Recycling",
-      "Consignment Services",
-      "Deconstruction Services",
-      "Environmental Services",
-      "Emergency response to chemical or petroleum spills",
-      "Hazardous Waste",
-      "Asbestos & Lead Paint Abatement",
-    ],
-  },
 ];
 
 // each of theses need to map to fields industries_
@@ -237,21 +200,22 @@ export const INDUSTRIES: ServiceLineCategoryData[] = [
   {
     heading: "",
     items: [
-      "Commercial Large Loss",
-      "Education",
-      "Energy & Chemical Facilities",
-      "Government & Public Entities",
-      "Healthcare & Hospitals",
-      "Hospitality, Hotel & Restaurant",
-      "Insurance",
-      "Manufacturing & Distribution",
-      "Maritime",
-      "Multi-Family Housing",
-      "Pharmaceutical Manufacturing",
-      "Religious Institutions",
-      "Retail",
-      "Senior Living & Assisted Living Facilities",
-      "Technology & Data Centers",
+     "Commerical Large Loss",
+     "Education",
+     "Energy & Chemical Facilities",
+     "Entertainment, Arenas",
+     "Government & Public Entities",
+     "Healthcare & Hospitals",
+     "Hospitality, Hotel & Restaurant",
+     "Insurance",
+     "Manufacturing & Distribution",
+     "Maritime",
+     "Multi-Family Housing",
+     "Pharmaceutical Manufacturing",
+     "Religious Institutions",
+     "Retail",
+     "Senior Living & Assisted Living Facilities",
+     "Technology & Data Centers",
     ],
   },
 ];

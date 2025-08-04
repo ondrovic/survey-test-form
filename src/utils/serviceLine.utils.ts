@@ -12,7 +12,7 @@ export const initializeServiceLineItems = (
   return serviceLines.map((name) => ({
     name,
     selected: false,
-    rating: "N/A",
+    rating: "High",
   }));
 };
 

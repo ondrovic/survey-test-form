@@ -5,8 +5,7 @@ import React, { useState } from 'react';
 
 export interface ServiceLineItem {
     name: string;
-    selected: boolean;
-    rating: RatingValue | 'N/A';
+    rating: RatingValue | 'Not Important';
 }
 
 export interface ServiceLineCategory {
@@ -17,8 +16,7 @@ export interface ServiceLineCategory {
 export interface ServiceLineSectionProps {
     title: string;
     categories: ServiceLineCategory[];
-    onItemChange: (categoryIndex: number, itemIndex: number, selected: boolean) => void;
-    onRatingChange: (categoryIndex: number, itemIndex: number, rating: RatingValue | 'N/A') => void;
+    onRatingChange: (categoryIndex: number, itemIndex: number, rating: RatingValue | 'Not Important') => void;
     onAdditionalNotesChange?: (notes: string) => void;
     additionalNotes?: string;
     className?: string;
@@ -29,7 +27,6 @@ export interface ServiceLineSectionProps {
 export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
     title,
     categories,
-    onItemChange,
     onRatingChange,
     onAdditionalNotesChange,
     additionalNotes = '',
@@ -39,23 +36,31 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
 }) => {
     const [openDropdown, setOpenDropdown] = useState<{ categoryIndex: number; itemIndex: number } | null>(null);
 
-    const ratingOptions: Array<RatingValue | 'N/A'> = ['N/A', 'High', 'Medium', 'Low'];
+    const ratingOptions: Array<RatingValue | 'Not Important'> = ['High', 'Medium', 'Low', 'Not Important'];
 
     const handleDropdownToggle = (categoryIndex: number, itemIndex: number) => {
-        const isSelected = categories[categoryIndex]?.items[itemIndex]?.selected || false;
-        if (!isSelected) return; // Don't open if not selected
-
         const currentKey = { categoryIndex, itemIndex };
         setOpenDropdown(openDropdown?.categoryIndex === categoryIndex && openDropdown?.itemIndex === itemIndex ? null : currentKey);
     };
 
-    const handleRatingSelect = (categoryIndex: number, itemIndex: number, rating: RatingValue | 'N/A') => {
+    const handleRatingSelect = (categoryIndex: number, itemIndex: number, rating: RatingValue | 'Not Important') => {
         onRatingChange(categoryIndex, itemIndex, rating);
         setOpenDropdown(null);
     };
 
-    const handleItemChange = (categoryIndex: number, itemIndex: number, selected: boolean) => {
-        onItemChange(categoryIndex, itemIndex, selected);
+    const getRatingButtonColor = (rating: RatingValue | 'Not Important') => {
+        switch (rating) {
+            case 'High':
+                return 'bg-green-100 hover:bg-green-200 text-green-700 border-green-200';
+            case 'Medium':
+                return 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border-yellow-200';
+            case 'Low':
+                return 'bg-red-100 hover:bg-red-200 text-red-700 border-red-200';
+            case 'Not Important':
+                return 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-200';
+            default:
+                return 'bg-green-100 hover:bg-green-200 text-green-700 border-green-200';
+        }
     };
 
     const classes = clsx('bg-amber-50 rounded-xl shadow-sm border border-amber-100 p-3', className);
@@ -76,7 +81,7 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
                     Instructions: For each service line below, how important is this to your business?
                 </p>
                 <p className="text-sm text-gray-700">
-                    Rating scale: High priority, Medium priority, Low priority, Not Applicable
+                    Rating scale: High priority, Medium priority, Low priority, Not Important
                 </p>
                 {error && (
                     <p className="text-sm text-red-600" role="alert">
@@ -94,32 +99,13 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
                             )}
                             <div className="space-y-2">
                                 {category.items.map((item, itemIndex) => {
-                                    const isChecked = item.selected;
-
                                     return (
                                         <div
                                             key={itemIndex}
-                                            className={clsx(
-                                                'flex items-center justify-between p-2 rounded-lg transition-all duration-200',
-                                                isChecked
-                                                    ? 'bg-white border border-green-200 shadow-sm'
-                                                    : 'bg-white border border-gray-200 shadow-sm'
-                                            )}
+                                            className="flex items-center justify-between p-2 rounded-lg transition-all duration-200 bg-white border border-green-200 shadow-sm"
                                         >
                                             <div className="flex items-center space-x-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={(e) => {
-                                                        const newSelected = e.target.checked;
-                                                        handleItemChange(categoryIndex, itemIndex, newSelected);
-                                                    }}
-                                                    className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-                                                />
-                                                <span className={clsx(
-                                                    'text-sm',
-                                                    isChecked ? 'text-gray-800' : 'text-gray-600'
-                                                )}>
+                                                <span className="text-sm text-gray-800">
                                                     {item.name}
                                                 </span>
                                             </div>
@@ -128,23 +114,19 @@ export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDropdownToggle(categoryIndex, itemIndex)}
-                                                    disabled={!isChecked}
                                                     className={clsx(
                                                         'flex items-center space-x-2 px-2 py-1 rounded-md border transition-colors duration-200',
-                                                        isChecked
-                                                            ? 'bg-green-100 hover:bg-green-200 text-green-700 border-green-200'
-                                                            : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                                        getRatingButtonColor(item.rating)
                                                     )}
                                                 >
                                                     <span className="text-sm">
-                                                        {isChecked ? item.rating : 'N/A'}
+                                                        {item.rating}
                                                     </span>
                                                     <ChevronDown className="h-4 w-4" />
                                                 </button>
 
                                                 {openDropdown?.categoryIndex === categoryIndex &&
-                                                    openDropdown?.itemIndex === itemIndex &&
-                                                    isChecked && (
+                                                    openDropdown?.itemIndex === itemIndex && (
                                                         <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px] transform-gpu">
                                                             {ratingOptions.map((rating) => (
                                                                 <button

@@ -20,17 +20,17 @@ export function getExpectedColumnCount(): number {
 
   // Add Residential Services columns
   RESIDENTIAL_SERVICE_LINES.forEach((category) => {
-    count += category.items.length * 2; // Selected + Rating for each item
+    count += category.items.length; // Rating for each item (no more selected column)
   });
 
   // Add Commercial Services columns
   COMMERCIAL_SERVICE_LINES.forEach((category) => {
-    count += category.items.length * 2; // Selected + Rating for each item
+    count += category.items.length; // Rating for each item (no more selected column)
   });
 
   // Add Industries columns
   INDUSTRIES.forEach((category) => {
-    count += category.items.length * 2; // Selected + Rating for each item
+    count += category.items.length; // Rating for each item (no more selected column)
   });
 
   return count;
@@ -71,11 +71,8 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
           (item) => item.name === itemName
         );
 
-        flatData[`${prefix} Selected`] = itemData?.selected ? "Yes" : "No";
-        // For rating, if not selected, show N/A, otherwise show the actual rating
-        flatData[`${prefix} Rating`] = itemData?.selected
-          ? itemData?.rating || "N/A"
-          : "N/A";
+        // Show the actual rating value
+        flatData[`${prefix} Rating`] = itemData?.rating || "Not Important";
       });
     });
 
@@ -92,11 +89,8 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
           (item) => item.name === itemName
         );
 
-        flatData[`${prefix} Selected`] = itemData?.selected ? "Yes" : "No";
-        // For rating, if not selected, show N/A, otherwise show the actual rating
-        flatData[`${prefix} Rating`] = itemData?.selected
-          ? itemData?.rating || "N/A"
-          : "N/A";
+        // Show the actual rating value
+        flatData[`${prefix} Rating`] = itemData?.rating || "Not Important";
       });
     });
 
@@ -113,11 +107,8 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
           (item) => item.name === itemName
         );
 
-        flatData[`${prefix} Selected`] = itemData?.selected ? "Yes" : "No";
-        // For rating, if not selected, show N/A, otherwise show the actual rating
-        flatData[`${prefix} Rating`] = itemData?.selected
-          ? itemData?.rating || "N/A"
-          : "N/A";
+        // Show the actual rating value
+        flatData[`${prefix} Rating`] = itemData?.rating || "Not Important";
       });
     });
 
