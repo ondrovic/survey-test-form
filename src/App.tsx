@@ -9,6 +9,8 @@ import { getCurrentTimestamp } from '@/utils/date.utils';
 import { Settings } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
+const currentYear = new Date().getFullYear();
+const copyright = `© ${currentYear}`;
 /**
  * Main App component that integrates all survey functionality
  */
@@ -170,7 +172,9 @@ function App() {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-sm text-gray-500">
                         <p>
-                            Your responses are securely stored in Firebase and will be used to improve our services.
+                            Your responses are securely stored and will be used to improve our services.
+                            <br />
+                            {copyright} SERVPRO. All rights reserved.
                         </p>
                     </div>
                 </div>
