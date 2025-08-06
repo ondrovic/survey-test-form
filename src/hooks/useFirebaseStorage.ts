@@ -4,9 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 
 // Global flags to prevent multiple simultaneous requests and connections
-let isLoading = false;
-let isSaving = false;
-let connectionInitialized = false;
+// Using refs instead of global variables to avoid issues
+const isLoadingRef = { current: false };
+const isSavingRef = { current: false };
+const connectionInitializedRef = { current: false };
 
 export interface FirebaseStorageReturn<T> {
   data: T[];
@@ -31,18 +32,28 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
   // Load data from Firebase
   const loadData = useCallback(async (): Promise<void> => {
     // Prevent multiple simultaneous requests
-    if (isLoading) {
-      console.log("Data loading already in progress, skipping");
+    if (isLoadingRef.current) {
+      console.log("Firebase Storage Debug:", {
+        action: "loadData",
+        status: "skipped",
+        reason: "Data loading already in progress",
+        timestamp: new Date().toISOString(),
+      });
       return;
     }
 
     // Only load once per session
-    if (connectionInitialized) {
-      console.log("Firebase connection already initialized, using cached data");
+    if (connectionInitializedRef.current) {
+      console.log("Firebase Storage Debug:", {
+        action: "loadData",
+        status: "skipped",
+        reason: "Firebase connection already initialized, using cached data",
+        timestamp: new Date().toISOString(),
+      });
       return;
     }
 
-    isLoading = true;
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -52,14 +63,21 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
       setData(firebaseData as T[]);
       setLocalData(firebaseData as T[]);
       setConnected(true);
-      connectionInitialized = true;
+      connectionInitializedRef.current = true;
+
+      console.log("Firebase Storage Debug:", {
+        action: "loadData",
+        status: "success",
+        dataCount: firebaseData.length,
+        timestamp: new Date().toISOString(),
+      });
     } catch (err) {
       console.error("Error loading from Firebase:", err);
       setError("Failed to load from Firebase.");
       setConnected(false);
     } finally {
       setLoading(false);
-      isLoading = false;
+      isLoadingRef.current = false;
     }
   }, []); // Remove dependencies to prevent infinite loops
 
@@ -67,12 +85,17 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
   const save = useCallback(
     async (item: T): Promise<void> => {
       // Prevent multiple simultaneous saves
-      if (isSaving) {
-        console.log("Save already in progress, skipping");
+      if (isSavingRef.current) {
+        console.log("Firebase Storage Debug:", {
+          action: "save",
+          status: "skipped",
+          reason: "Save already in progress",
+          timestamp: new Date().toISOString(),
+        });
         return;
       }
 
-      isSaving = true;
+      isSavingRef.current = true;
       try {
         // Save to Firebase
         await firestoreHelpers.addSurvey(item);
@@ -82,13 +105,19 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
         setData(newData);
         setLocalData(newData);
         setConnected(true);
-        console.log("Successfully saved to Firebase");
+
+        console.log("Firebase Storage Debug:", {
+          action: "save",
+          status: "success",
+          itemId: (item as any).id,
+          timestamp: new Date().toISOString(),
+        });
       } catch (err) {
         console.error("Error saving to Firebase:", err);
         setError("Failed to save to Firebase.");
         setConnected(false);
       } finally {
-        isSaving = false;
+        isSavingRef.current = false;
       }
     },
     [data, setLocalData]
@@ -96,8 +125,8 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
 
   // Refresh data
   const refresh = useCallback(async (): Promise<void> => {
-    isLoading = false; // Reset loading flag
-    connectionInitialized = false; // Allow fresh load
+    isLoadingRef.current = false; // Reset loading flag
+    connectionInitializedRef.current = false; // Allow fresh load
     await loadData();
   }, []); // Remove loadData dependency
 

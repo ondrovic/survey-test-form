@@ -1,0 +1,1 @@
+export { RatingScaleManager } from "./RatingScaleManager";

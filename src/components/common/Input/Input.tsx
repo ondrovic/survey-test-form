@@ -68,19 +68,19 @@ export const Input = <T extends string | number = string>({
                 return 'off';
             default:
                 // Auto-generate based on field name
-                if (name.toLowerCase().includes('email')) return 'email';
-                if (name.toLowerCase().includes('name')) return 'name';
-                if (name.toLowerCase().includes('phone')) return 'tel';
-                if (name.toLowerCase().includes('url')) return 'url';
+                if (name && name.toLowerCase().includes('email')) return 'email';
+                if (name && name.toLowerCase().includes('name')) return 'name';
+                if (name && name.toLowerCase().includes('phone')) return 'tel';
+                if (name && name.toLowerCase().includes('url')) return 'url';
                 return 'off';
         }
     };
 
-    const baseClasses = 'block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseClasses = 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const stateClasses = error
         ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500'
-        : 'border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500';
+        : 'border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-500 focus:border-amber-500';
 
     const inputClasses = clsx(baseClasses, stateClasses, className);
 
@@ -91,7 +91,7 @@ export const Input = <T extends string | number = string>({
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className="block text-sm font-semibold text-gray-800 mb-2"
+                        className="block text-sm font-medium text-gray-700 mb-2"
                     >
                         {label}
                         {required && <span className="text-red-500 ml-1">*</span>}

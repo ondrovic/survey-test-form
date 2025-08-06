@@ -1,16 +1,20 @@
-import { AdminPanel } from '@/components/admin';
-import { ConnectionStatus, SurveyForm } from '@/components/survey';
-import { authHelpers } from '@/config/firebase';
+import { AdminPage } from '@/components/admin';
+import { DynamicForm } from '@/components/form';
+import { authHelpers, firestoreHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
-import { useFirebaseStorage } from '@/hooks/useFirebaseStorage';
-import { SurveyData, SurveyFormData } from '@/types';
+import { AdminTabProvider } from '@/contexts/AdminTabContext';
+import { useFirebaseStorage } from '@/hooks';
+import { SurveyConfig, SurveyData, SurveyInstance, SurveyResponse } from '@/types';
 import { suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
-import { Settings } from 'lucide-react';
+import { migrateExistingData } from '@/utils/migration.utils';
+import { isReCaptchaConfigured, verifyReCaptchaTokenWithFirebase } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 
 const currentYear = new Date().getFullYear();
 const copyright = `© ${currentYear}`;
+
 /**
  * Main App component that integrates all survey functionality
  */
@@ -25,10 +29,14 @@ function App() {
         message: string;
     } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showAdminPanel, setShowAdminPanel] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const { loading, error, connected, save, refresh } = useFirebaseStorage<SurveyData>();
+    // Framework state
+    const [isMigrating, setIsMigrating] = useState(true);
+    const [allSurveyInstances, setAllSurveyInstances] = useState<SurveyInstance[]>([]);
+
+    const { save } = useFirebaseStorage<SurveyData>();
+    const navigate = useNavigate();
 
     // Initialize anonymous authentication
     useEffect(() => {
@@ -59,30 +67,175 @@ function App() {
         return unsubscribe;
     }, []);
 
-    // Keyboard shortcut for admin panel (Ctrl+Shift+A)
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey && event.shiftKey && event.key === 'A') {
-                event.preventDefault();
-                setShowAdminPanel(true);
-            }
-        };
+    // Initialize framework and migrate data
+    const initializeFramework = useCallback(async () => {
+        try {
+            setIsMigrating(true);
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+            // Migrate existing data to framework
+            await migrateExistingData(firestoreHelpers);
+
+            // Get all survey instances
+            const instances = await firestoreHelpers.getSurveyInstances();
+            setAllSurveyInstances(instances);
+
+            // Debug: Check what survey configs exist
+            const configs = await firestoreHelpers.getSurveyConfigs();
+
+            // Consolidated debug information
+            console.log('Framework Initialization Debug Info:', {
+                surveyInstances: instances,
+                surveyConfigs: configs,
+                configIds: configs.map(config => ({
+                    documentId: config.id,
+                    configId: config.id,
+                    title: config.title
+                })),
+                timestamp: new Date().toISOString()
+            });
+
+            // Get active survey instance
+            const instance = await firestoreHelpers.getActiveSurveyInstance();
+            if (instance) {
+                // This part of the logic is no longer needed as activeSurveyInstance is removed
+                // and the framework state is not managed here.
+            }
+
+            setIsMigrating(false);
+        } catch (error) {
+            console.error('Error initializing framework:', error);
+            setIsMigrating(false);
+        }
     }, []);
 
-    const handleSubmit = useCallback(async (formData: SurveyFormData) => {
+    // Initialize framework on mount
+    useEffect(() => {
+        initializeFramework();
+    }, [initializeFramework]);
+
+    const getSurveyInstanceBySlug = (slug: string) => {
+        return allSurveyInstances.find(instance =>
+            instance.title.toLowerCase().replace(/\s+/g, '-') === slug
+        );
+    };
+
+    const generateSlug = (title: string) => {
+        return title.toLowerCase().replace(/\s+/g, '-');
+    };
+
+    return (
+        <AdminTabProvider>
+            <Routes>
+                <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
+                <Route path="/survey-test-form/admin" element={<AdminPage onBack={() => navigate('/')} />} />
+                <Route path="/survey-test-form/:slug" element={
+                    (() => {
+                        const slug = window.location.pathname.split('/').pop() || '';
+                        const instance = getSurveyInstanceBySlug(slug);
+                        if (instance) {
+                            return <SurveyPage instance={instance} />;
+                        } else {
+                            return <NotFoundPage />;
+                        }
+                    })()
+                } />
+                <Route path="/:slug" element={
+                    (() => {
+                        const slug = window.location.pathname.split('/').pop() || '';
+                        const instance = getSurveyInstanceBySlug(slug);
+                        if (instance) {
+                            return <SurveyPage instance={instance} />;
+                        } else {
+                            return <NotFoundPage />;
+                        }
+                    })()
+                } />
+                <Route path="/" element={<NotFoundPage />} />
+            </Routes>
+        </AdminTabProvider>
+    );
+}
+
+// Survey Page Component
+function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
+    const [surveyConfig, setSurveyConfig] = useState<SurveyConfig | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [alert, setAlert] = useState<{
+        type: 'success' | 'error';
+        message: string;
+    } | null>(null);
+    const navigate = useNavigate();
+
+    // Check if instance is valid
+    if (!instance) {
+        return (
+            <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Survey Not Found</h1>
+                    <p className="text-gray-600 mb-6">The requested survey could not be found.</p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Go to Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const loadSurveyConfig = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const config = await firestoreHelpers.getSurveyConfig(instance.configId);
+            if (config) {
+                setSurveyConfig(config);
+            } else {
+                setError('Survey configuration not found');
+            }
+        } catch (err) {
+            console.error('Error loading survey config:', err);
+            setError('Failed to load survey');
+        } finally {
+            setLoading(false);
+        }
+    }, [instance.configId]);
+
+    useEffect(() => {
+        loadSurveyConfig();
+    }, [loadSurveyConfig]);
+
+    const handleSubmit = useCallback(async (responses: Record<string, any>) => {
+        if (!surveyConfig) return;
+
         setIsSubmitting(true);
         try {
-            const surveyData: SurveyData = {
+            // Verify reCAPTCHA if enabled
+            if (isReCaptchaConfigured() && responses.recaptchaToken) {
+                const isValid = await verifyReCaptchaTokenWithFirebase(responses.recaptchaToken);
+                if (!isValid) {
+                    throw new Error('reCAPTCHA verification failed');
+                }
+            }
+
+            const surveyResponse: SurveyResponse = {
                 id: crypto.randomUUID(),
-                ...formData,
-                submittedAt: getCurrentTimestamp(),
-                updatedAt: getCurrentTimestamp()
+                surveyInstanceId: instance.id,
+                configVersion: surveyConfig.metadata.version,
+                responses,
+                metadata: {
+                    submittedAt: getCurrentTimestamp(),
+                    userAgent: navigator.userAgent,
+                    ipAddress: undefined,
+                    sessionId: undefined,
+                }
             };
 
-            await save(surveyData);
+            await firestoreHelpers.addSurveyResponse(surveyResponse);
             setAlert({
                 type: 'success',
                 message: SUCCESS_MESSAGES.surveySubmitted
@@ -99,92 +252,78 @@ function App() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [save]);
+    }, [instance.id, surveyConfig]);
 
-    const handleDismissAlert = useCallback(() => {
-        setAlert(null);
-    }, []);
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading survey...</p>
+                </div>
+            </div>
+        );
+    }
 
-    const handleRetryConnection = useCallback(() => {
-        refresh();
-    }, [refresh]);
-
-    const handleAdminButtonClick = useCallback(() => {
-        setShowAdminPanel(true);
-    }, []);
-
-    const handleCloseAdminPanel = useCallback(() => {
-        setShowAdminPanel(false);
-    }, []);
+    if (error || !surveyConfig) {
+        return (
+            <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Survey Not Found</h1>
+                    <p className="text-gray-600 mb-6">{error || 'The requested survey could not be loaded.'}</p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Go to Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-amber-50/30">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
-                                Service Line Feedback Survey
-                            </h1>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Help us improve our service lines by providing your feedback
-                            </p>
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                            <ConnectionStatus
-                                connected={connected}
-                                loading={loading}
-                                error={error}
-                                onRetry={handleRetryConnection}
-                                isAuthenticated={isAuthenticated}
-                            />
-
-                            {/* Hidden admin button - accessible via keyboard or developer tools */}
-                            <button
-                                onClick={handleAdminButtonClick}
-                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors opacity-20 hover:opacity-100"
-                                title="Admin Panel (Ctrl+Shift+A)"
-                                aria-label="Open admin panel"
-                            >
-                                <Settings className="h-5 w-5" />
-                            </button>
+            {/* Main Content */}
+            <main className="py-8">
+                {alert && (
+                    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                        <div className={`p-4 rounded-md ${alert.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                            {alert.message}
                         </div>
                     </div>
-                </div>
-            </header>
+                )}
 
-            {/* Main Content */}
-            <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <SurveyForm
+                <DynamicForm
+                    config={surveyConfig}
                     onSubmit={handleSubmit}
                     loading={isSubmitting}
                     error={alert?.type === 'error' ? alert.message : undefined}
                     success={alert?.type === 'success' ? alert.message : undefined}
-                    onDismissAlert={handleDismissAlert}
-                    connected={connected}
+                    onDismissAlert={() => setAlert(null)}
                 />
             </main>
 
             {/* Footer */}
-            <footer className="bg-white border-t border-gray-200 mt-16">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="text-center text-sm text-gray-500">
-                        <p>
-                            Your responses are securely stored and will be used to improve our services.
-                            <br />
-                            {copyright} SERVPRO. All rights reserved.
-                        </p>
+            <footer className="bg-white border-t mt-12">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex items-center justify-center">
+                        <p className="text-sm text-gray-500">{copyright}</p>
                     </div>
                 </div>
             </footer>
+        </div>
+    );
+}
 
-            {/* Admin Panel */}
-            <AdminPanel
-                isVisible={showAdminPanel}
-                onClose={handleCloseAdminPanel}
-            />
+// Not Found Page Component
+function NotFoundPage() {
+    return (
+        <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
+            <div className="text-center">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h1>
+                <p className="text-gray-600 mb-6">The resource you're looking for doesn't exist.</p>
+            </div>
         </div>
     );
 }

@@ -1,13 +1,17 @@
-import { Download, Eye, EyeOff, Lock } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { Download, Eye, EyeOff, Lock, Plus, Star } from 'lucide-react';
+import React, { useState } from 'react';
 import { firestoreHelpers } from '../../config/firebase';
-import { SurveyData } from '../../types/survey.types';
+import { SurveyConfig, SurveyData, SurveyInstance } from '../../types/survey.types';
 import { downloadSurveyDataAsExcel } from '../../utils/excel.utils';
 import { Alert, Button, Input } from '../common';
+// import { RatingScaleManager } from './RatingScaleManager';
+import { SurveyBuilder } from './SurveyBuilder';
 
 interface AdminPanelProps {
     isVisible: boolean;
     onClose: () => void;
+    surveyCount: number | null;
+    isCountLoading: boolean;
 }
 
 interface AdminPanelState {
@@ -18,11 +22,13 @@ interface AdminPanelState {
     success: string | null;
     surveys: SurveyData[];
     showPassword: boolean;
-    surveyCount: number | null;
-    isCheckingCount: boolean;
+    showSurveyBuilder: boolean;
+    showRatingScaleManager: boolean;
+    surveyConfigs: SurveyConfig[];
+    surveyInstances: SurveyInstance[];
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surveyCount, isCountLoading }) => {
     const [state, setState] = useState<AdminPanelState>({
         password: '',
         isAuthenticated: false,
@@ -31,8 +37,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
         success: null,
         surveys: [],
         showPassword: false,
-        surveyCount: null,
-        isCheckingCount: false,
+        showSurveyBuilder: false,
+        showRatingScaleManager: false,
+        surveyConfigs: [],
+        surveyInstances: [],
     });
 
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
@@ -55,12 +63,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                 error: null,
                 password: ''
             }));
+            // Load framework data when authenticated
+            loadFrameworkData();
         } else {
             setState(prev => ({
                 ...prev,
                 error: 'Invalid password. Please try again.',
                 password: ''
             }));
+        }
+    };
+
+    const loadFrameworkData = async () => {
+        try {
+            const [configs, instances] = await Promise.all([
+                firestoreHelpers.getSurveyConfigs(),
+                firestoreHelpers.getSurveyInstances()
+            ]);
+            setState(prev => ({
+                ...prev,
+                surveyConfigs: configs,
+                surveyInstances: instances
+            }));
+        } catch (error) {
+            console.error('Error loading framework data:', error);
         }
     };
 
@@ -109,74 +135,70 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
     };
 
     const handleLogout = () => {
-        setState({
-            password: '',
+        setState(prev => ({
+            ...prev,
             isAuthenticated: false,
-            isLoading: false,
-            error: null,
-            success: null,
             surveys: [],
-            showPassword: false,
-            surveyCount: null,
-            isCheckingCount: false,
-        });
+            surveyConfigs: [],
+            surveyInstances: [],
+            showSurveyBuilder: false,
+            showRatingScaleManager: false
+        }));
     };
 
     const handleClose = () => {
-        // Clear success message when closing the panel
-        setState(prev => ({ ...prev, success: null }));
+        setState(prev => ({
+            ...prev,
+            isAuthenticated: false,
+            surveys: [],
+            surveyConfigs: [],
+            surveyInstances: [],
+            showSurveyBuilder: false,
+            showRatingScaleManager: false
+        }));
         onClose();
     };
 
-    const handleCheckSurveyCount = async () => {
-        setState(prev => ({ ...prev, isCheckingCount: true, error: null }));
-
-        try {
-            const surveys = await firestoreHelpers.getSurveys();
-            setState(prev => ({
-                ...prev,
-                surveyCount: surveys.length,
-                isCheckingCount: false
-            }));
-        } catch (error) {
-            console.error('Error checking survey count:', error);
-            setState(prev => ({
-                ...prev,
-                isCheckingCount: false,
-                error: 'Failed to check survey count. Please try again.'
-            }));
-        }
-    };
-
     const togglePasswordVisibility = () => {
-        setState(prev => ({ ...prev, showPassword: !prev.showPassword }));
+        setState(prev => ({
+            ...prev,
+            showPassword: !prev.showPassword
+        }));
     };
 
-    // Auto-load survey count when admin panel becomes visible
-    useEffect(() => {
-        if (isVisible && state.isAuthenticated) {
-            handleCheckSurveyCount();
-        }
-    }, [isVisible, state.isAuthenticated]);
+    const handleShowSurveyBuilder = () => {
+        setState(prev => ({ ...prev, showSurveyBuilder: true }));
+    };
+
+    const handleCloseSurveyBuilder = () => {
+        setState(prev => ({ ...prev, showSurveyBuilder: false }));
+        // Reload framework data after builder is closed
+        loadFrameworkData();
+    };
+
+    const handleShowRatingScaleManager = () => {
+        setState(prev => ({ ...prev, showRatingScaleManager: true }));
+    };
+
+    const handleCloseRatingScaleManager = () => {
+        setState(prev => ({ ...prev, showRatingScaleManager: false }));
+    };
 
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto overscroll-contain">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center space-x-2">
-                            <Lock className="h-6 w-6 text-gray-600" />
-                            <h2 className="text-xl font-semibold text-gray-900">
-                                Admin Panel
-                            </h2>
-                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            Admin Panel
+                        </h2>
                         <button
                             onClick={handleClose}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
-                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -184,40 +206,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
 
                     {!state.isAuthenticated ? (
                         <div>
-                            <p className="text-gray-600 mb-4">
-                                Enter the admin password to access survey data download functionality.
-                            </p>
+                            <div className="mb-6">
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">Authentication Required</h3>
+                                <p className="text-gray-600 text-sm">
+                                    Please enter the admin password to access the admin panel.
+                                </p>
+                            </div>
 
                             <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                                {/* Hidden username field for accessibility */}
-                                <input
-                                    type="text"
-                                    name="username"
-                                    autoComplete="username"
-                                    style={{ display: 'none' }}
-                                    aria-hidden="true"
-                                />
                                 <div className="relative">
                                     <Input
-                                        name="adminPassword"
-                                        type={state.showPassword ? 'text' : 'password'}
+                                        type={state.showPassword ? "text" : "password"}
+                                        name="password"
+                                        label="Admin Password"
                                         value={state.password}
-                                        onChange={(value) => setState(prev => ({ ...prev, password: value }))}
+                                        onChange={(e) => setState(prev => ({ ...prev, password: e }))}
                                         placeholder="Enter admin password"
                                         required
-                                        className="pr-10"
-                                        autocomplete="new-password"
                                     />
                                     <button
                                         type="button"
                                         onClick={togglePasswordVisibility}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition-colors"
                                     >
-                                        {state.showPassword ? (
-                                            <EyeOff className="h-4 w-4" />
-                                        ) : (
-                                            <Eye className="h-4 w-4" />
-                                        )}
+                                        {state.showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
 
@@ -245,11 +257,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                             </form>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
+                            {/* Framework Management Section */}
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <h3 className="font-medium text-green-900 mb-2">Survey Framework</h3>
+                                <p className="text-green-700 text-sm mb-3">
+                                    Create and manage configurable surveys using the new framework.
+                                </p>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="font-medium">Configurations:</span> {state.surveyConfigs.length}
+                                    </div>
+                                    <div>
+                                        <span className="font-medium">Active Instances:</span> {state.surveyInstances.filter(i => i.isActive).length}
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={handleShowSurveyBuilder}
+                                    variant="primary"
+                                    className="mt-3"
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Create New Survey
+                                </Button>
+                            </div>
+
+                            {/* Rating Scale Management Section */}
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <h3 className="font-medium text-blue-900 mb-2">Download Survey Data</h3>
+                                <h3 className="font-medium text-blue-900 mb-2">Rating Scale Management</h3>
+                                <p className="text-blue-700 text-sm mb-3">
+                                    Create and manage reusable rating scales with default values that can be used across different survey fields.
+                                </p>
+                                <Button
+                                    onClick={handleShowRatingScaleManager}
+                                    variant="primary"
+                                    className="mt-3"
+                                >
+                                    <Star className="h-4 w-4 mr-2" />
+                                    Manage Rating Scales
+                                </Button>
+                            </div>
+
+                            {/* Legacy Data Section */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h3 className="font-medium text-blue-900 mb-2">Legacy Survey Data</h3>
                                 <p className="text-blue-700 text-sm">
-                                    Download all survey responses as an Excel file (.xlsx) with comprehensive data including personal info, business details, and service line ratings.
+                                    Download all legacy survey responses as an Excel file (.xlsx) with comprehensive data including personal info, business details, and service line ratings.
                                 </p>
                             </div>
 
@@ -258,14 +311,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                                 <h3 className="font-medium text-amber-900 mb-2">Survey Count</h3>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        {state.isCheckingCount ? (
+                                        {isCountLoading ? (
                                             <div className="flex items-center text-amber-700 text-sm">
                                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600 mr-2" />
                                                 Loading survey count...
                                             </div>
-                                        ) : state.surveyCount !== null ? (
+                                        ) : surveyCount !== null ? (
                                             <p className="text-amber-700 text-sm">
-                                                Currently {state.surveyCount} survey records in the database
+                                                Currently {surveyCount} survey records in the database
                                             </p>
                                         ) : (
                                             <p className="text-amber-700 text-sm">
@@ -317,6 +370,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                     )}
                 </div>
             </div>
+
+            {/* Survey Builder Modal */}
+            {state.showSurveyBuilder && (
+                <SurveyBuilder onClose={handleCloseSurveyBuilder} />
+            )}
+
+            {/* Rating Scale Manager Modal */}
+            {/* {state.showRatingScaleManager && (
+                <RatingScaleManager
+                    isVisible={state.showRatingScaleManager}
+                    onClose={handleCloseRatingScaleManager}
+                />
+            )} */}
         </div>
     );
 }; 
