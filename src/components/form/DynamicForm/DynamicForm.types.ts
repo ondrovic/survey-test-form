@@ -1,12 +1,9 @@
-import { SurveyConfig } from '../../../types/survey.types';
+import { SurveyConfig } from "@/types";
 
 export interface DynamicFormProps {
   config: SurveyConfig;
-  onSubmit: (responses: Record<string, any>) => Promise<void>;
+  onSubmit: (data: Record<string, any>) => Promise<void>;
   loading?: boolean;
-  error?: string | null;
-  success?: string | null;
-  onDismissAlert?: () => void;
   className?: string;
+  resetTrigger?: number; // Add reset trigger prop
 }
-

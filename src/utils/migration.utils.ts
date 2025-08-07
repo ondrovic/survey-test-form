@@ -273,26 +273,26 @@ export const migrateExistingData = async (firestoreHelpers: any) => {
     );
 
     // Check if default rating scales exist
-    const existingScales = await firestoreHelpers.getRatingScales();
-    const defaultScale = existingScales.find(
-      (scale) => scale.id === "default-rating-scale"
-    );
+    // const existingScales = await firestoreHelpers.getRatingScales();
+    // const defaultScale = existingScales.find(
+    //   (scale) => scale.id === "default-rating-scale"
+    // );
 
     // Consolidated migration debug info
-    console.log("Migration Debug Info:", {
-      existingConfigs: existingConfigs.length,
-      defaultConfigFound: !!defaultConfig,
-      defaultConfigId: defaultConfig?.id,
-      existingScales: existingScales.length,
-      defaultScaleFound: !!defaultScale,
-      defaultScaleId: defaultScale?.id,
-      allScaleIds: existingScales.map((s) => s.id),
-      timestamp: new Date().toISOString(),
-    });
+    // console.log("Migration Debug Info:", {
+    //   existingConfigs: existingConfigs.length,
+    //   defaultConfigFound: !!defaultConfig,
+    //   defaultConfigId: defaultConfig?.id,
+    //   existingScales: existingScales.length,
+    //   defaultScaleFound: !!defaultScale,
+    //   defaultScaleId: defaultScale?.id,
+    //   allScaleIds: existingScales.map((s) => s.id),
+    //   timestamp: new Date().toISOString(),
+    // });
 
     // Note: Default rating scale creation has been removed
     // Users should create their own rating scales through the admin interface
-    console.log(`Found ${existingScales.length} existing rating scales`);
+    // console.log(`Found ${existingScales.length} existing rating scales`);
 
     if (!defaultConfig) {
       // Create default survey config
@@ -314,20 +314,21 @@ export const migrateExistingData = async (firestoreHelpers: any) => {
 
       await firestoreHelpers.addSurveyInstance(instance);
 
-      console.log("Migration Completed:", {
-        configCreated: true,
-        instanceCreated: true,
-        configId: config.id,
-        instanceConfigId: instance.configId,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      console.log("Migration Skipped:", {
-        reason: "Default config already exists",
-        configId: defaultConfig.id,
-        timestamp: new Date().toISOString(),
-      });
+      // console.log("Migration Completed:", {
+      //   configCreated: true,
+      //   instanceCreated: true,
+      //   configId: config.id,
+      //   instanceConfigId: instance.configId,
+      //   timestamp: new Date().toISOString(),
+      // });
     }
+    //  else {
+    //   console.log("Migration Skipped:", {
+    //     reason: "Default config already exists",
+    //     configId: defaultConfig.id,
+    //     timestamp: new Date().toISOString(),
+    //   });
+    // }
   } catch (error) {
     console.error("Migration error:", error);
     throw error;

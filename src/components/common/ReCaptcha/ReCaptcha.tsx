@@ -1,13 +1,6 @@
 import React from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
-
-export interface ReCaptchaProps {
-  onVerify: (token: string | null) => void;
-  onExpired?: () => void;
-  onError?: () => void;
-  className?: string;
-  disabled?: boolean;
-}
+import { ReCaptchaProps } from './ReCaptcha.types';
 
 export const ReCaptchaComponent: React.FC<ReCaptchaProps> = ({
   onVerify,

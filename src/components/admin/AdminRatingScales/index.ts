@@ -1,0 +1,1 @@
+export { AdminRatingScales } from "./AdminRatingScales";

@@ -1,9 +1,10 @@
 import { Download, Eye, EyeOff, Lock, Plus, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import { firestoreHelpers } from '../../config/firebase';
+import { useToast } from '../../contexts/ToastContext';
 import { SurveyConfig, SurveyData, SurveyInstance } from '../../types/survey.types';
 import { downloadSurveyDataAsExcel } from '../../utils/excel.utils';
-import { Alert, Button, Input } from '../common';
+import { Button, Input } from '../common';
 // import { RatingScaleManager } from './RatingScaleManager';
 import { SurveyBuilder } from './SurveyBuilder';
 
@@ -29,6 +30,7 @@ interface AdminPanelState {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surveyCount, isCountLoading }) => {
+    const { showSuccess, showError } = useToast();
     const [state, setState] = useState<AdminPanelState>({
         password: '',
         isAuthenticated: false,
@@ -49,10 +51,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
         e.preventDefault();
 
         if (!adminPassword) {
-            setState(prev => ({
-                ...prev,
-                error: 'Admin password not configured. Please contact the administrator.'
-            }));
+            showError('Admin password not configured. Please contact the administrator.');
             return;
         }
 
@@ -66,9 +65,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
             // Load framework data when authenticated
             loadFrameworkData();
         } else {
+            showError('Invalid password. Please try again.');
             setState(prev => ({
                 ...prev,
-                error: 'Invalid password. Please try again.',
                 password: ''
             }));
         }
@@ -98,10 +97,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
             const surveys = await firestoreHelpers.getSurveys();
 
             if (surveys.length === 0) {
+                showError('No survey data found to download.');
                 setState(prev => ({
                     ...prev,
-                    isLoading: false,
-                    error: 'No survey data found to download.'
+                    isLoading: false
                 }));
                 return;
             }
@@ -117,19 +116,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
                 sheetName: 'Survey Data'
             });
 
+            showSuccess(`Successfully downloaded ${surveys.length} survey records to ${filename}`);
             setState(prev => ({
                 ...prev,
                 isLoading: false,
-                success: `Successfully downloaded ${surveys.length} survey records to ${filename}`,
                 surveys
             }));
 
         } catch (error) {
             console.error('Error downloading data:', error);
+            showError('Failed to download survey data. Please try again.');
             setState(prev => ({
                 ...prev,
-                isLoading: false,
-                error: 'Failed to download survey data. Please try again.'
+                isLoading: false
             }));
         }
     };
@@ -233,9 +232,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
                                     </button>
                                 </div>
 
-                                {state.error && (
-                                    <Alert type="error" title="Authentication Error" message={state.error} />
-                                )}
+
 
                                 <div className="flex space-x-3">
                                     <Button
@@ -329,13 +326,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
                                 </div>
                             </div>
 
-                            {state.error && (
-                                <Alert type="error" title="Download Error" message={state.error} />
-                            )}
 
-                            {state.success && (
-                                <Alert type="success" title="Download Successful" message={state.success} />
-                            )}
 
                             <div className="flex space-x-3">
                                 <Button

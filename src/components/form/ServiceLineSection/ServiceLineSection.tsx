@@ -2,27 +2,7 @@ import { RatingValue } from '@/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import React, { useState } from 'react';
-
-export interface ServiceLineItem {
-    name: string;
-    rating: RatingValue | 'Not Important';
-}
-
-export interface ServiceLineCategory {
-    heading: string;
-    items: ServiceLineItem[];
-}
-
-export interface ServiceLineSectionProps {
-    title: string;
-    categories: ServiceLineCategory[];
-    onRatingChange: (categoryIndex: number, itemIndex: number, rating: RatingValue | 'Not Important') => void;
-    onAdditionalNotesChange?: (notes: string) => void;
-    additionalNotes?: string;
-    className?: string;
-    isRequired?: boolean;
-    error?: string;
-}
+import { ServiceLineSectionProps } from './ServiceLineSection.types';
 
 export const ServiceLineSection: React.FC<ServiceLineSectionProps> = ({
     title,

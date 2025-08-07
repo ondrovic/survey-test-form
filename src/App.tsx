@@ -1,15 +1,21 @@
 import { AdminPage } from '@/components/admin';
+import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm } from '@/components/form';
-import { authHelpers, firestoreHelpers } from '@/config/firebase';
+import { SurveyConfirmation } from '@/components/survey';
+import { firestoreHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
 import { AdminTabProvider } from '@/contexts/AdminTabContext';
-import { useFirebaseStorage } from '@/hooks';
-import { SurveyConfig, SurveyData, SurveyInstance, SurveyResponse } from '@/types';
+import { SurveyDataProvider } from '@/contexts/SurveyDataContext';
+import { ToastProvider, useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/hooks';
+import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
+import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 import { migrateExistingData } from '@/utils/migration.utils';
 import { isReCaptchaConfigured, verifyReCaptchaTokenWithFirebase } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
 const currentYear = new Date().getFullYear();
@@ -24,48 +30,13 @@ function App() {
         suppressConsoleWarnings();
     }, []);
 
-    const [alert, setAlert] = useState<{
-        type: 'success' | 'error';
-        message: string;
-    } | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
 
     // Framework state
     const [isMigrating, setIsMigrating] = useState(true);
     const [allSurveyInstances, setAllSurveyInstances] = useState<SurveyInstance[]>([]);
 
-    const { save } = useFirebaseStorage<SurveyData>();
     const navigate = useNavigate();
-
-    // Initialize anonymous authentication
-    useEffect(() => {
-        const initializeAuth = async () => {
-            try {
-                await authHelpers.signInAnonymously();
-                setIsAuthenticated(true);
-            } catch (error) {
-                console.error('Failed to sign in anonymously:', error);
-                setIsAuthenticated(false);
-            }
-        };
-
-        // Listen for auth state changes
-        const unsubscribe = authHelpers.onAuthStateChanged((user) => {
-            setIsAuthenticated(!!user);
-        });
-
-        // Initialize auth if not already authenticated
-        const currentUser = authHelpers.getCurrentUser();
-
-        if (!currentUser) {
-            initializeAuth();
-        } else {
-            setIsAuthenticated(true);
-        }
-
-        return unsubscribe;
-    }, []);
 
     // Initialize framework and migrate data
     const initializeFramework = useCallback(async () => {
@@ -94,13 +65,6 @@ function App() {
                 timestamp: new Date().toISOString()
             });
 
-            // Get active survey instance
-            const instance = await firestoreHelpers.getActiveSurveyInstance();
-            if (instance) {
-                // This part of the logic is no longer needed as activeSurveyInstance is removed
-                // and the framework state is not managed here.
-            }
-
             setIsMigrating(false);
         } catch (error) {
             console.error('Error initializing framework:', error);
@@ -110,8 +74,10 @@ function App() {
 
     // Initialize framework on mount
     useEffect(() => {
-        initializeFramework();
-    }, [initializeFramework]);
+        if (isAuthenticated) {
+            initializeFramework();
+        }
+    }, [isAuthenticated, initializeFramework]);
 
     const getSurveyInstanceBySlug = (slug: string) => {
         return allSurveyInstances.find(instance =>
@@ -119,40 +85,59 @@ function App() {
         );
     };
 
-    const generateSlug = (title: string) => {
-        return title.toLowerCase().replace(/\s+/g, '-');
-    };
+    // Show loading while auth is initializing
+    if (authLoading || isMigrating) {
+        return <LoadingSpinner fullScreen text="Initializing..." />;
+    }
 
     return (
-        <AdminTabProvider>
-            <Routes>
-                <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path="/survey-test-form/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path="/survey-test-form/:slug" element={
-                    (() => {
-                        const slug = window.location.pathname.split('/').pop() || '';
-                        const instance = getSurveyInstanceBySlug(slug);
-                        if (instance) {
-                            return <SurveyPage instance={instance} />;
-                        } else {
-                            return <NotFoundPage />;
-                        }
-                    })()
-                } />
-                <Route path="/:slug" element={
-                    (() => {
-                        const slug = window.location.pathname.split('/').pop() || '';
-                        const instance = getSurveyInstanceBySlug(slug);
-                        if (instance) {
-                            return <SurveyPage instance={instance} />;
-                        } else {
-                            return <NotFoundPage />;
-                        }
-                    })()
-                } />
-                <Route path="/" element={<NotFoundPage />} />
-            </Routes>
-        </AdminTabProvider>
+        <ErrorBoundary>
+            <ToastProvider>
+                <SurveyDataProvider>
+                    <AdminTabProvider>
+                        <Routes>
+                            <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
+                            <Route path="/survey-test-form/admin" element={<AdminPage onBack={() => navigate('/')} />} />
+                            <Route path="/survey-confirmation/:slug" element={
+                                (() => {
+                                    const slug = window.location.pathname.split('/').pop() || '';
+                                    const instance = getSurveyInstanceBySlug(slug);
+                                    if (instance) {
+                                        return <SurveyConfirmation surveyTitle={instance.title} />;
+                                    } else {
+                                        return <NotFoundPage />;
+                                    }
+                                })()
+                            } />
+                            <Route path="/survey-test-form/:slug" element={
+                                (() => {
+                                    const slug = window.location.pathname.split('/').pop() || '';
+                                    const instance = getSurveyInstanceBySlug(slug);
+                                    if (instance) {
+                                        return <SurveyPage instance={instance} />;
+                                    } else {
+                                        return <NotFoundPage />;
+                                    }
+                                })()
+                            } />
+                            <Route path="/:slug" element={
+                                (() => {
+                                    const slug = window.location.pathname.split('/').pop() || '';
+                                    const instance = getSurveyInstanceBySlug(slug);
+                                    if (instance) {
+                                        return <SurveyPage instance={instance} />;
+                                    } else {
+                                        return <NotFoundPage />;
+                                    }
+                                })()
+                            } />
+                            <Route path="/" element={<NotFoundPage />} />
+                        </Routes>
+                    </AdminTabProvider>
+                </SurveyDataProvider>
+                <Toaster />
+            </ToastProvider>
+        </ErrorBoundary>
     );
 }
 
@@ -162,28 +147,13 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [alert, setAlert] = useState<{
-        type: 'success' | 'error';
-        message: string;
-    } | null>(null);
+    const [resetFormTrigger, setResetFormTrigger] = useState(0); // Add trigger for form reset
     const navigate = useNavigate();
+    const { showSuccess, showError } = useToast();
 
     // Check if instance is valid
     if (!instance) {
-        return (
-            <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Survey Not Found</h1>
-                    <p className="text-gray-600 mb-6">The requested survey could not be found.</p>
-                    <button
-                        onClick={() => navigate('/')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        Go to Home
-                    </button>
-                </div>
-            </div>
-        );
+        return <NotFoundPage />;
     }
 
     const loadSurveyConfig = useCallback(async () => {
@@ -210,10 +180,27 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     }, [loadSurveyConfig]);
 
     const handleSubmit = useCallback(async (responses: Record<string, any>) => {
-        if (!surveyConfig) return;
+        console.log('🔍 handleSubmit called with:', {
+            hasSurveyConfig: !!surveyConfig,
+            surveyConfigId: surveyConfig?.id,
+            responsesCount: Object.keys(responses).length,
+            responses: responses
+        });
+
+        if (!surveyConfig) {
+            console.error('❌ No survey config available, cannot submit');
+            showError('Survey configuration not found');
+            return;
+        }
 
         setIsSubmitting(true);
         try {
+            console.log('Starting survey submission...', {
+                instanceId: instance.id,
+                configVersion: surveyConfig.metadata.version,
+                responseCount: Object.keys(responses).length
+            });
+
             // Verify reCAPTCHA if enabled
             if (isReCaptchaConfigured() && responses.recaptchaToken) {
                 const isValid = await verifyReCaptchaTokenWithFirebase(responses.recaptchaToken);
@@ -222,47 +209,40 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 }
             }
 
+            // Get client IP address
+            const ipAddress = await getClientIPAddressWithTimeout(3000); // 3 second timeout
+
             const surveyResponse: SurveyResponse = {
                 id: crypto.randomUUID(),
                 surveyInstanceId: instance.id,
-                configVersion: surveyConfig.metadata.version,
+                configVersion: surveyConfig.metadata?.version || surveyConfig.id || 'unknown',
                 responses,
                 metadata: {
                     submittedAt: getCurrentTimestamp(),
                     userAgent: navigator.userAgent,
-                    ipAddress: undefined,
-                    sessionId: undefined,
+                    ipAddress: ipAddress || undefined,
                 }
             };
 
+            console.log('Submitting survey response to Firebase...', surveyResponse);
             await firestoreHelpers.addSurveyResponse(surveyResponse);
-            setAlert({
-                type: 'success',
-                message: SUCCESS_MESSAGES.surveySubmitted
-            });
+            console.log('Survey response submitted successfully!');
+            showSuccess(SUCCESS_MESSAGES.surveySubmitted);
 
-            // Clear alert after 5 seconds
-            setTimeout(() => setAlert(null), 5000);
+            // Redirect to confirmation page instead of resetting form
+            const slug = instance.title.toLowerCase().replace(/\s+/g, '-');
+            navigate(`/survey-confirmation/${slug}`);
         } catch (err) {
             console.error('Survey submission error:', err);
-            setAlert({
-                type: 'error',
-                message: ERROR_MESSAGES.submissionError
-            });
+            showError(ERROR_MESSAGES.submissionError);
+            throw err; // Re-throw the error so DynamicForm can catch it
         } finally {
             setIsSubmitting(false);
         }
-    }, [instance.id, surveyConfig]);
+    }, [instance.id, surveyConfig, showSuccess, showError]);
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading survey...</p>
-                </div>
-            </div>
-        );
+        return <LoadingSpinner fullScreen text="Loading survey..." />;
     }
 
     if (error || !surveyConfig) {
@@ -286,21 +266,11 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         <div className="min-h-screen bg-amber-50/30">
             {/* Main Content */}
             <main className="py-8">
-                {alert && (
-                    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-                        <div className={`p-4 rounded-md ${alert.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                            {alert.message}
-                        </div>
-                    </div>
-                )}
-
                 <DynamicForm
                     config={surveyConfig}
                     onSubmit={handleSubmit}
                     loading={isSubmitting}
-                    error={alert?.type === 'error' ? alert.message : undefined}
-                    success={alert?.type === 'success' ? alert.message : undefined}
-                    onDismissAlert={() => setAlert(null)}
+                    resetTrigger={resetFormTrigger}
                 />
             </main>
 

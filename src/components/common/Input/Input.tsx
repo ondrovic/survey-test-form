@@ -34,6 +34,7 @@ export const Input = <T extends string | number = string>({
     name,
     value,
     onChange,
+    onBlur,
     register,
     type = 'text',
     label,
@@ -52,6 +53,11 @@ export const Input = <T extends string | number = string>({
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = type === 'number' ? Number(e.target.value) as T : e.target.value as T;
         onChange?.(newValue);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const newValue = type === 'number' ? Number(e.target.value) as T : e.target.value as T;
+        onBlur?.(newValue);
     };
 
     // Auto-generate autocomplete value if not provided
@@ -144,6 +150,7 @@ export const Input = <T extends string | number = string>({
                 type={type}
                 value={value}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder={placeholder}
                 required={required}
                 disabled={disabled}

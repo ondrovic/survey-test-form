@@ -3,6 +3,7 @@ export * from "./cookie.utils";
 export * from "./date.utils";
 export * from "./env.utils";
 export * from "./excel.utils";
+export * from "./ip.utils";
 export * from "./migration.utils";
 export * from "./recaptcha.utils";
 export * from "./serviceLine.utils";

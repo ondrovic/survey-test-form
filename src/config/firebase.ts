@@ -362,6 +362,58 @@ export const firestoreHelpers = {
   // Survey Responses
   async addSurveyResponse(response: Omit<SurveyResponse, "id">) {
     try {
+      console.log("addSurveyResponse called with:", response);
+
+      // Get the survey instance to determine the collection name
+      const instanceRef = doc(
+        db,
+        "survey_instances",
+        response.surveyInstanceId
+      );
+      const instanceDoc = await getDoc(instanceRef);
+
+      if (!instanceDoc.exists()) {
+        throw new Error(
+          `Survey instance ${response.surveyInstanceId} not found`
+        );
+      }
+
+      const instanceData = instanceDoc.data() as SurveyInstance;
+      const collectionName = instanceData.title
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+      console.log("Creating collection with name:", collectionName);
+
+      // Create or get the survey-specific collection
+      const surveyCollection = collection(firestoreDb, collectionName);
+
+      const docRef = await addDoc(surveyCollection, {
+        ...response,
+        metadata: {
+          ...response.metadata,
+          submittedAt: new Date().toISOString(),
+        },
+      });
+
+      console.log(
+        "Survey response saved successfully to collection:",
+        collectionName,
+        "with document ID:",
+        docRef.id
+      );
+      return { id: docRef.id, ...response };
+    } catch (error) {
+      console.error("Error adding survey response:", error);
+      throw error;
+    }
+  },
+
+  // Legacy function for backward compatibility - saves to survey_responses collection
+  async addSurveyResponseToLegacyCollection(
+    response: Omit<SurveyResponse, "id">
+  ) {
+    try {
       const docRef = await addDoc(surveyResponsesCollection, {
         ...response,
         metadata: {
@@ -400,6 +452,44 @@ export const firestoreHelpers = {
       return responses;
     } catch (error) {
       console.error("Error getting survey responses:", error);
+      throw error;
+    }
+  },
+
+  // Get survey responses from survey-specific collection
+  async getSurveyResponsesFromCollection(instanceId: string) {
+    try {
+      // Get the survey instance to determine the collection name
+      const instanceRef = doc(db, "survey_instances", instanceId);
+      const instanceDoc = await getDoc(instanceRef);
+
+      if (!instanceDoc.exists()) {
+        throw new Error(`Survey instance ${instanceId} not found`);
+      }
+
+      const instanceData = instanceDoc.data() as SurveyInstance;
+      const collectionName = instanceData.title
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+      // Get the survey-specific collection
+      const surveyCollection = collection(firestoreDb, collectionName);
+
+      const q = query(
+        surveyCollection,
+        orderBy("metadata.submittedAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const responses = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as SurveyResponse;
+        return {
+          ...data,
+          id: doc.id,
+        };
+      });
+      return responses;
+    } catch (error) {
+      console.error("Error getting survey responses from collection:", error);
       throw error;
     }
   },

@@ -1,0 +1,1 @@
+export { AdminLegacy } from "./AdminLegacy";

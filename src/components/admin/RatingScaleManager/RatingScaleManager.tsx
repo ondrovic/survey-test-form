@@ -1,8 +1,9 @@
 import { Check, Edit, Plus, Save, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
+import { useToast } from '../../../contexts/ToastContext';
 import { RatingScale, RatingScaleOption } from '../../../types/survey.types';
-import { Alert, Button, Input } from '../../common';
+import { Button, Input } from '../../common';
 
 interface RatingScaleManagerProps {
     isVisible: boolean;
@@ -34,9 +35,8 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
     onScaleCreated,
     onScaleUpdated
 }) => {
+    const { showSuccess, showError } = useToast();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
     const [editingScale, setEditingScale] = useState<RatingScaleFormData | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [scales, setScales] = useState<RatingScale[]>([]);
@@ -85,7 +85,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             setScales(loadedScales);
         } catch (error) {
             console.error('Error loading rating scales:', error);
-            setError('Failed to load rating scales');
+            showError('Failed to load rating scales');
         } finally {
             setIsLoadingScales(false);
         }
@@ -121,19 +121,18 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         if (!confirm('Are you sure you want to delete this rating scale?')) return;
 
         setLoading(true);
-        setError(null);
         try {
             console.log('Deleting rating scale with ID:', scaleId);
             await firestoreHelpers.deleteRatingScale(scaleId);
             console.log('Rating scale deleted successfully from Firebase');
-            setSuccess('Rating scale deleted successfully');
+            showSuccess('Rating scale deleted successfully');
 
             // Notify parent component about the deletion
             if (onScaleDeleted) {
                 onScaleDeleted(scaleId);
             }
         } catch (err) {
-            setError('Failed to delete rating scale');
+            showError('Failed to delete rating scale');
             console.error('Error deleting rating scale:', err);
         } finally {
             setLoading(false);
@@ -146,23 +145,22 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         if (!scaleToSave) return;
 
         if (!scaleToSave.name.trim()) {
-            setError('Scale name is required');
+            showError('Scale name is required');
             return;
         }
 
         if (scaleToSave.options.length === 0) {
-            setError('At least one option is required');
+            showError('At least one option is required');
             return;
         }
 
         const defaultOptions = scaleToSave.options.filter(opt => opt.isDefault);
         if (defaultOptions.length === 0) {
-            setError('At least one option must be marked as default');
+            showError('At least one option must be marked as default');
             return;
         }
 
         setLoading(true);
-        setError(null);
         try {
             const scaleData = {
                 name: scaleToSave.name.trim(),
@@ -178,7 +176,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
 
             if (currentIsCreating) {
                 const newScale = await firestoreHelpers.addRatingScale(scaleData);
-                setSuccess('Rating scale created successfully');
+                showSuccess('Rating scale created successfully');
 
                 // Notify parent component about the creation
                 if (onScaleCreated && newScale) {
@@ -186,7 +184,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                 }
             } else {
                 await firestoreHelpers.updateRatingScale(scaleToSave.id, scaleData);
-                setSuccess('Rating scale updated successfully');
+                showSuccess('Rating scale updated successfully');
 
                 // Notify parent component about the update
                 if (onScaleUpdated) {
@@ -198,7 +196,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             setEditingScale(null);
             setIsCreating(false);
         } catch (err) {
-            setError(currentIsCreating ? 'Failed to create rating scale' : 'Failed to update rating scale');
+            showError(currentIsCreating ? 'Failed to create rating scale' : 'Failed to update rating scale');
             console.error('Error saving rating scale:', err);
         } finally {
             setLoading(false);
@@ -208,8 +206,6 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
     const handleCancel = () => {
         setEditingScale(null);
         setIsCreating(false);
-        setError(null);
-        setSuccess(null);
         // Call onClose to close the modal
         onClose();
     };
@@ -311,8 +307,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                         </button>
                     </div>
 
-                    {error && <Alert type="error" title="Error" message={error} />}
-                    {success && <Alert type="success" title="Success" message={success} />}
+
 
                     {(editingScale || currentEditingScale) ? (
                         // Edit/Create Form

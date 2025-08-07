@@ -1,89 +1,127 @@
-import { UseFormOptions, UseFormReturn } from "@/types";
-import { useCallback } from "react";
-import { useForm as useReactHookForm } from "react-hook-form";
+import { SurveyField } from "@/types";
+import { useCallback, useState } from "react";
 
-/**
- * Custom hook that wraps react-hook-form to maintain the existing interface
- *
- * @param initialValues - Initial form values
- * @param validationRules - Validation rules for form fields
- * @param onSubmit - Function to call when form is submitted
- *
- * @returns Form state and handlers compatible with the existing interface
- *
- * @example
- * ```tsx
- * const { values, errors, handleSubmit, setValue } = useForm({
- *   initialValues: { email: '', password: '' },
- *   validationRules: {
- *     email: { required: 'Email is required' },
- *     password: { required: 'Password is required' }
- *   },
- *   onSubmit: async (values) => {
- *     await loginUser(values);
- *   }
- * });
- * ```
- */
-export const useForm = <T extends Record<string, any>>({
-  initialValues,
-  onSubmit,
-}: UseFormOptions<T>): UseFormReturn<T> => {
-  const {
-    register,
-    handleSubmit: reactHookFormSubmit,
-    formState: { errors, isSubmitting, isValid },
-    setValue: setReactHookFormValue,
-    reset,
-    watch,
-    setError,
-    trigger,
-  } = useReactHookForm({
-    defaultValues: initialValues as any,
-    mode: "onSubmit",
-  });
+interface FormState {
+  [fieldId: string]: any;
+}
 
-  const values = watch() as T;
+interface UseFormReturn {
+  formState: FormState;
+  errors: Record<string, string>;
+  setFieldValue: (fieldId: string, value: any) => void;
+  setFieldError: (fieldId: string, error: string) => void;
+  clearFieldError: (fieldId: string) => void;
+  validateField: (field: SurveyField, value: any) => string | null;
+  validateForm: (fields: SurveyField[]) => boolean;
+  resetForm: () => void;
+  getFieldValue: (fieldId: string) => any;
+}
 
-  const setValue = useCallback(
-    <K extends keyof T>(field: K, value: T[K]) => {
-      setReactHookFormValue(field as any, value);
+export const useForm = (initialState: FormState = {}): UseFormReturn => {
+  const [formState, setFormState] = useState<FormState>(initialState);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const setFieldValue = useCallback(
+    (fieldId: string, value: any) => {
+      setFormState((prev) => ({ ...prev, [fieldId]: value }));
+
+      // Clear error when user starts typing
+      if (errors[fieldId]) {
+        setErrors((prev) => ({ ...prev, [fieldId]: "" }));
+      }
     },
-    [setReactHookFormValue]
+    [errors]
   );
 
-  const setFieldError = useCallback(
-    (field: keyof T, error: string) => {
-      setError(field as any, { message: error });
+  const setFieldError = useCallback((fieldId: string, error: string) => {
+    setErrors((prev) => ({ ...prev, [fieldId]: error }));
+  }, []);
+
+  const clearFieldError = useCallback((fieldId: string) => {
+    setErrors((prev) => ({ ...prev, [fieldId]: "" }));
+  }, []);
+
+  const validateField = useCallback(
+    (field: SurveyField, value: any): string | null => {
+      if (!field.validation) return null;
+
+      for (const rule of field.validation) {
+        switch (rule.type) {
+          case "required":
+            if (!value || (Array.isArray(value) && value.length === 0)) {
+              return rule.message || `${field.label} is required`;
+            }
+            break;
+          case "email":
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (value && !emailRegex.test(value)) {
+              return rule.message || "Please enter a valid email address";
+            }
+            break;
+          case "min":
+            if (value && value.length < (rule.value || 0)) {
+              return (
+                rule.message ||
+                `${field.label} must be at least ${rule.value} characters`
+              );
+            }
+            break;
+          case "max":
+            if (value && value.length > (rule.value || 0)) {
+              return (
+                rule.message ||
+                `${field.label} must be no more than ${rule.value} characters`
+              );
+            }
+            break;
+        }
+      }
+      return null;
     },
-    [setError]
+    []
   );
 
-  const handleSubmit = useCallback(
-    reactHookFormSubmit(async (data: any) => {
-      await onSubmit(data as T);
-    }),
-    [reactHookFormSubmit, onSubmit]
+  const validateForm = useCallback(
+    (fields: SurveyField[]): boolean => {
+      const newErrors: Record<string, string> = {};
+      let isValid = true;
+
+      fields.forEach((field) => {
+        const value = formState[field.id];
+        const error = validateField(field, value);
+        if (error) {
+          newErrors[field.id] = error;
+          isValid = false;
+        }
+      });
+
+      setErrors(newErrors);
+      return isValid;
+    },
+    [formState, validateField]
   );
 
   const resetForm = useCallback(() => {
-    reset(initialValues as any);
-  }, [reset, initialValues]);
+    setFormState(initialState);
+    setErrors({});
+  }, [initialState]);
 
-  // Use react-hook-form errors directly - no conversion needed
+  const getFieldValue = useCallback(
+    (fieldId: string) => {
+      return formState[fieldId];
+    },
+    [formState]
+  );
 
   return {
-    values,
-    errors, // Use react-hook-form errors directly
-    touched: {}, // react-hook-form doesn't track touched state in the same way
-    isSubmitting,
-    isValid,
-    setValue,
+    formState,
+    errors,
+    setFieldValue,
     setFieldError,
-    handleSubmit,
+    clearFieldError,
+    validateField,
+    validateForm,
     resetForm,
-    register, // Expose the standard register function
-    trigger, // Expose trigger function for manual validation
-    setError, // Expose setError function for manual error setting
+    getFieldValue,
   };
 };

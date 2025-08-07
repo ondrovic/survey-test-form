@@ -1,4 +1,4 @@
-import { Alert, Button, Input } from '@/components/common';
+import { Button, Input } from '@/components/common';
 import { CheckboxGroup, RadioGroup, ServiceLineSection } from '@/components/form';
 import {
     BUSINESS_FOCUS_OPTIONS,
@@ -9,7 +9,7 @@ import { useForm } from '@/hooks/useForm';
 import { SurveyFormData } from '@/types';
 import { createInitialServiceLineSection } from '@/utils/serviceLine.utils';
 import { clsx } from 'clsx';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { SurveyFormProps } from './SurveyForm.types';
 
 /**
@@ -23,16 +23,13 @@ import { SurveyFormProps } from './SurveyForm.types';
  *   loading={isSubmitting}
  *   error={error}
  *   success={success}
- *   onDismissAlert={handleDismissAlert}
+
  * />
  * ```
  */
 export const SurveyForm: React.FC<SurveyFormProps> = ({
     onSubmit,
     loading = false,
-    error,
-    success,
-    onDismissAlert,
     className,
     connected = true
 }) => {
@@ -55,7 +52,7 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 
 
 
-    const { values, errors, handleSubmit, setValue, resetForm, register, trigger } = useForm({
+    const { values, errors, handleSubmit, setValue, register, trigger } = useForm({
         initialValues,
         onSubmit: async (formData: SurveyFormData) => {
             // Trigger validation for all fields
@@ -73,12 +70,7 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 
 
 
-    // Reset form when submission is successful
-    useEffect(() => {
-        if (success) {
-            resetForm();
-        }
-    }, [success]);
+
 
     const handleBusinessInfoChange = useCallback((field: keyof typeof values.businessInfo, value: any) => {
         setValue('businessInfo', {
@@ -116,25 +108,6 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 
     return (
         <div className={classes}>
-            {/* Alerts */}
-            {error && (
-                <Alert
-                    type="error"
-                    title="Submission Error"
-                    message={error}
-                    onDismiss={onDismissAlert}
-                />
-            )}
-
-            {success && (
-                <Alert
-                    type="success"
-                    title="Success!"
-                    message={success}
-                    onDismiss={onDismissAlert}
-                />
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 {/* Personal Information Section */}
                 <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-100 p-3">
