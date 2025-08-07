@@ -1,5 +1,5 @@
 import { Button, Input } from '@/components/common';
-import { useAuth } from '@/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -12,10 +12,15 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
+    console.log("🔐 AdminAuth - Component rendered:", { isLoading, error });
+
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("🔐 AdminAuth - Password submit attempted");
         const success = await login(password);
+        console.log("🔐 AdminAuth - Login result:", { success });
         if (success) {
+            console.log("🔐 AdminAuth - Login successful, calling onAuthenticated");
             onAuthenticated();
         }
     };

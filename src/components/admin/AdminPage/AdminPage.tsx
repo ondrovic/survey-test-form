@@ -1,16 +1,21 @@
-import { AdminAuth, AdminFramework, AdminHeader, AdminLegacy, AdminOverview, AdminRatingScales, RatingScaleManager, SurveyBuilder } from '@/components/admin';
+import { AdminAuth } from '@/components/admin/AdminAuth';
+import { AdminFramework } from '@/components/admin/AdminFramework';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminOptionSets } from '@/components/admin/AdminOptionSets';
+import { AdminOverview } from '@/components/admin/AdminOverview';
+import { MultiSelectOptionSetManager } from '@/components/admin/MultiSelectOptionSetManager';
+import { RadioOptionSetManager } from '@/components/admin/RadioOptionSetManager';
+import { SelectOptionSetManager } from '@/components/admin/SelectOptionSetManager';
 import { useAdminTab } from '@/contexts/AdminTabContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSurveyDataContext } from '@/contexts/SurveyDataContext';
-import { useAdminOperations, useAuth, useModal } from '@/hooks';
+import { useAdminOperations, useModal } from '@/hooks';
 import { RatingScale, SurveyConfig } from '@/types';
 import { clsx } from 'clsx';
 import React, { useEffect } from 'react';
+import { AdminPageProps } from './AdminPage.types';
 
-interface AdminPageProps {
-    onBack: () => void;
-}
-
-export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
+export const AdminPage: React.FC<AdminPageProps> = ({ }) => {
     const { isAuthenticated, logout } = useAuth();
     const { activeTab, setActiveTab } = useAdminTab();
     const { refreshAll } = useSurveyDataContext();
@@ -19,6 +24,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
     // Modal states
     const surveyBuilderModal = useModal<SurveyConfig>();
     const ratingScaleManagerModal = useModal<RatingScale>();
+    const radioOptionSetManagerModal = useModal<any>();
+    const multiSelectOptionSetManagerModal = useModal<any>();
+    const selectOptionSetManagerModal = useModal<any>();
 
     // Check for existing authentication on component mount
     useEffect(() => {
@@ -31,7 +39,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
         logout();
     };
 
-    const handleSetActiveTab = (tab: 'overview' | 'framework' | 'legacy' | 'rating-scales') => {
+    const handleSetActiveTab = (tab: 'overview' | 'framework' | 'legacy' | 'option-sets') => {
         setActiveTab(tab);
     };
 
@@ -60,6 +68,58 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
         ratingScaleManagerModal.open(scale);
     };
 
+    const handleShowRadioOptionSetManager = () => {
+        radioOptionSetManagerModal.open();
+    };
+
+    const handleShowMultiSelectOptionSetManager = () => {
+        multiSelectOptionSetManagerModal.open();
+    };
+
+    const handleShowSelectOptionSetManager = () => {
+        selectOptionSetManagerModal.open();
+    };
+
+    // Radio Option Set handlers
+    const handleEditRadioOptionSet = (optionSet: any) => {
+        radioOptionSetManagerModal.open(optionSet);
+    };
+
+    const handleDeleteRadioOptionSet = (optionSetId: string) => {
+        adminOperations.deleteRadioOptionSet(optionSetId);
+    };
+
+    // Multi-Select Option Set handlers
+    const handleEditMultiSelectOptionSet = (optionSet: any) => {
+        multiSelectOptionSetManagerModal.open(optionSet);
+    };
+
+    const handleDeleteMultiSelectOptionSet = (optionSetId: string) => {
+        adminOperations.deleteMultiSelectOptionSet(optionSetId);
+    };
+
+    // Select Option Set handlers
+    const handleEditSelectOptionSet = (optionSet: any) => {
+        selectOptionSetManagerModal.open(optionSet);
+    };
+
+    const handleDeleteSelectOptionSet = (optionSetId: string) => {
+        adminOperations.deleteSelectOptionSet(optionSetId);
+    };
+
+    // Close handler functions for option set managers
+    const handleCloseRadioOptionSetManager = () => {
+        radioOptionSetManagerModal.close();
+    };
+
+    const handleCloseMultiSelectOptionSetManager = () => {
+        multiSelectOptionSetManagerModal.close();
+    };
+
+    const handleCloseSelectOptionSetManager = () => {
+        selectOptionSetManagerModal.close();
+    };
+
     const handleDownloadAllData = () => {
         adminOperations.downloadFrameworkData();
     };
@@ -82,7 +142,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
                         {[
                             { id: 'overview', label: 'Overview' },
                             { id: 'framework', label: 'Survey Framework' },
-                            { id: 'rating-scales', label: 'Rating Scales' },
+                            { id: 'option-sets', label: 'Option Sets' },
                             // { id: 'legacy', label: 'Legacy Surveys' },
                         ].map((tab) => (
                             <button
@@ -121,20 +181,25 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
                     />
                 )}
 
-                {activeTab === 'rating-scales' && (
-                    <AdminRatingScales
+                {activeTab === 'option-sets' && (
+                    <AdminOptionSets
                         onShowRatingScaleManager={handleShowRatingScaleManager}
                         onEditRatingScale={handleEditRatingScale}
                         onDeleteRatingScale={adminOperations.deleteRatingScale}
                         onCleanupDuplicates={adminOperations.cleanupDuplicateRatingScales}
+                        onShowRadioOptionSetManager={handleShowRadioOptionSetManager}
+                        onEditRadioOptionSet={handleEditRadioOptionSet}
+                        onDeleteRadioOptionSet={handleDeleteRadioOptionSet}
+                        onShowMultiSelectOptionSetManager={handleShowMultiSelectOptionSetManager}
+                        onEditMultiSelectOptionSet={handleEditMultiSelectOptionSet}
+                        onDeleteMultiSelectOptionSet={handleDeleteMultiSelectOptionSet}
+                        onShowSelectOptionSetManager={handleShowSelectOptionSetManager}
+                        onEditSelectOptionSet={handleEditSelectOptionSet}
+                        onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
                     />
                 )}
 
-                {activeTab === 'legacy' && (
-                    <AdminLegacy
-                        onDeleteSurvey={adminOperations.deleteSurvey}
-                    />
-                )}
+
             </main>
 
             {/* Survey Builder Modal */}
@@ -157,10 +222,73 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
                     onScaleDeleted={(scaleId) => {
                         adminOperations.deleteRatingScale(scaleId);
                     }}
-                    onScaleCreated={(newScale) => {
+                    onScaleCreated={() => {
                         refreshAll();
                     }}
-                    onScaleUpdated={(updatedScale) => {
+                    onScaleUpdated={() => {
+                        refreshAll();
+                    }}
+                />
+            )}
+
+            {/* Radio Option Set Manager Modal */}
+            {radioOptionSetManagerModal.isOpen && (
+                <RadioOptionSetManager
+                    isVisible={radioOptionSetManagerModal.isOpen}
+                    onClose={handleCloseRadioOptionSetManager}
+                    onOptionSetSelect={() => { }}
+                    editingOptionSet={radioOptionSetManagerModal.data}
+                    isCreating={!radioOptionSetManagerModal.data}
+                    optionSets={[]} // This will be handled by the RadioOptionSetManager internally
+                    onOptionSetDeleted={(optionSetId) => {
+                        adminOperations.deleteRadioOptionSet(optionSetId);
+                    }}
+                    onOptionSetCreated={() => {
+                        refreshAll();
+                    }}
+                    onOptionSetUpdated={() => {
+                        refreshAll();
+                    }}
+                />
+            )}
+
+            {/* Multi-Select Option Set Manager Modal */}
+            {multiSelectOptionSetManagerModal.isOpen && (
+                <MultiSelectOptionSetManager
+                    isVisible={multiSelectOptionSetManagerModal.isOpen}
+                    onClose={handleCloseMultiSelectOptionSetManager}
+                    onOptionSetSelect={() => { }}
+                    editingOptionSet={multiSelectOptionSetManagerModal.data}
+                    isCreating={!multiSelectOptionSetManagerModal.data}
+                    optionSets={[]} // This will be handled by the MultiSelectOptionSetManager internally
+                    onOptionSetDeleted={(optionSetId) => {
+                        adminOperations.deleteMultiSelectOptionSet(optionSetId);
+                    }}
+                    onOptionSetCreated={() => {
+                        refreshAll();
+                    }}
+                    onOptionSetUpdated={() => {
+                        refreshAll();
+                    }}
+                />
+            )}
+
+            {/* Select Option Set Manager Modal */}
+            {selectOptionSetManagerModal.isOpen && (
+                <SelectOptionSetManager
+                    isVisible={selectOptionSetManagerModal.isOpen}
+                    onClose={handleCloseSelectOptionSetManager}
+                    onOptionSetSelect={() => { }}
+                    editingOptionSet={selectOptionSetManagerModal.data}
+                    isCreating={!selectOptionSetManagerModal.data}
+                    optionSets={[]} // This will be handled by the SelectOptionSetManager internally
+                    onOptionSetDeleted={(optionSetId) => {
+                        adminOperations.deleteSelectOptionSet(optionSetId);
+                    }}
+                    onOptionSetCreated={() => {
+                        refreshAll();
+                    }}
+                    onOptionSetUpdated={() => {
                         refreshAll();
                     }}
                 />

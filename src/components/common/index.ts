@@ -1,8 +1,12 @@
 export { Alert } from "./Alert/index";
 export { Button } from "./Button/index";
+export { CollapsibleSection } from "./CollapsibleSection";
+export { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 export { ErrorBoundary } from "./ErrorBoundary/index";
 export { Input } from "./Input/index";
 export { LoadingSpinner } from "./LoadingSpinner/index";
 export { Modal } from "./Modal/index";
+export { PaginatedList } from "./PaginatedList";
+export { Pagination } from "./Pagination";
 export { ReCaptcha } from "./ReCaptcha/index";
 export { SortableList } from "./SortableList/index";

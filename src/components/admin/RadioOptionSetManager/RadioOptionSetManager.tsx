@@ -3,124 +3,123 @@ import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { useToast } from '../../../contexts/ToastContext';
 import { useModal } from '../../../hooks';
-import { RatingScale, RatingScaleOption } from '../../../types/survey.types';
+import { OptionSetOption, RadioOptionSet } from '../../../types/survey.types';
 import { Button, DeleteConfirmationModal, Input } from '../../common';
 
-interface RatingScaleManagerProps {
+interface RadioOptionSetManagerProps {
     isVisible: boolean;
     onClose: () => void;
-    onScaleSelect?: (scaleId: string) => void;
-    editingScale?: RatingScale | null;
+    onOptionSetSelect?: (optionSetId: string) => void;
+    editingOptionSet?: RadioOptionSet | null;
     isCreating?: boolean;
-    scales: RatingScale[];
-    onScaleDeleted?: (scaleId: string) => void;
-    onScaleCreated?: (scale: RatingScale) => void;
-    onScaleUpdated?: (scale: RatingScale) => void;
+    optionSets: RadioOptionSet[];
+    onOptionSetDeleted?: (optionSetId: string) => void;
+    onOptionSetCreated?: (optionSet: RadioOptionSet) => void;
+    onOptionSetUpdated?: (optionSet: RadioOptionSet) => void;
 }
 
-interface RatingScaleFormData {
+interface RadioOptionSetFormData {
     id: string;
     name: string;
     description: string;
-    options: RatingScaleOption[];
+    options: OptionSetOption[];
 }
 
-export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
+export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
     isVisible,
     onClose,
-    onScaleSelect,
-    editingScale: propEditingScale,
+    onOptionSetSelect,
+    editingOptionSet: propEditingOptionSet,
     isCreating: propIsCreating,
-    scales: [],
-    onScaleDeleted,
-    onScaleCreated,
-    onScaleUpdated
+    optionSets: [],
+    onOptionSetDeleted,
+    onOptionSetCreated,
+    onOptionSetUpdated
 }) => {
     const { showSuccess, showError } = useToast();
     const deleteModal = useModal<{ id: string; name: string }>();
     const [loading, setLoading] = useState(false);
-    const [editingScale, setEditingScale] = useState<RatingScaleFormData | null>(null);
+    const [editingOptionSet, setEditingOptionSet] = useState<RadioOptionSetFormData | null>(null);
     const [isCreating, setIsCreating] = useState(false);
-    const [scales, setScales] = useState<RatingScale[]>([]);
-    const [isLoadingScales, setIsLoadingScales] = useState(false);
+    const [optionSets, setOptionSets] = useState<RadioOptionSet[]>([]);
+    const [isLoadingOptionSets, setIsLoadingOptionSets] = useState(false);
 
-    // Load scales when component becomes visible
+    // Load option sets when component becomes visible
     useEffect(() => {
         if (isVisible) {
-            loadScales();
+            loadOptionSets();
         }
     }, [isVisible]);
 
     // Always use internal state for form operations, but initialize from props if needed
-    const currentEditingScale = editingScale || (propEditingScale ? {
-        id: propEditingScale.id,
-        name: propEditingScale.name,
-        description: propEditingScale.description || '',
-        options: [...propEditingScale.options]
+    const currentEditingOptionSet = editingOptionSet || (propEditingOptionSet ? {
+        id: propEditingOptionSet.id,
+        name: propEditingOptionSet.name,
+        description: propEditingOptionSet.description || '',
+        options: [...propEditingOptionSet.options]
     } : null);
 
     const currentIsCreating = propIsCreating !== undefined ? propIsCreating : isCreating;
 
     // Sync internal state when props change
     useEffect(() => {
-        if (propEditingScale) {
-            setEditingScale({
-                id: propEditingScale.id,
-                name: propEditingScale.name,
-                description: propEditingScale.description || '',
-                options: [...propEditingScale.options]
+        if (propEditingOptionSet) {
+            setEditingOptionSet({
+                id: propEditingOptionSet.id,
+                name: propEditingOptionSet.name,
+                description: propEditingOptionSet.description || '',
+                options: [...propEditingOptionSet.options]
             });
             setIsCreating(false);
-        } else if (propEditingScale === null) {
+        } else if (propEditingOptionSet === null) {
             // Clear internal state when props are cleared
-            setEditingScale(null);
+            setEditingOptionSet(null);
             setIsCreating(false);
         }
-    }, [propEditingScale]);
+    }, [propEditingOptionSet]);
 
-    const loadScales = async () => {
-        setIsLoadingScales(true);
+    const loadOptionSets = async () => {
+        setIsLoadingOptionSets(true);
         try {
-            console.log('Loading rating scales from database...');
-            const loadedScales = await firestoreHelpers.getRatingScales();
-            console.log('Loaded scales:', loadedScales);
-            setScales(loadedScales);
+            console.log('Loading radio option sets from database...');
+            const loadedOptionSets = await firestoreHelpers.getRadioOptionSets();
+            console.log('Loaded radio option sets:', loadedOptionSets);
+            setOptionSets(loadedOptionSets);
         } catch (error) {
-            console.error('Error loading rating scales:', error);
-            showError('Failed to load rating scales');
+            console.error('Error loading radio option sets:', error);
+            showError('Failed to load radio option sets');
         } finally {
-            setIsLoadingScales(false);
+            setIsLoadingOptionSets(false);
         }
     };
 
     const handleCreateNew = () => {
-        const newScale: RatingScaleFormData = {
+        const newOptionSet: RadioOptionSetFormData = {
             id: '',
             name: '',
             description: '',
             options: [
-                { value: 'High', label: 'High', color: 'success', isDefault: true, order: 0 },
-                { value: 'Medium', label: 'Medium', color: 'warning', isDefault: false, order: 1 },
-                { value: 'Low', label: 'Low', color: 'error', isDefault: false, order: 2 },
-                { value: 'Not Important', label: 'Not Important', color: 'default', isDefault: false, order: 3 }
+                { value: 'option1', label: 'Option 1', color: 'default', isDefault: true, order: 0 },
+                { value: 'option2', label: 'Option 2', color: 'default', isDefault: false, order: 1 },
+                { value: 'option3', label: 'Option 3', color: 'default', isDefault: false, order: 2 }
             ]
         };
-        setEditingScale(newScale);
+        setEditingOptionSet(newOptionSet);
         setIsCreating(true);
     };
 
-    const handleEdit = (scale: RatingScale) => {
-        setEditingScale({
-            id: scale.id,
-            name: scale.name,
-            description: scale.description || '',
-            options: [...scale.options]
+    const handleEdit = (optionSet: RadioOptionSet) => {
+        setEditingOptionSet({
+            id: optionSet.id,
+            name: optionSet.name,
+            description: optionSet.description || '',
+            options: [...optionSet.options]
         });
         setIsCreating(false);
     };
 
-    const handleDelete = (scale: RatingScale) => {
-        deleteModal.open({ id: scale.id, name: scale.name });
+    const handleDelete = (optionSet: RadioOptionSet) => {
+        deleteModal.open({ id: optionSet.id, name: optionSet.name });
     };
 
     const handleDeleteConfirm = async () => {
@@ -128,18 +127,25 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
 
         setLoading(true);
         try {
-            console.log('Deleting rating scale with ID:', deleteModal.data.id);
-            await firestoreHelpers.deleteRatingScale(deleteModal.data.id);
-            console.log('Rating scale deleted successfully from Firebase');
-            showSuccess('Rating scale deleted successfully');
+            console.log('Deleting radio option set with ID:', deleteModal.data.id);
+            await firestoreHelpers.deleteRadioOptionSet(deleteModal.data.id);
+            console.log('Radio option set deleted successfully from Firebase');
+            showSuccess('Radio option set deleted successfully');
 
             // Notify parent component about the deletion
-            if (onScaleDeleted) {
-                onScaleDeleted(deleteModal.data.id);
+            if (onOptionSetDeleted) {
+                onOptionSetDeleted(deleteModal.data.id);
+            }
+
+            // Refresh the option sets list
+            try {
+                await loadOptionSets();
+            } catch (error) {
+                console.warn('Failed to refresh option sets after delete:', error);
             }
         } catch (err) {
-            showError('Failed to delete rating scale');
-            console.error('Error deleting rating scale:', err);
+            showError('Failed to delete radio option set');
+            console.error('Error deleting radio option set:', err);
         } finally {
             setLoading(false);
         }
@@ -147,21 +153,21 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
     };
 
     const handleSave = async () => {
-        // Always use the internal editingScale state
-        const scaleToSave = editingScale;
-        if (!scaleToSave) return;
+        // Always use the internal editingOptionSet state
+        const optionSetToSave = editingOptionSet;
+        if (!optionSetToSave) return;
 
-        if (!scaleToSave.name.trim()) {
-            showError('Scale name is required');
+        if (!optionSetToSave.name.trim()) {
+            showError('Option set name is required');
             return;
         }
 
-        if (scaleToSave.options.length === 0) {
+        if (optionSetToSave.options.length === 0) {
             showError('At least one option is required');
             return;
         }
 
-        const defaultOptions = scaleToSave.options.filter(opt => opt.isDefault);
+        const defaultOptions = optionSetToSave.options.filter(opt => opt.isDefault);
         if (defaultOptions.length === 0) {
             showError('At least one option must be marked as default');
             return;
@@ -169,10 +175,10 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
 
         setLoading(true);
         try {
-            const scaleData = {
-                name: scaleToSave.name.trim(),
-                description: scaleToSave.description.trim(),
-                options: scaleToSave.options,
+            const optionSetData = {
+                name: optionSetToSave.name.trim(),
+                description: optionSetToSave.description.trim(),
+                options: optionSetToSave.options,
                 metadata: {
                     createdBy: 'admin',
                     createdAt: new Date().toISOString(),
@@ -182,46 +188,52 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             };
 
             if (currentIsCreating) {
-                const newScale = await firestoreHelpers.addRatingScale(scaleData);
-                showSuccess('Rating scale created successfully');
+                const newOptionSet = await firestoreHelpers.addRadioOptionSet(optionSetData);
+                showSuccess('Radio option set created successfully');
 
                 // Notify parent component about the creation
-                if (onScaleCreated && newScale) {
-                    onScaleCreated(newScale);
+                if (onOptionSetCreated && newOptionSet) {
+                    onOptionSetCreated(newOptionSet);
                 }
             } else {
-                await firestoreHelpers.updateRatingScale(scaleToSave.id, scaleData);
-                showSuccess('Rating scale updated successfully');
+                await firestoreHelpers.updateRadioOptionSet(optionSetToSave.id, optionSetData);
+                showSuccess('Radio option set updated successfully');
 
                 // Notify parent component about the update
-                if (onScaleUpdated) {
-                    const updatedScale = { ...scaleData, id: scaleToSave.id };
-                    onScaleUpdated(updatedScale);
+                if (onOptionSetUpdated) {
+                    const updatedOptionSet = { ...optionSetData, id: optionSetToSave.id };
+                    onOptionSetUpdated(updatedOptionSet);
                 }
             }
 
-            setEditingScale(null);
+            // Refresh the option sets list
+            try {
+                await loadOptionSets();
+            } catch (error) {
+                console.warn('Failed to refresh option sets after save:', error);
+            }
+            setEditingOptionSet(null);
             setIsCreating(false);
         } catch (err) {
-            showError(currentIsCreating ? 'Failed to create rating scale' : 'Failed to update rating scale');
-            console.error('Error saving rating scale:', err);
+            showError(currentIsCreating ? 'Failed to create radio option set' : 'Failed to update radio option set');
+            console.error('Error saving radio option set:', err);
         } finally {
             setLoading(false);
         }
     };
 
     const handleCancel = () => {
-        setEditingScale(null);
+        setEditingOptionSet(null);
         setIsCreating(false);
         // Call onClose to close the modal
         onClose();
     };
 
-    const updateOption = (index: number, field: keyof RatingScaleOption, value: any) => {
-        const currentScale = editingScale || currentEditingScale;
-        if (!currentScale) return;
+    const updateOption = (index: number, field: keyof OptionSetOption, value: any) => {
+        const currentOptionSet = editingOptionSet || currentEditingOptionSet;
+        if (!currentOptionSet) return;
 
-        const updatedOptions = [...currentScale.options];
+        const updatedOptions = [...currentOptionSet.options];
         updatedOptions[index] = { ...updatedOptions[index], [field]: value };
 
         // If setting this option as default, unset others
@@ -231,52 +243,52 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             });
         }
 
-        const updatedScale = { ...currentScale, options: updatedOptions };
-        setEditingScale(updatedScale);
+        const updatedOptionSet = { ...currentOptionSet, options: updatedOptions };
+        setEditingOptionSet(updatedOptionSet);
     };
 
     const addOption = () => {
-        const currentScale = editingScale || currentEditingScale;
-        if (!currentScale) return;
+        const currentOptionSet = editingOptionSet || currentEditingOptionSet;
+        if (!currentOptionSet) return;
 
-        const newOption: RatingScaleOption = {
+        const newOption: OptionSetOption = {
             value: '',
             label: '',
             color: 'default',
             isDefault: false,
-            order: currentScale.options.length
+            order: currentOptionSet.options.length
         };
 
-        const updatedScale = {
-            ...currentScale,
-            options: [...currentScale.options, newOption]
+        const updatedOptionSet = {
+            ...currentOptionSet,
+            options: [...currentOptionSet.options, newOption]
         };
 
-        setEditingScale(updatedScale);
+        setEditingOptionSet(updatedOptionSet);
     };
 
     const removeOption = (index: number) => {
-        const currentScale = editingScale || currentEditingScale;
-        if (!currentScale || currentScale.options.length <= 1) return;
+        const currentOptionSet = editingOptionSet || currentEditingOptionSet;
+        if (!currentOptionSet || currentOptionSet.options.length <= 1) return;
 
-        const updatedOptions = currentScale.options.filter((_, i) => i !== index);
+        const updatedOptions = currentOptionSet.options.filter((_, i) => i !== index);
         // Reorder remaining options
         updatedOptions.forEach((opt, i) => {
             opt.order = i;
         });
 
-        const updatedScale = { ...currentScale, options: updatedOptions };
-        setEditingScale(updatedScale);
+        const updatedOptionSet = { ...currentOptionSet, options: updatedOptions };
+        setEditingOptionSet(updatedOptionSet);
     };
 
     const moveOption = (index: number, direction: 'up' | 'down') => {
-        const currentScale = editingScale || currentEditingScale;
-        if (!currentScale) return;
+        const currentOptionSet = editingOptionSet || currentEditingOptionSet;
+        if (!currentOptionSet) return;
 
         const newIndex = direction === 'up' ? index - 1 : index + 1;
-        if (newIndex < 0 || newIndex >= currentScale.options.length) return;
+        if (newIndex < 0 || newIndex >= currentOptionSet.options.length) return;
 
-        const updatedOptions = [...currentScale.options];
+        const updatedOptions = [...currentOptionSet.options];
         [updatedOptions[index], updatedOptions[newIndex]] = [updatedOptions[newIndex], updatedOptions[index]];
 
         // Update order values
@@ -284,15 +296,15 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             opt.order = i;
         });
 
-        const updatedScale = { ...currentScale, options: updatedOptions };
-        setEditingScale(updatedScale);
+        const updatedOptionSet = { ...currentOptionSet, options: updatedOptions };
+        setEditingOptionSet(updatedOptionSet);
     };
 
-    const handleSelectScale = (scaleId: string) => {
-        if (onScaleSelect) {
-            onScaleSelect(scaleId);
+    const handleSelectOptionSet = (optionSetId: string) => {
+        if (onOptionSetSelect) {
+            onOptionSetSelect(optionSetId);
         }
-        // Automatically close the modal after selecting a scale
+        // Automatically close the modal after selecting an option set
         onClose();
     };
 
@@ -304,7 +316,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-semibold text-gray-900">
-                            Rating Scale Manager
+                            Radio Option Set Manager
                         </h2>
                         <button
                             onClick={onClose}
@@ -314,14 +326,12 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                         </button>
                     </div>
 
-
-
-                    {(editingScale || currentEditingScale) ? (
+                    {(editingOptionSet || currentEditingOptionSet) ? (
                         // Edit/Create Form
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-medium text-gray-900">
-                                    {currentIsCreating ? 'Create New Rating Scale' : 'Edit Rating Scale'}
+                                    {currentIsCreating ? 'Create New Radio Option Set' : 'Edit Radio Option Set'}
                                 </h3>
                                 <div className="flex space-x-2">
                                     <Button
@@ -346,26 +356,26 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <Input
-                                    name="scaleName"
-                                    label="Scale Name"
-                                    value={editingScale?.name || currentEditingScale?.name || ''}
+                                    name="optionSetName"
+                                    label="Option Set Name"
+                                    value={editingOptionSet?.name || currentEditingOptionSet?.name || ''}
                                     onChange={(value) => {
-                                        const currentScale = editingScale || currentEditingScale;
-                                        if (currentScale) {
-                                            setEditingScale({ ...currentScale, name: value });
+                                        const currentOptionSet = editingOptionSet || currentEditingOptionSet;
+                                        if (currentOptionSet) {
+                                            setEditingOptionSet({ ...currentOptionSet, name: value });
                                         }
                                     }}
-                                    placeholder="Enter scale name"
+                                    placeholder="Enter option set name"
                                     required
                                 />
                                 <Input
                                     name="description"
                                     label="Description"
-                                    value={editingScale?.description || currentEditingScale?.description || ''}
+                                    value={editingOptionSet?.description || currentEditingOptionSet?.description || ''}
                                     onChange={(value) => {
-                                        const currentScale = editingScale || currentEditingScale;
-                                        if (currentScale) {
-                                            setEditingScale({ ...currentScale, description: value });
+                                        const currentOptionSet = editingOptionSet || currentEditingOptionSet;
+                                        if (currentOptionSet) {
+                                            setEditingOptionSet({ ...currentOptionSet, description: value });
                                         }
                                     }}
                                     placeholder="Enter description (optional)"
@@ -386,7 +396,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                 </div>
 
                                 <div className="space-y-3">
-                                    {(editingScale?.options || currentEditingScale?.options || []).map((option, index) => (
+                                    {(editingOptionSet?.options || currentEditingOptionSet?.options || []).map((option, index) => (
                                         <div key={index} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
                                             <div className="flex-1 grid grid-cols-4 gap-3">
                                                 <Input
@@ -394,7 +404,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                                     label="Value"
                                                     value={option.value}
                                                     onChange={(value) => updateOption(index, 'value', value)}
-                                                    placeholder="e.g., High"
+                                                    placeholder="e.g., option1"
                                                     required
                                                 />
                                                 <Input
@@ -402,7 +412,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                                     label="Label"
                                                     value={option.label}
                                                     onChange={(value) => updateOption(index, 'label', value)}
-                                                    placeholder="e.g., High"
+                                                    placeholder="e.g., Option 1"
                                                     required
                                                 />
                                                 <div className="space-y-1">
@@ -446,14 +456,14 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                                 </button>
                                                 <button
                                                     onClick={() => moveOption(index, 'down')}
-                                                    disabled={index === (editingScale?.options || currentEditingScale?.options || []).length - 1}
+                                                    disabled={index === (editingOptionSet?.options || currentEditingOptionSet?.options || []).length - 1}
                                                     className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                                                 >
                                                     ↓
                                                 </button>
                                                 <button
                                                     onClick={() => removeOption(index)}
-                                                    disabled={(editingScale?.options || currentEditingScale?.options || []).length <= 1}
+                                                    disabled={(editingOptionSet?.options || currentEditingOptionSet?.options || []).length <= 1}
                                                     className="p-1 text-red-400 hover:text-red-600 disabled:opacity-50"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -465,51 +475,51 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                             </div>
                         </div>
                     ) : (
-                        // Scale List
+                        // Option Set List
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium text-gray-900">Rating Scales</h3>
+                                <h3 className="text-lg font-medium text-gray-900">Radio Option Sets</h3>
                                 <Button
                                     onClick={handleCreateNew}
                                     variant="primary"
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
-                                    Create New Scale
+                                    Create New Option Set
                                 </Button>
                             </div>
 
-                            {isLoadingScales ? (
+                            {isLoadingOptionSets ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
                                 </div>
-                            ) : scales.length === 0 ? (
+                            ) : optionSets.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500">
-                                    No rating scales found. Create your first one!
+                                    No radio option sets found. Create your first one!
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {scales.map((scale) => (
-                                        <div key={scale.id} className="border border-gray-200 rounded-lg p-4">
+                                    {optionSets.map((optionSet) => (
+                                        <div key={optionSet.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div>
-                                                    <h4 className="font-medium text-gray-900">{scale.name}</h4>
-                                                    {scale.description && (
-                                                        <p className="text-sm text-gray-600 mt-1">{scale.description}</p>
+                                                    <h4 className="font-medium text-gray-900">{optionSet.name}</h4>
+                                                    {optionSet.description && (
+                                                        <p className="text-sm text-gray-600 mt-1">{optionSet.description}</p>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    {onScaleSelect && (
+                                                    {onOptionSetSelect && (
                                                         <Button
-                                                            onClick={() => handleSelectScale(scale.id)}
+                                                            onClick={() => handleSelectOptionSet(optionSet.id)}
                                                             variant="secondary"
                                                             size="sm"
                                                         >
                                                             <Check className="h-4 w-4 mr-2" />
-                                                            Use This Scale
+                                                            Use This Option Set
                                                         </Button>
                                                     )}
                                                     <Button
-                                                        onClick={() => handleEdit(scale)}
+                                                        onClick={() => handleEdit(optionSet)}
                                                         variant="secondary"
                                                         size="sm"
                                                     >
@@ -517,7 +527,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                                         Edit
                                                     </Button>
                                                     <Button
-                                                        onClick={() => handleDelete(scale)}
+                                                        onClick={() => handleDelete(optionSet)}
                                                         variant="secondary"
                                                         size="sm"
                                                         className="text-red-600 hover:text-red-700"
@@ -528,7 +538,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                                 </div>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                {scale.options.map((option, index) => (
+                                                {optionSet.options.map((option, index) => (
                                                     <span
                                                         key={index}
                                                         className={`px-2 py-1 rounded text-xs font-medium ${option.isDefault

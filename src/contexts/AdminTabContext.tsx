@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-type AdminTab = 'overview' | 'framework' | 'legacy' | 'rating-scales';
+type AdminTab = 'overview' | 'framework' | 'legacy' | 'option-sets';
 
 interface AdminTabContextType {
     activeTab: AdminTab;
@@ -17,7 +17,7 @@ export const AdminTabProvider: React.FC<AdminTabProviderProps> = ({ children }) 
     // Get initial active tab from localStorage
     const getInitialActiveTab = (): AdminTab => {
         const savedTab = localStorage.getItem('admin-active-tab');
-        if (savedTab && ['overview', 'framework', 'legacy', 'rating-scales'].includes(savedTab)) {
+        if (savedTab && ['overview', 'framework', 'legacy', 'option-sets'].includes(savedTab)) {
             return savedTab as AdminTab;
         }
         return 'overview';

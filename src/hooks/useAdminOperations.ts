@@ -260,6 +260,61 @@ export const useAdminOperations = () => {
     }
   }, [showSuccess, showError, refreshAll]);
 
+  // Option Set deletion methods
+  const deleteRadioOptionSet = useCallback(
+    async (optionSetId: string) => {
+      console.log("Starting deleteRadioOptionSet with ID:", optionSetId);
+      try {
+        await firestoreHelpers.deleteRadioOptionSet(optionSetId);
+        console.log("Firebase delete completed successfully");
+        showSuccess("Radio option set deleted successfully!");
+        console.log("Calling refreshAll...");
+        await refreshAll();
+        console.log("refreshAll completed");
+      } catch (error) {
+        console.error("Error in deleteRadioOptionSet:", error);
+        showError("Failed to delete radio option set");
+      }
+    },
+    [showSuccess, showError, refreshAll]
+  );
+
+  const deleteMultiSelectOptionSet = useCallback(
+    async (optionSetId: string) => {
+      console.log("Starting deleteMultiSelectOptionSet with ID:", optionSetId);
+      try {
+        await firestoreHelpers.deleteMultiSelectOptionSet(optionSetId);
+        console.log("Firebase delete completed successfully");
+        showSuccess("Multi-select option set deleted successfully!");
+        console.log("Calling refreshAll...");
+        await refreshAll();
+        console.log("refreshAll completed");
+      } catch (error) {
+        console.error("Error in deleteMultiSelectOptionSet:", error);
+        showError("Failed to delete multi-select option set");
+      }
+    },
+    [showSuccess, showError, refreshAll]
+  );
+
+  const deleteSelectOptionSet = useCallback(
+    async (optionSetId: string) => {
+      console.log("Starting deleteSelectOptionSet with ID:", optionSetId);
+      try {
+        await firestoreHelpers.deleteSelectOptionSet(optionSetId);
+        console.log("Firebase delete completed successfully");
+        showSuccess("Select option set deleted successfully!");
+        console.log("Calling refreshAll...");
+        await refreshAll();
+        console.log("refreshAll completed");
+      } catch (error) {
+        console.error("Error in deleteSelectOptionSet:", error);
+        showError("Failed to delete select option set");
+      }
+    },
+    [showSuccess, showError, refreshAll]
+  );
+
   return {
     deleteSurvey,
     deleteSurveyConfig,
@@ -271,5 +326,8 @@ export const useAdminOperations = () => {
     downloadLegacyData,
     downloadFrameworkData,
     cleanupDuplicateRatingScales,
+    deleteRadioOptionSet,
+    deleteMultiSelectOptionSet,
+    deleteSelectOptionSet,
   };
 };

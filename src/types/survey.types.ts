@@ -39,6 +39,7 @@ export interface SurveyData {
   serviceLines: ServiceLineSection;
   submittedAt: string;
   updatedAt: string;
+  responses?: any[];
 }
 
 export interface SurveyFormData {
@@ -96,6 +97,58 @@ export interface RatingScale {
   name: string;
   description?: string;
   options: RatingScaleOption[];
+  metadata: {
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    isActive: boolean;
+  };
+}
+
+// New Option Set Types
+export interface OptionSetOption {
+  value: string;
+  label: string;
+  color?: string;
+  isDefault?: boolean;
+  order: number;
+  metadata?: Record<string, any>;
+}
+
+export interface RadioOptionSet {
+  id: string;
+  name: string;
+  description?: string;
+  options: OptionSetOption[];
+  metadata: {
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    isActive: boolean;
+  };
+}
+
+export interface MultiSelectOptionSet {
+  id: string;
+  name: string;
+  description?: string;
+  options: OptionSetOption[];
+  maxSelections?: number;
+  minSelections?: number;
+  metadata: {
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    isActive: boolean;
+  };
+}
+
+export interface SelectOptionSet {
+  id: string;
+  name: string;
+  description?: string;
+  options: OptionSetOption[];
+  allowMultiple?: boolean;
   metadata: {
     createdBy: string;
     createdAt: string;

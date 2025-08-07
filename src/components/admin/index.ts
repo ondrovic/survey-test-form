@@ -1,10 +1,13 @@
 export { AdminAuth } from "./AdminAuth";
 export { AdminFramework } from "./AdminFramework";
 export { AdminHeader } from "./AdminHeader";
-export { AdminLegacy } from "./AdminLegacy";
+export { AdminOptionSets } from "./AdminOptionSets";
 export { AdminOverview } from "./AdminOverview";
 export { AdminPage } from "./AdminPage";
 export { AdminPanel } from "./AdminPanel";
 export { AdminRatingScales } from "./AdminRatingScales";
+export { MultiSelectOptionSetManager } from "./MultiSelectOptionSetManager";
+export { RadioOptionSetManager } from "./RadioOptionSetManager";
 export { RatingScaleManager } from "./RatingScaleManager";
+export { SelectOptionSetManager } from "./SelectOptionSetManager";
 export { SurveyBuilder } from "./SurveyBuilder";

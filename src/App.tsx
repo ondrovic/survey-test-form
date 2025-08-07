@@ -5,9 +5,9 @@ import { SurveyConfirmation } from '@/components/survey';
 import { firestoreHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
 import { AdminTabProvider } from '@/contexts/AdminTabContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SurveyDataProvider } from '@/contexts/SurveyDataContext';
 import { ToastProvider, useToast } from '@/contexts/ToastContext';
-import { useAuth } from '@/hooks';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
@@ -24,7 +24,7 @@ const copyright = `© ${currentYear}`;
 /**
  * Main App component that integrates all survey functionality
  */
-function App() {
+function AppContent() {
     // Suppress console warnings for passive event listeners
     useEffect(() => {
         suppressConsoleWarnings();
@@ -72,10 +72,14 @@ function App() {
         }
     }, []);
 
-    // Initialize framework on mount
+    // Initialize framework on mount if authenticated, or set migrating to false if not
     useEffect(() => {
         if (isAuthenticated) {
             initializeFramework();
+        } else {
+            // If not authenticated, we don't need to migrate data
+            console.log('App - Not authenticated, skipping framework initialization');
+            setIsMigrating(false);
         }
     }, [isAuthenticated, initializeFramework]);
 
@@ -85,10 +89,13 @@ function App() {
         );
     };
 
-    // Show loading while auth is initializing
-    if (authLoading || isMigrating) {
+    // Show loading while auth is initializing OR while migrating (only if authenticated)
+    if (authLoading || (isAuthenticated && isMigrating)) {
+        console.log('App - Showing loading spinner:', { authLoading, isAuthenticated, isMigrating });
         return <LoadingSpinner fullScreen text="Initializing..." />;
     }
+
+    console.log('App - Rendering main content:', { authLoading, isAuthenticated, isMigrating });
 
     return (
         <ErrorBoundary>
@@ -138,6 +145,14 @@ function App() {
                 <Toaster />
             </ToastProvider>
         </ErrorBoundary>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 }
 

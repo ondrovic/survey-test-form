@@ -20,7 +20,7 @@ export const AdminRatingScales: React.FC<AdminRatingScalesProps> = ({
     onCleanupDuplicates
 }) => {
     const { ratingScales } = useSurveyDataContext();
-    const { showSuccess, showError } = useToast();
+    const { } = useToast();
     const deleteModal = useModal<{ id: string; name: string }>();
 
     return (

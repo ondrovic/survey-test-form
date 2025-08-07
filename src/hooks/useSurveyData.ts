@@ -1,5 +1,13 @@
 import { firestoreHelpers } from "@/config/firebase";
-import { RatingScale, SurveyConfig, SurveyData, SurveyInstance } from "@/types";
+import {
+  MultiSelectOptionSet,
+  RadioOptionSet,
+  RatingScale,
+  SelectOptionSet,
+  SurveyConfig,
+  SurveyData,
+  SurveyInstance,
+} from "@/types";
 import { useCallback, useState } from "react";
 
 interface UseSurveyDataReturn {
@@ -7,6 +15,11 @@ interface UseSurveyDataReturn {
   surveyConfigs: SurveyConfig[];
   surveyInstances: SurveyInstance[];
   ratingScales: RatingScale[];
+
+  // Option Sets
+  radioOptionSets: RadioOptionSet[];
+  multiSelectOptionSets: MultiSelectOptionSet[];
+  selectOptionSets: SelectOptionSet[];
 
   // Legacy data
   surveys: SurveyData[];
@@ -19,6 +32,9 @@ interface UseSurveyDataReturn {
   loadFrameworkData: () => Promise<void>;
   loadLegacyData: () => Promise<void>;
   loadRatingScales: () => Promise<void>;
+  loadRadioOptionSets: () => Promise<void>;
+  loadMultiSelectOptionSets: () => Promise<void>;
+  loadSelectOptionSets: () => Promise<void>;
   refreshAll: () => Promise<void>;
 }
 
@@ -26,6 +42,13 @@ export const useSurveyData = (): UseSurveyDataReturn => {
   const [surveyConfigs, setSurveyConfigs] = useState<SurveyConfig[]>([]);
   const [surveyInstances, setSurveyInstances] = useState<SurveyInstance[]>([]);
   const [ratingScales, setRatingScales] = useState<RatingScale[]>([]);
+  const [radioOptionSets, setRadioOptionSets] = useState<RadioOptionSet[]>([]);
+  const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<
+    MultiSelectOptionSet[]
+  >([]);
+  const [selectOptionSets, setSelectOptionSets] = useState<SelectOptionSet[]>(
+    []
+  );
   const [surveys, setSurveys] = useState<SurveyData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +103,52 @@ export const useSurveyData = (): UseSurveyDataReturn => {
     }
   }, []);
 
+  const loadRadioOptionSets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const optionSets = (await firestoreHelpers.getRadioOptionSets?.()) || [];
+      setRadioOptionSets(optionSets);
+    } catch (error) {
+      console.error("Error loading radio option sets:", error);
+      setError("Failed to load radio option sets");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadMultiSelectOptionSets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const optionSets =
+        (await firestoreHelpers.getMultiSelectOptionSets?.()) || [];
+      setMultiSelectOptionSets(optionSets);
+    } catch (error) {
+      console.error("Error loading multi-select option sets:", error);
+      setError("Failed to load multi-select option sets");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadSelectOptionSets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const optionSets = (await firestoreHelpers.getSelectOptionSets?.()) || [];
+      setSelectOptionSets(optionSets);
+    } catch (error) {
+      console.error("Error loading select option sets:", error);
+      setError("Failed to load select option sets");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const refreshAll = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -89,6 +158,9 @@ export const useSurveyData = (): UseSurveyDataReturn => {
         loadFrameworkData(),
         loadLegacyData(),
         loadRatingScales(),
+        loadRadioOptionSets(),
+        loadMultiSelectOptionSets(),
+        loadSelectOptionSets(),
       ]);
     } catch (error) {
       console.error("Error refreshing data:", error);
@@ -96,18 +168,31 @@ export const useSurveyData = (): UseSurveyDataReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [loadFrameworkData, loadLegacyData, loadRatingScales]);
+  }, [
+    loadFrameworkData,
+    loadLegacyData,
+    loadRatingScales,
+    loadRadioOptionSets,
+    loadMultiSelectOptionSets,
+    loadSelectOptionSets,
+  ]);
 
   return {
     surveyConfigs,
     surveyInstances,
     ratingScales,
+    radioOptionSets,
+    multiSelectOptionSets,
+    selectOptionSets,
     surveys,
     isLoading,
     error,
     loadFrameworkData,
     loadLegacyData,
     loadRatingScales,
+    loadRadioOptionSets,
+    loadMultiSelectOptionSets,
+    loadSelectOptionSets,
     refreshAll,
   };
 };

@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '../../common';
 
 interface SurveyConfirmationProps {
@@ -7,8 +6,6 @@ interface SurveyConfirmationProps {
 }
 
 export const SurveyConfirmation: React.FC<SurveyConfirmationProps> = ({ surveyTitle }) => {
-    const navigate = useNavigate();
-
     return (
         <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8 text-center">

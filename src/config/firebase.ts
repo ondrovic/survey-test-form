@@ -41,6 +41,9 @@ let surveyConfigsCol: any = null;
 let surveyInstancesCol: any = null;
 let surveyResponsesCol: any = null;
 let ratingScalesCol: any = null;
+let radioOptionSetsCol: any = null;
+let multiSelectOptionSetsCol: any = null;
+let selectOptionSetsCol: any = null;
 let authInstance: any = null;
 
 // Initialize Firebase (singleton)
@@ -54,6 +57,12 @@ function initializeFirebase() {
     surveyInstancesCol = collection(firestoreDb, "survey_instances");
     surveyResponsesCol = collection(firestoreDb, "survey_responses");
     ratingScalesCol = collection(firestoreDb, "rating_scales");
+    radioOptionSetsCol = collection(firestoreDb, "radio_option_sets");
+    multiSelectOptionSetsCol = collection(
+      firestoreDb,
+      "multi_select_option_sets"
+    );
+    selectOptionSetsCol = collection(firestoreDb, "select_option_sets");
 
     // Disable real-time listeners to prevent connection spam
     // We only need one-time reads and writes
@@ -67,6 +76,9 @@ function initializeFirebase() {
     surveyInstancesCollection: surveyInstancesCol,
     surveyResponsesCollection: surveyResponsesCol,
     ratingScalesCollection: ratingScalesCol,
+    radioOptionSetsCollection: radioOptionSetsCol,
+    multiSelectOptionSetsCollection: multiSelectOptionSetsCol,
+    selectOptionSetsCollection: selectOptionSetsCol,
     auth: authInstance,
   };
 }
@@ -515,7 +527,7 @@ export const firestoreHelpers = {
 
   async getRatingScale(id: string) {
     try {
-      const scaleRef = doc(db, "rating_scales", id);
+      const scaleRef = doc(ratingScalesCol, id);
       const scaleDoc = await getDoc(scaleRef);
       if (scaleDoc.exists()) {
         const data = scaleDoc.data() as RatingScale;
@@ -531,7 +543,7 @@ export const firestoreHelpers = {
   async addRatingScale(scale: Omit<RatingScale, "id">) {
     try {
       const scaleId = crypto.randomUUID();
-      const scaleRef = doc(db, "rating_scales", scaleId);
+      const scaleRef = doc(ratingScalesCol, scaleId);
       await setDoc(scaleRef, {
         ...scale,
         metadata: {
@@ -549,7 +561,7 @@ export const firestoreHelpers = {
 
   async updateRatingScale(id: string, data: Partial<RatingScale>) {
     try {
-      const scaleRef = doc(db, "rating_scales", id);
+      const scaleRef = doc(ratingScalesCol, id);
       await updateDoc(scaleRef, {
         ...data,
         metadata: {
@@ -565,10 +577,215 @@ export const firestoreHelpers = {
 
   async deleteRatingScale(id: string) {
     try {
-      const scaleRef = doc(db, "rating_scales", id);
-      await deleteDoc(scaleRef);
+      const ratingScaleRef = doc(ratingScalesCol, id);
+      await deleteDoc(ratingScaleRef);
+      console.log("Rating scale deleted successfully");
     } catch (error) {
       console.error("Error deleting rating scale:", error);
+      throw error;
+    }
+  },
+
+  // Multi-Select Option Sets
+  async getMultiSelectOptionSets() {
+    try {
+      const q = query(
+        multiSelectOptionSetsCol,
+        orderBy("metadata.createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const optionSets = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return optionSets;
+    } catch (error) {
+      console.error("Error getting multi-select option sets:", error);
+      throw error;
+    }
+  },
+
+  async getMultiSelectOptionSet(id: string) {
+    try {
+      const optionSetRef = doc(multiSelectOptionSetsCol, id);
+      const optionSetDoc = await getDoc(optionSetRef);
+      if (optionSetDoc.exists()) {
+        return { id: optionSetDoc.id, ...optionSetDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting multi-select option set:", error);
+      throw error;
+    }
+  },
+
+  async addMultiSelectOptionSet(optionSet: any) {
+    try {
+      const docRef = await addDoc(multiSelectOptionSetsCol, optionSet);
+      console.log("Multi-select option set added with ID:", docRef.id);
+      return { id: docRef.id, ...optionSet };
+    } catch (error) {
+      console.error("Error adding multi-select option set:", error);
+      throw error;
+    }
+  },
+
+  async updateMultiSelectOptionSet(id: string, data: any) {
+    try {
+      const optionSetRef = doc(multiSelectOptionSetsCol, id);
+      await updateDoc(optionSetRef, data);
+      console.log("Multi-select option set updated successfully");
+    } catch (error) {
+      console.error("Error updating multi-select option set:", error);
+      throw error;
+    }
+  },
+
+  async deleteMultiSelectOptionSet(id: string) {
+    console.log("Firebase deleteMultiSelectOptionSet called with ID:", id);
+    try {
+      const optionSetRef = doc(multiSelectOptionSetsCol, id);
+      console.log("Document reference created:", optionSetRef.path);
+      await deleteDoc(optionSetRef);
+      console.log("Multi-select option set deleted successfully from Firebase");
+    } catch (error) {
+      console.error("Error deleting multi-select option set:", error);
+      throw error;
+    }
+  },
+
+  // Radio Option Sets
+  async getRadioOptionSets() {
+    try {
+      const q = query(
+        radioOptionSetsCol,
+        orderBy("metadata.createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const optionSets = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return optionSets;
+    } catch (error) {
+      console.error("Error getting radio option sets:", error);
+      throw error;
+    }
+  },
+
+  async getRadioOptionSet(id: string) {
+    try {
+      const optionSetRef = doc(radioOptionSetsCol, id);
+      const optionSetDoc = await getDoc(optionSetRef);
+      if (optionSetDoc.exists()) {
+        return { id: optionSetDoc.id, ...optionSetDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting radio option set:", error);
+      throw error;
+    }
+  },
+
+  async addRadioOptionSet(optionSet: any) {
+    try {
+      const docRef = await addDoc(radioOptionSetsCol, optionSet);
+      console.log("Radio option set added with ID:", docRef.id);
+      return { id: docRef.id, ...optionSet };
+    } catch (error) {
+      console.error("Error adding radio option set:", error);
+      throw error;
+    }
+  },
+
+  async updateRadioOptionSet(id: string, data: any) {
+    try {
+      const optionSetRef = doc(radioOptionSetsCol, id);
+      await updateDoc(optionSetRef, data);
+      console.log("Radio option set updated successfully");
+    } catch (error) {
+      console.error("Error updating radio option set:", error);
+      throw error;
+    }
+  },
+
+  async deleteRadioOptionSet(id: string) {
+    console.log("Firebase deleteRadioOptionSet called with ID:", id);
+    try {
+      const optionSetRef = doc(radioOptionSetsCol, id);
+      console.log("Document reference created:", optionSetRef.path);
+      await deleteDoc(optionSetRef);
+      console.log("Radio option set deleted successfully from Firebase");
+    } catch (error) {
+      console.error("Error deleting radio option set:", error);
+      throw error;
+    }
+  },
+
+  // Select Option Sets
+  async getSelectOptionSets() {
+    try {
+      const q = query(
+        selectOptionSetsCol,
+        orderBy("metadata.createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const optionSets = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return optionSets;
+    } catch (error) {
+      console.error("Error getting select option sets:", error);
+      throw error;
+    }
+  },
+
+  async getSelectOptionSet(id: string) {
+    try {
+      const optionSetRef = doc(selectOptionSetsCol, id);
+      const optionSetDoc = await getDoc(optionSetRef);
+      if (optionSetDoc.exists()) {
+        return { id: optionSetDoc.id, ...optionSetDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting select option set:", error);
+      throw error;
+    }
+  },
+
+  async addSelectOptionSet(optionSet: any) {
+    try {
+      const docRef = await addDoc(selectOptionSetsCol, optionSet);
+      console.log("Select option set added with ID:", docRef.id);
+      return { id: docRef.id, ...optionSet };
+    } catch (error) {
+      console.error("Error adding select option set:", error);
+      throw error;
+    }
+  },
+
+  async updateSelectOptionSet(id: string, data: any) {
+    try {
+      const optionSetRef = doc(selectOptionSetsCol, id);
+      await updateDoc(optionSetRef, data);
+      console.log("Select option set updated successfully");
+    } catch (error) {
+      console.error("Error updating select option set:", error);
+      throw error;
+    }
+  },
+
+  async deleteSelectOptionSet(id: string) {
+    console.log("Firebase deleteSelectOptionSet called with ID:", id);
+    try {
+      const optionSetRef = doc(selectOptionSetsCol, id);
+      console.log("Document reference created:", optionSetRef.path);
+      await deleteDoc(optionSetRef);
+      console.log("Select option set deleted successfully from Firebase");
+    } catch (error) {
+      console.error("Error deleting select option set:", error);
       throw error;
     }
   },

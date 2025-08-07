@@ -1,5 +1,5 @@
 import { useSurveyData } from '@/hooks';
-import { RatingScale, SurveyConfig, SurveyData, SurveyInstance } from '@/types';
+import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyConfig, SurveyData, SurveyInstance } from '@/types';
 import React, { createContext, ReactNode, useContext, useEffect } from 'react';
 
 interface SurveyDataContextType {
@@ -7,6 +7,11 @@ interface SurveyDataContextType {
     surveyConfigs: SurveyConfig[];
     surveyInstances: SurveyInstance[];
     ratingScales: RatingScale[];
+
+    // Option Sets
+    radioOptionSets: RadioOptionSet[];
+    multiSelectOptionSets: MultiSelectOptionSet[];
+    selectOptionSets: SelectOptionSet[];
 
     // Legacy data
     surveys: SurveyData[];
@@ -19,6 +24,9 @@ interface SurveyDataContextType {
     loadFrameworkData: () => Promise<void>;
     loadLegacyData: () => Promise<void>;
     loadRatingScales: () => Promise<void>;
+    loadRadioOptionSets: () => Promise<void>;
+    loadMultiSelectOptionSets: () => Promise<void>;
+    loadSelectOptionSets: () => Promise<void>;
     refreshAll: () => Promise<void>;
 }
 
