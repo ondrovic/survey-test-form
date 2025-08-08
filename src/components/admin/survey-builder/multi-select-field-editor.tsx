@@ -505,7 +505,7 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                     isVisible={showRatingScaleManager}
                     onClose={() => setShowRatingScaleManager(false)}
                     onScaleSelect={handleRatingScaleSelect}
-                    scales={ratingScales}
+
                 />
             )}
         </div>

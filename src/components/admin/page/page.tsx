@@ -10,7 +10,7 @@ import { SurveyBuilder } from '@/components/admin/survey-builder';
 import { RatingScaleManager } from '@/components/admin/rating-scale-manager';
 import { useAdminTab } from '@/contexts/admin-tab-context/index';
 import { useAuth } from '@/contexts/auth-context/index';
-import { useSurveyDataContext } from '@/contexts/survey-data-context/index';
+import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useAdminOperations, useModal } from '@/hooks';
 import { RatingScale, SurveyConfig } from '@/types';
 import { clsx } from 'clsx';
@@ -20,7 +20,7 @@ import { AdminPageProps } from './page.types';
 export const AdminPage: React.FC<AdminPageProps> = ({ }) => {
     const { isAuthenticated, logout } = useAuth();
     const { activeTab, setActiveTab } = useAdminTab();
-    const { refreshAll } = useSurveyDataContext();
+    const { refreshAll } = useSurveyData();
     const adminOperations = useAdminOperations();
 
     // Modal states
@@ -218,18 +218,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({ }) => {
                     isVisible={ratingScaleManagerModal.isOpen}
                     onClose={handleCloseRatingScaleManager}
                     onScaleSelect={() => { }}
-                    editingScale={ratingScaleManagerModal.data}
-                    isCreating={!ratingScaleManagerModal.data}
-                    scales={[]} // This will be handled by the RatingScaleManager internally
-                    onScaleDeleted={(scaleId) => {
-                        adminOperations.deleteRatingScale(scaleId);
-                    }}
-                    onScaleCreated={() => {
-                        refreshAll();
-                    }}
-                    onScaleUpdated={() => {
-                        refreshAll();
-                    }}
                 />
             )}
 
@@ -239,18 +227,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({ }) => {
                     isVisible={radioOptionSetManagerModal.isOpen}
                     onClose={handleCloseRadioOptionSetManager}
                     onOptionSetSelect={() => { }}
-                    editingOptionSet={radioOptionSetManagerModal.data}
-                    isCreating={!radioOptionSetManagerModal.data}
-                    optionSets={[]} // This will be handled by the RadioOptionSetManager internally
-                    onOptionSetDeleted={(optionSetId) => {
-                        adminOperations.deleteRadioOptionSet(optionSetId);
-                    }}
-                    onOptionSetCreated={() => {
-                        refreshAll();
-                    }}
-                    onOptionSetUpdated={() => {
-                        refreshAll();
-                    }}
                 />
             )}
 
@@ -260,18 +236,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({ }) => {
                     isVisible={multiSelectOptionSetManagerModal.isOpen}
                     onClose={handleCloseMultiSelectOptionSetManager}
                     onOptionSetSelect={() => { }}
-                    editingOptionSet={multiSelectOptionSetManagerModal.data}
-                    isCreating={!multiSelectOptionSetManagerModal.data}
-                    optionSets={[]} // This will be handled by the MultiSelectOptionSetManager internally
-                    onOptionSetDeleted={(optionSetId) => {
-                        adminOperations.deleteMultiSelectOptionSet(optionSetId);
-                    }}
-                    onOptionSetCreated={() => {
-                        refreshAll();
-                    }}
-                    onOptionSetUpdated={() => {
-                        refreshAll();
-                    }}
                 />
             )}
 

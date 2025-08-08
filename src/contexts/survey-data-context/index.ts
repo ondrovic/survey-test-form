@@ -1,1 +1,1 @@
-export { SurveyDataProvider, useSurveyDataContext } from "./survey-data-context";
+export { SurveyDataProvider, useSurveyData } from "./survey-data-context";

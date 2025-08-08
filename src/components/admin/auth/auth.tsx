@@ -1,6 +1,6 @@
-import { Button, Input } from '@/components/common';
+import { Button, PasswordInput } from '@/components/common';
 import { useAuth } from '@/contexts/auth-context/index';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface AdminAuthProps {
@@ -10,7 +10,6 @@ interface AdminAuthProps {
 export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
     const { login, isLoading, error } = useAuth();
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
 
     console.log("🔐 AdminAuth - Component rendered:", { isLoading, error });
 
@@ -25,9 +24,7 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
         }
     };
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
+
 
     return (
         <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
@@ -39,24 +36,15 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
                 </div>
 
                 <form onSubmit={handlePasswordSubmit}>
-                    <div className="relative">
-                        <Input
-                            name="adminPassword"
-                            type={showPassword ? "text" : "password"}
-                            label="Admin Password"
-                            value={password}
-                            onChange={(value) => setPassword(value)}
-                            placeholder="Enter admin password"
-                            required
-                        />
-                        <button
-                            type="button"
-                            onClick={togglePasswordVisibility}
-                            className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
-                        >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                    </div>
+                    <PasswordInput
+                        name="adminPassword"
+                        label="Admin Password"
+                        value={password}
+                        onChange={(value) => setPassword(value)}
+                        placeholder="Enter admin password"
+                        required
+                        autocomplete="current-password"
+                    />
 
                     {error && (
                         <p className="text-red-500 text-sm mt-2">{error}</p>

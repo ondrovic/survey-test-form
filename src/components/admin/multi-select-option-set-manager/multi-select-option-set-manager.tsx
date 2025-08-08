@@ -1,6 +1,7 @@
 import { Check, Edit, Plus, Save, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
+import { useOptionSet } from '../../../contexts/option-set-context';
 import { useToast } from '../../../contexts/toast-context/index';
 import { useModal } from '../../../hooks';
 import { MultiSelectOptionSet, OptionSetOption } from '../../../types/survey.types';
@@ -10,12 +11,6 @@ interface MultiSelectOptionSetManagerProps {
     isVisible: boolean;
     onClose: () => void;
     onOptionSetSelect?: (optionSetId: string) => void;
-    editingOptionSet?: MultiSelectOptionSet | null;
-    isCreating?: boolean;
-    optionSets: MultiSelectOptionSet[];
-    onOptionSetDeleted?: (optionSetId: string) => void;
-    onOptionSetCreated?: (optionSet: MultiSelectOptionSet) => void;
-    onOptionSetUpdated?: (optionSet: MultiSelectOptionSet) => void;
 }
 
 interface MultiSelectOptionSetFormData {
@@ -30,21 +25,19 @@ interface MultiSelectOptionSetFormData {
 export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerProps> = ({
     isVisible,
     onClose,
-    onOptionSetSelect,
-    editingOptionSet: propEditingOptionSet,
-    isCreating: propIsCreating,
-    optionSets: [],
-    onOptionSetDeleted,
-    onOptionSetCreated,
-    onOptionSetUpdated
+    onOptionSetSelect
 }) => {
     const { showSuccess, showError } = useToast();
+    const { 
+        state: { multiSelectOptionSets, editingMultiSelectOptionSet, isCreating, isLoading },
+        dispatch,
+        setEditingMultiSelectOptionSet,
+        setIsCreating,
+        resetEditingState
+    } = useOptionSet();
     const deleteModal = useModal<{ id: string; name: string }>();
     const [loading, setLoading] = useState(false);
-    const [editingOptionSet, setEditingOptionSet] = useState<MultiSelectOptionSetFormData | null>(null);
-    const [isCreating, setIsCreating] = useState(false);
-    const [optionSets, setOptionSets] = useState<MultiSelectOptionSet[]>([]);
-    const [isLoadingOptionSets, setIsLoadingOptionSets] = useState(false);
+    const [editingOptionSet, setLocalEditingOptionSet] = useState<MultiSelectOptionSetFormData | null>(null);
 
     // Load option sets when component becomes visible
     useEffect(() => {
@@ -53,50 +46,43 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
         }
     }, [isVisible]);
 
-    // Always use internal state for form operations, but initialize from props if needed
-    const currentEditingOptionSet = editingOptionSet || (propEditingOptionSet ? {
-        id: propEditingOptionSet.id,
-        name: propEditingOptionSet.name,
-        description: propEditingOptionSet.description || '',
-        options: [...propEditingOptionSet.options],
-        maxSelections: propEditingOptionSet.maxSelections,
-        minSelections: propEditingOptionSet.minSelections
+    // Always use internal state for form operations, but initialize from context if needed
+    const currentEditingOptionSet = editingOptionSet || (editingMultiSelectOptionSet ? {
+        id: editingMultiSelectOptionSet.id,
+        name: editingMultiSelectOptionSet.name,
+        description: editingMultiSelectOptionSet.description || '',
+        options: [...editingMultiSelectOptionSet.options],
+        maxSelections: editingMultiSelectOptionSet.maxSelections,
+        minSelections: editingMultiSelectOptionSet.minSelections
     } : null);
 
-    const currentIsCreating = propIsCreating !== undefined ? propIsCreating : isCreating;
-
-    // Sync internal state when props change
+    // Sync internal state when context changes, but only on initial load
     useEffect(() => {
-        if (propEditingOptionSet) {
-            setEditingOptionSet({
-                id: propEditingOptionSet.id,
-                name: propEditingOptionSet.name,
-                description: propEditingOptionSet.description || '',
-                options: [...propEditingOptionSet.options],
-                maxSelections: propEditingOptionSet.maxSelections,
-                minSelections: propEditingOptionSet.minSelections
+        if (editingMultiSelectOptionSet && !editingOptionSet) {
+            setLocalEditingOptionSet({
+                id: editingMultiSelectOptionSet.id,
+                name: editingMultiSelectOptionSet.name,
+                description: editingMultiSelectOptionSet.description || '',
+                options: [...editingMultiSelectOptionSet.options],
+                maxSelections: editingMultiSelectOptionSet.maxSelections,
+                minSelections: editingMultiSelectOptionSet.minSelections
             });
-            setIsCreating(false);
-        } else if (propEditingOptionSet === null) {
-            // Clear internal state when props are cleared
-            setEditingOptionSet(null);
-            setIsCreating(false);
         }
-    }, [propEditingOptionSet]);
+    }, [editingMultiSelectOptionSet, editingOptionSet]);
 
     const loadOptionSets = async () => {
-        setIsLoadingOptionSets(true);
+        dispatch({ type: 'SET_IS_LOADING', payload: true });
         try {
             console.log('Loading multi-select option sets from database...');
             const loadedOptionSets = await firestoreHelpers.getMultiSelectOptionSets();
             console.log('Loaded multi-select option sets:', loadedOptionSets);
             console.log('Option set IDs:', loadedOptionSets.map(os => ({ id: os.id, name: os.name })));
-            setOptionSets(loadedOptionSets);
+            dispatch({ type: 'SET_MULTI_SELECT_OPTION_SETS', payload: loadedOptionSets });
         } catch (error) {
             console.error('Error loading multi-select option sets:', error);
             showError('Failed to load multi-select option sets');
         } finally {
-            setIsLoadingOptionSets(false);
+            dispatch({ type: 'SET_IS_LOADING', payload: false });
         }
     };
 
@@ -113,12 +99,12 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
             minSelections: 1,
             maxSelections: 3
         };
-        setEditingOptionSet(newOptionSet);
+        setLocalEditingOptionSet(newOptionSet);
         setIsCreating(true);
     };
 
     const handleEdit = (optionSet: MultiSelectOptionSet) => {
-        setEditingOptionSet({
+        setLocalEditingOptionSet({
             id: optionSet.id,
             name: optionSet.name,
             description: optionSet.description || '',
@@ -126,6 +112,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
             maxSelections: optionSet.maxSelections,
             minSelections: optionSet.minSelections
         });
+        setEditingMultiSelectOptionSet(optionSet);
         setIsCreating(false);
     };
 
@@ -143,10 +130,8 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
             console.log('Multi-select option set deleted successfully from Firebase');
             showSuccess('Multi-select option set deleted successfully');
 
-            // Notify parent component about the deletion
-            if (onOptionSetDeleted) {
-                onOptionSetDeleted(deleteModal.data.id);
-            }
+            // Update context state
+            dispatch({ type: 'DELETE_MULTI_SELECT_OPTION_SET', payload: deleteModal.data.id });
 
             // Refresh the option sets list
             try {
@@ -210,23 +195,21 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                 }
             };
 
-            if (currentIsCreating) {
+            if (isCreating) {
                 const newOptionSet = await firestoreHelpers.addMultiSelectOptionSet(optionSetData);
                 showSuccess('Multi-select option set created successfully');
 
-                // Notify parent component about the creation
-                if (onOptionSetCreated && newOptionSet) {
-                    onOptionSetCreated(newOptionSet);
+                // Update context state
+                if (newOptionSet) {
+                    dispatch({ type: 'ADD_MULTI_SELECT_OPTION_SET', payload: newOptionSet });
                 }
             } else {
                 await firestoreHelpers.updateMultiSelectOptionSet(optionSetToSave.id, optionSetData);
                 showSuccess('Multi-select option set updated successfully');
 
-                // Notify parent component about the update
-                if (onOptionSetUpdated) {
-                    const updatedOptionSet = { ...optionSetData, id: optionSetToSave.id };
-                    onOptionSetUpdated(updatedOptionSet);
-                }
+                // Update context state
+                const updatedOptionSet = { ...optionSetData, id: optionSetToSave.id };
+                dispatch({ type: 'UPDATE_MULTI_SELECT_OPTION_SET', payload: updatedOptionSet });
             }
 
             // Refresh the option sets list
@@ -235,10 +218,10 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
             } catch (error) {
                 console.warn('Failed to refresh option sets after save:', error);
             }
-            setEditingOptionSet(null);
-            setIsCreating(false);
+            setLocalEditingOptionSet(null);
+            resetEditingState();
         } catch (err) {
-            showError(currentIsCreating ? 'Failed to create multi-select option set' : 'Failed to update multi-select option set');
+            showError(isCreating ? 'Failed to create multi-select option set' : 'Failed to update multi-select option set');
             console.error('Error saving multi-select option set:', err);
         } finally {
             setLoading(false);
@@ -246,8 +229,8 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
     };
 
     const handleCancel = () => {
-        setEditingOptionSet(null);
-        setIsCreating(false);
+        setLocalEditingOptionSet(null);
+        resetEditingState();
         // Call onClose to close the modal
         onClose();
     };
@@ -260,7 +243,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
         updatedOptions[index] = { ...updatedOptions[index], [field]: value };
 
         const updatedOptionSet = { ...currentOptionSet, options: updatedOptions };
-        setEditingOptionSet(updatedOptionSet);
+        setLocalEditingOptionSet(updatedOptionSet);
     };
 
     const addOption = () => {
@@ -280,7 +263,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
             options: [...currentOptionSet.options, newOption]
         };
 
-        setEditingOptionSet(updatedOptionSet);
+        setLocalEditingOptionSet(updatedOptionSet);
     };
 
     const removeOption = (index: number) => {
@@ -294,7 +277,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
         });
 
         const updatedOptionSet = { ...currentOptionSet, options: updatedOptions };
-        setEditingOptionSet(updatedOptionSet);
+        setLocalEditingOptionSet(updatedOptionSet);
     };
 
     const moveOption = (index: number, direction: 'up' | 'down') => {
@@ -313,7 +296,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
         });
 
         const updatedOptionSet = { ...currentOptionSet, options: updatedOptions };
-        setEditingOptionSet(updatedOptionSet);
+        setLocalEditingOptionSet(updatedOptionSet);
     };
 
     const handleSelectOptionSet = (optionSetId: string) => {
@@ -323,6 +306,14 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
         // Automatically close the modal after selecting an option set
         onClose();
     };
+
+    // Clean up state when modal is closed
+    useEffect(() => {
+        if (!isVisible) {
+            setLocalEditingOptionSet(null);
+            resetEditingState();
+        }
+    }, [isVisible, resetEditingState]);
 
     if (!isVisible) return null;
 
@@ -347,7 +338,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-medium text-gray-900">
-                                    {currentIsCreating ? 'Create New Multi-Select Option Set' : 'Edit Multi-Select Option Set'}
+                                    {isCreating ? 'Create New Multi-Select Option Set' : 'Edit Multi-Select Option Set'}
                                 </h3>
                                 <div className="flex space-x-2">
                                     <Button
@@ -378,7 +369,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                                     onChange={(value) => {
                                         const currentOptionSet = editingOptionSet || currentEditingOptionSet;
                                         if (currentOptionSet) {
-                                            setEditingOptionSet({ ...currentOptionSet, name: value });
+                                            setLocalEditingOptionSet({ ...currentOptionSet, name: value });
                                         }
                                     }}
                                     placeholder="Enter option set name"
@@ -391,7 +382,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                                     onChange={(value) => {
                                         const currentOptionSet = editingOptionSet || currentEditingOptionSet;
                                         if (currentOptionSet) {
-                                            setEditingOptionSet({ ...currentOptionSet, description: value });
+                                            setLocalEditingOptionSet({ ...currentOptionSet, description: value });
                                         }
                                     }}
                                     placeholder="Enter description (optional)"
@@ -408,7 +399,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                                     onChange={(value) => {
                                         const currentOptionSet = editingOptionSet || currentEditingOptionSet;
                                         if (currentOptionSet) {
-                                            setEditingOptionSet({ ...currentOptionSet, minSelections: parseInt(value.toString()) || 1 });
+                                            setLocalEditingOptionSet({ ...currentOptionSet, minSelections: parseInt(value.toString()) || 1 });
                                         }
                                     }}
                                     placeholder="1"
@@ -421,7 +412,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                                     onChange={(value) => {
                                         const currentOptionSet = editingOptionSet || currentEditingOptionSet;
                                         if (currentOptionSet) {
-                                            setEditingOptionSet({ ...currentOptionSet, maxSelections: parseInt(value.toString()) || 3 });
+                                            setLocalEditingOptionSet({ ...currentOptionSet, maxSelections: parseInt(value.toString()) || 3 });
                                         }
                                     }}
                                     placeholder="3"
@@ -466,7 +457,7 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                                                         Color
                                                     </label>
                                                     <ColorSelector
-                                                        value={option.color}
+                                                        value={option.color || 'transparent'}
                                                         onChange={(value) => updateOption(index, 'color', value)}
                                                     />
                                                 </div>
@@ -513,17 +504,17 @@ export const MultiSelectOptionSetManager: React.FC<MultiSelectOptionSetManagerPr
                                 </Button>
                             </div>
 
-                            {isLoadingOptionSets ? (
+                            {isLoading ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
                                 </div>
-                            ) : optionSets.length === 0 ? (
+                            ) : multiSelectOptionSets.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500">
                                     No multi-select option sets found. Create your first one!
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {optionSets.map((optionSet) => (
+                                    {multiSelectOptionSets.map((optionSet) => (
                                         <div key={optionSet.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div>

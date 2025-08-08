@@ -6,6 +6,7 @@ export { DeleteConfirmationModal } from "./delete-confirmation-modal/delete-conf
 export { ErrorBoundary } from "./error-boundary";
 export { Input } from "./input";
 export { LoadingSpinner } from "./loading-spinner";
+export { PasswordInput } from "./PasswordInput";
 export { Modal } from "./modal";
 export { PaginatedList } from "./paginated-list/paginated-list";
 export { Pagination } from "./pagination/pagination";

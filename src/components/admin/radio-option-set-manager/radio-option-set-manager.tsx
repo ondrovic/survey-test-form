@@ -1,6 +1,7 @@
 import { Check, Edit, Plus, Save, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
+import { useOptionSet } from '../../../contexts/option-set-context';
 import { useToast } from '../../../contexts/toast-context/index';
 import { useModal } from '../../../hooks';
 import { OptionSetOption, RadioOptionSet } from '../../../types/survey.types';
@@ -10,12 +11,6 @@ interface RadioOptionSetManagerProps {
     isVisible: boolean;
     onClose: () => void;
     onOptionSetSelect?: (optionSetId: string) => void;
-    editingOptionSet?: RadioOptionSet | null;
-    isCreating?: boolean;
-    optionSets: RadioOptionSet[];
-    onOptionSetDeleted?: (optionSetId: string) => void;
-    onOptionSetCreated?: (optionSet: RadioOptionSet) => void;
-    onOptionSetUpdated?: (optionSet: RadioOptionSet) => void;
 }
 
 interface RadioOptionSetFormData {
@@ -28,21 +23,19 @@ interface RadioOptionSetFormData {
 export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
     isVisible,
     onClose,
-    onOptionSetSelect,
-    editingOptionSet: propEditingOptionSet,
-    isCreating: propIsCreating,
-    optionSets: [],
-    onOptionSetDeleted,
-    onOptionSetCreated,
-    onOptionSetUpdated
+    onOptionSetSelect
 }) => {
     const { showSuccess, showError } = useToast();
+    const { 
+        state: { radioOptionSets, editingRadioOptionSet, isCreating, isLoading },
+        dispatch,
+        setEditingRadioOptionSet,
+        setIsCreating,
+        resetEditingState
+    } = useOptionSet();
     const deleteModal = useModal<{ id: string; name: string }>();
     const [loading, setLoading] = useState(false);
     const [editingOptionSet, setEditingOptionSet] = useState<RadioOptionSetFormData | null>(null);
-    const [isCreating, setIsCreating] = useState(false);
-    const [optionSets, setOptionSets] = useState<RadioOptionSet[]>([]);
-    const [isLoadingOptionSets, setIsLoadingOptionSets] = useState(false);
 
     // Load option sets when component becomes visible
     useEffect(() => {
@@ -51,45 +44,38 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
         }
     }, [isVisible]);
 
-    // Always use internal state for form operations, but initialize from props if needed
-    const currentEditingOptionSet = editingOptionSet || (propEditingOptionSet ? {
-        id: propEditingOptionSet.id,
-        name: propEditingOptionSet.name,
-        description: propEditingOptionSet.description || '',
-        options: [...propEditingOptionSet.options]
+    // Always use internal state for form operations, but initialize from context if needed
+    const currentEditingOptionSet = editingOptionSet || (editingRadioOptionSet ? {
+        id: editingRadioOptionSet.id,
+        name: editingRadioOptionSet.name,
+        description: editingRadioOptionSet.description || '',
+        options: [...editingRadioOptionSet.options]
     } : null);
 
-    const currentIsCreating = propIsCreating !== undefined ? propIsCreating : isCreating;
-
-    // Sync internal state when props change
+    // Sync internal state when context changes, but only on initial load
     useEffect(() => {
-        if (propEditingOptionSet) {
+        if (editingRadioOptionSet && !editingOptionSet) {
             setEditingOptionSet({
-                id: propEditingOptionSet.id,
-                name: propEditingOptionSet.name,
-                description: propEditingOptionSet.description || '',
-                options: [...propEditingOptionSet.options]
+                id: editingRadioOptionSet.id,
+                name: editingRadioOptionSet.name,
+                description: editingRadioOptionSet.description || '',
+                options: [...editingRadioOptionSet.options]
             });
-            setIsCreating(false);
-        } else if (propEditingOptionSet === null) {
-            // Clear internal state when props are cleared
-            setEditingOptionSet(null);
-            setIsCreating(false);
         }
-    }, [propEditingOptionSet]);
+    }, [editingRadioOptionSet, editingOptionSet]);
 
     const loadOptionSets = async () => {
-        setIsLoadingOptionSets(true);
+        dispatch({ type: 'SET_IS_LOADING', payload: true });
         try {
             console.log('Loading radio option sets from database...');
             const loadedOptionSets = await firestoreHelpers.getRadioOptionSets();
             console.log('Loaded radio option sets:', loadedOptionSets);
-            setOptionSets(loadedOptionSets);
+            dispatch({ type: 'SET_RADIO_OPTION_SETS', payload: loadedOptionSets });
         } catch (error) {
             console.error('Error loading radio option sets:', error);
             showError('Failed to load radio option sets');
         } finally {
-            setIsLoadingOptionSets(false);
+            dispatch({ type: 'SET_IS_LOADING', payload: false });
         }
     };
 
@@ -99,7 +85,7 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
             name: '',
             description: '',
             options: [
-                { value: 'option1', label: 'Option 1', color: 'transparent', isDefault: true, order: 0 },
+                { value: 'option1', label: 'Option 1', color: 'transparent', isDefault: false, order: 0 },
                 { value: 'option2', label: 'Option 2', color: 'transparent', isDefault: false, order: 1 },
                 { value: 'option3', label: 'Option 3', color: 'transparent', isDefault: false, order: 2 }
             ]
@@ -109,12 +95,14 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
     };
 
     const handleEdit = (optionSet: RadioOptionSet) => {
-        setEditingOptionSet({
+        const formData: RadioOptionSetFormData = {
             id: optionSet.id,
             name: optionSet.name,
             description: optionSet.description || '',
             options: [...optionSet.options]
-        });
+        };
+        setEditingOptionSet(formData);
+        setEditingRadioOptionSet(optionSet);
         setIsCreating(false);
     };
 
@@ -132,10 +120,8 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
             console.log('Radio option set deleted successfully from Firebase');
             showSuccess('Radio option set deleted successfully');
 
-            // Notify parent component about the deletion
-            if (onOptionSetDeleted) {
-                onOptionSetDeleted(deleteModal.data.id);
-            }
+            // Update context state
+            dispatch({ type: 'DELETE_RADIO_OPTION_SET', payload: deleteModal.data.id });
 
             // Refresh the option sets list
             try {
@@ -167,11 +153,7 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
             return;
         }
 
-        const defaultOptions = optionSetToSave.options.filter(opt => opt.isDefault);
-        if (defaultOptions.length === 0) {
-            showError('At least one option must be marked as default');
-            return;
-        }
+        // Note: Default options are now optional - no validation required
 
         setLoading(true);
         try {
@@ -187,23 +169,21 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
                 }
             };
 
-            if (currentIsCreating) {
+            if (isCreating) {
                 const newOptionSet = await firestoreHelpers.addRadioOptionSet(optionSetData);
                 showSuccess('Radio option set created successfully');
 
-                // Notify parent component about the creation
-                if (onOptionSetCreated && newOptionSet) {
-                    onOptionSetCreated(newOptionSet);
+                // Update context state
+                if (newOptionSet) {
+                    dispatch({ type: 'ADD_RADIO_OPTION_SET', payload: newOptionSet });
                 }
             } else {
                 await firestoreHelpers.updateRadioOptionSet(optionSetToSave.id, optionSetData);
                 showSuccess('Radio option set updated successfully');
 
-                // Notify parent component about the update
-                if (onOptionSetUpdated) {
-                    const updatedOptionSet = { ...optionSetData, id: optionSetToSave.id };
-                    onOptionSetUpdated(updatedOptionSet);
-                }
+                // Update context state
+                const updatedOptionSet = { ...optionSetData, id: optionSetToSave.id };
+                dispatch({ type: 'UPDATE_RADIO_OPTION_SET', payload: updatedOptionSet });
             }
 
             // Refresh the option sets list
@@ -212,10 +192,11 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
             } catch (error) {
                 console.warn('Failed to refresh option sets after save:', error);
             }
+            // Clear internal state after successful save
             setEditingOptionSet(null);
-            setIsCreating(false);
+            resetEditingState();
         } catch (err) {
-            showError(currentIsCreating ? 'Failed to create radio option set' : 'Failed to update radio option set');
+            showError(isCreating ? 'Failed to create radio option set' : 'Failed to update radio option set');
             console.error('Error saving radio option set:', err);
         } finally {
             setLoading(false);
@@ -224,10 +205,18 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
 
     const handleCancel = () => {
         setEditingOptionSet(null);
-        setIsCreating(false);
+        resetEditingState();
         // Call onClose to close the modal
         onClose();
     };
+
+    // Clean up state when modal is closed
+    useEffect(() => {
+        if (!isVisible) {
+            setEditingOptionSet(null);
+            resetEditingState();
+        }
+    }, [isVisible, resetEditingState]);
 
     const updateOption = (index: number, field: keyof OptionSetOption, value: any) => {
         const currentOptionSet = editingOptionSet || currentEditingOptionSet;
@@ -331,7 +320,7 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-medium text-gray-900">
-                                    {currentIsCreating ? 'Create New Radio Option Set' : 'Edit Radio Option Set'}
+                                    {isCreating ? 'Create New Radio Option Set' : 'Edit Radio Option Set'}
                                 </h3>
                                 <div className="flex space-x-2">
                                     <Button
@@ -420,7 +409,7 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
                                                         Color
                                                     </label>
                                                     <ColorSelector
-                                                        value={option.color}
+                                                        value={option.color || 'transparent'}
                                                         onChange={(value) => updateOption(index, 'color', value)}
                                                     />
                                                 </div>
@@ -478,17 +467,17 @@ export const RadioOptionSetManager: React.FC<RadioOptionSetManagerProps> = ({
                                 </Button>
                             </div>
 
-                            {isLoadingOptionSets ? (
+                            {isLoading ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
                                 </div>
-                            ) : optionSets.length === 0 ? (
+                            ) : radioOptionSets.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500">
                                     No radio option sets found. Create your first one!
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {optionSets.map((optionSet) => (
+                                    {radioOptionSets.map((optionSet) => (
                                         <div key={optionSet.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div>

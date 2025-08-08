@@ -1,6 +1,7 @@
 import { Check, Edit, Plus, Save, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
+import { useRatingScale } from '../../../contexts/rating-scale-context';
 import { useToast } from '../../../contexts/toast-context/index';
 import { useModal } from '../../../hooks';
 import { RatingScale, RatingScaleOption } from '../../../types/survey.types';
@@ -10,12 +11,6 @@ interface RatingScaleManagerProps {
     isVisible: boolean;
     onClose: () => void;
     onScaleSelect?: (scaleId: string) => void;
-    editingScale?: RatingScale | null;
-    isCreating?: boolean;
-    scales: RatingScale[];
-    onScaleDeleted?: (scaleId: string) => void;
-    onScaleCreated?: (scale: RatingScale) => void;
-    onScaleUpdated?: (scale: RatingScale) => void;
 }
 
 interface RatingScaleFormData {
@@ -28,21 +23,23 @@ interface RatingScaleFormData {
 export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
     isVisible,
     onClose,
-    onScaleSelect,
-    editingScale: propEditingScale,
-    isCreating: propIsCreating,
-    scales: [],
-    onScaleDeleted,
-    onScaleCreated,
-    onScaleUpdated
+    onScaleSelect
 }) => {
     const { showSuccess, showError } = useToast();
+    const {
+        state: { ratingScales, editingScale: contextEditingScale, isCreating, isLoading },
+        setRatingScales,
+        setEditingScale,
+        setIsCreating,
+        setIsLoading,
+        addRatingScale,
+        updateRatingScale,
+        deleteRatingScale,
+        resetEditingState
+    } = useRatingScale();
     const deleteModal = useModal<{ id: string; name: string }>();
     const [loading, setLoading] = useState(false);
-    const [editingScale, setEditingScale] = useState<RatingScaleFormData | null>(null);
-    const [isCreating, setIsCreating] = useState(false);
-    const [scales, setScales] = useState<RatingScale[]>([]);
-    const [isLoadingScales, setIsLoadingScales] = useState(false);
+    const [editingScale, setLocalEditingScale] = useState<RatingScaleFormData | null>(null);
 
     // Load scales when component becomes visible
     useEffect(() => {
@@ -51,45 +48,38 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         }
     }, [isVisible]);
 
-    // Always use internal state for form operations, but initialize from props if needed
-    const currentEditingScale = editingScale || (propEditingScale ? {
-        id: propEditingScale.id,
-        name: propEditingScale.name,
-        description: propEditingScale.description || '',
-        options: [...propEditingScale.options]
+    // Always use internal state for form operations, but initialize from context if needed
+    const currentEditingScale = editingScale || (contextEditingScale ? {
+        id: contextEditingScale.id,
+        name: contextEditingScale.name,
+        description: contextEditingScale.description || '',
+        options: [...contextEditingScale.options]
     } : null);
 
-    const currentIsCreating = propIsCreating !== undefined ? propIsCreating : isCreating;
-
-    // Sync internal state when props change
+    // Sync internal state when context changes, but only on initial load
     useEffect(() => {
-        if (propEditingScale) {
-            setEditingScale({
-                id: propEditingScale.id,
-                name: propEditingScale.name,
-                description: propEditingScale.description || '',
-                options: [...propEditingScale.options]
+        if (contextEditingScale && !editingScale) {
+            setLocalEditingScale({
+                id: contextEditingScale.id,
+                name: contextEditingScale.name,
+                description: contextEditingScale.description || '',
+                options: [...contextEditingScale.options]
             });
-            setIsCreating(false);
-        } else if (propEditingScale === null) {
-            // Clear internal state when props are cleared
-            setEditingScale(null);
-            setIsCreating(false);
         }
-    }, [propEditingScale]);
+    }, [contextEditingScale, editingScale]);
 
     const loadScales = async () => {
-        setIsLoadingScales(true);
+        setIsLoading(true);
         try {
             console.log('Loading rating scales from database...');
             const loadedScales = await firestoreHelpers.getRatingScales();
-            console.log('Loaded scales:', loadedScales);
-            setScales(loadedScales);
+            console.log('Loaded rating scales:', loadedScales);
+            setRatingScales(loadedScales);
         } catch (error) {
             console.error('Error loading rating scales:', error);
             showError('Failed to load rating scales');
         } finally {
-            setIsLoadingScales(false);
+            setIsLoading(false);
         }
     };
 
@@ -99,23 +89,25 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             name: '',
             description: '',
             options: [
-                { value: 'High', label: 'High', color: 'success', isDefault: true, order: 0 },
+                { value: 'High', label: 'High', color: 'success', isDefault: false, order: 0 },
                 { value: 'Medium', label: 'Medium', color: 'warning', isDefault: false, order: 1 },
                 { value: 'Low', label: 'Low', color: 'error', isDefault: false, order: 2 },
                 { value: 'Not Important', label: 'Not Important', color: 'transparent', isDefault: false, order: 3 }
             ]
         };
-        setEditingScale(newScale);
+        setLocalEditingScale(newScale);
         setIsCreating(true);
     };
 
     const handleEdit = (scale: RatingScale) => {
-        setEditingScale({
+        const formData: RatingScaleFormData = {
             id: scale.id,
             name: scale.name,
             description: scale.description || '',
             options: [...scale.options]
-        });
+        };
+        setLocalEditingScale(formData);
+        setEditingScale(scale);
         setIsCreating(false);
     };
 
@@ -133,10 +125,8 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             console.log('Rating scale deleted successfully from Firebase');
             showSuccess('Rating scale deleted successfully');
 
-            // Notify parent component about the deletion
-            if (onScaleDeleted) {
-                onScaleDeleted(deleteModal.data.id);
-            }
+            // Update context state
+            deleteRatingScale(deleteModal.data.id);
         } catch (err) {
             showError('Failed to delete rating scale');
             console.error('Error deleting rating scale:', err);
@@ -161,11 +151,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             return;
         }
 
-        const defaultOptions = scaleToSave.options.filter(opt => opt.isDefault);
-        if (defaultOptions.length === 0) {
-            showError('At least one option must be marked as default');
-            return;
-        }
+        // Note: Default options are now optional - no validation required
 
         setLoading(true);
         try {
@@ -181,29 +167,27 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                 }
             };
 
-            if (currentIsCreating) {
+            if (isCreating) {
                 const newScale = await firestoreHelpers.addRatingScale(scaleData);
                 showSuccess('Rating scale created successfully');
 
-                // Notify parent component about the creation
-                if (onScaleCreated && newScale) {
-                    onScaleCreated(newScale);
+                // Update context state
+                if (newScale) {
+                    addRatingScale(newScale);
                 }
             } else {
                 await firestoreHelpers.updateRatingScale(scaleToSave.id, scaleData);
                 showSuccess('Rating scale updated successfully');
 
-                // Notify parent component about the update
-                if (onScaleUpdated) {
-                    const updatedScale = { ...scaleData, id: scaleToSave.id };
-                    onScaleUpdated(updatedScale);
-                }
+                // Update context state
+                const updatedScale = { ...scaleData, id: scaleToSave.id, metadata: { isActive: true, createdBy: 'admin', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } };
+                updateRatingScale(updatedScale);
             }
 
-            setEditingScale(null);
-            setIsCreating(false);
+            setLocalEditingScale(null);
+            resetEditingState();
         } catch (err) {
-            showError(currentIsCreating ? 'Failed to create rating scale' : 'Failed to update rating scale');
+            showError(isCreating ? 'Failed to create rating scale' : 'Failed to update rating scale');
             console.error('Error saving rating scale:', err);
         } finally {
             setLoading(false);
@@ -211,8 +195,8 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
     };
 
     const handleCancel = () => {
-        setEditingScale(null);
-        setIsCreating(false);
+        setLocalEditingScale(null);
+        resetEditingState();
         // Call onClose to close the modal
         onClose();
     };
@@ -232,7 +216,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         }
 
         const updatedScale = { ...currentScale, options: updatedOptions };
-        setEditingScale(updatedScale);
+        setLocalEditingScale(updatedScale);
     };
 
     const addOption = () => {
@@ -252,7 +236,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
             options: [...currentScale.options, newOption]
         };
 
-        setEditingScale(updatedScale);
+        setLocalEditingScale(updatedScale);
     };
 
     const removeOption = (index: number) => {
@@ -266,7 +250,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         });
 
         const updatedScale = { ...currentScale, options: updatedOptions };
-        setEditingScale(updatedScale);
+        setLocalEditingScale(updatedScale);
     };
 
     const moveOption = (index: number, direction: 'up' | 'down') => {
@@ -285,7 +269,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         });
 
         const updatedScale = { ...currentScale, options: updatedOptions };
-        setEditingScale(updatedScale);
+        setLocalEditingScale(updatedScale);
     };
 
     const handleSelectScale = (scaleId: string) => {
@@ -295,6 +279,14 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
         // Automatically close the modal after selecting a scale
         onClose();
     };
+
+    // Clean up state when modal is closed
+    useEffect(() => {
+        if (!isVisible) {
+            setLocalEditingScale(null);
+            resetEditingState();
+        }
+    }, [isVisible, resetEditingState]);
 
     if (!isVisible) return null;
 
@@ -321,7 +313,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-medium text-gray-900">
-                                    {currentIsCreating ? 'Create New Rating Scale' : 'Edit Rating Scale'}
+                                    {isCreating ? 'Create New Rating Scale' : 'Edit Rating Scale'}
                                 </h3>
                                 <div className="flex space-x-2">
                                     <Button
@@ -410,7 +402,7 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                                         Color
                                                     </label>
                                                     <ColorSelector
-                                                        value={option.color}
+                                                        value={option.color || 'transparent'}
                                                         onChange={(value) => updateOption(index, 'color', value)}
                                                     />
                                                 </div>
@@ -468,17 +460,17 @@ export const RatingScaleManager: React.FC<RatingScaleManagerProps> = ({
                                 </Button>
                             </div>
 
-                            {isLoadingScales ? (
+                            {isLoading ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
                                 </div>
-                            ) : scales.length === 0 ? (
+                            ) : ratingScales.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500">
                                     No rating scales found. Create your first one!
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {scales.map((scale) => (
+                                    {ratingScales.map((scale) => (
                                         <div key={scale.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
-import { useSurveyDataContext } from '../../../contexts/survey-data-context/index';
+import { useSurveyData } from '../../../contexts/survey-data-context/index';
 import { useToast } from '../../../contexts/toast-context/index';
 import { FieldType, SurveyField, SurveySection } from '../../../types/survey.types';
 import { MultiSelectOptionSetManager } from '../multi-select-option-set-manager';
@@ -28,7 +28,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 // Main component that uses the context
 const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
     const { showSuccess, showError } = useToast();
-    const { refreshAll } = useSurveyDataContext();
+    const { refreshAll } = useSurveyData();
     const {
         state,
         updateConfig,
@@ -226,7 +226,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                             }
                             showRatingScaleManager(false);
                         }}
-                        scales={[]} // SurveyBuilder doesn't need to manage scales, so pass empty array
+
                     />
                 )}
 
@@ -246,16 +246,26 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     <RadioOptionSetManager
                         isVisible={state.showRadioOptionSetManager}
                         onClose={() => showRadioOptionSetManager(false)}
-                        onOptionSetSelect={(optionSetId) => {
+                        onOptionSetSelect={async (optionSetId) => {
                             if (selectedField) {
-                                handleUpdateField(selectedSection!.id, selectedField.id, {
-                                    radioOptionSetId: optionSetId,
-                                    radioOptionSetName: `Radio Option Set ${optionSetId}`
-                                });
+                                try {
+                                    // Fetch the actual option set to get its name
+                                    const optionSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
+                                    handleUpdateField(selectedSection!.id, selectedField.id, {
+                                        radioOptionSetId: optionSetId,
+                                        radioOptionSetName: optionSet?.name || `Radio Option Set ${optionSetId}`
+                                    });
+                                } catch (error) {
+                                    console.error('Error fetching option set name:', error);
+                                    // Fallback to generic name if fetch fails
+                                    handleUpdateField(selectedSection!.id, selectedField.id, {
+                                        radioOptionSetId: optionSetId,
+                                        radioOptionSetName: `Radio Option Set ${optionSetId}`
+                                    });
+                                }
                             }
                             showRadioOptionSetManager(false);
                         }}
-                        optionSets={[]} // SurveyBuilder doesn't need to manage option sets, so pass empty array
                     />
                 )}
 
@@ -264,17 +274,27 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     <MultiSelectOptionSetManager
                         isVisible={state.showMultiSelectOptionSetManager}
                         onClose={() => showMultiSelectOptionSetManager(false)}
-                        onOptionSetSelect={(optionSetId) => {
+                        onOptionSetSelect={async (optionSetId) => {
                             console.log('🎯 Selected multi-select option set:', optionSetId);
                             if (selectedField) {
-                                handleUpdateField(selectedSection!.id, selectedField.id, {
-                                    multiSelectOptionSetId: optionSetId,
-                                    multiSelectOptionSetName: `Multi-Select Option Set ${optionSetId}`
-                                });
+                                try {
+                                    // Fetch the actual option set to get its name
+                                    const optionSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
+                                    handleUpdateField(selectedSection!.id, selectedField.id, {
+                                        multiSelectOptionSetId: optionSetId,
+                                        multiSelectOptionSetName: optionSet?.name || `Multi-Select Option Set ${optionSetId}`
+                                    });
+                                } catch (error) {
+                                    console.error('Error fetching option set name:', error);
+                                    // Fallback to generic name if fetch fails
+                                    handleUpdateField(selectedSection!.id, selectedField.id, {
+                                        multiSelectOptionSetId: optionSetId,
+                                        multiSelectOptionSetName: `Multi-Select Option Set ${optionSetId}`
+                                    });
+                                }
                             }
                             showMultiSelectOptionSetManager(false);
                         }}
-                        optionSets={[]} // SurveyBuilder doesn't need to manage option sets, so pass empty array
                     />
                 )}
 

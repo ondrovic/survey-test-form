@@ -1,5 +1,5 @@
 import { firestoreHelpers } from "@/config/firebase";
-import { useSurveyDataContext } from "@/contexts/survey-data-context/index";
+import { useSurveyData } from "@/contexts/survey-data-context/index";
 import { useToast } from "@/contexts/toast-context";
 import { RatingScale, SurveyResponse } from "@/types";
 import {
@@ -10,7 +10,7 @@ import { useCallback } from "react";
 
 export const useAdminOperations = () => {
   const { showSuccess, showError } = useToast();
-  const { refreshAll } = useSurveyDataContext();
+  const { refreshAll } = useSurveyData();
 
   const deleteSurvey = useCallback(
     async (surveyId: string) => {

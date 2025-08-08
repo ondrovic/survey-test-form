@@ -12,13 +12,10 @@ interface FieldRendererProps {
     onChange: (fieldId: string, value: any) => void;
     error?: string;
     ratingScales?: Record<string, RatingScale>;
-    loadingScales?: Record<string, boolean>;
-    onLoadRatingScale?: (scaleId: string) => Promise<void>;
+    loadingScales?: boolean;
     radioOptionSets?: Record<string, RadioOptionSet>;
     multiSelectOptionSets?: Record<string, MultiSelectOptionSet>;
-    loadingOptionSets?: Record<string, boolean>;
-    onLoadRadioOptionSet?: (optionSetId: string) => Promise<void>;
-    onLoadMultiSelectOptionSet?: (optionSetId: string) => Promise<void>;
+    loadingOptionSets?: boolean;
 }
 
 export const FieldRenderer: React.FC<FieldRendererProps> = ({
@@ -27,13 +24,10 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     onChange,
     error,
     ratingScales = {},
-    loadingScales = {},
-    onLoadRatingScale,
+    loadingScales = false,
     radioOptionSets = {},
     multiSelectOptionSets = {},
-    loadingOptionSets = {},
-    onLoadRadioOptionSet,
-    onLoadMultiSelectOptionSet
+    loadingOptionSets = false
 }) => {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -74,26 +68,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         };
     }, [openDropdown]);
 
-    // Load rating scale if needed
-    useEffect(() => {
-        if (field.type === 'rating' && field.ratingScaleId && onLoadRatingScale) {
-            onLoadRatingScale(field.ratingScaleId);
-        }
-    }, [field, onLoadRatingScale]);
 
-    // Load radio option set if needed
-    useEffect(() => {
-        if (field.type === 'radio' && field.radioOptionSetId && onLoadRadioOptionSet) {
-            onLoadRadioOptionSet(field.radioOptionSetId);
-        }
-    }, [field, onLoadRadioOptionSet]);
-
-    // Load multi-select option set if needed
-    useEffect(() => {
-        if (field.type === 'multiselect' && field.multiSelectOptionSetId && onLoadMultiSelectOptionSet) {
-            onLoadMultiSelectOptionSet(field.multiSelectOptionSetId);
-        }
-    }, [field, onLoadMultiSelectOptionSet]);
 
     const handleFieldChange = useCallback((fieldId: string, newValue: any) => {
         onChange(fieldId, newValue);
@@ -166,7 +141,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         color: opt.color,
                         isDefault: opt.isDefault
                     }));
-                } else if (loadingOptionSets[field.radioOptionSetId]) {
+                } else if (loadingOptionSets) {
                     isRadioLoading = true;
                 }
             }
@@ -206,9 +181,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 hasOptionSetId: !!field.multiSelectOptionSetId,
                 optionSetId: field.multiSelectOptionSetId,
                 hasLoadedOptionSet: !!multiSelectOptionSets[field.multiSelectOptionSetId],
-                isLoading: loadingOptionSets[field.multiSelectOptionSetId],
+                isLoading: loadingOptionSets,
                 loadedOptionSets: Object.keys(multiSelectOptionSets),
-                loadingOptionSets: Object.keys(loadingOptionSets),
                 availableOptionSets: Object.keys(multiSelectOptionSets),
                 fieldOptions: field.options?.length || 0
             });
@@ -223,7 +197,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         isDefault: opt.isDefault
                     }));
                     console.log('✅ Using loaded option set options:', multiSelectOptions);
-                } else if (loadingOptionSets[field.multiSelectOptionSetId]) {
+                } else if (loadingOptionSets) {
                     isMultiSelectLoading = true;
                     console.log('⏳ Option set is loading...');
                 } else {
@@ -279,7 +253,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         color: opt.color,
                         isDefault: opt.isDefault
                     }));
-                } else if (loadingScales[field.ratingScaleId]) {
+                } else if (loadingScales) {
                     isLoading = true;
                 }
             }

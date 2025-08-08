@@ -444,7 +444,7 @@ export const SelectOptionSetManager: React.FC<SelectOptionSetManagerProps> = ({
                                                         Color
                                                     </label>
                                                     <ColorSelector
-                                                        value={option.color}
+                                                        value={option.color || 'transparent'}
                                                         onChange={(value) => updateOption(index, 'color', value)}
                                                     />
                                                 </div>

@@ -1,8 +1,8 @@
-import { useForm } from '@/hooks';
 import { clsx } from 'clsx';
-import React, { useCallback, useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
-import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../types/survey.types';
+import React, { useCallback } from 'react';
+import { useForm } from '../../../contexts/form-context';
+import { useSurveyData } from '../../../contexts/survey-data-context';
+import { SurveyConfig, SurveyField, SurveySection } from '../../../types/survey.types';
 import { Button } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
@@ -37,86 +37,41 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     className,
     resetTrigger
 }) => {
-    const [ratingScales, setRatingScales] = useState<Record<string, RatingScale>>({});
-    const [loadingScales, setLoadingScales] = useState<Record<string, boolean>>({});
-    const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
-    const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
-    const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
-    const [showSuccess, setShowSuccess] = useState(false);
+    // Use context providers
+    const { state: formState, setFieldValue, resetForm } = useForm();
+    const { state: surveyDataState } = useSurveyData();
 
-    // Use our custom form hook
-    const {
-        formState,
-        errors,
-        setFieldValue,
-        validateForm,
-        resetForm
-    } = useForm();
+    // Extract data from survey data context
+    const { ratingScales, radioOptionSets, multiSelectOptionSets, isLoading } = surveyDataState;
 
-    // Load rating scale for a field
-    const loadRatingScale = useCallback(async (scaleId: string) => {
-        if (ratingScales[scaleId] || loadingScales[scaleId]) return;
+    // Convert arrays to records for easy lookup
+    const ratingScalesRecord = React.useMemo(() => {
+        const record: Record<string, any> = {};
+        ratingScales.forEach(scale => {
+            record[scale.id] = scale;
+        });
+        return record;
+    }, [ratingScales]);
 
-        setLoadingScales(prev => ({ ...prev, [scaleId]: true }));
-        try {
-            const scale = await firestoreHelpers.getRatingScale(scaleId);
-            if (scale) {
-                setRatingScales(prev => ({ ...prev, [scaleId]: scale }));
-            }
-        } catch (error) {
-            console.error('Error loading rating scale:', error);
-        } finally {
-            setLoadingScales(prev => ({ ...prev, [scaleId]: false }));
-        }
-    }, [ratingScales, loadingScales]);
+    const radioOptionSetsRecord = React.useMemo(() => {
+        const record: Record<string, any> = {};
+        radioOptionSets.forEach(set => {
+            record[set.id] = set;
+        });
+        return record;
+    }, [radioOptionSets]);
 
-    // Load radio option set for a field
-    const loadRadioOptionSet = useCallback(async (optionSetId: string) => {
-        if (radioOptionSets[optionSetId] || loadingOptionSets[optionSetId]) return;
+    const multiSelectOptionSetsRecord = React.useMemo(() => {
+        const record: Record<string, any> = {};
+        multiSelectOptionSets.forEach(set => {
+            record[set.id] = set;
+        });
+        return record;
+    }, [multiSelectOptionSets]);
 
-        setLoadingOptionSets(prev => ({ ...prev, [optionSetId]: true }));
-        try {
-            const optionSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
-            if (optionSet) {
-                setRadioOptionSets(prev => ({ ...prev, [optionSetId]: optionSet }));
-            }
-        } catch (error) {
-            console.error('Error loading radio option set:', error);
-        } finally {
-            setLoadingOptionSets(prev => ({ ...prev, [optionSetId]: false }));
-        }
-    }, [radioOptionSets, loadingOptionSets]);
-
-    // Load multi-select option set for a field
-    const loadMultiSelectOptionSet = useCallback(async (optionSetId: string) => {
-        if (multiSelectOptionSets[optionSetId] || loadingOptionSets[optionSetId]) return;
-
-        console.log('🔄 Loading multi-select option set:', optionSetId);
-        console.log('🔍 Current multiSelectOptionSets:', Object.keys(multiSelectOptionSets));
-        console.log('🔍 Current loadingOptionSets:', Object.keys(loadingOptionSets));
-        setLoadingOptionSets(prev => ({ ...prev, [optionSetId]: true }));
-        try {
-            const optionSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
-            console.log('✅ Loaded multi-select option set:', optionSet);
-            if (optionSet) {
-                setMultiSelectOptionSets(prev => ({ ...prev, [optionSetId]: optionSet }));
-                console.log('✅ Updated multiSelectOptionSets with:', optionSetId);
-            } else {
-                console.log('❌ Option set not found in database:', optionSetId);
-            }
-        } catch (error) {
-            console.error('❌ Error loading multi-select option set:', error);
-        } finally {
-            setLoadingOptionSets(prev => ({ ...prev, [optionSetId]: false }));
-        }
-    }, [multiSelectOptionSets, loadingOptionSets]);
-
-    // Initialize form state with default values and load rating scales
+    // Initialize form state with default values
     const initializeFormState = useCallback(() => {
         const initialState: Record<string, any> = {};
-        const scalesToLoad: string[] = [];
-        const radioOptionSetsToLoad: string[] = [];
-        const multiSelectOptionSetsToLoad: string[] = [];
 
         config.sections.forEach(section => {
             section.fields.forEach(field => {
@@ -132,31 +87,51 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     ratingScaleId: field.ratingScaleId
                 });
 
-                if (field.defaultValue !== undefined) {
-                    initialState[field.id] = field.defaultValue;
-                } else if (field.type === 'multiselect') {
-                    initialState[field.id] = [];
-                } else if (field.type === 'rating') {
-                    if (field.ratingScaleId) {
-                        // Load rating scale and use its default option
-                        scalesToLoad.push(field.ratingScaleId);
-                        // We'll set the default value after loading the scale
+                if (field.type === 'rating' && field.ratingScaleId) {
+                    // Use default value from rating scale if available
+                    const scale = ratingScalesRecord[field.ratingScaleId];
+                    if (scale) {
+                        const defaultOption = scale.options.find(opt => opt.isDefault);
+                        if (defaultOption) {
+                            initialState[field.id] = defaultOption.value;
+                        } else {
+                            initialState[field.id] = 'Not Important';
+                        }
                     } else {
-                        // Use default value from individual options if available
-                        const defaultOption = field.options?.find(opt => opt.isDefault);
-                        initialState[field.id] = defaultOption?.value || 'Not Important';
+                        initialState[field.id] = 'Not Important';
                     }
                 } else if (field.type === 'radio' && field.radioOptionSetId) {
-                    // Load radio option set
-                    radioOptionSetsToLoad.push(field.radioOptionSetId);
+                    // Load radio option set - don't set initial value, will be set when option set loads
                     console.log('📋 Found radio option set to load:', field.radioOptionSetId);
+                } else if (field.type === 'radio' && field.options) {
+                    // Use default value from individual radio options if available
+                    const defaultOption = field.options.find(opt => opt.isDefault);
+                    if (defaultOption) {
+                        initialState[field.id] = defaultOption.value;
+                    }
+                    // If no default option, don't set any initial value (will be undefined)
                 } else if (field.type === 'multiselect' && field.multiSelectOptionSetId) {
-                    // Load multi-select option set
-                    multiSelectOptionSetsToLoad.push(field.multiSelectOptionSetId);
+                    // Load multi-select option set - don't set initial value, will be set when option set loads
                     console.log('📋 Found multi-select option set to load:', field.multiSelectOptionSetId);
+                } else if (field.type === 'multiselect' && field.options) {
+                    // Use default values from individual multi-select options if available
+                    const defaultOptions = field.options.filter(opt => opt.isDefault);
+                    if (defaultOptions.length > 0) {
+                        const defaultValues = defaultOptions.map(opt => opt.value);
+                        initialState[field.id] = defaultValues;
+                    } else {
+                        initialState[field.id] = [];
+                    }
                 }
             });
         });
+
+        return initialState;
+    }, [config, ratingScalesRecord]);
+
+    // Initialize form state with default values
+    const setupFormState = useCallback(() => {
+        const initialState = initializeFormState();
 
         // Reset form to initial state
         resetForm();
@@ -165,42 +140,67 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         Object.entries(initialState).forEach(([fieldId, value]) => {
             setFieldValue(fieldId, value);
         });
-
-        // Load all needed rating scales
-        scalesToLoad.forEach(scaleId => loadRatingScale(scaleId));
-
-        // Load all needed option sets
-        radioOptionSetsToLoad.forEach(optionSetId => loadRadioOptionSet(optionSetId));
-        multiSelectOptionSetsToLoad.forEach(optionSetId => loadMultiSelectOptionSet(optionSetId));
-    }, [config, loadRatingScale, loadRadioOptionSet, loadMultiSelectOptionSet, setFieldValue, resetForm]);
+    }, [config, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, setFieldValue, resetForm]);
 
     // Initialize form on mount
     React.useEffect(() => {
-        initializeFormState();
+        setupFormState();
     }, [config.id]); // Only re-initialize when config ID changes
 
     // Handle form reset when resetTrigger changes
     React.useEffect(() => {
         if (resetTrigger && resetTrigger > 0) {
-            initializeFormState();
-            setShowSuccess(false);
+            setupFormState();
         }
-    }, [resetTrigger, initializeFormState]);
+    }, [resetTrigger, setupFormState]);
 
     // Set default values when rating scales are loaded
     React.useEffect(() => {
         config.sections.forEach(section => {
             section.fields.forEach(field => {
-                if (field.type === 'rating' && field.ratingScaleId && ratingScales[field.ratingScaleId]) {
-                    const scale = ratingScales[field.ratingScaleId];
+                if (field.type === 'rating' && field.ratingScaleId && ratingScalesRecord[field.ratingScaleId]) {
+                    const scale = ratingScalesRecord[field.ratingScaleId];
                     const defaultOption = scale.options.find(opt => opt.isDefault);
-                    if (defaultOption && !formState[field.id]) {
+                    if (defaultOption && !formState.formData[field.id]) {
                         setFieldValue(field.id, defaultOption.value);
                     }
                 }
             });
         });
-    }, [ratingScales, config, formState, setFieldValue]);
+    }, [ratingScalesRecord, config, formState.formData, setFieldValue]);
+
+    // Set default values when radio option sets are loaded
+    React.useEffect(() => {
+        config.sections.forEach(section => {
+            section.fields.forEach(field => {
+                if (field.type === 'radio' && field.radioOptionSetId && radioOptionSetsRecord[field.radioOptionSetId]) {
+                    const optionSet = radioOptionSetsRecord[field.radioOptionSetId];
+                    const defaultOption = optionSet.options.find(opt => opt.isDefault);
+                    // Only set default value if there is a default option and no value is currently set
+                    if (defaultOption && formState.formData[field.id] === undefined) {
+                        setFieldValue(field.id, defaultOption.value);
+                    }
+                }
+            });
+        });
+    }, [radioOptionSetsRecord, config, formState.formData, setFieldValue]);
+
+    // Set default values when multi-select option sets are loaded
+    React.useEffect(() => {
+        config.sections.forEach(section => {
+            section.fields.forEach(field => {
+                if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
+                    const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
+                    const defaultOptions = optionSet.options.filter(opt => opt.isDefault);
+                    // Only set default values if there are default options and no value is currently set
+                    if (defaultOptions.length > 0 && formState.formData[field.id] === undefined) {
+                        const defaultValues = defaultOptions.map(opt => opt.value);
+                        setFieldValue(field.id, defaultValues);
+                    }
+                }
+            });
+        });
+    }, [multiSelectOptionSetsRecord, config, formState.formData, setFieldValue]);
 
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         console.log('🔄 handleFieldChange called:', {
@@ -225,19 +225,27 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
         console.log('📋 Validation check:', {
             fieldsCount: allFields.length,
-            formStateKeys: Object.keys(formState),
-            hasErrors: Object.keys(errors).length > 0,
-            errors: errors
+            formStateKeys: Object.keys(formState.formData),
+            hasErrors: Object.keys(formState.errors).length > 0,
+            errors: formState.errors
         });
 
-        if (!validateForm(allFields)) {
-            console.log('❌ Form validation failed, errors:', errors);
+        // Simple validation - check if required fields have values
+        const validationErrors: Record<string, string> = {};
+        allFields.forEach(field => {
+            if (field.required && (!formState.formData[field.id] || formState.formData[field.id] === '')) {
+                validationErrors[field.id] = 'This field is required';
+            }
+        });
+
+        if (Object.keys(validationErrors).length > 0) {
+            console.log('❌ Form validation failed, errors:', validationErrors);
             return;
         }
 
         console.log('✅ Form validation passed, calling onSubmit');
         try {
-            const transformedData = transformFormStateToDescriptiveIds(formState, config);
+            const transformedData = transformFormStateToDescriptiveIds(formState.formData, config);
             console.log('📤 Calling onSubmit with data:', transformedData);
             await onSubmit(transformedData);
 
@@ -248,14 +256,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             // The error will be handled by the parent component
             console.error('Form submission error:', error);
         }
-    }, [formState, validateForm, onSubmit, config]);
+    }, [formState.formData, formState.errors, onSubmit, config]);
 
     const renderField = (field: SurveyField) => {
         console.log(`🔍 renderField called for field: ${field.id}`, {
             fieldType: field.type,
             fieldLabel: field.label,
-            currentValue: formState[field.id],
-            hasError: !!errors[field.id],
+            currentValue: formState.formData[field.id],
+            hasError: !!formState.errors[field.id],
             timestamp: new Date().toISOString(),
             stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
         });
@@ -264,17 +272,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             <FieldRenderer
                 key={field.id}
                 field={field}
-                value={formState[field.id]}
+                value={formState.formData[field.id]}
                 onChange={handleFieldChange}
-                error={errors[field.id]}
-                ratingScales={ratingScales}
-                loadingScales={loadingScales}
-                onLoadRatingScale={loadRatingScale}
-                radioOptionSets={radioOptionSets}
-                multiSelectOptionSets={multiSelectOptionSets}
-                loadingOptionSets={loadingOptionSets}
-                onLoadRadioOptionSet={loadRadioOptionSet}
-                onLoadMultiSelectOptionSet={loadMultiSelectOptionSet}
+                error={formState.errors[field.id]}
+                ratingScales={ratingScalesRecord}
+                loadingScales={isLoading}
+                radioOptionSets={radioOptionSetsRecord}
+                multiSelectOptionSets={multiSelectOptionSetsRecord}
+                loadingOptionSets={isLoading}
             />
         );
     };
@@ -307,8 +312,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     console.log('🎯 DynamicForm render called', {
         configTitle: config.title,
         sectionsCount: config.sections.length,
-        formStateKeys: Object.keys(formState),
-        errorsCount: Object.keys(errors).length,
+        formStateKeys: Object.keys(formState.formData),
+        errorsCount: Object.keys(formState.errors).length,
         timestamp: new Date().toISOString(),
         stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
     });
@@ -341,25 +346,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         .map(renderSection)}
 
                     <div className="flex justify-center pt-6">
-                        {showSuccess ? (
-                            <div className="text-center">
-                                <div className="text-green-600 text-lg font-semibold mb-2">
-                                    ✓ Survey submitted successfully!
-                                </div>
-                                <p className="text-gray-600">
-                                    Thank you for your response. The form will reset shortly.
-                                </p>
-                            </div>
-                        ) : (
-                            <Button
-                                type="submit"
-                                loading={loading}
-                                disabled={loading}
-                                className="px-8 py-3 text-base"
-                            >
-                                Submit Survey
-                            </Button>
-                        )}
+                        <Button
+                            type="submit"
+                            loading={loading}
+                            disabled={loading}
+                            className="px-8 py-3 text-base"
+                        >
+                            Submit Survey
+                        </Button>
                     </div>
                 </form>
             </div>

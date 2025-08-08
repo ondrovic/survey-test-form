@@ -1,6 +1,6 @@
 import { Button } from '@/components/common';
 import { firestoreHelpers } from '@/config/firebase';
-import { useSurveyDataContext } from '@/contexts/survey-data-context/index';
+import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { useModal } from '@/hooks';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
@@ -26,7 +26,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     onToggleInstanceActive,
     onUpdateInstanceDateRange
 }) => {
-    const { surveyConfigs, surveyInstances, refreshAll } = useSurveyDataContext();
+    const { state: { surveyConfigs, surveyInstances }, refreshAll } = useSurveyData();
     const { showSuccess, showError } = useToast();
     const deleteModal = useModal<{ type: 'config' | 'instance'; id: string; name: string }>();
     const settingsModal = useModal<SurveyInstance>();

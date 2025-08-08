@@ -4,10 +4,10 @@ import { DynamicForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { firestoreHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
-import { AdminTabProvider } from '@/contexts/admin-tab-context/index';
-import { AuthProvider, useAuth } from '@/contexts/auth-context/index';
-import { SurveyDataProvider } from '@/contexts/survey-data-context/index';
-import { ToastProvider, useToast } from '@/contexts/toast-context/index';
+
+import { AppProvider } from '@/contexts/app-provider';
+import { useAuth } from '@/contexts/auth-context/index';
+import { useToast } from '@/contexts/toast-context/index';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
@@ -99,60 +99,54 @@ function AppContent() {
 
     return (
         <ErrorBoundary>
-            <ToastProvider>
-                <SurveyDataProvider>
-                    <AdminTabProvider>
-                        <Routes>
-                            <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                            <Route path="/survey-test-form/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                            <Route path="/survey-confirmation/:slug" element={
-                                (() => {
-                                    const slug = window.location.pathname.split('/').pop() || '';
-                                    const instance = getSurveyInstanceBySlug(slug);
-                                    if (instance) {
-                                        return <SurveyConfirmation surveyTitle={instance.title} />;
-                                    } else {
-                                        return <NotFoundPage />;
-                                    }
-                                })()
-                            } />
-                            <Route path="/survey-test-form/:slug" element={
-                                (() => {
-                                    const slug = window.location.pathname.split('/').pop() || '';
-                                    const instance = getSurveyInstanceBySlug(slug);
-                                    if (instance) {
-                                        return <SurveyPage instance={instance} />;
-                                    } else {
-                                        return <NotFoundPage />;
-                                    }
-                                })()
-                            } />
-                            <Route path="/:slug" element={
-                                (() => {
-                                    const slug = window.location.pathname.split('/').pop() || '';
-                                    const instance = getSurveyInstanceBySlug(slug);
-                                    if (instance) {
-                                        return <SurveyPage instance={instance} />;
-                                    } else {
-                                        return <NotFoundPage />;
-                                    }
-                                })()
-                            } />
-                            <Route path="/" element={<NotFoundPage />} />
-                        </Routes>
-                    </AdminTabProvider>
-                </SurveyDataProvider>
-                <Toaster />
-            </ToastProvider>
+            <Routes>
+                <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
+                <Route path="/survey-test-form/admin" element={<AdminPage onBack={() => navigate('/')} />} />
+                <Route path="/survey-confirmation/:slug" element={
+                    (() => {
+                        const slug = window.location.pathname.split('/').pop() || '';
+                        const instance = getSurveyInstanceBySlug(slug);
+                        if (instance) {
+                            return <SurveyConfirmation surveyTitle={instance.title} />;
+                        } else {
+                            return <NotFoundPage />;
+                        }
+                    })()
+                } />
+                <Route path="/survey-test-form/:slug" element={
+                    (() => {
+                        const slug = window.location.pathname.split('/').pop() || '';
+                        const instance = getSurveyInstanceBySlug(slug);
+                        if (instance) {
+                            return <SurveyPage instance={instance} />;
+                        } else {
+                            return <NotFoundPage />;
+                        }
+                    })()
+                } />
+                <Route path="/:slug" element={
+                    (() => {
+                        const slug = window.location.pathname.split('/').pop() || '';
+                        const instance = getSurveyInstanceBySlug(slug);
+                        if (instance) {
+                            return <SurveyPage instance={instance} />;
+                        } else {
+                            return <NotFoundPage />;
+                        }
+                    })()
+                } />
+                <Route path="/" element={<NotFoundPage />} />
+            </Routes>
+            <Toaster />
         </ErrorBoundary>
     );
 }
 
 function App() {
     return (
-        <AuthProvider>
+        <AppProvider>
             <AppContent />
-        </AuthProvider>
+        </AppProvider>
     );
 }
 

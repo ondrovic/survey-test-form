@@ -1,5 +1,5 @@
 import { Button } from '@/components/common';
-import { useSurveyDataContext } from '@/contexts/survey-data-context/index';
+import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { useModal } from '@/hooks';
 import { RatingScale } from '@/types';
@@ -19,7 +19,7 @@ export const AdminRatingScales: React.FC<AdminRatingScalesProps> = ({
     onDeleteRatingScale,
     onCleanupDuplicates
 }) => {
-    const { ratingScales } = useSurveyDataContext();
+    const { state: { ratingScales } } = useSurveyData();
     const { } = useToast();
     const deleteModal = useModal<{ id: string; name: string }>();
 
