@@ -1,6 +1,6 @@
 import { firestoreHelpers } from "@/config/firebase";
-import { useSurveyDataContext } from "@/contexts/SurveyDataContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useSurveyDataContext } from "@/contexts/survey-data-context/index";
+import { useToast } from "@/contexts/toast-context";
 import { RatingScale, SurveyResponse } from "@/types";
 import {
   downloadFrameworkResponsesAsExcel,

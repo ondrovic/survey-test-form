@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import React from 'react';
-import { ButtonProps } from './Button.types';
+import { ButtonProps } from './button.types';
 
 /**
  * Button component with multiple variants and sizes

@@ -1,6 +1,6 @@
-export { CheckboxGroup } from "./CheckboxGroup/index";
-export { DynamicForm } from "./DynamicForm/index";
-export { FieldRenderer } from "./FieldRenderer/index";
-export { RadioGroup } from "./RadioGroup/index";
-export { RatingSection } from "./RatingSection/index";
-export { ServiceLineSection } from "./ServiceLineSection/index";
+export { CheckboxGroup } from "./checkbox-group/index";
+export { DynamicForm } from "./dynamic-form/index";
+export { FieldRenderer } from "./field-renderer/index";
+export { RadioGroup } from "./radio-group/index";
+export { RatingSection } from "./rating-section/index";
+export { ServiceLineSection } from "./service-line-section/index";

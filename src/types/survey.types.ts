@@ -164,6 +164,10 @@ export interface SurveyField {
   options?: FieldOption[];
   ratingScaleId?: string;
   ratingScaleName?: string;
+  radioOptionSetId?: string;
+  radioOptionSetName?: string;
+  multiSelectOptionSetId?: string;
+  multiSelectOptionSetName?: string;
   required: boolean;
   validation?: ValidationRule[];
   placeholder?: string;

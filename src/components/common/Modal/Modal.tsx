@@ -1,14 +1,14 @@
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
 import React from 'react';
-import { Button } from '../Button';
+import { Button } from '../button';
 
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
     children: React.ReactNode;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
     showCloseButton?: boolean;
     className?: string;
 }
@@ -28,7 +28,8 @@ export const Modal: React.FC<ModalProps> = ({
         sm: 'max-w-sm',
         md: 'max-w-md',
         lg: 'max-w-lg',
-        xl: 'max-w-xl'
+        xl: 'max-w-xl',
+        full: 'max-w-[95vw] w-[95vw]'
     };
 
     return (

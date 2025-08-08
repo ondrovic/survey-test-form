@@ -1,3 +1,4 @@
+export * from "./color.utils";
 export * from "./console.utils";
 export * from "./cookie.utils";
 export * from "./date.utils";
