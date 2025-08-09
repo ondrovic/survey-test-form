@@ -4,6 +4,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  // deleteField,
   doc,
   getDoc,
   getDocs,
@@ -15,11 +16,14 @@ import {
   where,
 } from "firebase/firestore";
 import {
+  MultiSelectOptionSet,
+  RadioOptionSet,
   RatingScale,
+  SelectOptionSet,
   SurveyConfig,
   SurveyInstance,
   SurveyResponse,
-} from "../types/survey.types";
+} from "../types/framework.types";
 
 // Your Firebase configuration
 // Replace with your actual Firebase config from Firebase Console
@@ -53,16 +57,17 @@ function initializeFirebase() {
     firestoreDb = getFirestore(firebaseApp);
     authInstance = getAuth(firebaseApp);
     surveysCol = collection(firestoreDb, "surveys");
-    surveyConfigsCol = collection(firestoreDb, "survey_configs");
-    surveyInstancesCol = collection(firestoreDb, "survey_instances");
-    surveyResponsesCol = collection(firestoreDb, "survey_responses");
-    ratingScalesCol = collection(firestoreDb, "rating_scales");
-    radioOptionSetsCol = collection(firestoreDb, "radio_option_sets");
+    surveyConfigsCol = collection(firestoreDb, "survey-configs");
+    surveyInstancesCol = collection(firestoreDb, "survey-instances");
+    surveyResponsesCol = collection(firestoreDb, "survey-responses");
+    ratingScalesCol = collection(firestoreDb, "rating-scale-option-sets");
+    radioOptionSetsCol = collection(firestoreDb, "radio-option-sets");
+
     multiSelectOptionSetsCol = collection(
       firestoreDb,
-      "multi_select_option_sets"
+      "multi-select-option-sets"
     );
-    selectOptionSetsCol = collection(firestoreDb, "select_option_sets");
+    selectOptionSetsCol = collection(firestoreDb, "select-option-sets");
 
     // Disable real-time listeners to prevent connection spam
     // We only need one-time reads and writes
@@ -91,6 +96,9 @@ const {
   surveyInstancesCollection: surveyInstancesCollectionInstance,
   surveyResponsesCollection: surveyResponsesCollectionInstance,
   ratingScalesCollection: ratingScalesCollectionInstance,
+  radioOptionSetsCollection: radioOptionSetsCollectionInstance,
+  multiSelectOptionSetsCollection: multiSelectOptionSetsCollectionInstance,
+  selectOptionSetsCollection: selectOptionSetsCollectionInstance,
   auth: authInstanceExport,
 } = initializeFirebase();
 
@@ -99,7 +107,22 @@ export const surveysCollection = surveysCollectionInstance;
 export const surveyConfigsCollection = surveyConfigsCollectionInstance;
 export const surveyInstancesCollection = surveyInstancesCollectionInstance;
 export const surveyResponsesCollection = surveyResponsesCollectionInstance;
+export const ratingScalesCollection = ratingScalesCollectionInstance;
+export const radioOptionSetsCollection = radioOptionSetsCollectionInstance;
+export const multiSelectOptionSetsCollection =
+  multiSelectOptionSetsCollectionInstance;
+export const selectOptionSetsCollection = selectOptionSetsCollectionInstance;
 export const auth = authInstanceExport;
+
+// Helper function to create human-readable, kebab-case document IDs
+const createKebabCaseId = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+};
 
 // Authentication helper functions
 export const authHelpers = {
@@ -208,7 +231,7 @@ export const firestoreHelpers = {
   async getSurveyConfig(id: string) {
     try {
       console.log("Looking for survey config with ID:", id);
-      const configRef = doc(db, "survey_configs", id);
+      const configRef = doc(db, "survey-configs", id);
       const configDoc = await getDoc(configRef);
       console.log("Document exists:", configDoc.exists());
       if (configDoc.exists()) {
@@ -227,8 +250,9 @@ export const firestoreHelpers = {
 
   async addSurveyConfig(config: Omit<SurveyConfig, "id">) {
     try {
-      const configId = crypto.randomUUID();
-      const configRef = doc(db, "survey_configs", configId);
+      // Use human-readable, kebab-case name for document ID
+      const configId = createKebabCaseId(config.title);
+      const configRef = doc(db, "survey-configs", configId);
       await setDoc(configRef, {
         ...config,
         metadata: {
@@ -246,7 +270,7 @@ export const firestoreHelpers = {
 
   async updateSurveyConfig(id: string, data: Partial<SurveyConfig>) {
     try {
-      const configRef = doc(db, "survey_configs", id);
+      const configRef = doc(db, "survey-configs", id);
       await updateDoc(configRef, {
         ...data,
         metadata: {
@@ -262,7 +286,7 @@ export const firestoreHelpers = {
 
   async deleteSurveyConfig(id: string) {
     try {
-      const configRef = doc(db, "survey_configs", id);
+      const configRef = doc(db, "survey-configs", id);
       await deleteDoc(configRef);
     } catch (error) {
       console.error("Error deleting survey config:", error);
@@ -273,10 +297,7 @@ export const firestoreHelpers = {
   // Survey Instances
   async getSurveyInstances() {
     try {
-      const q = query(
-        surveyInstancesCollection,
-        orderBy("metadata.createdAt", "desc")
-      );
+      const q = query(surveyInstancesCol);
       const querySnapshot = await getDocs(q);
       const instances = querySnapshot.docs.map((doc) => {
         const data = doc.data() as SurveyInstance;
@@ -292,45 +313,48 @@ export const firestoreHelpers = {
     }
   },
 
-  async getActiveSurveyInstance() {
-    try {
-      const q = query(
-        surveyInstancesCollection,
-        where("isActive", "==", true),
-        orderBy("metadata.createdAt", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      const now = new Date();
+  // async getActiveSurveyInstance() {
+  //   try {
+  //     const q = query(
+  //       surveyInstancesCollection,
+  //       where("isActive", "==", true),
+  //       orderBy("metadata.createdAt", "desc")
+  //     );
+  //     const querySnapshot = await getDocs(q);
+  //     const now = new Date();
 
-      // Find the first instance that is active and within its date range (if specified)
-      for (const doc of querySnapshot.docs) {
-        const data = doc.data() as SurveyInstance;
-        const instance = { ...data, id: doc.id };
+  //     // Find the first instance that is active and within its date range (if specified)
+  //     for (const doc of querySnapshot.docs) {
+  //       const data = doc.data() as SurveyInstance;
+  //       const instance = { ...data, id: doc.id };
 
-        // If no date range is specified, the instance is always active
-        if (!instance.activeDateRange) {
-          return instance;
-        }
+  //       // If no date range is specified, the instance is always active
+  //       if (!instance.activeDateRange) {
+  //         return instance;
+  //       }
 
-        // Check if current time is within the date range
-        const startDate = new Date(instance.activeDateRange.startDate);
-        const endDate = new Date(instance.activeDateRange.endDate);
+  //       // Check if current time is within the date range
+  //       const startDate = new Date(instance.activeDateRange.startDate);
+  //       const endDate = new Date(instance.activeDateRange.endDate);
 
-        if (now >= startDate && now <= endDate) {
-          return instance;
-        }
-      }
+  //       if (now >= startDate && now <= endDate) {
+  //         return instance;
+  //       }
+  //     }
 
-      return null;
-    } catch (error) {
-      console.error("Error getting active survey instance:", error);
-      throw error;
-    }
-  },
+  //     return null;
+  //   } catch (error) {
+  //     console.error("Error getting active survey instance:", error);
+  //     throw error;
+  //   }
+  // },
 
   async addSurveyInstance(instance: Omit<SurveyInstance, "id">) {
     try {
-      const docRef = await addDoc(surveyInstancesCollection, {
+      // Use human-readable, kebab-case name for document ID
+      const instanceId = createKebabCaseId(instance.title);
+      const instanceRef = doc(surveyInstancesCollection, instanceId);
+      await setDoc(instanceRef, {
         ...instance,
         metadata: {
           ...instance.metadata,
@@ -338,7 +362,7 @@ export const firestoreHelpers = {
           updatedAt: new Date().toISOString(),
         },
       });
-      return { id: docRef.id, ...instance };
+      return { id: instanceId, ...instance };
     } catch (error) {
       console.error("Error adding survey instance:", error);
       throw error;
@@ -347,14 +371,20 @@ export const firestoreHelpers = {
 
   async updateSurveyInstance(id: string, data: Partial<SurveyInstance>) {
     try {
-      const instanceRef = doc(db, "survey_instances", id);
-      await updateDoc(instanceRef, {
-        ...data,
-        metadata: {
-          ...data.metadata,
-          updatedAt: new Date().toISOString(),
-        },
+      const instanceRef = doc(db, "survey-instances", id);
+      
+      // Clean the data to remove undefined values (Firebase doesn't support them)
+      const cleanData: any = { ...data, updatedAt: new Date().toISOString() };
+      
+      // Remove undefined values
+      Object.keys(cleanData).forEach(key => {
+        if (cleanData[key] === undefined) {
+          delete cleanData[key];
+        }
       });
+      
+      console.log("Updating survey instance with clean data:", cleanData);
+      await updateDoc(instanceRef, cleanData);
     } catch (error) {
       console.error("Error updating survey instance:", error);
       throw error;
@@ -363,7 +393,7 @@ export const firestoreHelpers = {
 
   async deleteSurveyInstance(id: string) {
     try {
-      const instanceRef = doc(db, "survey_instances", id);
+      const instanceRef = doc(db, "survey-instances", id);
       await deleteDoc(instanceRef);
     } catch (error) {
       console.error("Error deleting survey instance:", error);
@@ -379,7 +409,7 @@ export const firestoreHelpers = {
       // Get the survey instance to determine the collection name
       const instanceRef = doc(
         db,
-        "survey_instances",
+        "survey-instances",
         response.surveyInstanceId
       );
       const instanceDoc = await getDoc(instanceRef);
@@ -472,7 +502,7 @@ export const firestoreHelpers = {
   async getSurveyResponsesFromCollection(instanceId: string) {
     try {
       // Get the survey instance to determine the collection name
-      const instanceRef = doc(db, "survey_instances", instanceId);
+      const instanceRef = doc(db, "survey-instances", instanceId);
       const instanceDoc = await getDoc(instanceRef);
 
       if (!instanceDoc.exists()) {
@@ -542,7 +572,8 @@ export const firestoreHelpers = {
 
   async addRatingScale(scale: Omit<RatingScale, "id">) {
     try {
-      const scaleId = crypto.randomUUID();
+      // Use human-readable, kebab-case name for document ID
+      const scaleId = createKebabCaseId(scale.name);
       const scaleRef = doc(ratingScalesCol, scaleId);
       await setDoc(scaleRef, {
         ...scale,
@@ -594,10 +625,10 @@ export const firestoreHelpers = {
         orderBy("metadata.createdAt", "desc")
       );
       const querySnapshot = await getDocs(q);
-      const optionSets = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const optionSets = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as MultiSelectOptionSet;
+        return { ...data, id: doc.id };
+      });
       return optionSets;
     } catch (error) {
       console.error("Error getting multi-select option sets:", error);
@@ -610,7 +641,8 @@ export const firestoreHelpers = {
       const optionSetRef = doc(multiSelectOptionSetsCol, id);
       const optionSetDoc = await getDoc(optionSetRef);
       if (optionSetDoc.exists()) {
-        return { id: optionSetDoc.id, ...optionSetDoc.data() };
+        const data = optionSetDoc.data() as MultiSelectOptionSet;
+        return { ...data, id: optionSetDoc.id };
       }
       return null;
     } catch (error) {
@@ -621,9 +653,19 @@ export const firestoreHelpers = {
 
   async addMultiSelectOptionSet(optionSet: any) {
     try {
-      const docRef = await addDoc(multiSelectOptionSetsCol, optionSet);
-      console.log("Multi-select option set added with ID:", docRef.id);
-      return { id: docRef.id, ...optionSet };
+      // Use human-readable, kebab-case name for document ID
+      const setId = createKebabCaseId(optionSet.name);
+      const setRef = doc(multiSelectOptionSetsCol, setId);
+      await setDoc(setRef, {
+        ...optionSet,
+        metadata: {
+          ...(optionSet.metadata || {}),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+      console.log("Multi-select option set added with ID:", setId);
+      return { id: setId, ...optionSet };
     } catch (error) {
       console.error("Error adding multi-select option set:", error);
       throw error;
@@ -662,10 +704,10 @@ export const firestoreHelpers = {
         orderBy("metadata.createdAt", "desc")
       );
       const querySnapshot = await getDocs(q);
-      const optionSets = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const optionSets = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as RadioOptionSet;
+        return { ...data, id: doc.id };
+      });
       return optionSets;
     } catch (error) {
       console.error("Error getting radio option sets:", error);
@@ -678,7 +720,8 @@ export const firestoreHelpers = {
       const optionSetRef = doc(radioOptionSetsCol, id);
       const optionSetDoc = await getDoc(optionSetRef);
       if (optionSetDoc.exists()) {
-        return { id: optionSetDoc.id, ...optionSetDoc.data() };
+        const data = optionSetDoc.data() as RadioOptionSet;
+        return { ...data, id: optionSetDoc.id };
       }
       return null;
     } catch (error) {
@@ -689,9 +732,19 @@ export const firestoreHelpers = {
 
   async addRadioOptionSet(optionSet: any) {
     try {
-      const docRef = await addDoc(radioOptionSetsCol, optionSet);
-      console.log("Radio option set added with ID:", docRef.id);
-      return { id: docRef.id, ...optionSet };
+      // Use human-readable, kebab-case name for document ID
+      const setId = createKebabCaseId(optionSet.name);
+      const setRef = doc(radioOptionSetsCol, setId);
+      await setDoc(setRef, {
+        ...optionSet,
+        metadata: {
+          ...(optionSet.metadata || {}),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+      console.log("Radio option set added with ID:", setId);
+      return { id: setId, ...optionSet };
     } catch (error) {
       console.error("Error adding radio option set:", error);
       throw error;
@@ -730,10 +783,10 @@ export const firestoreHelpers = {
         orderBy("metadata.createdAt", "desc")
       );
       const querySnapshot = await getDocs(q);
-      const optionSets = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const optionSets = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as SelectOptionSet;
+        return { ...data, id: doc.id };
+      });
       return optionSets;
     } catch (error) {
       console.error("Error getting select option sets:", error);
@@ -746,7 +799,8 @@ export const firestoreHelpers = {
       const optionSetRef = doc(selectOptionSetsCol, id);
       const optionSetDoc = await getDoc(optionSetRef);
       if (optionSetDoc.exists()) {
-        return { id: optionSetDoc.id, ...optionSetDoc.data() };
+        const data = optionSetDoc.data() as SelectOptionSet;
+        return { ...data, id: optionSetDoc.id };
       }
       return null;
     } catch (error) {
@@ -757,9 +811,19 @@ export const firestoreHelpers = {
 
   async addSelectOptionSet(optionSet: any) {
     try {
-      const docRef = await addDoc(selectOptionSetsCol, optionSet);
-      console.log("Select option set added with ID:", docRef.id);
-      return { id: docRef.id, ...optionSet };
+      // Use human-readable, kebab-case name for document ID
+      const setId = createKebabCaseId(optionSet.name);
+      const setRef = doc(selectOptionSetsCol, setId);
+      await setDoc(setRef, {
+        ...optionSet,
+        metadata: {
+          ...(optionSet.metadata || {}),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+      console.log("Select option set added with ID:", setId);
+      return { id: setId, ...optionSet };
     } catch (error) {
       console.error("Error adding select option set:", error);
       throw error;

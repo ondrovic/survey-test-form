@@ -3,7 +3,7 @@ import { CheckSquare, Square, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { useToast } from '../../../contexts/toast-context/index';
-import { RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../types/survey.types';
+import { RatingScale, SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
 import { Button, Input } from '../../common';
 import { RatingScaleManager } from '../rating-scale-manager';
 

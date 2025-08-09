@@ -26,19 +26,26 @@ export const useAdminOperations = () => {
   );
 
   const deleteSurveyConfig = useCallback(
-    async (configId: string) => {
+    async (configId: string, configName?: string) => {
       try {
+        console.log("Starting delete for config ID:", configId);
         await firestoreHelpers.deleteSurveyConfig(configId);
-        showSuccess("Survey configuration deleted successfully!");
+        console.log("Firebase delete completed successfully");
+        const itemName = configName || "Survey configuration";
+        showSuccess(`${itemName} deleted successfully!`);
+        console.log("Calling refreshAll...");
         await refreshAll();
+        console.log("refreshAll completed");
       } catch (error) {
-        showError("Failed to delete survey configuration");
+        console.error("Error in deleteSurveyConfig:", error);
+        const itemName = configName || "Survey configuration";
+        showError(`Failed to delete ${itemName.toLowerCase()}`);
       }
     },
     [showSuccess, showError, refreshAll]
   );
 
-  const deleteSurveyInstance = useCallback(
+  const deactivateSurveyInstance = useCallback(
     async (instanceId: string) => {
       try {
         await firestoreHelpers.updateSurveyInstance(instanceId, {
@@ -56,10 +63,15 @@ export const useAdminOperations = () => {
   const permanentlyDeleteSurveyInstance = useCallback(
     async (instanceId: string) => {
       try {
+        console.log("Starting delete for instance ID:", instanceId);
         await firestoreHelpers.deleteSurveyInstance(instanceId);
+        console.log("Firebase delete completed successfully");
         showSuccess("Survey instance permanently deleted!");
+        console.log("Calling refreshAll...");
         await refreshAll();
+        console.log("refreshAll completed");
       } catch (error) {
+        console.error("Error in permanentlyDeleteSurveyInstance:", error);
         showError("Failed to delete survey instance");
       }
     },
@@ -67,13 +79,15 @@ export const useAdminOperations = () => {
   );
 
   const deleteRatingScale = useCallback(
-    async (scaleId: string) => {
+    async (scaleId: string, scaleName?: string) => {
       try {
         await firestoreHelpers.deleteRatingScale(scaleId);
-        showSuccess("Rating scale deleted successfully!");
+        const itemName = scaleName || "Unnamed Rating Scale";
+        showSuccess(`Rating scale "${itemName}" deleted successfully`);
         await refreshAll();
       } catch (error) {
-        showError("Failed to delete rating scale");
+        const itemName = scaleName || "Unnamed Rating Scale";
+        showError(`Failed to delete rating scale "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
@@ -104,9 +118,17 @@ export const useAdminOperations = () => {
       dateRange: { startDate: string; endDate: string } | null
     ) => {
       try {
-        const updateData = dateRange
-          ? { activeDateRange: dateRange }
-          : { activeDateRange: undefined };
+        const updateData: any = {};
+        
+        if (dateRange) {
+          updateData.activeDateRange = dateRange;
+        } else {
+          // To remove the field entirely, we need to import deleteField
+          // For now, we'll set it to null which is Firebase-safe
+          updateData.activeDateRange = null;
+        }
+        
+        console.log("updateInstanceDateRange calling updateSurveyInstance with:", updateData);
         await firestoreHelpers.updateSurveyInstance(instanceId, updateData);
         showSuccess(
           dateRange
@@ -115,6 +137,7 @@ export const useAdminOperations = () => {
         );
         await refreshAll();
       } catch (error) {
+        console.error("Error in updateInstanceDateRange:", error);
         showError("Failed to update date range");
       }
     },
@@ -262,54 +285,60 @@ export const useAdminOperations = () => {
 
   // Option Set deletion methods
   const deleteRadioOptionSet = useCallback(
-    async (optionSetId: string) => {
+    async (optionSetId: string, optionSetName?: string) => {
       console.log("Starting deleteRadioOptionSet with ID:", optionSetId);
       try {
         await firestoreHelpers.deleteRadioOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
-        showSuccess("Radio option set deleted successfully!");
+        const itemName = optionSetName || "Unnamed Radio Option Set";
+        showSuccess(`Radio option set "${itemName}" deleted successfully`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
       } catch (error) {
         console.error("Error in deleteRadioOptionSet:", error);
-        showError("Failed to delete radio option set");
+        const itemName = optionSetName || "Unnamed Radio Option Set";
+        showError(`Failed to delete radio option set "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
   );
 
   const deleteMultiSelectOptionSet = useCallback(
-    async (optionSetId: string) => {
+    async (optionSetId: string, optionSetName?: string) => {
       console.log("Starting deleteMultiSelectOptionSet with ID:", optionSetId);
       try {
         await firestoreHelpers.deleteMultiSelectOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
-        showSuccess("Multi-select option set deleted successfully!");
+        const itemName = optionSetName || "Unnamed Multi-Select Option Set";
+        showSuccess(`Multi-select option set "${itemName}" deleted successfully`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
       } catch (error) {
         console.error("Error in deleteMultiSelectOptionSet:", error);
-        showError("Failed to delete multi-select option set");
+        const itemName = optionSetName || "Unnamed Multi-Select Option Set";
+        showError(`Failed to delete multi-select option set "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
   );
 
   const deleteSelectOptionSet = useCallback(
-    async (optionSetId: string) => {
+    async (optionSetId: string, optionSetName?: string) => {
       console.log("Starting deleteSelectOptionSet with ID:", optionSetId);
       try {
         await firestoreHelpers.deleteSelectOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
-        showSuccess("Select option set deleted successfully!");
+        const itemName = optionSetName || "Unnamed Select Option Set";
+        showSuccess(`Select option set "${itemName}" deleted successfully`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
       } catch (error) {
         console.error("Error in deleteSelectOptionSet:", error);
-        showError("Failed to delete select option set");
+        const itemName = optionSetName || "Unnamed Select Option Set";
+        showError(`Failed to delete select option set "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
@@ -318,7 +347,7 @@ export const useAdminOperations = () => {
   return {
     deleteSurvey,
     deleteSurveyConfig,
-    deleteSurveyInstance,
+
     permanentlyDeleteSurveyInstance,
     deleteRatingScale,
     toggleInstanceActive,

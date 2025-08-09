@@ -7,7 +7,7 @@ interface AdminHeaderProps {
 }
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({
-    title = 'Admin Panel',
+    title = 'Survey Administration',
     onLogout
 }) => {
     return (

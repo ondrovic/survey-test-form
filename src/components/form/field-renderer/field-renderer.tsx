@@ -1,5 +1,5 @@
 import { Input } from '@/components/common';
-import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SurveyField } from '@/types';
+import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '@/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -15,6 +15,7 @@ interface FieldRendererProps {
     loadingScales?: boolean;
     radioOptionSets?: Record<string, RadioOptionSet>;
     multiSelectOptionSets?: Record<string, MultiSelectOptionSet>;
+    selectOptionSets?: Record<string, SelectOptionSet>;
     loadingOptionSets?: boolean;
 }
 
@@ -27,6 +28,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     loadingScales = false,
     radioOptionSets = {},
     multiSelectOptionSets = {},
+    selectOptionSets = {},
     loadingOptionSets = false
 }) => {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     switch (field.type) {
         case 'text':
         case 'email':
+        case 'number':
             return (
                 <Input
                     name={field.id}
@@ -123,6 +126,64 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         )}
                         rows={4}
                     />
+                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                </div>
+            );
+
+        case 'select':
+            // Determine which options to use - select option set or individual options
+            let selectOptions = field.options || [];
+            let isSelectLoading = false;
+
+            if (field.selectOptionSetId) {
+                if (selectOptionSets[field.selectOptionSetId]) {
+                    // Use loaded select option set options
+                    selectOptions = selectOptionSets[field.selectOptionSetId].options.map(opt => ({
+                        value: opt.value,
+                        label: opt.label,
+                        color: opt.color,
+                        isDefault: opt.isDefault
+                    }));
+                } else if (loadingOptionSets) {
+                    isSelectLoading = true;
+                }
+            }
+
+            if (isSelectLoading) {
+                return (
+                    <div className="mb-4">
+                        <label className="block text-base font-medium text-gray-700 mb-2">
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <div className="text-gray-500 text-sm">Loading options...</div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="mb-4">
+                    <label htmlFor={`${field.id}-select`} className="block text-base font-medium text-gray-700 mb-2">
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    <select
+                        id={`${field.id}-select`}
+                        name={field.id}
+                        value={value || ''}
+                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                        className={clsx(
+                            "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500",
+                            error ? "border-red-500" : "border-gray-300"
+                        )}
+                    >
+                        <option value="">{field.placeholder || 'Select an option...'}</option>
+                        {selectOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
                     {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                 </div>
             );
@@ -180,7 +241,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 fieldLabel: field.label,
                 hasOptionSetId: !!field.multiSelectOptionSetId,
                 optionSetId: field.multiSelectOptionSetId,
-                hasLoadedOptionSet: !!multiSelectOptionSets[field.multiSelectOptionSetId],
+                hasLoadedOptionSet: field.multiSelectOptionSetId ? !!multiSelectOptionSets[field.multiSelectOptionSetId] : false,
                 isLoading: loadingOptionSets,
                 loadedOptionSets: Object.keys(multiSelectOptionSets),
                 availableOptionSets: Object.keys(multiSelectOptionSets),
@@ -312,6 +373,105 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 </div>
                             )}
                         </div>
+                    </div>
+                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                </div>
+            );
+
+        case 'multiselectdropdown':
+            // Determine which options to use - select option set (with allowMultiple=true) or individual options
+            let multiDropdownOptions = field.options || [];
+            let isMultiDropdownLoading = false;
+
+            if (field.selectOptionSetId) {
+                if (selectOptionSets[field.selectOptionSetId]) {
+                    // Use loaded select option set options (should have allowMultiple=true)
+                    multiDropdownOptions = selectOptionSets[field.selectOptionSetId].options.map(opt => ({
+                        value: opt.value,
+                        label: opt.label,
+                        color: opt.color,
+                        isDefault: opt.isDefault
+                    }));
+                } else if (loadingOptionSets) {
+                    isMultiDropdownLoading = true;
+                }
+            }
+
+            if (isMultiDropdownLoading) {
+                return (
+                    <div className="mb-4">
+                        <label className="block text-base font-medium text-gray-700 mb-2">
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <div className="text-gray-500 text-sm">Loading options...</div>
+                    </div>
+                );
+            }
+
+            const selectedValues = value || [];
+            const selectedLabels = selectedValues
+                .map((val: string) => multiDropdownOptions.find(opt => opt.value === val)?.label)
+                .filter(Boolean);
+
+            return (
+                <div className="mb-4">
+                    <label className="block text-base font-medium text-gray-700 mb-2">
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    <div className="relative" ref={dropdownRef}>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const newOpenDropdown = openDropdown === field.id ? null : field.id;
+                                setOpenDropdown(newOpenDropdown);
+                            }}
+                            className={clsx(
+                                "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-left flex items-center justify-between",
+                                error ? "border-red-500" : "border-gray-300"
+                            )}
+                        >
+                            <span className="truncate">
+                                {selectedLabels.length > 0 
+                                    ? selectedLabels.length === 1 
+                                        ? selectedLabels[0]
+                                        : `${selectedLabels.length} selected`
+                                    : field.placeholder || 'Select options...'
+                                }
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                        </button>
+
+                        {openDropdown === field.id && (
+                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                {multiDropdownOptions.map((option) => {
+                                    const isSelected = selectedValues.includes(option.value);
+                                    return (
+                                        <label
+                                            key={option.value}
+                                            className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    const newValues = isSelected
+                                                        ? selectedValues.filter((val: string) => val !== option.value)
+                                                        : [...selectedValues, option.value];
+                                                    handleFieldChange(field.id, newValues);
+                                                }}
+                                                className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                            />
+                                            <span className="ml-3 text-gray-900">{option.label}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                     {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                 </div>

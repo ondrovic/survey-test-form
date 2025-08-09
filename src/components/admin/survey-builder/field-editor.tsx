@@ -1,6 +1,6 @@
 import { Plus, Star, Trash2 } from 'lucide-react';
 import React from 'react';
-import { FieldType, SurveyField } from '../../../types/survey.types';
+import { FieldType, SurveyField } from '../../../types/framework.types';
 import { Button, Input } from '../../common';
 import { FIELD_TYPES } from './survey-builder.types';
 

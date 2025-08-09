@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '../../common';
+import { useValidation } from '../../../contexts/validation-context';
 
 interface SurveyDetailsProps {
     title: string;
@@ -14,30 +15,55 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
     onTitleChange,
     onDescriptionChange
 }) => {
+    const { validateSurveyTitle, validateSurveyDescription } = useValidation();
+    const [titleError, setTitleError] = useState<string>('');
+    const [descriptionError, setDescriptionError] = useState<string>('');
+
+    // Validate title on change
+    const handleTitleChange = (value: string) => {
+        const validation = validateSurveyTitle(value);
+        setTitleError(validation.isValid ? '' : validation.error || '');
+        onTitleChange(value);
+    };
+
+    // Validate description on change
+    const handleDescriptionChange = (value: string) => {
+        const validation = validateSurveyDescription(value);
+        setDescriptionError(validation.isValid ? '' : validation.error || '');
+        onDescriptionChange(value);
+    };
+
+    // Validate on mount
+    useEffect(() => {
+        const titleValidation = validateSurveyTitle(title);
+        setTitleError(titleValidation.isValid ? '' : titleValidation.error || '');
+        
+        const descValidation = validateSurveyDescription(description);
+        setDescriptionError(descValidation.isValid ? '' : descValidation.error || '');
+    }, [title, description, validateSurveyTitle, validateSurveyDescription]);
+
     return (
         <div className="mb-6">
             <h3 className="font-semibold mb-2">Survey Details</h3>
             <div className="space-y-3">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title
-                    </label>
                     <Input
                         name="surveyTitle"
+                        label="Title *"
                         value={title}
-                        onChange={onTitleChange}
-                        placeholder="Survey title"
+                        onChange={handleTitleChange}
+                        placeholder="Enter survey title (3-100 characters)"
+                        error={titleError}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                    </label>
                     <Input
                         name="surveyDescription"
+                        label="Description"
                         value={description}
-                        onChange={onDescriptionChange}
-                        placeholder="Survey description"
+                        onChange={handleDescriptionChange}
+                        placeholder="Enter survey description (optional, max 500 characters)"
+                        error={descriptionError}
                     />
                 </div>
             </div>

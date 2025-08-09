@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useReducer } from 'react';
-import { SurveyConfig, SurveyField, SurveySection } from '../../types/survey.types';
+import { SurveyConfig, SurveySection, SurveyField } from '../../types/framework.types';
 
 interface SurveyBuilderState {
     config: SurveyConfig;
@@ -12,6 +12,7 @@ interface SurveyBuilderState {
     showFieldEditorModal: boolean;
     showRadioOptionSetManager: boolean;
     showMultiSelectOptionSetManager: boolean;
+    showSelectOptionSetManager: boolean;
 }
 
 type SurveyBuilderAction =
@@ -26,6 +27,7 @@ type SurveyBuilderAction =
     | { type: 'SHOW_FIELD_EDITOR_MODAL'; payload: boolean }
     | { type: 'SHOW_RADIO_OPTION_SET_MANAGER'; payload: boolean }
     | { type: 'SHOW_MULTI_SELECT_OPTION_SET_MANAGER'; payload: boolean }
+    | { type: 'SHOW_SELECT_OPTION_SET_MANAGER'; payload: boolean }
     | { type: 'ADD_SECTION'; payload: SurveySection }
     | { type: 'UPDATE_SECTION'; payload: { sectionId: string; updates: Partial<SurveySection> } }
     | { type: 'DELETE_SECTION'; payload: string }
@@ -55,7 +57,8 @@ const initialState: SurveyBuilderState = {
     showMultiSelectEditor: false,
     showFieldEditorModal: false,
     showRadioOptionSetManager: false,
-    showMultiSelectOptionSetManager: false
+    showMultiSelectOptionSetManager: false,
+    showSelectOptionSetManager: false
 };
 
 function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAction): SurveyBuilderState {
@@ -95,6 +98,9 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
 
         case 'SHOW_MULTI_SELECT_OPTION_SET_MANAGER':
             return { ...state, showMultiSelectOptionSetManager: action.payload };
+
+        case 'SHOW_SELECT_OPTION_SET_MANAGER':
+            return { ...state, showSelectOptionSetManager: action.payload };
 
         case 'ADD_SECTION':
             return {
@@ -313,6 +319,7 @@ interface SurveyBuilderContextType {
     showFieldEditorModal: (show: boolean) => void;
     showRadioOptionSetManager: (show: boolean) => void;
     showMultiSelectOptionSetManager: (show: boolean) => void;
+    showSelectOptionSetManager: (show: boolean) => void;
     addSection: (section: SurveySection) => void;
     updateSection: (sectionId: string, updates: Partial<SurveySection>) => void;
     deleteSection: (sectionId: string) => void;
@@ -379,6 +386,10 @@ export function SurveyBuilderProvider({ children, initialConfig }: { children: R
         dispatch({ type: 'SHOW_MULTI_SELECT_OPTION_SET_MANAGER', payload: show });
     };
 
+    const showSelectOptionSetManager = (show: boolean) => {
+        dispatch({ type: 'SHOW_SELECT_OPTION_SET_MANAGER', payload: show });
+    };
+
     const addSection = (section: SurveySection) => {
         dispatch({ type: 'ADD_SECTION', payload: section });
     };
@@ -441,6 +452,7 @@ export function SurveyBuilderProvider({ children, initialConfig }: { children: R
         showFieldEditorModal,
         showRadioOptionSetManager,
         showMultiSelectOptionSetManager,
+        showSelectOptionSetManager,
         addSection,
         updateSection,
         deleteSection,

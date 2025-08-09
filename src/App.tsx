@@ -3,16 +3,16 @@ import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { firestoreHelpers } from '@/config/firebase';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
+
 
 import { AppProvider } from '@/contexts/app-provider';
 import { useAuth } from '@/contexts/auth-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
-import { suppressConsoleWarnings } from '@/utils';
+import { suppressConsoleWarnings, isSurveyInstanceActive } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
-import { migrateExistingData } from '@/utils/migration.utils';
+
 import { isReCaptchaConfigured, verifyReCaptchaTokenWithFirebase } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
@@ -43,8 +43,7 @@ function AppContent() {
         try {
             setIsMigrating(true);
 
-            // Migrate existing data to framework
-            await migrateExistingData(firestoreHelpers);
+
 
             // Get all survey instances
             const instances = await firestoreHelpers.getSurveyInstances();
@@ -85,7 +84,8 @@ function AppContent() {
 
     const getSurveyInstanceBySlug = (slug: string) => {
         return allSurveyInstances.find(instance =>
-            instance.title.toLowerCase().replace(/\s+/g, '-') === slug
+            instance.title.toLowerCase().replace(/\s+/g, '-') === slug && 
+            isSurveyInstanceActive(instance)
         );
     };
 
@@ -236,14 +236,14 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             console.log('Submitting survey response to Firebase...', surveyResponse);
             await firestoreHelpers.addSurveyResponse(surveyResponse);
             console.log('Survey response submitted successfully!');
-            showSuccess(SUCCESS_MESSAGES.surveySubmitted);
+            showSuccess('Survey submitted successfully!');
 
             // Redirect to confirmation page instead of resetting form
             const slug = instance.title.toLowerCase().replace(/\s+/g, '-');
             navigate(`/survey-confirmation/${slug}`);
         } catch (err) {
             console.error('Survey submission error:', err);
-            showError(ERROR_MESSAGES.submissionError);
+            showError('Failed to submit survey. Please try again.');
             throw err; // Re-throw the error so DynamicForm can catch it
         } finally {
             setIsSubmitting(false);
@@ -300,7 +300,7 @@ function NotFoundPage() {
     return (
         <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
             <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Resource Not Found</h1>
                 <p className="text-gray-600 mb-6">The resource you're looking for doesn't exist.</p>
             </div>
         </div>

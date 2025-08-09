@@ -16,20 +16,20 @@ type DeleteModalData =
 interface AdminOptionSetsProps {
     onShowRatingScaleManager: () => void;
     onEditRatingScale: (scale: RatingScale) => void;
-    onDeleteRatingScale: (scaleId: string) => void;
+    onDeleteRatingScale: (scaleId: string, scaleName?: string) => void;
     onCleanupDuplicates: () => void;
     // Radio Option Sets
     onShowRadioOptionSetManager: () => void;
     onEditRadioOptionSet: (optionSet: RadioOptionSet) => void;
-    onDeleteRadioOptionSet: (optionSetId: string) => void;
+    onDeleteRadioOptionSet: (optionSetId: string, optionSetName?: string) => void;
     // Multi-Select Option Sets
     onShowMultiSelectOptionSetManager: () => void;
     onEditMultiSelectOptionSet: (optionSet: MultiSelectOptionSet) => void;
-    onDeleteMultiSelectOptionSet: (optionSetId: string) => void;
+    onDeleteMultiSelectOptionSet: (optionSetId: string, optionSetName?: string) => void;
     // Select Option Sets
     onShowSelectOptionSetManager: () => void;
     onEditSelectOptionSet: (optionSet: SelectOptionSet) => void;
-    onDeleteSelectOptionSet: (optionSetId: string) => void;
+    onDeleteSelectOptionSet: (optionSetId: string, optionSetName?: string) => void;
 }
 
 export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
@@ -60,16 +60,16 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
         // Type-safe deletion based on the item type
         switch (deleteModal.data.type) {
             case 'rating':
-                onDeleteRatingScale(deleteModal.data.id);
+                onDeleteRatingScale(deleteModal.data.id, deleteModal.data.name);
                 break;
             case 'radio':
-                onDeleteRadioOptionSet(deleteModal.data.id);
+                onDeleteRadioOptionSet(deleteModal.data.id, deleteModal.data.name);
                 break;
             case 'multi-select':
-                onDeleteMultiSelectOptionSet(deleteModal.data.id);
+                onDeleteMultiSelectOptionSet(deleteModal.data.id, deleteModal.data.name);
                 break;
             case 'select':
-                onDeleteSelectOptionSet(deleteModal.data.id);
+                onDeleteSelectOptionSet(deleteModal.data.id, deleteModal.data.name);
                 break;
             default:
                 console.error('Unknown delete type:', deleteModal.data);
@@ -104,7 +104,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
 
             {/* Rating Scales Section */}
             <OptionSetSection<RatingScale>
-                title="Rating Scales"
+                title="Rating Scale Option Sets"
                 items={ratingScales || []}
                 onCreateNew={onShowRatingScaleManager}
                 onEdit={onEditRatingScale}
@@ -152,7 +152,9 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                 renderItemDetails={(optionSet) =>
                     optionSet.allowMultiple ? (
                         <span>, multiple selections allowed</span>
-                    ) : null
+                    ) : (
+                        <span>, single selection only</span>
+                    )
                 }
             />
 

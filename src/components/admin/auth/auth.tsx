@@ -11,15 +11,10 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
     const { login, isLoading, error } = useAuth();
     const [password, setPassword] = useState('');
 
-    console.log("🔐 AdminAuth - Component rendered:", { isLoading, error });
-
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("🔐 AdminAuth - Password submit attempted");
         const success = await login(password);
-        console.log("🔐 AdminAuth - Login result:", { success });
         if (success) {
-            console.log("🔐 AdminAuth - Login successful, calling onAuthenticated");
             onAuthenticated();
         }
     };
@@ -31,7 +26,7 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
                 <div className="text-center mb-6">
                     <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900">Admin Access</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Survey Admin Access</h2>
                     <p className="text-gray-600 mt-2">Enter admin password to continue</p>
                 </div>
 
@@ -56,7 +51,7 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
                             className="flex-1"
                             loading={isLoading}
                         >
-                            Access Admin Panel
+                            Login
                         </Button>
                     </div>
                 </form>

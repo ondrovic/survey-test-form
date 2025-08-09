@@ -1,9 +1,4 @@
-import {
-  FieldType,
-  RatingScale,
-  SectionType,
-  SurveyConfig,
-} from "../../../types/survey.types";
+import { FieldType, RatingScale, SurveyConfig } from "../../../types/framework.types";
 
 export interface SurveyBuilderProps {
   onClose: () => void;
@@ -32,22 +27,14 @@ export const FIELD_TYPES: {
   { value: "text", label: "Text Input", hasOptions: false },
   { value: "email", label: "Email Input", hasOptions: false },
   { value: "textarea", label: "Text Area", hasOptions: false },
+  { value: "select", label: "Dropdown (Single Select)", hasOptions: true },
+  { value: "multiselectdropdown", label: "Dropdown (Multi Select)", hasOptions: true },
   { value: "radio", label: "Radio Buttons (Single Select)", hasOptions: true },
   {
     value: "multiselect",
-    label: "Checkboxes (Multi Select)",
+    label: "Multi-Select Inline",
     hasOptions: true,
   },
   { value: "rating", label: "Rating", hasOptions: true },
   { value: "number", label: "Number Input", hasOptions: false },
-];
-
-export const SECTION_TYPES: { value: SectionType; label: string }[] = [
-  { value: "personal_info", label: "Personal Information" },
-  { value: "business_info", label: "Business Information" },
-  { value: "rating_section", label: "Rating Section" },
-  { value: "checkbox_section", label: "Checkbox Section" },
-  { value: "radio_section", label: "Radio Section" },
-  { value: "text_input", label: "Text Input Section" },
-  { value: "custom", label: "Custom Section" },
 ];

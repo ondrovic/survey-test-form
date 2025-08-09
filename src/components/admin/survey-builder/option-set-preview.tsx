@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
-import { MultiSelectOptionSet, RadioOptionSet, RatingScale } from '../../../types/survey.types';
+import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '../../../types/framework.types';
 
 interface OptionSetPreviewProps {
     type: 'rating' | 'radio' | 'multiselect' | 'select';
@@ -20,7 +20,7 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
     const [ratingScale, setRatingScale] = useState<RatingScale | null>(null);
     const [radioOptionSet, setRadioOptionSet] = useState<RadioOptionSet | null>(null);
     const [multiSelectOptionSet, setMultiSelectOptionSet] = useState<MultiSelectOptionSet | null>(null);
-    const [selectOptionSet, setSelectOptionSet] = useState<any | null>(null);
+    const [selectOptionSet, setSelectOptionSet] = useState<SelectOptionSet | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -163,19 +163,18 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
                     return <div className="text-sm text-gray-500">Failed to load options</div>;
                 }
                 return (
-                    <div className="flex flex-wrap gap-2">
+                    <select
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                    >
+                        <option value="">Select an option...</option>
                         {selectOptionSet.options.map((option, index) => (
-                            <span
-                                key={index}
-                                className={`px-2 py-1 text-xs rounded border ${option.isDefault
-                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                    : 'bg-gray-100 text-gray-700 border-gray-200'
-                                    }`}
-                            >
+                            <option key={index} value={option.value}>
                                 {option.label}
-                            </span>
+                                {option.isDefault ? ' (Default)' : ''}
+                            </option>
                         ))}
-                    </div>
+                    </select>
                 );
 
             default:

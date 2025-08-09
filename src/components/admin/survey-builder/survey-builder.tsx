@@ -3,10 +3,13 @@ import { firestoreHelpers } from '../../../config/firebase';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
 import { useToast } from '../../../contexts/toast-context/index';
-import { FieldType, SurveyField, SurveySection } from '../../../types/survey.types';
+import { ValidationProvider, useValidation } from '../../../contexts/validation-context';
+import { SurveySection } from '../../../types/framework.types';
+import { FieldType, SurveyField } from '../../../types/framework.types';
 import { MultiSelectOptionSetManager } from '../multi-select-option-set-manager';
 import { RadioOptionSetManager } from '../radio-option-set-manager';
 import { RatingScaleManager } from '../rating-scale-manager';
+import { SelectOptionSetManager } from '../select-option-set-manager';
 import { FieldEditorModal } from './field-editor-modal';
 import { MultiSelectFieldEditor } from './multi-select-field-editor';
 import { SectionEditor } from './section-editor';
@@ -19,9 +22,11 @@ import { SurveyPreview } from './survey-preview';
 // Wrapper component that provides the context
 export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
     return (
-        <SurveyBuilderProvider initialConfig={editingConfig || undefined}>
-            <SurveyBuilderContent onClose={onClose} editingConfig={editingConfig} />
-        </SurveyBuilderProvider>
+        <ValidationProvider>
+            <SurveyBuilderProvider initialConfig={editingConfig || undefined}>
+                <SurveyBuilderContent onClose={onClose} editingConfig={editingConfig} />
+            </SurveyBuilderProvider>
+        </ValidationProvider>
     );
 };
 
@@ -29,6 +34,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
     const { showSuccess, showError } = useToast();
     const { refreshAll } = useSurveyData();
+    const { validateSurvey } = useValidation();
     const {
         state,
         updateConfig,
@@ -41,6 +47,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         showFieldEditorModal,
         showRadioOptionSetManager,
         showMultiSelectOptionSetManager,
+        showSelectOptionSetManager,
         addSection,
         updateSection,
         deleteSection,
@@ -127,6 +134,18 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             setLoading(true);
             const updatedConfig = { ...state.config };
 
+            // Validate the entire survey before saving
+            const validation = validateSurvey(updatedConfig);
+            if (!validation.isValid) {
+                const errorMessage = validation.errors.length > 0 
+                    ? `Validation failed:\n${validation.errors.slice(0, 3).join('\n')}${validation.errors.length > 3 ? '\n...and more' : ''}`
+                    : 'Survey validation failed. Please check all fields.';
+                
+                showError(errorMessage);
+                setLoading(false);
+                return;
+            }
+
             if (editingConfig) {
                 await firestoreHelpers.updateSurveyConfig(editingConfig.id, updatedConfig);
                 showSuccess('Survey configuration updated successfully!');
@@ -162,6 +181,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     isEditing={!!editingConfig}
                     isPreviewMode={state.isPreviewMode}
                     loading={state.loading}
+                    config={state.config}
                     onTogglePreview={togglePreviewMode}
                     onShowMultiSelectEditor={() => showMultiSelectEditor(true)}
                     onSave={handleSave}
@@ -298,6 +318,35 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     />
                 )}
 
+                {/* Select Option Set Manager Modal */}
+                {state.showSelectOptionSetManager && (
+                    <SelectOptionSetManager
+                        isVisible={state.showSelectOptionSetManager}
+                        onClose={() => showSelectOptionSetManager(false)}
+                        filterMultiple={selectedField?.type === 'multiselectdropdown' ? true : selectedField?.type === 'select' ? false : undefined}
+                        onOptionSetSelect={async (optionSetId) => {
+                            if (selectedField) {
+                                try {
+                                    // Fetch the actual option set to get its name
+                                    const optionSet = await firestoreHelpers.getSelectOptionSet(optionSetId);
+                                    handleUpdateField(selectedSection!.id, selectedField.id, {
+                                        selectOptionSetId: optionSetId,
+                                        selectOptionSetName: optionSet?.name || `Select Option Set ${optionSetId}`
+                                    });
+                                } catch (error) {
+                                    console.error('Error fetching option set name:', error);
+                                    // Fallback to generic name if fetch fails
+                                    handleUpdateField(selectedSection!.id, selectedField.id, {
+                                        selectOptionSetId: optionSetId,
+                                        selectOptionSetName: `Select Option Set ${optionSetId}`
+                                    });
+                                }
+                            }
+                            showSelectOptionSetManager(false);
+                        }}
+                    />
+                )}
+
                 {/* Field Editor Modal */}
                 {state.showFieldEditorModal && selectedField && selectedSection && (
                     <FieldEditorModal
@@ -316,6 +365,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                         onShowRatingScaleManager={() => showRatingScaleManager(true)}
                         onShowRadioOptionSetManager={() => showRadioOptionSetManager(true)}
                         onShowMultiSelectOptionSetManager={() => showMultiSelectOptionSetManager(true)}
+                        onShowSelectOptionSetManager={() => showSelectOptionSetManager(true)}
                     />
                 )}
             </div>

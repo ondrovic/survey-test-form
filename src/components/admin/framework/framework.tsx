@@ -7,13 +7,13 @@ import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { isSurveyInstanceActive } from '@/utils';
 import { downloadFrameworkResponsesAsExcel } from '@/utils/excel.utils';
 import { Copy, Download, Edit, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface AdminFrameworkProps {
     onCreateNewSurvey: () => void;
     onEditSurveyConfig: (config: SurveyConfig) => void;
-    onDeleteSurveyConfig: (configId: string) => void;
-    onDeleteSurveyInstance: (instanceId: string) => void;
+    onDeleteSurveyConfig: (configId: string, configName?: string) => void;
+    onDeleteSurveyInstance: (instanceId: string, instanceName?: string) => void;
     onToggleInstanceActive: (instanceId: string, isActive: boolean) => void;
     onUpdateInstanceDateRange: (instanceId: string, dateRange: { startDate: string; endDate: string } | null) => void;
 }
@@ -245,8 +245,9 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                                         size="sm"
                                                         variant="ghost"
                                                         onClick={() => copySurveyUrl(generateSurveyUrl(instance))}
-                                                        className="text-gray-500 hover:text-gray-700"
-                                                        title="Copy URL"
+                                                        className={`text-gray-500 hover:text-gray-700 ${!isSurveyInstanceActive(instance) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        title={isSurveyInstanceActive(instance) ? "Copy URL" : "Survey is inactive - URL disabled"}
+                                                        disabled={!isSurveyInstanceActive(instance)}
                                                     >
                                                         <Copy className="w-3 h-3" />
                                                     </Button>
@@ -254,8 +255,9 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                                         size="sm"
                                                         variant="ghost"
                                                         onClick={() => openSurveyInNewTab(generateSurveyUrl(instance))}
-                                                        className="text-gray-500 hover:text-gray-700"
-                                                        title="Open survey in new tab"
+                                                        className={`text-gray-500 hover:text-gray-700 ${!isSurveyInstanceActive(instance) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        title={isSurveyInstanceActive(instance) ? "Open survey in new tab" : "Survey is inactive - URL disabled"}
+                                                        disabled={!isSurveyInstanceActive(instance)}
                                                     >
                                                         <ExternalLink className="w-3 h-3" />
                                                     </Button>
@@ -316,9 +318,9 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                             <Button
                                 onClick={() => {
                                     if (deleteModal.data?.type === 'config') {
-                                        onDeleteSurveyConfig(deleteModal.data.id);
+                                        onDeleteSurveyConfig(deleteModal.data.id, deleteModal.data.name);
                                     } else if (deleteModal.data?.type === 'instance') {
-                                        onDeleteSurveyInstance(deleteModal.data.id);
+                                        onDeleteSurveyInstance(deleteModal.data.id, deleteModal.data.name);
                                     }
                                     deleteModal.close();
                                 }}
@@ -341,111 +343,227 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
 
             {/* Instance Settings Modal */}
             {settingsModal.isOpen && settingsModal.data && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Survey Instance Settings</h3>
-                            <Button
-                                variant="ghost"
-                                onClick={closeInstanceSettings}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                ×
-                            </Button>
-                        </div>
+                <InstanceSettingsModal
+                    instance={settingsModal.data}
+                    onClose={closeInstanceSettings}
+                    onSave={async (updates) => {
+                        try {
+                            // Apply active status change if it changed
+                            if (updates.isActive !== settingsModal.data?.isActive) {
+                                await onToggleInstanceActive(settingsModal.data?.id || '', updates.isActive);
+                            }
+                            
+                            // Apply date range change if it changed
+                            const currentDateRange = settingsModal.data?.activeDateRange;
+                            const newDateRange = updates.activeDateRange;
+                            console.log("Date range comparison:", { currentDateRange, newDateRange });
+                            
+                            // Normalize both values for comparison (handle undefined vs null)
+                            const normalizedCurrent = currentDateRange || null;
+                            const normalizedNew = newDateRange || null;
+                            
+                            if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew)) {
+                                console.log("Date range changed, updating...");
+                                await onUpdateInstanceDateRange(settingsModal.data?.id || '', newDateRange);
+                            } else {
+                                console.log("Date range unchanged, skipping update");
+                            }
+                            
+                            closeInstanceSettings();
+                        } catch (error) {
+                            // Error handling is done in the individual functions
+                        }
+                    }}
+                />
+            )}
+        </div>
+    );
+};
 
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="font-medium mb-2">{settingsModal.data.title}</h4>
-                                <p className="text-sm text-gray-600">{settingsModal.data.description}</p>
-                            </div>
+// Separate component for Instance Settings Modal with local state
+interface InstanceSettingsModalProps {
+    instance: SurveyInstance;
+    onClose: () => void;
+    onSave: (updates: { isActive: boolean; activeDateRange: { startDate: string; endDate: string } | null }) => Promise<void>;
+}
 
-                            <div className="border-t pt-4">
-                                <h5 className="font-medium mb-3">Active Status</h5>
-                                <div className="flex items-center gap-3">
-                                    <label className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={settingsModal.data.isActive}
-                                            onChange={(e) => onToggleInstanceActive(
-                                                settingsModal.data?.id || '',
-                                                e.target.checked
-                                            )}
-                                            className="mr-2"
-                                        />
-                                        Active
-                                    </label>
-                                    <span className={`px-2 py-1 text-xs rounded-full ${isSurveyInstanceActive(settingsModal.data)
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-800"
-                                        }`}>
-                                        {isSurveyInstanceActive(settingsModal.data) ? 'Currently Active' : 'Currently Inactive'}
-                                    </span>
-                                </div>
-                            </div>
+const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance, onClose, onSave }) => {
+    const [isActive, setIsActive] = useState(instance.isActive);
+    // Initialize dates properly - use empty string only if there's no existing date range
+    const [startDate, setStartDate] = useState(instance.activeDateRange?.startDate?.slice(0, 16) || '');
+    const [endDate, setEndDate] = useState(instance.activeDateRange?.endDate?.slice(0, 16) || '');
+    const [isSaving, setIsSaving] = useState(false);
 
-                            <div className="border-t pt-4">
-                                <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
-                                <p className="text-sm text-gray-600 mb-3">
-                                    Leave empty to keep survey active indefinitely
-                                </p>
+    // Store the original state for comparison
+    const originalHasDateRange = Boolean(instance.activeDateRange?.startDate && instance.activeDateRange?.endDate);
 
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Start Date
-                                        </label>
-                                        <input
-                                            type="datetime-local"
-                                            value={settingsModal.data.activeDateRange?.startDate?.slice(0, 16) || ''}
-                                            onChange={(e) => {
-                                                const startDate = e.target.value ? new Date(e.target.value).toISOString() : '';
-                                                const endDate = settingsModal.data?.activeDateRange?.endDate || '';
-                                                const dateRange = startDate && endDate ? { startDate, endDate } : null;
-                                                onUpdateInstanceDateRange(settingsModal.data?.id || '', dateRange);
-                                            }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    </div>
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const activeDateRange = startDate && endDate 
+                ? { startDate: new Date(startDate).toISOString(), endDate: new Date(endDate).toISOString() }
+                : null;
+            
+            await onSave({ isActive, activeDateRange });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            End Date
-                                        </label>
-                                        <input
-                                            type="datetime-local"
-                                            value={settingsModal.data.activeDateRange?.endDate?.slice(0, 16) || ''}
-                                            onChange={(e) => {
-                                                const startDate = settingsModal.data?.activeDateRange?.startDate || '';
-                                                const endDate = e.target.value ? new Date(e.target.value).toISOString() : '';
-                                                const dateRange = startDate && endDate ? { startDate, endDate } : null;
-                                                onUpdateInstanceDateRange(settingsModal.data?.id || '', dateRange);
-                                            }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    </div>
-                                </div>
+    const clearDateRange = () => {
+        setStartDate('');
+        setEndDate('');
+    };
 
-                                <div className="mt-3">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => onUpdateInstanceDateRange(settingsModal.data?.id || '', null)}
-                                    >
-                                        Remove Date Range
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+    const hasChanges = () => {
+        const currentDateRange = instance.activeDateRange;
+        let newDateRange = null;
+        if (startDate && endDate) {
+            newDateRange = { 
+                startDate: new Date(startDate).toISOString(), 
+                endDate: new Date(endDate).toISOString() 
+            };
+        }
+        
+        // Normalize both values for comparison
+        const normalizedCurrent = currentDateRange || null;
+        const normalizedNew = newDateRange || null;
+        
+        const activeChanged = isActive !== instance.isActive;
+        const dateRangeChanged = JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew);
+        
+        console.log("hasChanges check:", { 
+            activeChanged, 
+            dateRangeChanged, 
+            currentDateRange: normalizedCurrent, 
+            newDateRange: normalizedNew,
+            startDate,
+            endDate
+        });
+        
+        return activeChanged || dateRangeChanged;
+    };
 
-                        <div className="mt-6 flex justify-end">
-                            <Button onClick={closeInstanceSettings}>
-                                Close
-                            </Button>
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Survey Instance Settings</h3>
+                    <Button
+                        variant="ghost"
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600"
+                    >
+                        ×
+                    </Button>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <h4 className="font-medium mb-2">{instance.title}</h4>
+                        <p className="text-sm text-gray-600">{instance.description}</p>
+                    </div>
+
+                    <div className="border-t pt-4">
+                        <h5 className="font-medium mb-3">Active Status</h5>
+                        <div className="flex items-center gap-3">
+                            <label className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={isActive}
+                                    onChange={(e) => setIsActive(e.target.checked)}
+                                    className="mr-2"
+                                />
+                                Active
+                            </label>
+                            <span className={`px-2 py-1 text-xs rounded-full ${isActive
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                                }`}>
+                                {isActive ? 'Will be Active' : 'Will be Inactive'}
+                            </span>
                         </div>
                     </div>
+
+                    <div className="border-t pt-4">
+                        <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
+                        <p className="text-sm text-gray-600 mb-3">
+                            Leave empty to keep survey active indefinitely. Both dates must be set to enable date restrictions.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Start Date
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    End Date
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Show status of date range */}
+                        <div className="mt-2">
+                            {startDate && endDate ? (
+                                <div className="text-sm text-green-600">
+                                    ✓ Date range will be active from {new Date(startDate).toLocaleDateString()} to {new Date(endDate).toLocaleDateString()}
+                                </div>
+                            ) : startDate || endDate ? (
+                                <div className="text-sm text-orange-600">
+                                    ⚠ Both start and end dates must be set for date range to be active
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-600">
+                                    Survey will be active indefinitely (no date restrictions)
+                                </div>
+                            )}
+                        </div>
+
+                        {(startDate || endDate) && (
+                            <div className="mt-3">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={clearDateRange}
+                                >
+                                    Clear Date Range
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            )}
+
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button 
+                        variant="outline" 
+                        onClick={onClose}
+                        disabled={isSaving}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleSave}
+                        disabled={!hasChanges() || isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 };

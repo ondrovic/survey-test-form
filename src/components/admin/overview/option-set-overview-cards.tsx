@@ -1,23 +1,16 @@
 import React from 'react';
 import { OverviewCard } from './overview-card';
 
-interface OptionSetOverviewCardsProps {
-    ratingScales: any[];
-    radioOptionSets: any[];
-    multiSelectOptionSets: any[];
-    selectOptionSets: any[];
-    onNavigateToOptionSets: () => void;
-}
 
 export const RatingScalesOverviewCard: React.FC<{
     ratingScales: any[];
     onNavigateToOptionSets: () => void;
 }> = ({ ratingScales, onNavigateToOptionSets }) => (
     <OverviewCard
-        title="Rating Scales"
+        title="Rating Scale Option Sets"
         description="Create and manage reusable rating scales with default values"
         statistics={[{ label: 'Available Scales', value: `${ratingScales.length} scales` }]}
-        actionLabel="Manage Rating Scales"
+        actionLabel="Manage Rating Option Sets"
         onAction={onNavigateToOptionSets}
     />
 );

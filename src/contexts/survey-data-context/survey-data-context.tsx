@@ -1,14 +1,14 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from 'react';
 import { firestoreHelpers } from '../../config/firebase';
+import { SurveyData } from '../../types/survey.types';
 import {
     MultiSelectOptionSet,
     RadioOptionSet,
     RatingScale,
     SelectOptionSet,
     SurveyConfig,
-    SurveyData,
     SurveyInstance
-} from '../../types/survey.types';
+} from '../../types/framework.types';
 
 // State interface
 interface SurveyDataState {
@@ -322,6 +322,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
     }, []);
 
     const refreshAll = useCallback(async () => {
+        console.log("refreshAll called - starting data reload...");
         await Promise.all([
             loadFrameworkData(),
             loadLegacyData(),
@@ -330,6 +331,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             loadMultiSelectOptionSets(),
             loadSelectOptionSets(),
         ]);
+        console.log("refreshAll completed - all data reloaded");
     }, [loadFrameworkData, loadLegacyData, loadRatingScales, loadRadioOptionSets, loadMultiSelectOptionSets, loadSelectOptionSets]);
 
     // CRUD operations

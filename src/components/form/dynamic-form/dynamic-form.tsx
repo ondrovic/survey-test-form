@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import React, { useCallback } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
-import { SurveyConfig, SurveyField, SurveySection } from '../../../types/survey.types';
+import { SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
 import { Button } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
@@ -38,11 +38,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     resetTrigger
 }) => {
     // Use context providers
-    const { state: formState, setFieldValue, resetForm } = useForm();
+    const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
+    
+    // Track if form has been submitted to control when to show validation
+    const [hasSubmitted, setHasSubmitted] = React.useState(false);
 
     // Extract data from survey data context
-    const { ratingScales, radioOptionSets, multiSelectOptionSets, isLoading } = surveyDataState;
+    const { ratingScales, radioOptionSets, multiSelectOptionSets, selectOptionSets, isLoading } = surveyDataState;
 
     // Convert arrays to records for easy lookup
     const ratingScalesRecord = React.useMemo(() => {
@@ -55,19 +58,33 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     const radioOptionSetsRecord = React.useMemo(() => {
         const record: Record<string, any> = {};
-        radioOptionSets.forEach(set => {
-            record[set.id] = set;
-        });
+        if (Array.isArray(radioOptionSets)) {
+            radioOptionSets.forEach(set => {
+                record[set.id] = set;
+            });
+        }
         return record;
     }, [radioOptionSets]);
 
     const multiSelectOptionSetsRecord = React.useMemo(() => {
         const record: Record<string, any> = {};
-        multiSelectOptionSets.forEach(set => {
-            record[set.id] = set;
-        });
+        if (Array.isArray(multiSelectOptionSets)) {
+            multiSelectOptionSets.forEach(set => {
+                record[set.id] = set;
+            });
+        }
         return record;
     }, [multiSelectOptionSets]);
+
+    const selectOptionSetsRecord = React.useMemo(() => {
+        const record: Record<string, any> = {};
+        if (Array.isArray(selectOptionSets)) {
+            selectOptionSets.forEach(set => {
+                record[set.id] = set;
+            });
+        }
+        return record;
+    }, [selectOptionSets]);
 
     // Initialize form state with default values
     const initializeFormState = useCallback(() => {
@@ -100,6 +117,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     } else {
                         initialState[field.id] = 'Not Important';
                     }
+                    console.log('🔍 Set rating field default:', { fieldId: field.id, value: initialState[field.id] });
                 } else if (field.type === 'radio' && field.radioOptionSetId) {
                     // Load radio option set - don't set initial value, will be set when option set loads
                     console.log('📋 Found radio option set to load:', field.radioOptionSetId);
@@ -113,7 +131,20 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 } else if (field.type === 'multiselect' && field.multiSelectOptionSetId) {
                     // Load multi-select option set - don't set initial value, will be set when option set loads
                     console.log('📋 Found multi-select option set to load:', field.multiSelectOptionSetId);
-                } else if (field.type === 'multiselect' && field.options) {
+                } else if (field.type === 'select' && field.selectOptionSetId) {
+                    // Load select option set - don't set initial value, will be set when option set loads
+                    console.log('📋 Found select option set to load:', field.selectOptionSetId, 'for field:', field.label);
+                } else if (field.type === 'select' && field.options) {
+                    // Use default value from individual select options if available
+                    const defaultOption = field.options.find(opt => opt.isDefault);
+                    if (defaultOption) {
+                        initialState[field.id] = defaultOption.value;
+                    }
+                    // If no default option, don't set any initial value (will be undefined)
+                } else if (field.type === 'multiselectdropdown' && field.selectOptionSetId) {
+                    // Load select option set for multi-select dropdown - don't set initial value, will be set when option set loads
+                    console.log('📋 Found select option set for multi-select dropdown to load:', field.selectOptionSetId, 'for field:', field.label);
+                } else if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && field.options) {
                     // Use default values from individual multi-select options if available
                     const defaultOptions = field.options.filter(opt => opt.isDefault);
                     if (defaultOptions.length > 0) {
@@ -127,7 +158,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         });
 
         return initialState;
-    }, [config, ratingScalesRecord]);
+    }, [config.id, config.sections, ratingScalesRecord]);
 
     // Initialize form state with default values
     const setupFormState = useCallback(() => {
@@ -140,12 +171,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         Object.entries(initialState).forEach(([fieldId, value]) => {
             setFieldValue(fieldId, value);
         });
-    }, [config, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, setFieldValue, resetForm]);
+    }, [initializeFormState, setFieldValue, resetForm]);
 
     // Initialize form on mount
     React.useEffect(() => {
         setupFormState();
-    }, [config.id]); // Only re-initialize when config ID changes
+    }, [setupFormState]); // Re-initialize when setup function changes
 
     // Handle form reset when resetTrigger changes
     React.useEffect(() => {
@@ -202,20 +233,104 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         });
     }, [multiSelectOptionSetsRecord, config, formState.formData, setFieldValue]);
 
-    const handleFieldChange = useCallback((fieldId: string, value: any) => {
-        console.log('🔄 handleFieldChange called:', {
-            fieldId,
-            value,
-            timestamp: new Date().toISOString(),
-            stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
+    // Set default values when select option sets are loaded
+    React.useEffect(() => {
+        config.sections.forEach(section => {
+            section.fields.forEach(field => {
+                if (field.type === 'select' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
+                    const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
+                    const defaultOption = optionSet.options.find(opt => opt.isDefault);
+                    console.log('🔍 Select option set loaded for field:', {
+                        fieldId: field.id,
+                        fieldLabel: field.label,
+                        optionSetId: field.selectOptionSetId,
+                        hasDefaultOption: !!defaultOption,
+                        defaultValue: defaultOption?.value,
+                        currentValue: formState.formData[field.id]
+                    });
+                    // Only set default value if there is a default option and no value is currently set
+                    if (defaultOption && formState.formData[field.id] === undefined) {
+                        console.log('🔄 Setting default value for select field:', field.id, defaultOption.value);
+                        setFieldValue(field.id, defaultOption.value);
+                    }
+                } else if (field.type === 'multiselectdropdown' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
+                    const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
+                    const defaultOptions = optionSet.options.filter(opt => opt.isDefault);
+                    console.log('🔍 Multi-select dropdown option set loaded for field:', {
+                        fieldId: field.id,
+                        fieldLabel: field.label,
+                        optionSetId: field.selectOptionSetId,
+                        hasDefaultOptions: defaultOptions.length > 0,
+                        currentValue: formState.formData[field.id]
+                    });
+                    // Only set default values if there are default options and no value is currently set
+                    if (defaultOptions.length > 0 && formState.formData[field.id] === undefined) {
+                        const defaultValues = defaultOptions.map(opt => opt.value);
+                        console.log('🔄 Setting default values for multi-select dropdown field:', field.id, defaultValues);
+                        setFieldValue(field.id, defaultValues);
+                    }
+                }
+            });
         });
+    }, [selectOptionSetsRecord, config, formState.formData, setFieldValue]);
+
+    // Helper function to check if a field value is considered "empty" based on field type
+    const isFieldEmpty = useCallback((field: SurveyField, value: any): boolean => {
+        if (value === null || value === undefined) return true;
+        
+        switch (field.type) {
+            case 'multiselect':
+            case 'multiselectdropdown':
+                return Array.isArray(value) ? value.length === 0 : true;
+            case 'text':
+            case 'email':
+            case 'textarea':
+            case 'number':
+                return String(value).trim() === '';
+            case 'select':
+                // For single select, empty string or exactly empty string means no selection
+                return value === '' || value === null || value === undefined;
+            case 'radio':
+            case 'rating':
+                // For radio/rating, empty string or exactly empty string means no selection
+                return value === '' || value === null || value === undefined;
+            default:
+                return !value || value === '';
+        }
+    }, []);
+
+    // Real-time field validation
+    const validateField = useCallback((fieldId: string, value: any) => {
+        // Find the field definition
+        let field: SurveyField | undefined;
+        config.sections.forEach(section => {
+            const foundField = section.fields.find(f => f.id === fieldId);
+            if (foundField) field = foundField;
+        });
+
+        if (!field) return;
+
+        // Clear any existing error for this field
+        setFieldError(fieldId, '');
+
+        // Check if required field is empty
+        if (field.required && isFieldEmpty(field, value)) {
+            setFieldError(fieldId, 'This field is required');
+        }
+    }, [config, setFieldError, isFieldEmpty]);
+
+    const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
-    }, [setFieldValue]);
+        
+        // Only validate if form has been submitted and there was already an error for this field
+        if (hasSubmitted && formState.errors[fieldId]) {
+            setTimeout(() => validateField(fieldId, value), 300);
+        }
+    }, [setFieldValue, validateField, formState.errors, hasSubmitted]);
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
-        console.log('🚀 DynamicForm handleSubmit called - FIRST LINE');
         e.preventDefault();
-        console.log('🚀 DynamicForm handleSubmit called');
+        setHasSubmitted(true);
 
         // Get all fields from config for validation
         const allFields: SurveyField[] = [];
@@ -230,16 +345,43 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             errors: formState.errors
         });
 
-        // Simple validation - check if required fields have values
+        // Clear any existing errors first
+        setErrors({});
+
+        // Comprehensive validation - check if required fields have values
         const validationErrors: Record<string, string> = {};
         allFields.forEach(field => {
-            if (field.required && (!formState.formData[field.id] || formState.formData[field.id] === '')) {
+            const fieldValue = formState.formData[field.id];
+            const isEmpty = isFieldEmpty(field, fieldValue);
+            
+            console.log('🔍 Validating field:', {
+                fieldId: field.id,
+                fieldLabel: field.label,
+                fieldType: field.type,
+                fieldValue,
+                isEmpty,
+                isRequired: field.required,
+                willError: field.required && isEmpty
+            });
+            
+            if (field.required && isEmpty) {
                 validationErrors[field.id] = 'This field is required';
             }
         });
 
         if (Object.keys(validationErrors).length > 0) {
             console.log('❌ Form validation failed, errors:', validationErrors);
+            // Set the validation errors in the form state so they show in the UI
+            setErrors(validationErrors);
+            
+            // Scroll to the first error field
+            const firstErrorFieldId = Object.keys(validationErrors)[0];
+            const firstErrorElement = document.querySelector(`[name="${firstErrorFieldId}"]`) as HTMLElement;
+            if (firstErrorElement) {
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstErrorElement.focus();
+            }
+            
             return;
         }
 
@@ -256,17 +398,11 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             // The error will be handled by the parent component
             console.error('Form submission error:', error);
         }
-    }, [formState.formData, formState.errors, onSubmit, config]);
+    }, [formState.formData, formState.errors, onSubmit, config, isFieldEmpty, setErrors]);
 
-    const renderField = (field: SurveyField) => {
-        console.log(`🔍 renderField called for field: ${field.id}`, {
-            fieldType: field.type,
-            fieldLabel: field.label,
-            currentValue: formState.formData[field.id],
-            hasError: !!formState.errors[field.id],
-            timestamp: new Date().toISOString(),
-            stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
-        });
+    const renderField = useCallback((field: SurveyField) => {
+        // Only show error if form has been submitted
+        const fieldError = hasSubmitted ? formState.errors[field.id] : undefined;
 
         return (
             <FieldRenderer
@@ -274,23 +410,18 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 field={field}
                 value={formState.formData[field.id]}
                 onChange={handleFieldChange}
-                error={formState.errors[field.id]}
+                error={fieldError}
                 ratingScales={ratingScalesRecord}
                 loadingScales={isLoading}
                 radioOptionSets={radioOptionSetsRecord}
                 multiSelectOptionSets={multiSelectOptionSetsRecord}
+                selectOptionSets={selectOptionSetsRecord}
                 loadingOptionSets={isLoading}
             />
         );
-    };
+    }, [formState.formData, formState.errors, handleFieldChange, hasSubmitted, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord, isLoading]);
 
-    const renderSection = (section: SurveySection) => {
-        console.log(`📋 renderSection called for section: ${section.id}`, {
-            sectionTitle: section.title,
-            fieldCount: section.fields.length,
-            timestamp: new Date().toISOString(),
-            stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
-        });
+    const renderSection = useCallback((section: SurveySection) => {
 
         return (
             <div key={section.id} className="mb-6">
@@ -307,19 +438,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 </div>
             </div>
         );
-    };
+    }, [renderField]);
 
-    console.log('🎯 DynamicForm render called', {
-        configTitle: config.title,
-        sectionsCount: config.sections.length,
-        formStateKeys: Object.keys(formState.formData),
-        errorsCount: Object.keys(formState.errors).length,
-        timestamp: new Date().toISOString(),
-        stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
-    });
 
-    // Test if component is rendering
-    console.log('🔍 DynamicForm is rendering, config:', config);
 
     return (
         <div className={clsx("max-w-4xl mx-auto bg-white rounded-lg shadow-md", className)}>
@@ -338,9 +459,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 <form
                     onSubmit={handleSubmit}
                     className="space-y-6"
-                    onClick={() => console.log('🔍 Form clicked')}
-                    onFocus={() => console.log('🔍 Form focused')}
                 >
+
+
                     {config.sections
                         .sort((a, b) => a.order - b.order)
                         .map(renderSection)}

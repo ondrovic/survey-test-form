@@ -1,5 +1,5 @@
 import React from 'react';
-import { SurveyConfig } from '../../../types/survey.types';
+import { SurveyConfig } from '../../../types/framework.types';
 import { OptionSetPreview } from './option-set-preview';
 
 interface SurveyPreviewProps {
@@ -58,6 +58,37 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                     />
                                 )}
 
+                                {field.type === 'number' && (
+                                    <input
+                                        type="number"
+                                        placeholder={field.placeholder || "Enter a number"}
+                                        disabled
+                                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                    />
+                                )}
+
+                                {field.type === 'select' && field.selectOptionSetId && (
+                                    <OptionSetPreview
+                                        type="select"
+                                        optionSetId={field.selectOptionSetId}
+                                        optionSetName={field.selectOptionSetName || ''}
+                                        hideLabel={true}
+                                    />
+                                )}
+                                {field.type === 'select' && !field.selectOptionSetId && field.options && field.options.length > 0 && (
+                                    <select
+                                        disabled
+                                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                    >
+                                        <option value="">{field.placeholder || 'Select an option...'}</option>
+                                        {field.options.map((option, index) => (
+                                            <option key={index} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+
                                 {field.type === 'multiselect' && field.multiSelectOptionSetId && (
                                     <OptionSetPreview
                                         type="multiselect"
@@ -66,7 +97,15 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                         hideLabel={true}
                                     />
                                 )}
-                                {field.type === 'multiselect' && !field.multiSelectOptionSetId && field.options && field.options.length > 0 && (
+                                {(field.type === 'select' || field.type === 'multiselectdropdown') && field.selectOptionSetId && (
+                                    <OptionSetPreview
+                                        type="select"
+                                        optionSetId={field.selectOptionSetId}
+                                        optionSetName={field.selectOptionSetName || ''}
+                                        hideLabel={true}
+                                    />
+                                )}
+                                {(field.type === 'multiselect' || field.type === 'multiselectdropdown') && !field.multiSelectOptionSetId && !field.selectOptionSetId && field.options && field.options.length > 0 && (
                                     <div className="space-y-2">
                                         {field.options.map((option, index) => (
                                             <div key={index} className="flex items-center">

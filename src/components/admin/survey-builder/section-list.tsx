@@ -1,7 +1,8 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import React from 'react';
-import { SurveySection } from '../../../types/survey.types';
+import { SurveySection } from '../../../types/framework.types';
 import { Button, SortableList } from '../../common';
+import { useValidation } from '../../../contexts/validation-context';
 
 interface SectionListProps {
     sections: SurveySection[];
@@ -20,6 +21,7 @@ export const SectionList: React.FC<SectionListProps> = ({
     onDeleteSection,
     onReorderSections
 }) => {
+    const { validateSection } = useValidation();
     return (
         <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
@@ -36,32 +38,45 @@ export const SectionList: React.FC<SectionListProps> = ({
                 onReorder={onReorderSections}
                 className="space-y-2"
                 itemClassName="p-3 border rounded-lg cursor-pointer transition-colors"
-                renderItem={(section, _isDragging) => (
-                    <div
-                        className={`${selectedSectionId === section.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                        onClick={() => onSelectSection(section.id)}
-                    >
-                        <div className="flex items-center justify-between">
-                            <span className="font-medium">{section.title}</span>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDeleteSection(section.id);
-                                }}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
+                renderItem={(section, _isDragging) => {
+                    const validation = validateSection(section as SurveySection);
+                    return (
+                        <div
+                            className={`${selectedSectionId === section.id
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : validation.isValid
+                                        ? 'border-gray-200 hover:border-gray-300'
+                                        : 'border-red-200 bg-red-50 hover:border-red-300'
+                                }`}
+                            onClick={() => onSelectSection(section.id)}
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium">{section.title}</span>
+                                    {!validation.isValid && (
+                                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                                    )}
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteSection(section.id);
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                                {section.fields.length} fields
+                                {!validation.isValid && (
+                                    <span className="text-red-600 ml-2">• {validation.errors.length} issue{validation.errors.length !== 1 ? 's' : ''}</span>
+                                )}
+                            </div>
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                            {section.fields.length} fields
-                        </div>
-                    </div>
-                )}
+                    );
+                }}
             />
         </div>
     );

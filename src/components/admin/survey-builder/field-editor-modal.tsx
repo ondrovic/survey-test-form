@@ -1,8 +1,10 @@
-import { CheckSquare, List, Plus, Star, Trash2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { CheckSquare, ChevronDown, List, Plus, Star, Trash2 } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
-import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveyField } from '../../../types/survey.types';
+import { MultiSelectOptionSet, RadioOptionSet, SelectOptionSet } from '../../../types/framework.types';
+import { FieldType, SurveyField } from '../../../types/framework.types';
 import { Button, Input, Modal } from '../../common';
+import { useValidation } from '../../../contexts/validation-context';
 import { OptionSetPreview } from './option-set-preview';
 import { FIELD_TYPES } from './survey-builder.types';
 
@@ -19,6 +21,7 @@ interface FieldEditorModalProps {
     onShowRatingScaleManager: () => void;
     onShowRadioOptionSetManager: () => void;
     onShowMultiSelectOptionSetManager: () => void;
+    onShowSelectOptionSetManager: () => void;
 }
 
 export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
@@ -33,17 +36,54 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     onDeleteFieldOption,
     onShowRatingScaleManager,
     onShowRadioOptionSetManager,
-    onShowMultiSelectOptionSetManager
+    onShowMultiSelectOptionSetManager,
+    onShowSelectOptionSetManager
 }) => {
+    const { validateFieldLabel, validateFieldPlaceholder, validateFieldOptions } = useValidation();
     const [loadedRadioOptionSet, setLoadedRadioOptionSet] = useState<RadioOptionSet | null>(null);
     const [loadedMultiSelectOptionSet, setLoadedMultiSelectOptionSet] = useState<MultiSelectOptionSet | null>(null);
+    const [loadedSelectOptionSet, setLoadedSelectOptionSet] = useState<SelectOptionSet | null>(null);
     const [isLoadingOptionSets, setIsLoadingOptionSets] = useState(false);
+    const [labelError, setLabelError] = useState<string>('');
+    const [placeholderError, setPlaceholderError] = useState<string>('');
+    const [optionsError, setOptionsError] = useState<string>('');
 
     if (!field) return null;
 
+    // Validation handlers
+    const handleLabelChange = (value: string) => {
+        const validation = validateFieldLabel(value);
+        setLabelError(validation.isValid ? '' : validation.error || '');
+        onUpdateField(sectionId, field.id, { label: value });
+    };
+
+    const handlePlaceholderChange = (value: string) => {
+        const validation = validateFieldPlaceholder(value);
+        setPlaceholderError(validation.isValid ? '' : validation.error || '');
+        onUpdateField(sectionId, field.id, { placeholder: value });
+    };
+
+    const validateOptions = useCallback(() => {
+        if (!field) return true;
+        const validation = validateFieldOptions(field);
+        setOptionsError(validation.isValid ? '' : validation.error || '');
+        return validation.isValid;
+    }, [field, validateFieldOptions]);
+
     const handleSave = () => {
-        onSave();
-        onClose();
+        // Validate all fields before saving
+        const labelValidation = validateFieldLabel(field.label);
+        const placeholderValidation = validateFieldPlaceholder(field.placeholder || '');
+        const optionsValidation = validateFieldOptions(field);
+
+        setLabelError(labelValidation.isValid ? '' : labelValidation.error || '');
+        setPlaceholderError(placeholderValidation.isValid ? '' : placeholderValidation.error || '');
+        setOptionsError(optionsValidation.isValid ? '' : optionsValidation.error || '');
+
+        if (labelValidation.isValid && placeholderValidation.isValid && optionsValidation.isValid) {
+            onSave();
+            onClose();
+        }
     };
 
     const handleCancel = () => {
@@ -66,7 +106,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         }
     }, [isOpen, onClose]);
 
-    // Load option sets when field changes
+    // Load option sets and validate when field changes
     useEffect(() => {
         const loadOptionSets = async () => {
             if (!field) return;
@@ -74,6 +114,14 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             setIsLoadingOptionSets(true);
             setLoadedRadioOptionSet(null);
             setLoadedMultiSelectOptionSet(null);
+            setLoadedSelectOptionSet(null);
+
+            // Validate current field state
+            const labelValidation = validateFieldLabel(field.label);
+            setLabelError(labelValidation.isValid ? '' : labelValidation.error || '');
+
+            const placeholderValidation = validateFieldPlaceholder(field.placeholder || '');
+            setPlaceholderError(placeholderValidation.isValid ? '' : placeholderValidation.error || '');
 
             try {
                 if (field.radioOptionSetId) {
@@ -85,15 +133,29 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     const multiSelectOptionSet = await firestoreHelpers.getMultiSelectOptionSet(field.multiSelectOptionSetId);
                     setLoadedMultiSelectOptionSet(multiSelectOptionSet);
                 }
+
+                if (field.selectOptionSetId) {
+                    const selectOptionSet = await firestoreHelpers.getSelectOptionSet(field.selectOptionSetId);
+                    setLoadedSelectOptionSet(selectOptionSet);
+                }
             } catch (error) {
                 console.error('Error loading option sets:', error);
             } finally {
                 setIsLoadingOptionSets(false);
+                // Validate options after loading
+                validateOptions();
             }
         };
 
         loadOptionSets();
-    }, [field?.radioOptionSetId, field?.multiSelectOptionSetId]);
+    }, [field?.radioOptionSetId, field?.multiSelectOptionSetId, field?.selectOptionSetId, field?.label, field?.placeholder, validateFieldLabel, validateFieldPlaceholder]);
+
+    // Validate options when they change
+    useEffect(() => {
+        if (field) {
+            validateOptions();
+        }
+    }, [field?.options, validateOptions]);
 
     return (
         <Modal
@@ -113,9 +175,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
                             name="fieldLabel"
-                            label="Field Label"
+                            label="Field Label *"
                             value={field.label}
-                            onChange={(value) => onUpdateField(sectionId, field.id, { label: value })}
+                            onChange={handleLabelChange}
+                            placeholder="Enter field label (1-100 characters)"
+                            error={labelError}
                         />
                         <div>
                             <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -151,7 +215,9 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         name="fieldPlaceholder"
                         label="Placeholder Text"
                         value={field.placeholder || ''}
-                        onChange={(value) => onUpdateField(sectionId, field.id, { placeholder: value })}
+                        onChange={handlePlaceholderChange}
+                        placeholder="Enter placeholder text (optional, max 150 characters)"
+                        error={placeholderError}
                     />
                 </div>
 
@@ -163,12 +229,19 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         </h3>
 
                         <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-600">
-                                Configure the options that users can select from.
-                                {field.type === 'radio' && ' Users can select only one option.'}
-                                {field.type === 'multiselect' && ' Users can select multiple options.'}
-                                {field.type === 'rating' && ' Users can select one rating option.'}
-                            </p>
+                            <div>
+                                <p className="text-sm text-gray-600">
+                                    Configure the options that users can select from.
+                                    {field.type === 'radio' && ' Users can select only one option.'}
+                                    {field.type === 'select' && ' Users can select one option from dropdown.'}
+                                    {field.type === 'multiselect' && ' Users can select multiple options using checkboxes.'}
+                                    {field.type === 'multiselectdropdown' && ' Users can select multiple options from dropdown.'}
+                                    {field.type === 'rating' && ' Users can select one rating option.'}
+                                </p>
+                                {optionsError && (
+                                    <p className="text-sm text-red-600 mt-1">{optionsError}</p>
+                                )}
+                            </div>
                             <div className="flex space-x-2">
                                 {field.type === 'rating' && (
                                     <Button
@@ -192,6 +265,17 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         Use Radio Option Set
                                     </Button>
                                 )}
+                                {(field.type === 'select' || field.type === 'multiselectdropdown') && (
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={onShowSelectOptionSetManager}
+                                        className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                    >
+                                        <ChevronDown className="w-4 h-4 mr-1" />
+                                        Use Select Option Set
+                                    </Button>
+                                )}
                                 {field.type === 'multiselect' && (
                                     <Button
                                         size="sm"
@@ -203,7 +287,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         Use Multi-Select Option Set
                                     </Button>
                                 )}
-                                {!field.ratingScaleId && !field.radioOptionSetId && !field.multiSelectOptionSetId && (
+                                {!field.ratingScaleId && !field.radioOptionSetId && !field.multiSelectOptionSetId && !field.selectOptionSetId && (
                                     <Button
                                         size="sm"
                                         onClick={() => onAddFieldOption(sectionId, field.id)}
@@ -343,47 +427,124 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         )}
                                     </div>
                                 </div>
+                            ) : field.selectOptionSetId ? (
+                                // Show select option set options as buttons
+                                <div className="p-4 border rounded-md bg-gray-50">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <h6 className="font-medium text-gray-900">{field.selectOptionSetName?.split('x')[0] || field.selectOptionSetName}</h6>
+                                            <p className="text-xs text-gray-500">Select Option Set</p>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => onUpdateField(sectionId, field.id, {
+                                                selectOptionSetId: undefined,
+                                                selectOptionSetName: undefined,
+                                                options: []
+                                            })}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {isLoadingOptionSets ? (
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                                Loading options...
+                                            </span>
+                                        ) : loadedSelectOptionSet ? (
+                                            loadedSelectOptionSet.options.map((option, index) => (
+                                                <span
+                                                    key={index}
+                                                    className={`px-3 py-1 text-sm rounded border ${option.isDefault
+                                                        ? 'bg-purple-100 text-purple-700 border-purple-200'
+                                                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                        }`}
+                                                >
+                                                    {option.label}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                                Failed to load options
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             ) : (
                                 // Show individual options
                                 <>
-                                    {(field.options || []).map((option, index) => (
+                                                                    {(field.options || []).map((option, index) => {
+                                    const labelValidation = option.label ? { isValid: true } : { isValid: false, error: 'Label is required' };
+                                    const valueValidation = option.value ? 
+                                        /^[a-zA-Z0-9_-]+$/.test(option.value) ? 
+                                            { isValid: true } : 
+                                            { isValid: false, error: 'Only letters, numbers, underscores, and hyphens allowed' }
+                                        : { isValid: false, error: 'Value is required' };
+
+                                    return (
                                         <div key={index} className="flex items-center space-x-3 p-4 border rounded-md bg-gray-50">
                                             <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                        Label
+                                                        Label *
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={option.label}
-                                                        onChange={(e) => onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value })}
-                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                        placeholder="Option label"
+                                                        onChange={(e) => {
+                                                            onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value });
+                                                            setTimeout(validateOptions, 100); // Re-validate after update
+                                                        }}
+                                                        className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${
+                                                            labelValidation.isValid 
+                                                                ? 'border-gray-300 focus:ring-blue-500' 
+                                                                : 'border-red-300 focus:ring-red-500'
+                                                        }`}
+                                                        placeholder="Option label (required)"
                                                     />
+                                                    {!labelValidation.isValid && (
+                                                        <p className="text-xs text-red-600 mt-1">{labelValidation.error}</p>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                        Value
+                                                        Value *
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={option.value}
-                                                        onChange={(e) => onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value })}
-                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                        placeholder="option_value"
+                                                        onChange={(e) => {
+                                                            onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value });
+                                                            setTimeout(validateOptions, 100); // Re-validate after update
+                                                        }}
+                                                        className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${
+                                                            valueValidation.isValid 
+                                                                ? 'border-gray-300 focus:ring-blue-500' 
+                                                                : 'border-red-300 focus:ring-red-500'
+                                                        }`}
+                                                        placeholder="option_value (letters, numbers, _, -)"
                                                     />
+                                                    {!valueValidation.isValid && (
+                                                        <p className="text-xs text-red-600 mt-1">{valueValidation.error}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                onClick={() => onDeleteFieldOption(sectionId, field.id, index)}
+                                                onClick={() => {
+                                                    onDeleteFieldOption(sectionId, field.id, index);
+                                                    setTimeout(validateOptions, 100); // Re-validate after deletion
+                                                }}
                                                 className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </div>
-                                    ))}
+                                    );
+                                })}
                                     {(field.options || []).length === 0 && (
                                         <div className="text-center text-gray-500 text-sm py-4 border-2 border-dashed border-gray-300 rounded-md">
                                             <p>No options configured.</p>
@@ -469,7 +630,15 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                 hideLabel={true}
                             />
                         )}
-                        {field.type === 'multiselect' && !field.multiSelectOptionSetId && field.options && field.options.length > 0 && (
+                        {(field.type === 'select' || field.type === 'multiselectdropdown') && field.selectOptionSetId && (
+                            <OptionSetPreview
+                                type="select"
+                                optionSetId={field.selectOptionSetId}
+                                optionSetName={field.selectOptionSetName || ''}
+                                hideLabel={true}
+                            />
+                        )}
+                        {(field.type === 'multiselect' || field.type === 'multiselectdropdown') && !field.multiSelectOptionSetId && !field.selectOptionSetId && field.options && field.options.length > 0 && (
                             <div className="space-y-2">
                                 {field.options.map((option, index) => (
                                     <label key={index} className="flex items-center">
@@ -482,6 +651,27 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                     </label>
                                 ))}
                             </div>
+                        )}
+                        {field.type === 'select' && field.selectOptionSetId && (
+                            <OptionSetPreview
+                                type="select"
+                                optionSetId={field.selectOptionSetId}
+                                optionSetName={field.selectOptionSetName || ''}
+                                hideLabel={true}
+                            />
+                        )}
+                        {field.type === 'select' && !field.selectOptionSetId && field.options && field.options.length > 0 && (
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                disabled
+                            >
+                                <option value="">{field.placeholder || 'Select an option...'}</option>
+                                {field.options.map((option, index) => (
+                                    <option key={index} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                         )}
                         {field.type === 'rating' && field.ratingScaleId && (
                             <OptionSetPreview

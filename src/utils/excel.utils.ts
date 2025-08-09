@@ -1,9 +1,6 @@
 import * as XLSX from "xlsx";
-import {
-  SurveyConfig,
-  SurveyData,
-  SurveyResponse,
-} from "../types/survey.types";
+import { SurveyData } from "../types/survey.types";
+import { SurveyConfig, SurveyResponse } from "../types/framework.types";
 
 export interface ExcelExportOptions {
   filename?: string;
