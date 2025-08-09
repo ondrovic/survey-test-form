@@ -82,11 +82,21 @@ function AppContent() {
         }
     }, [isAuthenticated, initializeFramework]);
 
-    const getSurveyInstanceBySlug = (slug: string) => {
-        return allSurveyInstances.find(instance =>
-            instance.title.toLowerCase().replace(/\s+/g, '-') === slug && 
-            isSurveyInstanceActive(instance)
+    const getSurveyInstanceBySlug = (slugOrId: string) => {
+        // First, try to find by instance ID (new method)
+        let instance = allSurveyInstances.find(instance =>
+            instance.id === slugOrId && isSurveyInstanceActive(instance)
         );
+        
+        // Backward compatibility: if not found by ID, try the old title-based slug method
+        if (!instance) {
+            instance = allSurveyInstances.find(instance =>
+                instance.title.toLowerCase().replace(/\s+/g, '-') === slugOrId && 
+                isSurveyInstanceActive(instance)
+            );
+        }
+        
+        return instance;
     };
 
     // Show loading while auth is initializing OR while migrating (only if authenticated)
@@ -239,8 +249,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             showSuccess('Survey submitted!');
 
             // Redirect to confirmation page instead of resetting form
-            const slug = instance.title.toLowerCase().replace(/\s+/g, '-');
-            navigate(`/survey-confirmation/${slug}`);
+            navigate(`/survey-confirmation/${instance.id}`);
         } catch (err) {
             console.error('Survey submission error:', err);
             showError('Failed to submit survey. Please try again.');

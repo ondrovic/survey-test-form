@@ -30,6 +30,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     const { showSuccess, showError } = useToast();
     const deleteModal = useModal<{ type: 'config' | 'instance'; id: string; name: string }>();
     const settingsModal = useModal<SurveyInstance>();
+    const createInstanceModal = useModal<SurveyConfig>();
 
     const handleCreateSurveyInstance = async (config: SurveyConfig) => {
         try {
@@ -113,8 +114,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     };
 
     const generateSurveyUrl = (instance: SurveyInstance) => {
-        const slug = instance.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        return `${window.location.origin}/survey-test-form/${slug}`;
+        return `${window.location.origin}/survey-test-form/${instance.id}`;
     };
 
     const copySurveyUrl = async (url: string) => {
@@ -138,14 +138,56 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         settingsModal.close();
     };
 
+    const handleMigrateResponseData = async () => {
+        try {
+            showSuccess('Starting data migration...');
+            const result = await firestoreHelpers.migrateSurveyResponsesToInstanceCollections();
+            showSuccess(`Migration completed! Migrated ${result.totalMigrated} responses across ${result.instancesProcessed} instances.`);
+            console.log('Migration results:', result);
+        } catch (error) {
+            showError('Failed to migrate response data');
+            console.error('Migration error:', error);
+        }
+    };
+
+    const handleVerifyDataSeparation = async () => {
+        try {
+            showSuccess('Verifying data separation...');
+            const result = await firestoreHelpers.verifyInstanceCollectionSeparation();
+            showSuccess(`Verification completed! ${result.properlyIsolated}/${result.totalInstances} instances properly isolated.`);
+            console.log('Verification results:', result);
+        } catch (error) {
+            showError('Failed to verify data separation');
+            console.error('Verification error:', error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Survey Framework</h2>
-                <Button onClick={onCreateNewSurvey}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create New Survey
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleVerifyDataSeparation}
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                    >
+                        Verify Data
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleMigrateResponseData}
+                        className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                    >
+                        Migrate Data
+                    </Button>
+                    <Button onClick={onCreateNewSurvey}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create New Survey
+                    </Button>
+                </div>
             </div>
 
             {/* Survey Configurations */}
@@ -167,6 +209,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                             <p className="text-xs text-gray-500">
                                                 {config.sections.length} sections,
                                                 {config.sections.reduce((sum, s) => sum + s.fields.length, 0)} fields
+                                                • {surveyInstances.filter(instance => instance.configId === config.id).length} instances
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -181,7 +224,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() => handleCreateSurveyInstance(config)}
+                                                onClick={() => createInstanceModal.open(config)}
                                             >
                                                 <Plus className="w-4 h-4 mr-1" />
                                                 Create Instance
@@ -217,8 +260,16 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                 <div key={instance.id} className="border rounded-lg p-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h4 className="font-semibold">{instance.title}</h4>
+                                            <h4 className="font-semibold">
+                                                {instance.title}
+                                                <span className="ml-2 text-sm font-normal text-blue-600">
+                                                    (ID: {instance.id})
+                                                </span>
+                                            </h4>
                                             <p className="text-sm text-gray-600">{instance.description}</p>
+                                            <p className="text-xs text-gray-500">
+                                                Config: {surveyConfigs.find(c => c.id === instance.configId)?.title || instance.configId}
+                                            </p>
                                             <div className="flex items-center gap-4 mt-2">
                                                 <span className={`px-2 py-1 text-xs rounded-full ${isSurveyInstanceActive(instance)
                                                     ? "bg-green-100 text-green-800"
@@ -373,6 +424,19 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                         } catch (error) {
                             // Error handling is done in the individual functions
                         }
+                    }}
+                />
+            )}
+
+            {/* Create Instance Confirmation Modal */}
+            {createInstanceModal.isOpen && createInstanceModal.data && (
+                <CreateInstanceModal
+                    config={createInstanceModal.data}
+                    existingInstances={surveyInstances.filter(instance => instance.configId === createInstanceModal.data!.id)}
+                    onClose={() => createInstanceModal.close()}
+                    onConfirm={() => {
+                        handleCreateSurveyInstance(createInstanceModal.data!);
+                        createInstanceModal.close();
                     }}
                 />
             )}
@@ -562,6 +626,86 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
                     >
                         {isSaving ? 'Saving...' : 'Save Changes'}
                     </Button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Create Instance Confirmation Modal
+interface CreateInstanceModalProps {
+    config: SurveyConfig;
+    existingInstances: SurveyInstance[];
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({ 
+    config, 
+    existingInstances, 
+    onClose, 
+    onConfirm 
+}) => {
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div className="p-6">
+                    <h3 className="text-lg font-semibold mb-4">Create New Survey Instance</h3>
+                    
+                    <div className="mb-4">
+                        <p className="text-sm text-gray-600 mb-2">
+                            You're about to create a new instance of:
+                        </p>
+                        <p className="font-medium text-gray-900">{config.title}</p>
+                    </div>
+
+                    {existingInstances.length > 0 && (
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <h4 className="text-sm font-medium text-blue-900 mb-2">
+                                Existing Instances ({existingInstances.length}):
+                            </h4>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                                {existingInstances.map((instance) => (
+                                    <div key={instance.id} className="text-xs text-blue-800 flex items-center justify-between">
+                                        <span>{instance.id}</span>
+                                        <span className={`px-1 py-0.5 rounded text-xs ${
+                                            instance.isActive 
+                                                ? 'bg-green-100 text-green-700' 
+                                                : 'bg-gray-100 text-gray-600'
+                                        }`}>
+                                            {instance.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm text-green-800">
+                            <p className="mb-2">
+                                <strong>New instance ID:</strong><br />
+                                <code className="text-xs bg-green-100 px-1 py-0.5 rounded">
+                                    {config.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-{(existingInstances.length + 1).toString().padStart(3, '0')}
+                                </code>
+                            </p>
+                            <p>
+                                <strong>Survey URL will be:</strong><br />
+                                <code className="text-xs bg-green-100 px-1 py-0.5 rounded break-all">
+                                    {window.location.origin}/survey-test-form/{config.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-{(existingInstances.length + 1).toString().padStart(3, '0')}
+                                </code>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                        <Button variant="outline" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button onClick={onConfirm}>
+                            Create Instance
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

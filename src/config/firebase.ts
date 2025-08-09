@@ -124,6 +124,36 @@ const createKebabCaseId = (name: string): string => {
     .replace(/^-|-$/g, "");
 };
 
+// Helper function to create unique survey instance IDs with counter
+const createUniqueInstanceId = async (baseTitle: string): Promise<string> => {
+  const baseId = createKebabCaseId(baseTitle);
+  
+  // Get all existing instances that start with this base ID
+  const q = query(surveyInstancesCol);
+  const querySnapshot = await getDocs(q);
+  const existingIds = querySnapshot.docs.map(doc => doc.id);
+  
+  // Find existing instances with the same base
+  const matchingIds = existingIds.filter(id => id.startsWith(baseId));
+  
+  if (matchingIds.length === 0) {
+    // No existing instances, use base ID with -001
+    return `${baseId}-001`;
+  }
+  
+  // Extract counters from existing IDs
+  const counters = matchingIds
+    .map(id => {
+      const match = id.match(new RegExp(`^${baseId}-(\\d{3})$`));
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter(counter => counter > 0);
+  
+  // Find the next available counter
+  const nextCounter = counters.length > 0 ? Math.max(...counters) + 1 : 1;
+  return `${baseId}-${nextCounter.toString().padStart(3, '0')}`;
+};
+
 // Authentication helper functions
 export const authHelpers = {
   // Sign in anonymously
@@ -313,6 +343,24 @@ export const firestoreHelpers = {
     }
   },
 
+  async getSurveyInstancesByConfig(configId: string) {
+    try {
+      const q = query(surveyInstancesCol, where("configId", "==", configId));
+      const querySnapshot = await getDocs(q);
+      const instances = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as SurveyInstance;
+        return {
+          ...data,
+          id: doc.id,
+        };
+      });
+      return instances;
+    } catch (error) {
+      console.error("Error getting survey instances by config:", error);
+      throw error;
+    }
+  },
+
   // async getActiveSurveyInstance() {
   //   try {
   //     const q = query(
@@ -351,8 +399,8 @@ export const firestoreHelpers = {
 
   async addSurveyInstance(instance: Omit<SurveyInstance, "id">) {
     try {
-      // Use human-readable, kebab-case name for document ID
-      const instanceId = createKebabCaseId(instance.title);
+      // Generate unique instance ID with counter
+      const instanceId = await createUniqueInstanceId(instance.title);
       const instanceRef = doc(surveyInstancesCollection, instanceId);
       await setDoc(instanceRef, {
         ...instance,
@@ -406,7 +454,7 @@ export const firestoreHelpers = {
     try {
       console.log("addSurveyResponse called with:", response);
 
-      // Get the survey instance to determine the collection name
+      // Verify the survey instance exists
       const instanceRef = doc(
         db,
         "survey-instances",
@@ -420,14 +468,12 @@ export const firestoreHelpers = {
         );
       }
 
-      const instanceData = instanceDoc.data() as SurveyInstance;
-      const collectionName = instanceData.title
-        .toLowerCase()
-        .replace(/\s+/g, "-");
+      // Use instance ID for unique collection names
+      const collectionName = `survey-responses-${response.surveyInstanceId}`;
 
       console.log("Creating collection with name:", collectionName);
 
-      // Create or get the survey-specific collection
+      // Create or get the instance-specific collection
       const surveyCollection = collection(firestoreDb, collectionName);
 
       const docRef = await addDoc(surveyCollection, {
@@ -439,10 +485,13 @@ export const firestoreHelpers = {
       });
 
       console.log(
-        "Survey response saved successfully to collection:",
-        collectionName,
-        "with document ID:",
-        docRef.id
+        "✅ Survey response saved successfully:",
+        {
+          collection: collectionName,
+          documentId: docRef.id,
+          surveyInstanceId: response.surveyInstanceId,
+          submissionTime: new Date().toISOString()
+        }
       );
       return { id: docRef.id, ...response };
     } catch (error) {
@@ -498,10 +547,10 @@ export const firestoreHelpers = {
     }
   },
 
-  // Get survey responses from survey-specific collection
+  // Get survey responses from instance-specific collection
   async getSurveyResponsesFromCollection(instanceId: string) {
     try {
-      // Get the survey instance to determine the collection name
+      // Verify the survey instance exists
       const instanceRef = doc(db, "survey-instances", instanceId);
       const instanceDoc = await getDoc(instanceRef);
 
@@ -509,12 +558,10 @@ export const firestoreHelpers = {
         throw new Error(`Survey instance ${instanceId} not found`);
       }
 
-      const instanceData = instanceDoc.data() as SurveyInstance;
-      const collectionName = instanceData.title
-        .toLowerCase()
-        .replace(/\s+/g, "-");
+      // Use instance ID for unique collection names (same as storage)
+      const collectionName = `survey-responses-${instanceId}`;
 
-      // Get the survey-specific collection
+      // Get the instance-specific collection
       const surveyCollection = collection(firestoreDb, collectionName);
 
       const q = query(
@@ -532,6 +579,161 @@ export const firestoreHelpers = {
       return responses;
     } catch (error) {
       console.error("Error getting survey responses from collection:", error);
+      throw error;
+    }
+  },
+
+  // Migration helper: Move responses from title-based collections to instance-based collections
+  async migrateSurveyResponsesToInstanceCollections() {
+    try {
+      console.log("Starting migration of survey responses to instance-specific collections...");
+      
+      // Get all survey instances
+      const instancesSnapshot = await getDocs(collection(firestoreDb, "survey-instances"));
+      const instances = instancesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SurveyInstance[];
+
+      let totalMigrated = 0;
+      const migrationResults = [];
+
+      for (const instance of instances) {
+        try {
+          // Old collection name (title-based)
+          const oldCollectionName = instance.title.toLowerCase().replace(/\s+/g, "-");
+          // New collection name (instance ID-based)
+          const newCollectionName = `survey-responses-${instance.id}`;
+
+          console.log(`Migrating responses for instance ${instance.id}: ${oldCollectionName} → ${newCollectionName}`);
+
+          // Check if old collection has any responses for this instance
+          const oldCollection = collection(firestoreDb, oldCollectionName);
+          const oldResponsesQuery = query(
+            oldCollection,
+            where("surveyInstanceId", "==", instance.id)
+          );
+          const oldResponsesSnapshot = await getDocs(oldResponsesQuery);
+
+          if (oldResponsesSnapshot.empty) {
+            console.log(`No responses found for instance ${instance.id} in ${oldCollectionName}`);
+            continue;
+          }
+
+          // Create new collection and copy responses
+          const newCollection = collection(firestoreDb, newCollectionName);
+          let instanceMigrated = 0;
+
+          for (const responseDoc of oldResponsesSnapshot.docs) {
+            const responseData = responseDoc.data();
+            
+            // Add to new collection
+            await addDoc(newCollection, responseData);
+            instanceMigrated++;
+          }
+
+          totalMigrated += instanceMigrated;
+          migrationResults.push({
+            instanceId: instance.id,
+            instanceTitle: instance.title,
+            oldCollection: oldCollectionName,
+            newCollection: newCollectionName,
+            responsesMigrated: instanceMigrated
+          });
+
+          console.log(`Migrated ${instanceMigrated} responses for instance ${instance.id}`);
+
+        } catch (error) {
+          console.error(`Error migrating responses for instance ${instance.id}:`, error);
+          migrationResults.push({
+            instanceId: instance.id,
+            error: error.message
+          });
+        }
+      }
+
+      console.log("Migration completed:", {
+        totalResponsesMigrated: totalMigrated,
+        instancesProcessed: instances.length,
+        results: migrationResults
+      });
+
+      return {
+        success: true,
+        totalMigrated,
+        instancesProcessed: instances.length,
+        results: migrationResults
+      };
+
+    } catch (error) {
+      console.error("Error during migration:", error);
+      throw error;
+    }
+  },
+
+  // Verification helper: Check instance-specific collections
+  async verifyInstanceCollectionSeparation() {
+    try {
+      console.log("🔍 Verifying instance-specific collection separation...");
+      
+      // Get all survey instances
+      const instancesSnapshot = await getDocs(collection(firestoreDb, "survey-instances"));
+      const instances = instancesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SurveyInstance[];
+
+      const verificationResults = [];
+
+      for (const instance of instances) {
+        const collectionName = `survey-responses-${instance.id}`;
+        const surveyCollection = collection(firestoreDb, collectionName);
+        
+        try {
+          const snapshot = await getDocs(surveyCollection);
+          const responseCount = snapshot.size;
+          
+          // Verify all responses belong to this instance
+          let correctInstanceId = 0;
+          snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.surveyInstanceId === instance.id) {
+              correctInstanceId++;
+            }
+          });
+
+          verificationResults.push({
+            instanceId: instance.id,
+            instanceTitle: instance.title,
+            collectionName: collectionName,
+            totalResponses: responseCount,
+            correctInstanceResponses: correctInstanceId,
+            isProperlyIsolated: correctInstanceId === responseCount,
+            status: correctInstanceId === responseCount ? '✅ ISOLATED' : '⚠️ MIXED DATA'
+          });
+
+        } catch (error) {
+          verificationResults.push({
+            instanceId: instance.id,
+            collectionName: collectionName,
+            error: error.message,
+            status: '❌ ERROR'
+          });
+        }
+      }
+
+      const summary = {
+        totalInstances: instances.length,
+        properlyIsolated: verificationResults.filter(r => r.isProperlyIsolated).length,
+        hasErrors: verificationResults.filter(r => r.error).length,
+        results: verificationResults
+      };
+
+      console.log("🔍 Instance Collection Verification Results:", summary);
+      return summary;
+
+    } catch (error) {
+      console.error("Error during verification:", error);
       throw error;
     }
   },
