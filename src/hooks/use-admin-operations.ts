@@ -32,14 +32,14 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteSurveyConfig(configId);
         console.log("Firebase delete completed successfully");
         const itemName = configName || "Survey configuration";
-        showSuccess(`${itemName} deleted!`);
+        showSuccess(`Survey configuration "${itemName}" deleted!`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
       } catch (error) {
         console.error("Error in deleteSurveyConfig:", error);
         const itemName = configName || "Survey configuration";
-        showError(`Failed to delete ${itemName.toLowerCase()}`);
+        showError(`Failed to delete survey configuration "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
@@ -61,18 +61,20 @@ export const useAdminOperations = () => {
   );
 
   const permanentlyDeleteSurveyInstance = useCallback(
-    async (instanceId: string) => {
+    async (instanceId: string, instanceName?: string) => {
       try {
         console.log("Starting delete for instance ID:", instanceId);
         await firestoreHelpers.deleteSurveyInstance(instanceId);
         console.log("Firebase delete completed successfully");
-        showSuccess("Survey instance permanently deleted!");
+        const itemName = instanceName || "Survey instance";
+        showSuccess(`Survey instance "${itemName}" permanently deleted!`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
       } catch (error) {
         console.error("Error in permanentlyDeleteSurveyInstance:", error);
-        showError("Failed to delete survey instance");
+        const itemName = instanceName || "Survey instance";
+        showError(`Failed to delete survey instance "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
@@ -83,7 +85,7 @@ export const useAdminOperations = () => {
       try {
         await firestoreHelpers.deleteRatingScale(scaleId);
         const itemName = scaleName || "Unnamed Rating Scale";
-        showSuccess(`Rating scale "${itemName}" deleted`);
+        showSuccess(`Rating scale "${itemName}" deleted!`);
         await refreshAll();
       } catch (error) {
         const itemName = scaleName || "Unnamed Rating Scale";
@@ -94,18 +96,20 @@ export const useAdminOperations = () => {
   );
 
   const toggleInstanceActive = useCallback(
-    async (instanceId: string, isActive: boolean) => {
+    async (instanceId: string, isActive: boolean, instanceName?: string) => {
       try {
         await firestoreHelpers.updateSurveyInstance(instanceId, { isActive });
+        const itemName = instanceName || "Survey instance";
         showSuccess(
-          `Survey instance ${
+          `Survey instance "${itemName}" ${
             isActive ? "activated" : "deactivated"
           }!`
         );
         await refreshAll();
       } catch (error) {
+        const itemName = instanceName || "Survey instance";
         showError(
-          `Failed to ${isActive ? "activate" : "deactivate"} survey instance`
+          `Failed to ${isActive ? "activate" : "deactivate"} survey instance "${itemName}"`
         );
       }
     },
@@ -115,7 +119,8 @@ export const useAdminOperations = () => {
   const updateInstanceDateRange = useCallback(
     async (
       instanceId: string,
-      dateRange: { startDate: string; endDate: string } | null
+      dateRange: { startDate: string; endDate: string } | null,
+      instanceName?: string
     ) => {
       try {
         const updateData: any = {};
@@ -130,15 +135,17 @@ export const useAdminOperations = () => {
         
         console.log("updateInstanceDateRange calling updateSurveyInstance with:", updateData);
         await firestoreHelpers.updateSurveyInstance(instanceId, updateData);
+        const itemName = instanceName || "Survey instance";
         showSuccess(
           dateRange
-            ? "Date range updated!"
-            : "Date range removed!"
+            ? `Survey instance "${itemName}" date range updated!`
+            : `Survey instance "${itemName}" date range removed!`
         );
         await refreshAll();
       } catch (error) {
         console.error("Error in updateInstanceDateRange:", error);
-        showError("Failed to update date range");
+        const itemName = instanceName || "Survey instance";
+        showError(`Failed to update date range for survey instance "${itemName}"`);
       }
     },
     [showSuccess, showError, refreshAll]
@@ -291,7 +298,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteRadioOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
         const itemName = optionSetName || "Unnamed Radio Option Set";
-        showSuccess(`Radio option set "${itemName}" deleted`);
+        showSuccess(`Radio option set "${itemName}" deleted!`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
@@ -311,7 +318,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteMultiSelectOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
         const itemName = optionSetName || "Unnamed Multi-Select Option Set";
-        showSuccess(`Multi-select option set "${itemName}" deleted`);
+        showSuccess(`Multi-select option set "${itemName}" deleted!`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
@@ -331,7 +338,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteSelectOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
         const itemName = optionSetName || "Unnamed Select Option Set";
-        showSuccess(`Select option set "${itemName}" deleted`);
+        showSuccess(`Select option set "${itemName}" deleted!`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");

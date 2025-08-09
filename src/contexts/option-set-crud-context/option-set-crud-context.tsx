@@ -109,7 +109,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     setIsLoading(true);
     try {
       const newItem = await config.firestoreHelpers.create(data);
-      showSuccess(`${config.displayName} "${data.name}" created`);
+      showSuccess(`${config.displayName} "${data.name}" created!`);
       return newItem;
     } catch (err) {
       const errorMsg = `Failed to create ${config.displayName.toLowerCase()} "${data.name}"`;
@@ -159,7 +159,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     setIsLoading(true);
     try {
       await config.firestoreHelpers.update(id, data);
-      showSuccess(`${config.displayName} "${data.name || 'item'}" updated`);
+      showSuccess(`${config.displayName} "${data.name || 'item'}" updated!`);
       return true;
     } catch (err) {
       const errorMsg = `Failed to update ${config.displayName.toLowerCase()} "${data.name || 'item'}"`;
@@ -181,7 +181,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     
     try {
       await config.firestoreHelpers.delete(id);
-      showSuccess(`${config.displayName} "${name}" deleted`);
+      showSuccess(`${config.displayName} "${name}" deleted!`);
       return true;
     } catch (err) {
       const errorMsg = `Failed to delete ${config.displayName.toLowerCase()} "${name}"`;

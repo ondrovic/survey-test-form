@@ -14,8 +14,8 @@ interface AdminFrameworkProps {
     onEditSurveyConfig: (config: SurveyConfig) => void;
     onDeleteSurveyConfig: (configId: string, configName?: string) => void;
     onDeleteSurveyInstance: (instanceId: string, instanceName?: string) => void;
-    onToggleInstanceActive: (instanceId: string, isActive: boolean) => void;
-    onUpdateInstanceDateRange: (instanceId: string, dateRange: { startDate: string; endDate: string } | null) => void;
+    onToggleInstanceActive: (instanceId: string, isActive: boolean, instanceName?: string) => void;
+    onUpdateInstanceDateRange: (instanceId: string, dateRange: { startDate: string; endDate: string } | null, instanceName?: string) => void;
 }
 
 export const AdminFramework: React.FC<AdminFrameworkProps> = ({
@@ -51,7 +51,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
             // Refresh the data to show the new instance immediately
             await refreshAll();
         } catch (error) {
-            showError('Failed to create survey instance');
+            showError(`Failed to create survey instance for "${config.title}"`);
         }
     };
 
@@ -268,7 +268,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() => onToggleInstanceActive(instance.id, !instance.isActive)}
+                                                onClick={() => onToggleInstanceActive(instance.id, !instance.isActive, instance.title)}
                                             >
                                                 {instance.isActive ? 'Deactivate' : 'Activate'}
                                             </Button>
@@ -350,7 +350,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                         try {
                             // Apply active status change if it changed
                             if (updates.isActive !== settingsModal.data?.isActive) {
-                                await onToggleInstanceActive(settingsModal.data?.id || '', updates.isActive);
+                                await onToggleInstanceActive(settingsModal.data?.id || '', updates.isActive, settingsModal.data?.title);
                             }
                             
                             // Apply date range change if it changed
@@ -364,7 +364,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                             
                             if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew)) {
                                 console.log("Date range changed, updating...");
-                                await onUpdateInstanceDateRange(settingsModal.data?.id || '', newDateRange);
+                                await onUpdateInstanceDateRange(settingsModal.data?.id || '', newDateRange, settingsModal.data?.title);
                             } else {
                                 console.log("Date range unchanged, skipping update");
                             }

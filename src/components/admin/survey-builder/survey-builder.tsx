@@ -148,16 +148,17 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 
             if (editingConfig) {
                 await firestoreHelpers.updateSurveyConfig(editingConfig.id, updatedConfig);
-                showSuccess('Survey configuration updated!');
+                showSuccess(`Survey configuration "${updatedConfig.title}" updated!`);
             } else {
                 await firestoreHelpers.addSurveyConfig(updatedConfig);
-                showSuccess('Survey configuration created!');
+                showSuccess(`Survey configuration "${updatedConfig.title}" created!`);
             }
 
             await refreshAll();
             onClose();
         } catch (error) {
-            showError('Failed to save survey configuration');
+            const configTitle = state.config.title || 'Survey configuration';
+            showError(`Failed to save survey configuration "${configTitle}"`);
         } finally {
             setLoading(false);
         }
