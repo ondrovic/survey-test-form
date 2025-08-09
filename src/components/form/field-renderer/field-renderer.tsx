@@ -278,6 +278,23 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 );
             }
 
+            // Extract min/max selections from option set or validation rules
+            let minSelections: number | undefined;
+            let maxSelections: number | undefined;
+            
+            if (field.multiSelectOptionSetId && multiSelectOptionSets[field.multiSelectOptionSetId]) {
+                // Use option set constraints
+                const optionSet = multiSelectOptionSets[field.multiSelectOptionSetId];
+                minSelections = optionSet.minSelections;
+                maxSelections = optionSet.maxSelections;
+            } else if (field.validation) {
+                // Use individual field validation rules
+                const minRule = field.validation.find(rule => rule.type === 'minSelections');
+                const maxRule = field.validation.find(rule => rule.type === 'maxSelections');
+                minSelections = minRule?.value;
+                maxSelections = maxRule?.value;
+            }
+
             console.log('🎯 Final options for multiselect:', multiSelectOptions);
             console.log('🎯 CheckboxGroup props:', {
                 name: field.id,
@@ -285,7 +302,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 optionsCount: multiSelectOptions.length,
                 selectedValues: value || [],
                 required: field.required,
-                hasError: !!error
+                hasError: !!error,
+                minSelections,
+                maxSelections
             });
 
             return (
@@ -297,6 +316,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     onChange={(value) => handleFieldChange(field.id, value)}
                     error={error}
                     required={field.required}
+                    minSelections={minSelections}
+                    maxSelections={maxSelections}
                 />
             );
 

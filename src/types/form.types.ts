@@ -54,6 +54,8 @@ export interface CheckboxGroupProps<T extends string | number = string> {
   required?: boolean;
   error?: string;
   layout?: "horizontal" | "vertical" | "grid";
+  maxSelections?: number;
+  minSelections?: number;
   "data-testid"?: string;
 }
 

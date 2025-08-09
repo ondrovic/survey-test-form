@@ -100,7 +100,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             required: false,
         };
         addField(sectionId, newField);
-        selectField(newField.id);
+        handleOpenFieldEditor(newField.id);
     };
 
     const handleUpdateField = (sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {

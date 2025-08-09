@@ -97,7 +97,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                         hideLabel={true}
                                     />
                                 )}
-                                {(field.type === 'select' || field.type === 'multiselectdropdown') && field.selectOptionSetId && (
+                                {field.type === 'multiselectdropdown' && field.selectOptionSetId && (
                                     <OptionSetPreview
                                         type="select"
                                         optionSetId={field.selectOptionSetId}

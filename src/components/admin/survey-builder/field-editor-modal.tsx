@@ -63,7 +63,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         onUpdateField(sectionId, field.id, { placeholder: value });
     };
 
-    const validateOptions = useCallback(() => {
+    const validateOptions = useCallback((): boolean => {
         if (!field) return true;
         const validation = validateFieldOptions(field);
         setOptionsError(validation.isValid ? '' : validation.error || '');
@@ -219,6 +219,46 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         placeholder="Enter placeholder text (optional, max 150 characters)"
                         error={placeholderError}
                     />
+
+                    {/* Min/Max Selection Configuration for Multiselect */}
+                    {((field.type === 'multiselect' && !field.multiSelectOptionSetId) || (field.type === 'multiselectdropdown' && !field.selectOptionSetId)) && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-blue-50 border-blue-200">
+                            <h4 className="font-medium text-blue-900">Selection Constraints</h4>
+                            <p className="text-sm text-blue-700">
+                                Set minimum and maximum number of options users can select. Leave empty for no limits.
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    name="minSelections"
+                                    label="Minimum Selections"
+                                    type="number"
+                                    value={field.validation?.find(rule => rule.type === 'minSelections')?.value?.toString() || ''}
+                                    onChange={(value) => {
+                                        const numValue = parseInt(value) || 0;
+                                        const currentValidation = field.validation || [];
+                                        const filteredValidation = currentValidation.filter(rule => rule.type !== 'minSelections');
+                                        const newValidation = value ? [...filteredValidation, { type: 'minSelections' as const, value: numValue }] : filteredValidation;
+                                        onUpdateField(sectionId, field.id, { validation: newValidation });
+                                    }}
+                                    placeholder="0"
+                                />
+                                <Input
+                                    name="maxSelections"
+                                    label="Maximum Selections"
+                                    type="number"
+                                    value={field.validation?.find(rule => rule.type === 'maxSelections')?.value?.toString() || ''}
+                                    onChange={(value) => {
+                                        const numValue = parseInt(value) || 0;
+                                        const currentValidation = field.validation || [];
+                                        const filteredValidation = currentValidation.filter(rule => rule.type !== 'maxSelections');
+                                        const newValidation = value ? [...filteredValidation, { type: 'maxSelections' as const, value: numValue }] : filteredValidation;
+                                        onUpdateField(sectionId, field.id, { validation: newValidation });
+                                    }}
+                                    placeholder="Unlimited"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Field Options Configuration */}
@@ -630,7 +670,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                 hideLabel={true}
                             />
                         )}
-                        {(field.type === 'select' || field.type === 'multiselectdropdown') && field.selectOptionSetId && (
+                        {field.type === 'multiselectdropdown' && field.selectOptionSetId && (
                             <OptionSetPreview
                                 type="select"
                                 optionSetId={field.selectOptionSetId}

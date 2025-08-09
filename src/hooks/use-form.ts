@@ -59,7 +59,15 @@ export const useForm = (initialState: FormState = {}): UseFormReturn => {
             }
             break;
           case "min":
-            if (value && value.length < (rule.value || 0)) {
+            if (Array.isArray(value)) {
+              // For multiselect fields, validate minimum selections
+              if (value.length < (rule.value || 0)) {
+                return (
+                  rule.message ||
+                  `${field.label} requires at least ${rule.value} selection${rule.value === 1 ? '' : 's'}`
+                );
+              }
+            } else if (value && value.length < (rule.value || 0)) {
               return (
                 rule.message ||
                 `${field.label} must be at least ${rule.value} characters`
@@ -67,10 +75,34 @@ export const useForm = (initialState: FormState = {}): UseFormReturn => {
             }
             break;
           case "max":
-            if (value && value.length > (rule.value || 0)) {
+            if (Array.isArray(value)) {
+              // For multiselect fields, validate maximum selections
+              if (value.length > (rule.value || 0)) {
+                return (
+                  rule.message ||
+                  `${field.label} can have at most ${rule.value} selection${rule.value === 1 ? '' : 's'}`
+                );
+              }
+            } else if (value && value.length > (rule.value || 0)) {
               return (
                 rule.message ||
                 `${field.label} must be no more than ${rule.value} characters`
+              );
+            }
+            break;
+          case "minSelections":
+            if (Array.isArray(value) && value.length < (rule.value || 0)) {
+              return (
+                rule.message ||
+                `${field.label} requires at least ${rule.value} selection${rule.value === 1 ? '' : 's'}`
+              );
+            }
+            break;
+          case "maxSelections":
+            if (Array.isArray(value) && value.length > (rule.value || 0)) {
+              return (
+                rule.message ||
+                `${field.label} can have at most ${rule.value} selection${rule.value === 1 ? '' : 's'}`
               );
             }
             break;

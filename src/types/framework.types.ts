@@ -26,7 +26,7 @@ export interface FieldOption {
 }
 
 export interface ValidationRule {
-  type: "required" | "email" | "min" | "max" | "pattern" | "custom";
+  type: "required" | "email" | "min" | "max" | "minSelections" | "maxSelections" | "pattern" | "custom";
   value?: any;
   message?: string;
 }
