@@ -236,7 +236,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             console.log('Submitting survey response to Firebase...', surveyResponse);
             await firestoreHelpers.addSurveyResponse(surveyResponse);
             console.log('Survey response submitted successfully!');
-            showSuccess('Survey submitted successfully!');
+            showSuccess('Survey submitted!');
 
             // Redirect to confirmation page instead of resetting form
             const slug = instance.title.toLowerCase().replace(/\s+/g, '-');

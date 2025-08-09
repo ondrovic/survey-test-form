@@ -1,6 +1,7 @@
 import { Check, Edit, Plus, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
+import { useSurveyData } from '../../../contexts/survey-data-context';
 import { useModal } from '../../../hooks';
 import { Button, DeleteConfirmationModal } from '../../common';
 import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
@@ -28,6 +29,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   renderAdditionalFields,
 }: GenericOptionSetManagerProps<T>) => {
   const { loadItems, createItem, updateItem, deleteItem, isLoading } = useOptionSetCrud();
+  const { refreshAll } = useSurveyData();
   const deleteModal = useModal<{ id: string; name: string }>();
   const [items, setItems] = useState<T[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<T> | null>(null);
@@ -139,6 +141,8 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     }
 
     if (success) {
+      // Refresh global survey data context to update all tabs
+      await refreshAll();
       // Clear editing state and close modal after successful save
       setEditingItem(null);
       onClose();

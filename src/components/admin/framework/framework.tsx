@@ -46,7 +46,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
             };
 
             await firestoreHelpers.addSurveyInstance(instance);
-            showSuccess(`Survey instance "${config.title}" created successfully!`);
+            showSuccess(`Survey instance "${config.title}" created!`);
 
             // Refresh the data to show the new instance immediately
             await refreshAll();

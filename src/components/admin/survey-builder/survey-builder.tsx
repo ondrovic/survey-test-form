@@ -148,10 +148,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 
             if (editingConfig) {
                 await firestoreHelpers.updateSurveyConfig(editingConfig.id, updatedConfig);
-                showSuccess('Survey configuration updated successfully!');
+                showSuccess('Survey configuration updated!');
             } else {
                 await firestoreHelpers.addSurveyConfig(updatedConfig);
-                showSuccess('Survey configuration created successfully!');
+                showSuccess('Survey configuration created!');
             }
 
             await refreshAll();

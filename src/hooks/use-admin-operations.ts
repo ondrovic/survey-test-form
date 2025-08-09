@@ -16,7 +16,7 @@ export const useAdminOperations = () => {
     async (surveyId: string) => {
       try {
         await firestoreHelpers.deleteSurvey(surveyId);
-        showSuccess("Survey deleted successfully!");
+        showSuccess("Survey deleted!");
         await refreshAll();
       } catch (error) {
         showError("Failed to delete survey");
@@ -32,7 +32,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteSurveyConfig(configId);
         console.log("Firebase delete completed successfully");
         const itemName = configName || "Survey configuration";
-        showSuccess(`${itemName} deleted successfully!`);
+        showSuccess(`${itemName} deleted!`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
@@ -51,7 +51,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.updateSurveyInstance(instanceId, {
           isActive: false,
         });
-        showSuccess("Survey instance deactivated successfully!");
+        showSuccess("Survey instance deactivated!");
         await refreshAll();
       } catch (error) {
         showError("Failed to deactivate survey instance");
@@ -83,7 +83,7 @@ export const useAdminOperations = () => {
       try {
         await firestoreHelpers.deleteRatingScale(scaleId);
         const itemName = scaleName || "Unnamed Rating Scale";
-        showSuccess(`Rating scale "${itemName}" deleted successfully`);
+        showSuccess(`Rating scale "${itemName}" deleted`);
         await refreshAll();
       } catch (error) {
         const itemName = scaleName || "Unnamed Rating Scale";
@@ -100,7 +100,7 @@ export const useAdminOperations = () => {
         showSuccess(
           `Survey instance ${
             isActive ? "activated" : "deactivated"
-          } successfully!`
+          }!`
         );
         await refreshAll();
       } catch (error) {
@@ -132,8 +132,8 @@ export const useAdminOperations = () => {
         await firestoreHelpers.updateSurveyInstance(instanceId, updateData);
         showSuccess(
           dateRange
-            ? "Date range updated successfully!"
-            : "Date range removed successfully!"
+            ? "Date range updated!"
+            : "Date range removed!"
         );
         await refreshAll();
       } catch (error) {
@@ -159,7 +159,7 @@ export const useAdminOperations = () => {
           const surveys = await firestoreHelpers.getSurveys();
           await downloadSurveyDataAsExcel(surveys);
         }
-        showSuccess("Survey data downloaded successfully!");
+        showSuccess("Survey data downloaded!");
       } catch (error) {
         showError("Failed to download survey data");
       }
@@ -291,7 +291,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteRadioOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
         const itemName = optionSetName || "Unnamed Radio Option Set";
-        showSuccess(`Radio option set "${itemName}" deleted successfully`);
+        showSuccess(`Radio option set "${itemName}" deleted`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
@@ -311,7 +311,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteMultiSelectOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
         const itemName = optionSetName || "Unnamed Multi-Select Option Set";
-        showSuccess(`Multi-select option set "${itemName}" deleted successfully`);
+        showSuccess(`Multi-select option set "${itemName}" deleted`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
@@ -331,7 +331,7 @@ export const useAdminOperations = () => {
         await firestoreHelpers.deleteSelectOptionSet(optionSetId);
         console.log("Firebase delete completed successfully");
         const itemName = optionSetName || "Unnamed Select Option Set";
-        showSuccess(`Select option set "${itemName}" deleted successfully`);
+        showSuccess(`Select option set "${itemName}" deleted`);
         console.log("Calling refreshAll...");
         await refreshAll();
         console.log("refreshAll completed");
