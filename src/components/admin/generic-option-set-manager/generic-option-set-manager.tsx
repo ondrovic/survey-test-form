@@ -31,15 +31,17 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const deleteModal = useModal<{ id: string; name: string }>();
   const [items, setItems] = useState<T[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<T> | null>(null);
+
   const hasSeededRef = useRef(false);
   const selectionMode = !!onOptionSetSelect;
 
-  // Load items when component becomes visible
+  // Load items when component becomes visible, but only in selection mode
+  // In creation mode, we don't need to load existing items
   useEffect(() => {
-    if (isVisible) {
+    if (isVisible && selectionMode) {
       loadItemsData();
     }
-  }, [isVisible]);
+  }, [isVisible, selectionMode]);
 
   // Seed from props/context once per open to support direct-to-form flows
   useEffect(() => {
