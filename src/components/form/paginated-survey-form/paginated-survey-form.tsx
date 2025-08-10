@@ -21,11 +21,22 @@ const transformFormStateToDescriptiveIds = (formState: Record<string, any>, conf
     const transformedResponses: Record<string, any> = {};
 
     config.sections.forEach(section => {
+        // Process section-level fields
         section.fields.forEach(field => {
             const descriptiveId = createDescriptiveFieldId(section, field);
             if (formState[field.id] !== undefined) {
                 transformedResponses[descriptiveId] = formState[field.id];
             }
+        });
+
+        // Process subsection fields
+        section.subsections?.forEach(subsection => {
+            subsection.fields.forEach(field => {
+                const descriptiveId = createDescriptiveFieldId(section, field);
+                if (formState[field.id] !== undefined) {
+                    transformedResponses[descriptiveId] = formState[field.id];
+                }
+            });
         });
     });
 
@@ -36,6 +47,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     config,
     onSubmit,
     loading = false,
+    showSectionPagination = true,
     className,
     resetTrigger
 }) => {
@@ -100,12 +112,25 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         return record;
     }, [selectOptionSets]);
 
+    // Helper function to process all fields in a section (including subsections)
+    const processAllFields = useCallback((section: SurveySection, callback: (field: SurveyField) => void) => {
+        // Process section-level fields
+        section.fields.forEach(callback);
+        
+        // Process subsection fields
+        if (section.subsections) {
+            section.subsections.forEach(subsection => {
+                subsection.fields.forEach(callback);
+            });
+        }
+    }, []);
+
     // Initialize form state with default values (reuse exact logic from DynamicForm)
     const initializeFormState = useCallback(() => {
         const initialState: Record<string, any> = {};
 
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 if (field.type === 'rating' && field.ratingScaleId) {
                     const scale = ratingScalesRecord[field.ratingScaleId];
                     if (scale) {
@@ -135,7 +160,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         });
 
         return initialState;
-    }, [config.id, config.sections, ratingScalesRecord]);
+    }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
 
     // Initialize form state
     const setupFormState = useCallback(() => {
@@ -161,7 +186,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     // Set default values when option sets are loaded (reuse exact logic from DynamicForm)
     useEffect(() => {
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 if (field.type === 'rating' && field.ratingScaleId && ratingScalesRecord[field.ratingScaleId]) {
                     const scale = ratingScalesRecord[field.ratingScaleId];
                     const defaultOption = scale.options.find(opt => opt.isDefault);
@@ -171,7 +196,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                 }
             });
         });
-    }, [ratingScalesRecord, config, formState.formData, setFieldValue]);
+    }, [ratingScalesRecord, config, formState.formData, setFieldValue, processAllFields]);
 
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
@@ -211,7 +236,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
         const sectionErrors: Record<string, string> = {};
 
-        section.fields.forEach(field => {
+        processAllFields(section, (field) => {
             const fieldValue = formState.formData[field.id];
             const isEmpty = isFieldEmpty(field, fieldValue);
 
@@ -335,7 +360,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             isValid: Object.keys(sectionErrors).length === 0,
             errors: sectionErrors
         };
-    }, [config.sections, formState.formData, isFieldEmpty, multiSelectOptionSetsRecord]);
+    }, [config.sections, formState.formData, isFieldEmpty, multiSelectOptionSetsRecord, processAllFields]);
 
     // Handle next button with validation
     const handleNext = useCallback(() => {
@@ -463,6 +488,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                                 section={currentSection}
                                 sectionIndex={paginationState.currentSectionIndex}
                                 totalSections={paginationState.totalSections}
+                                showSectionPagination={showSectionPagination}
                                 fieldValues={formState.formData}
                                 fieldErrors={hasSubmitted ? formState.errors : {}}
                                 onFieldChange={handleFieldChange}

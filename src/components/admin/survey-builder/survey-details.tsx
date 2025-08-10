@@ -150,6 +150,16 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                     />
                                     <span className="text-xs text-gray-600">Show progress text</span>
                                 </label>
+
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={paginatorConfig.showSectionPagination !== false}
+                                        onChange={(e) => handlePaginatorToggle('showSectionPagination', e.target.checked)}
+                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    />
+                                    <span className="text-xs text-gray-600">Show section pagination (Section x of xx)</span>
+                                </label>
                             </div>
                         )}
                     </div>

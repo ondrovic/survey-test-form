@@ -7,6 +7,7 @@ export interface SurveyPaginatorConfig {
   allowBackNavigation: boolean;
   showProgressBar: boolean;
   showProgressText: boolean;
+  showSectionPagination: boolean;
   animateTransitions?: boolean;
   allowSkipping?: boolean;
 }
@@ -45,6 +46,7 @@ export interface PaginatedSectionRendererProps {
   section: SurveySection;
   sectionIndex: number;
   totalSections: number;
+  showSectionPagination?: boolean;
   className?: string;
 }
 

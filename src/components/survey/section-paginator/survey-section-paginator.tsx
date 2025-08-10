@@ -12,6 +12,7 @@ const DEFAULT_CONFIG = {
   allowBackNavigation: true,
   showProgressBar: true,
   showProgressText: true,
+  showSectionPagination: true,
   animateTransitions: true
 };
 
@@ -137,6 +138,7 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
           section={currentSection}
           sectionIndex={state.currentSectionIndex}
           totalSections={state.totalSections}
+          showSectionPagination={mergedConfig.showSectionPagination}
         />
       </div>
 

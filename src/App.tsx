@@ -289,6 +289,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 config={surveyConfig}
                 onSubmit={handleSubmit}
                 loading={isSubmitting}
+                showSectionPagination={surveyConfig.paginatorConfig?.showSectionPagination !== false}
                 resetTrigger={resetFormTrigger}
             />
         );

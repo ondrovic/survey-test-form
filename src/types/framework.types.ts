@@ -133,11 +133,21 @@ export interface SurveyField {
   metadata?: Record<string, any>;
 }
 
+export interface SurveySubsection {
+  id: string;
+  title: string;
+  description?: string;
+  fields: SurveyField[];
+  order: number;
+  metadata?: Record<string, any>;
+}
+
 export interface SurveySection {
   id: string;
   title: string;
   type: string;
   fields: SurveyField[];
+  subsections: SurveySubsection[];
   order: number;
   description?: string;
   metadata?: Record<string, any>;

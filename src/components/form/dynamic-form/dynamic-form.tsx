@@ -86,12 +86,25 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         return record;
     }, [selectOptionSets]);
 
+    // Helper function to process all fields in a section (including subsections)
+    const processAllFields = useCallback((section: SurveySection, callback: (field: SurveyField) => void) => {
+        // Process section-level fields
+        section.fields.forEach(callback);
+        
+        // Process subsection fields
+        if (section.subsections) {
+            section.subsections.forEach(subsection => {
+                subsection.fields.forEach(callback);
+            });
+        }
+    }, []);
+
     // Initialize form state with default values
     const initializeFormState = useCallback(() => {
         const initialState: Record<string, any> = {};
 
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 console.log('🔍 Processing field:', {
                     fieldId: field.id,
                     fieldLabel: field.label,
@@ -168,7 +181,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         });
 
         return initialState;
-    }, [config.id, config.sections, ratingScalesRecord]);
+    }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
 
     // Initialize form state with default values
     const setupFormState = useCallback(() => {
@@ -198,7 +211,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     // Set default values when rating scales are loaded
     React.useEffect(() => {
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 if (field.type === 'rating' && field.ratingScaleId && ratingScalesRecord[field.ratingScaleId]) {
                     const scale = ratingScalesRecord[field.ratingScaleId];
                     const defaultOption = scale.options.find(opt => opt.isDefault);
@@ -208,12 +221,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 }
             });
         });
-    }, [ratingScalesRecord, config, formState.formData, setFieldValue]);
+    }, [ratingScalesRecord, config, formState.formData, setFieldValue, processAllFields]);
 
     // Set default values when radio option sets are loaded
     React.useEffect(() => {
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 if (field.type === 'radio' && field.radioOptionSetId && radioOptionSetsRecord[field.radioOptionSetId]) {
                     const optionSet = radioOptionSetsRecord[field.radioOptionSetId];
                     const defaultOption = optionSet.options.find(opt => opt.isDefault);
@@ -224,12 +237,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 }
             });
         });
-    }, [radioOptionSetsRecord, config, formState.formData, setFieldValue]);
+    }, [radioOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
 
     // Set default values when multi-select option sets are loaded
     React.useEffect(() => {
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
                     const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
                     const defaultOptions = optionSet.options.filter(opt => opt.isDefault);
@@ -241,12 +254,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 }
             });
         });
-    }, [multiSelectOptionSetsRecord, config, formState.formData, setFieldValue]);
+    }, [multiSelectOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
 
     // Set default values when select option sets are loaded
     React.useEffect(() => {
         config.sections.forEach(section => {
-            section.fields.forEach(field => {
+            processAllFields(section, (field) => {
                 if (field.type === 'select' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
                     const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
                     const defaultOption = optionSet.options.find(opt => opt.isDefault);
@@ -282,7 +295,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 }
             });
         });
-    }, [selectOptionSetsRecord, config, formState.formData, setFieldValue]);
+    }, [selectOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
 
     // Helper function to check if a field value is considered "empty" based on field type
     const isFieldEmpty = useCallback((field: SurveyField, value: any): boolean => {
@@ -953,9 +966,34 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         <p className="text-gray-600">{section.description}</p>
                     )}
                 </div>
-                <div className="space-y-4">
-                    {section.fields.map(renderField)}
-                </div>
+                
+                {/* Render subsections if they exist */}
+                {section.subsections && section.subsections.length > 0 && (
+                    <div className="space-y-6">
+                        {section.subsections.map((subsection) => (
+                            <div key={subsection.id} className="border-l-4 border-gray-200 pl-4">
+                                <div className="mb-4">
+                                    <h4 className="text-lg font-semibold text-gray-800">
+                                        {subsection.title}
+                                    </h4>
+                                    {subsection.description && (
+                                        <p className="text-gray-600 text-sm">{subsection.description}</p>
+                                    )}
+                                </div>
+                                <div className="space-y-4">
+                                    {subsection.fields.map(renderField)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                
+                {/* Section-level fields */}
+                {section.fields.length > 0 && (
+                    <div className="space-y-4">
+                        {section.fields.map(renderField)}
+                    </div>
+                )}
             </div>
         );
     }, [renderField]);

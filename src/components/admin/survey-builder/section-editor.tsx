@@ -1,11 +1,16 @@
 import { Edit, Plus, Trash2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
-import { MultiSelectOptionSet, RadioOptionSet, SurveySection } from '../../../types/framework.types';
+import { MultiSelectOptionSet, RadioOptionSet, SurveySection, SurveySubsection } from '../../../types/framework.types';
 import { FieldType } from '../../../types/framework.types';
 import { Button, Input, SortableList } from '../../common';
 import { useValidation } from '../../../contexts/validation-context';
 import { FIELD_TYPES } from './survey-builder.types';
+import { SubsectionEditor } from './subsection-editor';
+import { DraggableField } from './draggable-field';
+import { DroppableFieldContainer } from './droppable-field-container';
+import { FieldContainer } from './field-drag-context';
+import { MemoizedFieldItem } from './memoized-field-item';
 
 // Utility function to generate kebab-case identifier from title
 const generateSectionType = (title: string): string => {
@@ -22,25 +27,45 @@ const generateSectionType = (title: string): string => {
 interface SectionEditorProps {
     section: SurveySection;
     selectedFieldId: string | null;
+    selectedSubsectionId: string | null;
     onUpdateSection: (sectionId: string, updates: Partial<SurveySection>) => void;
-    onAddField: (sectionId: string, fieldType: FieldType) => void;
+    onAddSubsection: (sectionId: string, subsection: SurveySubsection) => void;
+    onUpdateSubsection: (sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => void;
+    onDeleteSubsection: (sectionId: string, subsectionId: string) => void;
+    onReorderSubsections: (sectionId: string, oldIndex: number, newIndex: number) => void;
+    onSelectSubsection: (subsectionId: string) => void;
+    onAddField: (sectionId: string, fieldType: FieldType, subsectionId?: string) => void;
     onSelectField: (fieldId: string) => void;
     onOpenFieldEditor: (fieldId: string) => void;
-    onDeleteField: (sectionId: string, fieldId: string) => void;
-    onReorderFields: (sectionId: string, oldIndex: number, newIndex: number) => void;
+    onDeleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
+    onReorderFields: (sectionId: string, oldIndex: number, newIndex: number, subsectionId?: string) => void;
+    onMoveField: (fieldId: string, fromContainer: FieldContainer, toContainer: FieldContainer, newIndex: number) => void;
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = ({
     section,
     selectedFieldId,
+    selectedSubsectionId,
     onUpdateSection,
+    onAddSubsection,
+    onUpdateSubsection,
+    onDeleteSubsection,
+    onReorderSubsections,
+    onSelectSubsection,
     onAddField,
     onSelectField,
     onOpenFieldEditor,
     onDeleteField,
-    onReorderFields
+    onReorderFields,
+    onMoveField
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
+    
+    // Memoize the container object to prevent unnecessary re-renders
+    const sectionContainer = useMemo(() => ({ 
+        type: 'section' as const, 
+        sectionId: section.id 
+    }), [section.id]);
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
     const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
     const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
@@ -153,6 +178,20 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
         return 'No options';
     };
+
+    // Handle adding a new subsection
+    const handleAddSubsection = () => {
+        const newSubsection: SurveySubsection = {
+            id: `subsection-${Date.now()}`,
+            title: 'New Subsection',
+            description: '',
+            fields: [],
+            order: section.subsections?.length || 0,
+            metadata: {}
+        };
+        onAddSubsection(section.id, newSubsection);
+    };
+
     return (
         <div>
             <div className="mb-6">
@@ -204,15 +243,93 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 </div>
             </div>
 
+            {/* Subsections */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h4 className="font-semibold">Fields</h4>
-                        <p className="text-xs text-gray-500 mt-1">Click on a field to select it, then use the edit button to modify</p>
+                        <h4 className="font-semibold">Subsections</h4>
+                        <p className="text-xs text-gray-500 mt-1">Group related fields together within this section</p>
                     </div>
                     <Button 
                         size="sm" 
-                        onClick={() => onAddField(section.id, 'text')}
+                        onClick={handleAddSubsection}
+                        disabled={!section.title || !section.type || titleError !== ''}
+                        title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Subsection
+                    </Button>
+                </div>
+                {section.subsections && section.subsections.length > 0 && (
+                    <SortableList
+                        items={section.subsections as any[]}
+                        onReorder={(oldIndex, newIndex) => onReorderSubsections(section.id, oldIndex, newIndex)}
+                        className="space-y-4"
+                        itemClassName="border rounded-lg"
+                        renderItem={(subsection, _isDragging) => (
+                            <div
+                                className={`${selectedSubsectionId === subsection.id
+                                    ? "border-green-500 bg-green-50 ring-2 ring-green-200"
+                                    : "border-gray-200 hover:border-gray-300"
+                                    } transition-all duration-200`}
+                            >
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div 
+                                            className="flex items-center gap-2 flex-1 cursor-pointer" 
+                                            onClick={() => onSelectSubsection(subsection.id)}
+                                        >
+                                            <span className="font-medium text-green-700">{subsection.title}</span>
+                                            <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDeleteSubsection(section.id, subsection.id);
+                                            }}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                    <SubsectionEditor
+                                        subsection={subsection}
+                                        sectionId={section.id}
+                                        selectedFieldId={selectedFieldId}
+                                        onUpdateSubsection={onUpdateSubsection}
+                                        onAddField={onAddField}
+                                        onSelectField={onSelectField}
+                                        onOpenFieldEditor={onOpenFieldEditor}
+                                        onDeleteField={onDeleteField}
+                                        onReorderFields={onReorderFields}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    />
+                )}
+            </div>
+
+            {/* Section-level Fields */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h4 className="font-semibold">Section Fields</h4>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {(section.subsections && section.subsections.length > 0) 
+                                ? 'These fields will be hidden in the survey since subsections exist. Consider moving them to a subsection.'
+                                : 'Fields that belong directly to this section (not in a subsection)'
+                            }
+                        </p>
+                    </div>
+                    <Button 
+                        size="sm" 
+                        onClick={() => {
+                            console.log('🟦 ADD FIELD CLICKED:', section.id);
+                            onAddField(section.id, 'text');
+                        }}
                         disabled={!section.title || !section.type || titleError !== ''}
                         title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
                     >
@@ -220,64 +337,25 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                         Add Field
                     </Button>
                 </div>
-                <SortableList
-                    items={section.fields}
-                    onReorder={(oldIndex, newIndex) => onReorderFields(section.id, oldIndex, newIndex)}
+                <DroppableFieldContainer
+                    container={sectionContainer}
                     className="space-y-4"
-                    itemClassName="p-4 border rounded"
-                    renderItem={(field, _isDragging) => (
-                        <div
-                            className={`${selectedFieldId === field.id
-                                ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                                : "border-gray-200 hover:border-gray-300"
-                                } transition-all duration-200`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div 
-                                    className="flex items-center gap-2 flex-1 cursor-pointer" 
-                                    onClick={() => onSelectField(field.id)}
-                                >
-                                    <span className="font-medium">{field.label}</span>
-                                    <span className="text-sm text-gray-500">({field.type})</span>
-                                    {field.required && (
-                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
-                                            Required
-                                        </span>
-                                    )}
-                                    {FIELD_TYPES.find(t => t.value === field.type)?.hasOptions && (
-                                        <span className="text-xs text-blue-600">
-                                            {getOptionCount(field)}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onOpenFieldEditor(field.id);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-700"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onDeleteField(section.id, field.id);
-                                        }}
-                                        className="text-red-500 hover:text-red-700"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                />
+                    emptyMessage="Drop fields here or add new fields"
+                >
+                    {section.fields.map((field) => (
+                        <MemoizedFieldItem
+                            key={field.id}
+                            field={field}
+                            container={sectionContainer}
+                            isSelected={selectedFieldId === field.id}
+                            onSelectField={onSelectField}
+                            onOpenFieldEditor={onOpenFieldEditor}
+                            onDeleteField={onDeleteField}
+                            sectionId={section.id}
+                            getOptionCount={getOptionCount}
+                        />
+                    ))}
+                </DroppableFieldContainer>
             </div>
         </div>
     );

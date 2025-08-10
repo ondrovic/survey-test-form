@@ -4,6 +4,7 @@ export interface PaginatedSurveyFormProps {
     config: SurveyConfig;
     onSubmit: (data: Record<string, any>) => Promise<void> | void;
     loading?: boolean;
+    showSectionPagination?: boolean;
     className?: string;
     resetTrigger?: number;
 }
