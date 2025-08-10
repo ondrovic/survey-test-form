@@ -27,8 +27,8 @@ export function downloadSurveyDataAsExcel(
       id: survey.id,
       surveyInstanceId: "legacy",
       configVersion: "1.0.0",
+      submittedAt: survey.submittedAt,  // Top-level field
       metadata: {
-        submittedAt: survey.submittedAt,
         userAgent: "Legacy Export",
         ipAddress: "Not Available",
       },
@@ -87,7 +87,7 @@ export function downloadFrameworkResponsesAsExcel(
         "Response ID": response.id,
         "Survey Instance ID": response.surveyInstanceId,
         "Config Version": response.configVersion,
-        "Submitted At": response.metadata.submittedAt,
+        "Submitted At": response.submittedAt,
         "User Agent": response.metadata.userAgent,
         "IP Address": response.metadata.ipAddress || "Not Available",
       };

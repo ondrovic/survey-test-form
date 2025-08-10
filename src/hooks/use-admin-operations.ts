@@ -201,7 +201,7 @@ export const useAdminOperations = () => {
               surveyConfig || undefined,
               {
                 filename,
-                sheetName: `${instance.title} Responses`,
+                sheetName: "Survey Data",
               }
             );
 
@@ -240,7 +240,7 @@ export const useAdminOperations = () => {
 
           downloadFrameworkResponsesAsExcel(allResponses, referenceConfig, {
             filename,
-            sheetName: "All Survey Responses",
+            sheetName: "Survey Data",
           });
 
           showSuccess(

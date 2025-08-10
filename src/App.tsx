@@ -216,7 +216,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         try {
             console.log('Starting survey submission...', {
                 instanceId: instance.id,
-                configVersion: surveyConfig.metadata.version,
+                configVersion: surveyConfig.version,
                 responseCount: Object.keys(responses).length
             });
 
@@ -234,10 +234,10 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             const surveyResponse: SurveyResponse = {
                 id: crypto.randomUUID(),
                 surveyInstanceId: instance.id,
-                configVersion: surveyConfig.metadata?.version || surveyConfig.id || 'unknown',
+                configVersion: surveyConfig.version || 'unknown',
                 responses,
+                submittedAt: getCurrentTimestamp(),  // Moved to top-level
                 metadata: {
-                    submittedAt: getCurrentTimestamp(),
                     userAgent: navigator.userAgent,
                     ipAddress: ipAddress || undefined,
                 }

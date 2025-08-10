@@ -10,14 +10,14 @@ interface AdminRatingScalesProps {
     onShowRatingScaleManager: () => void;
     onEditRatingScale: (scale: RatingScale) => void;
     onDeleteRatingScale: (scaleId: string) => void;
-    onCleanupDuplicates: () => void;
+    // onCleanupDuplicates: () => void;
 }
 
 export const AdminRatingScales: React.FC<AdminRatingScalesProps> = ({
     onShowRatingScaleManager,
     onEditRatingScale,
     onDeleteRatingScale,
-    onCleanupDuplicates
+    // onCleanupDuplicates
 }) => {
     const { state: { ratingScales } } = useSurveyData();
     const { } = useToast();
@@ -28,13 +28,13 @@ export const AdminRatingScales: React.FC<AdminRatingScalesProps> = ({
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Rating Option Sets</h2>
                 <div className="flex gap-2">
-                    <Button
+                    {/* <Button
                         onClick={onCleanupDuplicates}
                         variant="outline"
                         size="sm"
                     >
                         Clean Duplicates
-                    </Button>
+                    </Button> */}
                     <Button onClick={onShowRatingScaleManager}>
                         <Plus className="w-4 h-4 mr-2" />
                         Create New Rating Scale

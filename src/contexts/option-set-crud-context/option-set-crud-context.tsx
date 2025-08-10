@@ -7,11 +7,13 @@ export interface BaseOptionSet {
   name: string;
   description?: string;
   options: any[];
+  // Business logic field (moved from metadata)
+  isActive: boolean;
+  // Audit trail only
   metadata?: {
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
-    isActive: boolean;
+    createdBy?: string;  // Optional, no longer hardcoded
   };
 }
 

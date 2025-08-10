@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { useToast } from '../../../contexts/toast-context/index';
 import { RatingScale, SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
+import { updateMetadata } from '../../../utils/metadata.utils';
 import { Button, Input } from '../../common';
 import { RatingScaleManager } from '../rating-scale-manager';
 
@@ -182,10 +183,7 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
             });
 
             // Update metadata
-            updatedConfig.metadata = {
-                ...updatedConfig.metadata,
-                updatedAt: new Date().toISOString(),
-            };
+            updatedConfig.metadata = updateMetadata(updatedConfig.metadata);
 
             onConfigUpdate(updatedConfig);
             showSuccess(`Successfully updated ${selectedFields.length} field(s)`);

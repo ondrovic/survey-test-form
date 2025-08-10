@@ -44,11 +44,13 @@ export interface RatingScale {
   name: string;
   description?: string;
   options: RatingScaleOption[];
+  // Business logic field (moved from metadata)
+  isActive: boolean;
+  // Audit trail only
   metadata: {
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
-    isActive: boolean;
+    createdBy?: string;  // Optional, no longer hardcoded
   };
 }
 
@@ -67,11 +69,13 @@ export interface RadioOptionSet {
   name: string;
   description?: string;
   options: OptionSetOption[];
+  // Business logic field (moved from metadata)
+  isActive: boolean;
+  // Audit trail only
   metadata: {
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
-    isActive: boolean;
+    createdBy?: string;  // Optional, no longer hardcoded
   };
 }
 
@@ -82,11 +86,13 @@ export interface MultiSelectOptionSet {
   options: OptionSetOption[];
   maxSelections?: number;
   minSelections?: number;
+  // Business logic field (moved from metadata)
+  isActive: boolean;
+  // Audit trail only
   metadata: {
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
-    isActive: boolean;
+    createdBy?: string;  // Optional, no longer hardcoded
   };
 }
 
@@ -96,11 +102,13 @@ export interface SelectOptionSet {
   description?: string;
   options: OptionSetOption[];
   allowMultiple?: boolean;
+  // Business logic field (moved from metadata)
+  isActive: boolean;
+  // Audit trail only
   metadata: {
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
-    isActive: boolean;
+    createdBy?: string;  // Optional, no longer hardcoded
   };
 }
 
@@ -140,12 +148,15 @@ export interface SurveyConfig {
   title: string;
   description?: string;
   sections: SurveySection[];
+  // Business logic fields (moved from metadata)
+  isActive: boolean;
+  version: string;
+  // Audit trail only
   metadata: {
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
-    version: string;
-    isActive: boolean;
+    createdBy?: string;  // Optional, no longer hardcoded
+    ip?: string;
   };
 }
 
@@ -163,6 +174,7 @@ export interface SurveyInstance {
     createdBy: string;
     createdAt: string;
     updatedAt: string;
+    ip?: string;
   };
 }
 
@@ -171,8 +183,10 @@ export interface SurveyResponse {
   surveyInstanceId: string;
   configVersion: string;
   responses: Record<string, any>;
+  // Business/query field (moved from metadata)
+  submittedAt: string;
+  // Technical audit trail only
   metadata: {
-    submittedAt: string;
     userAgent: string;
     ipAddress?: string;
     sessionId?: string;

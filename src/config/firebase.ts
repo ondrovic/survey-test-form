@@ -4,7 +4,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
-  // deleteField,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -24,6 +24,11 @@ import {
   SurveyInstance,
   SurveyResponse,
 } from "../types/framework.types";
+import {
+  createMetadata,
+  mergeMetadata,
+  updateMetadata,
+} from "../utils/metadata.utils";
 
 // Your Firebase configuration
 // Replace with your actual Firebase config from Firebase Console
@@ -127,31 +132,31 @@ const createKebabCaseId = (name: string): string => {
 // Helper function to create unique survey instance IDs with counter
 const createUniqueInstanceId = async (baseTitle: string): Promise<string> => {
   const baseId = createKebabCaseId(baseTitle);
-  
+
   // Get all existing instances that start with this base ID
   const q = query(surveyInstancesCol);
   const querySnapshot = await getDocs(q);
-  const existingIds = querySnapshot.docs.map(doc => doc.id);
-  
+  const existingIds = querySnapshot.docs.map((doc) => doc.id);
+
   // Find existing instances with the same base
-  const matchingIds = existingIds.filter(id => id.startsWith(baseId));
-  
+  const matchingIds = existingIds.filter((id) => id.startsWith(baseId));
+
   if (matchingIds.length === 0) {
     // No existing instances, use base ID with -001
     return `${baseId}-001`;
   }
-  
+
   // Extract counters from existing IDs
   const counters = matchingIds
-    .map(id => {
+    .map((id) => {
       const match = id.match(new RegExp(`^${baseId}-(\\d{3})$`));
       return match ? parseInt(match[1], 10) : 0;
     })
-    .filter(counter => counter > 0);
-  
+    .filter((counter) => counter > 0);
+
   // Find the next available counter
   const nextCounter = counters.length > 0 ? Math.max(...counters) + 1 : 1;
-  return `${baseId}-${nextCounter.toString().padStart(3, '0')}`;
+  return `${baseId}-${nextCounter.toString().padStart(3, "0")}`;
 };
 
 // Authentication helper functions
@@ -215,10 +220,13 @@ export const firestoreHelpers = {
   async updateSurvey(id: string, data: any) {
     try {
       const surveyRef = doc(db, "surveys", id);
-      await updateDoc(surveyRef, {
-        ...data,
-        updatedAt: new Date().toISOString(),
-      });
+      const updateData = { ...data };
+      if (data.metadata) {
+        updateData.metadata = updateMetadata(data.metadata);
+      } else {
+        updateData.metadata = updateMetadata(createMetadata());
+      }
+      await updateDoc(surveyRef, updateData);
     } catch (error) {
       console.error("Error updating survey:", error);
       throw error;
@@ -239,6 +247,8 @@ export const firestoreHelpers = {
   // Survey Configs
   async getSurveyConfigs() {
     try {
+      // Try to order by metadata.createdAt for backward compatibility
+      // TODO: After migration, can simplify to just metadata.createdAt
       const q = query(
         surveyConfigsCollection,
         orderBy("metadata.createdAt", "desc")
@@ -283,15 +293,16 @@ export const firestoreHelpers = {
       // Use human-readable, kebab-case name for document ID
       const configId = createKebabCaseId(config.title);
       const configRef = doc(db, "survey-configs", configId);
-      await setDoc(configRef, {
+      const configData = {
         ...config,
-        metadata: {
-          ...config.metadata,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
-      return { id: configId, ...config };
+        id: configId,
+        // Ensure business logic fields are set
+        isActive: config.isActive ?? true,
+        version: config.version || "1.0.0",
+        metadata: mergeMetadata(config.metadata),
+      };
+      await setDoc(configRef, configData);
+      return configData;
     } catch (error) {
       console.error("Error adding survey config:", error);
       throw error;
@@ -301,13 +312,13 @@ export const firestoreHelpers = {
   async updateSurveyConfig(id: string, data: Partial<SurveyConfig>) {
     try {
       const configRef = doc(db, "survey-configs", id);
-      await updateDoc(configRef, {
-        ...data,
-        metadata: {
-          ...data.metadata,
-          updatedAt: new Date().toISOString(),
-        },
-      });
+      const updateData = { ...data };
+      if (data.metadata) {
+        updateData.metadata = updateMetadata(data.metadata as any);
+      } else {
+        updateData.metadata = updateMetadata(createMetadata());
+      }
+      await updateDoc(configRef, updateData);
     } catch (error) {
       console.error("Error updating survey config:", error);
       throw error;
@@ -402,15 +413,13 @@ export const firestoreHelpers = {
       // Generate unique instance ID with counter
       const instanceId = await createUniqueInstanceId(instance.title);
       const instanceRef = doc(surveyInstancesCollection, instanceId);
-      await setDoc(instanceRef, {
+      const instanceData = {
         ...instance,
-        metadata: {
-          ...instance.metadata,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
-      return { id: instanceId, ...instance };
+        id: instanceId,
+        metadata: mergeMetadata(instance.metadata),
+      };
+      await setDoc(instanceRef, instanceData);
+      return instanceData;
     } catch (error) {
       console.error("Error adding survey instance:", error);
       throw error;
@@ -420,17 +429,22 @@ export const firestoreHelpers = {
   async updateSurveyInstance(id: string, data: Partial<SurveyInstance>) {
     try {
       const instanceRef = doc(db, "survey-instances", id);
-      
+
       // Clean the data to remove undefined values (Firebase doesn't support them)
-      const cleanData: any = { ...data, updatedAt: new Date().toISOString() };
-      
+      const cleanData: any = { ...data };
+      if (data.metadata) {
+        cleanData.metadata = updateMetadata(data.metadata as any);
+      } else {
+        cleanData.metadata = updateMetadata(createMetadata());
+      }
+
       // Remove undefined values
-      Object.keys(cleanData).forEach(key => {
+      Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] === undefined) {
           delete cleanData[key];
         }
       });
-      
+
       console.log("Updating survey instance with clean data:", cleanData);
       await updateDoc(instanceRef, cleanData);
     } catch (error) {
@@ -478,21 +492,19 @@ export const firestoreHelpers = {
 
       const docRef = await addDoc(surveyCollection, {
         ...response,
+        // Ensure submittedAt is set at top-level
+        submittedAt: response.submittedAt || new Date().toISOString(),
         metadata: {
           ...response.metadata,
-          submittedAt: new Date().toISOString(),
         },
       });
 
-      console.log(
-        "✅ Survey response saved successfully:",
-        {
-          collection: collectionName,
-          documentId: docRef.id,
-          surveyInstanceId: response.surveyInstanceId,
-          submissionTime: new Date().toISOString()
-        }
-      );
+      console.log("✅ Survey response saved successfully:", {
+        collection: collectionName,
+        documentId: docRef.id,
+        surveyInstanceId: response.surveyInstanceId,
+        submissionTime: new Date().toISOString(),
+      });
       return { id: docRef.id, ...response };
     } catch (error) {
       console.error("Error adding survey response:", error);
@@ -507,9 +519,10 @@ export const firestoreHelpers = {
     try {
       const docRef = await addDoc(surveyResponsesCollection, {
         ...response,
+        // Ensure submittedAt is set at top-level
+        submittedAt: response.submittedAt || new Date().toISOString(),
         metadata: {
           ...response.metadata,
-          submittedAt: new Date().toISOString(),
         },
       });
       return { id: docRef.id, ...response };
@@ -521,15 +534,13 @@ export const firestoreHelpers = {
 
   async getSurveyResponses(instanceId?: string) {
     try {
-      let q = query(
-        surveyResponsesCollection,
-        orderBy("metadata.submittedAt", "desc")
-      );
+      // Try to order by submittedAt (new structure) with fallback to metadata.submittedAt
+      let q = query(surveyResponsesCollection, orderBy("submittedAt", "desc"));
       if (instanceId) {
         q = query(
           surveyResponsesCollection,
           where("surveyInstanceId", "==", instanceId),
-          orderBy("metadata.submittedAt", "desc")
+          orderBy("submittedAt", "desc")
         );
       }
       const querySnapshot = await getDocs(q);
@@ -564,10 +575,7 @@ export const firestoreHelpers = {
       // Get the instance-specific collection
       const surveyCollection = collection(firestoreDb, collectionName);
 
-      const q = query(
-        surveyCollection,
-        orderBy("metadata.submittedAt", "desc")
-      );
+      const q = query(surveyCollection, orderBy("submittedAt", "desc"));
       const querySnapshot = await getDocs(q);
       const responses = querySnapshot.docs.map((doc) => {
         const data = doc.data() as SurveyResponse;
@@ -586,26 +594,41 @@ export const firestoreHelpers = {
   // Migration helper: Move responses from title-based collections to instance-based collections
   async migrateSurveyResponsesToInstanceCollections() {
     try {
-      console.log("Starting migration of survey responses to instance-specific collections...");
-      
+      console.log(
+        "Starting migration of survey responses to instance-specific collections..."
+      );
+
       // Get all survey instances
-      const instancesSnapshot = await getDocs(collection(firestoreDb, "survey-instances"));
-      const instances = instancesSnapshot.docs.map(doc => ({
+      const instancesSnapshot = await getDocs(
+        collection(firestoreDb, "survey-instances")
+      );
+      const instances = instancesSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as SurveyInstance[];
 
       let totalMigrated = 0;
-      const migrationResults = [];
+      const migrationResults: Array<{
+        instanceId: string;
+        instanceTitle?: string;
+        oldCollection?: string;
+        newCollection?: string;
+        responsesMigrated?: number;
+        error?: string;
+      }> = [];
 
       for (const instance of instances) {
         try {
           // Old collection name (title-based)
-          const oldCollectionName = instance.title.toLowerCase().replace(/\s+/g, "-");
+          const oldCollectionName = instance.title
+            .toLowerCase()
+            .replace(/\s+/g, "-");
           // New collection name (instance ID-based)
           const newCollectionName = `survey-responses-${instance.id}`;
 
-          console.log(`Migrating responses for instance ${instance.id}: ${oldCollectionName} → ${newCollectionName}`);
+          console.log(
+            `Migrating responses for instance ${instance.id}: ${oldCollectionName} → ${newCollectionName}`
+          );
 
           // Check if old collection has any responses for this instance
           const oldCollection = collection(firestoreDb, oldCollectionName);
@@ -616,7 +639,9 @@ export const firestoreHelpers = {
           const oldResponsesSnapshot = await getDocs(oldResponsesQuery);
 
           if (oldResponsesSnapshot.empty) {
-            console.log(`No responses found for instance ${instance.id} in ${oldCollectionName}`);
+            console.log(
+              `No responses found for instance ${instance.id} in ${oldCollectionName}`
+            );
             continue;
           }
 
@@ -626,7 +651,7 @@ export const firestoreHelpers = {
 
           for (const responseDoc of oldResponsesSnapshot.docs) {
             const responseData = responseDoc.data();
-            
+
             // Add to new collection
             await addDoc(newCollection, responseData);
             instanceMigrated++;
@@ -638,16 +663,20 @@ export const firestoreHelpers = {
             instanceTitle: instance.title,
             oldCollection: oldCollectionName,
             newCollection: newCollectionName,
-            responsesMigrated: instanceMigrated
+            responsesMigrated: instanceMigrated,
           });
 
-          console.log(`Migrated ${instanceMigrated} responses for instance ${instance.id}`);
-
+          console.log(
+            `Migrated ${instanceMigrated} responses for instance ${instance.id}`
+          );
         } catch (error) {
-          console.error(`Error migrating responses for instance ${instance.id}:`, error);
+          console.error(
+            `Error migrating responses for instance ${instance.id}:`,
+            error
+          );
           migrationResults.push({
             instanceId: instance.id,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       }
@@ -655,16 +684,15 @@ export const firestoreHelpers = {
       console.log("Migration completed:", {
         totalResponsesMigrated: totalMigrated,
         instancesProcessed: instances.length,
-        results: migrationResults
+        results: migrationResults,
       });
 
       return {
         success: true,
         totalMigrated,
         instancesProcessed: instances.length,
-        results: migrationResults
+        results: migrationResults,
       };
-
     } catch (error) {
       console.error("Error during migration:", error);
       throw error;
@@ -675,27 +703,38 @@ export const firestoreHelpers = {
   async verifyInstanceCollectionSeparation() {
     try {
       console.log("🔍 Verifying instance-specific collection separation...");
-      
+
       // Get all survey instances
-      const instancesSnapshot = await getDocs(collection(firestoreDb, "survey-instances"));
-      const instances = instancesSnapshot.docs.map(doc => ({
+      const instancesSnapshot = await getDocs(
+        collection(firestoreDb, "survey-instances")
+      );
+      const instances = instancesSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as SurveyInstance[];
 
-      const verificationResults = [];
+      const verificationResults: Array<{
+        instanceId: string;
+        instanceTitle?: string;
+        collectionName?: string;
+        totalResponses?: number;
+        correctInstanceResponses?: number;
+        isProperlyIsolated?: boolean;
+        status: string;
+        error?: string;
+      }> = [];
 
       for (const instance of instances) {
         const collectionName = `survey-responses-${instance.id}`;
         const surveyCollection = collection(firestoreDb, collectionName);
-        
+
         try {
           const snapshot = await getDocs(surveyCollection);
           const responseCount = snapshot.size;
-          
+
           // Verify all responses belong to this instance
           let correctInstanceId = 0;
-          snapshot.docs.forEach(doc => {
+          snapshot.docs.forEach((doc) => {
             const data = doc.data();
             if (data.surveyInstanceId === instance.id) {
               correctInstanceId++;
@@ -709,33 +748,210 @@ export const firestoreHelpers = {
             totalResponses: responseCount,
             correctInstanceResponses: correctInstanceId,
             isProperlyIsolated: correctInstanceId === responseCount,
-            status: correctInstanceId === responseCount ? '✅ ISOLATED' : '⚠️ MIXED DATA'
+            status:
+              correctInstanceId === responseCount
+                ? "✅ ISOLATED"
+                : "⚠️ MIXED DATA",
           });
-
         } catch (error) {
           verificationResults.push({
             instanceId: instance.id,
             collectionName: collectionName,
-            error: error.message,
-            status: '❌ ERROR'
+            error: error instanceof Error ? error.message : String(error),
+            status: "❌ ERROR",
           });
         }
       }
 
       const summary = {
         totalInstances: instances.length,
-        properlyIsolated: verificationResults.filter(r => r.isProperlyIsolated).length,
-        hasErrors: verificationResults.filter(r => r.error).length,
-        results: verificationResults
+        properlyIsolated: verificationResults.filter(
+          (r) => r.isProperlyIsolated
+        ).length,
+        hasErrors: verificationResults.filter((r) => r.error).length,
+        results: verificationResults,
       };
 
       console.log("🔍 Instance Collection Verification Results:", summary);
       return summary;
-
     } catch (error) {
       console.error("Error during verification:", error);
       throw error;
     }
+  },
+
+  // Metadata Structure Migration Functions
+  async migrateMetadataStructure() {
+    try {
+      console.log("🔄 Starting metadata structure migration...");
+
+      const migrationResults = {
+        surveyConfigs: await this.migrateSurveyConfigsMetadata(),
+        ratingScales: await this.migrateRatingScalesMetadata(),
+        radioOptionSets: await this.migrateRadioOptionSetsMetadata(),
+        multiSelectOptionSets:
+          await this.migrateMultiSelectOptionSetsMetadata(),
+        selectOptionSets: await this.migrateSelectOptionSetsMetadata(),
+        surveyResponses: await this.migrateSurveyResponsesMetadata(),
+      };
+
+      console.log(
+        "✅ Metadata structure migration completed:",
+        migrationResults
+      );
+      return migrationResults;
+    } catch (error) {
+      console.error("❌ Error during metadata migration:", error);
+      throw error;
+    }
+  },
+
+  async migrateSurveyConfigsMetadata() {
+    const configs = await getDocs(collection(firestoreDb, "survey-configs"));
+    let migrated = 0;
+
+    for (const configDoc of configs.docs) {
+      const data = configDoc.data();
+      if (
+        data.metadata?.isActive !== undefined ||
+        data.metadata?.version !== undefined
+      ) {
+        const updates: any = {};
+
+        if (data.metadata.isActive !== undefined) {
+          updates.isActive = data.metadata.isActive;
+          updates["metadata.isActive"] = deleteField();
+        }
+
+        if (data.metadata.version !== undefined) {
+          updates.version = data.metadata.version;
+          updates["metadata.version"] = deleteField();
+        }
+
+        await updateDoc(configDoc.ref, updates);
+        migrated++;
+      }
+    }
+    return { total: configs.size, migrated };
+  },
+
+  async migrateRatingScalesMetadata() {
+    const scales = await getDocs(
+      collection(firestoreDb, "rating-scale-option-sets")
+    );
+    let migrated = 0;
+
+    for (const scaleDoc of scales.docs) {
+      const data = scaleDoc.data();
+      if (data.metadata?.isActive !== undefined) {
+        await updateDoc(scaleDoc.ref, {
+          isActive: data.metadata.isActive,
+          "metadata.isActive": deleteField(),
+        });
+        migrated++;
+      }
+    }
+    return { total: scales.size, migrated };
+  },
+
+  async migrateRadioOptionSetsMetadata() {
+    const sets = await getDocs(collection(firestoreDb, "radio-option-sets"));
+    let migrated = 0;
+
+    for (const setDoc of sets.docs) {
+      const data = setDoc.data();
+      if (data.metadata?.isActive !== undefined) {
+        await updateDoc(setDoc.ref, {
+          isActive: data.metadata.isActive,
+          "metadata.isActive": deleteField(),
+        });
+        migrated++;
+      }
+    }
+    return { total: sets.size, migrated };
+  },
+
+  async migrateMultiSelectOptionSetsMetadata() {
+    const sets = await getDocs(
+      collection(firestoreDb, "multi-select-option-sets")
+    );
+    let migrated = 0;
+
+    for (const setDoc of sets.docs) {
+      const data = setDoc.data();
+      if (data.metadata?.isActive !== undefined) {
+        await updateDoc(setDoc.ref, {
+          isActive: data.metadata.isActive,
+          "metadata.isActive": deleteField(),
+        });
+        migrated++;
+      }
+    }
+    return { total: sets.size, migrated };
+  },
+
+  async migrateSelectOptionSetsMetadata() {
+    const sets = await getDocs(collection(firestoreDb, "select-option-sets"));
+    let migrated = 0;
+
+    for (const setDoc of sets.docs) {
+      const data = setDoc.data();
+      if (data.metadata?.isActive !== undefined) {
+        await updateDoc(setDoc.ref, {
+          isActive: data.metadata.isActive,
+          "metadata.isActive": deleteField(),
+        });
+        migrated++;
+      }
+    }
+    return { total: sets.size, migrated };
+  },
+
+  async migrateSurveyResponsesMetadata() {
+    console.log("Migrating survey responses metadata...");
+    let totalMigrated = 0;
+
+    // Get all survey instances to find their response collections
+    const instances = await getDocs(
+      collection(firestoreDb, "survey-instances")
+    );
+
+    for (const instanceDoc of instances.docs) {
+      const instanceId = instanceDoc.id;
+      const collectionName = `survey-responses-${instanceId}`;
+
+      try {
+        const responses = await getDocs(
+          collection(firestoreDb, collectionName)
+        );
+        let instanceMigrated = 0;
+
+        for (const responseDoc of responses.docs) {
+          const data = responseDoc.data();
+          if (data.metadata?.submittedAt !== undefined) {
+            await updateDoc(responseDoc.ref, {
+              submittedAt: data.metadata.submittedAt,
+              "metadata.submittedAt": deleteField(),
+            });
+            instanceMigrated++;
+          }
+        }
+
+        totalMigrated += instanceMigrated;
+        if (instanceMigrated > 0) {
+          console.log(
+            `Migrated ${instanceMigrated} responses for instance ${instanceId}`
+          );
+        }
+      } catch (error) {
+        console.warn(
+          `No responses collection found for instance ${instanceId}:`,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    return { totalMigrated };
   },
 
   // Rating Scales
@@ -777,15 +993,15 @@ export const firestoreHelpers = {
       // Use human-readable, kebab-case name for document ID
       const scaleId = createKebabCaseId(scale.name);
       const scaleRef = doc(ratingScalesCol, scaleId);
-      await setDoc(scaleRef, {
+      const scaleData = {
         ...scale,
-        metadata: {
-          ...scale.metadata,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
-      return { id: scaleId, ...scale };
+        id: scaleId,
+        // Ensure business logic fields are set
+        isActive: scale.isActive ?? true,
+        metadata: mergeMetadata(scale.metadata),
+      };
+      await setDoc(scaleRef, scaleData);
+      return scaleData;
     } catch (error) {
       console.error("Error adding rating scale:", error);
       throw error;
@@ -795,13 +1011,13 @@ export const firestoreHelpers = {
   async updateRatingScale(id: string, data: Partial<RatingScale>) {
     try {
       const scaleRef = doc(ratingScalesCol, id);
-      await updateDoc(scaleRef, {
-        ...data,
-        metadata: {
-          ...data.metadata,
-          updatedAt: new Date().toISOString(),
-        },
-      });
+      const updateData = { ...data };
+      if (data.metadata) {
+        updateData.metadata = updateMetadata(data.metadata as any);
+      } else {
+        updateData.metadata = updateMetadata(createMetadata());
+      }
+      await updateDoc(scaleRef, updateData);
     } catch (error) {
       console.error("Error updating rating scale:", error);
       throw error;
@@ -858,16 +1074,16 @@ export const firestoreHelpers = {
       // Use human-readable, kebab-case name for document ID
       const setId = createKebabCaseId(optionSet.name);
       const setRef = doc(multiSelectOptionSetsCol, setId);
-      await setDoc(setRef, {
+      const optionSetData = {
         ...optionSet,
-        metadata: {
-          ...(optionSet.metadata || {}),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
+        id: setId,
+        // Ensure business logic fields are set
+        isActive: optionSet.isActive ?? true,
+        metadata: mergeMetadata(optionSet.metadata),
+      };
+      await setDoc(setRef, optionSetData);
       console.log("Multi-select option set added with ID:", setId);
-      return { id: setId, ...optionSet };
+      return optionSetData;
     } catch (error) {
       console.error("Error adding multi-select option set:", error);
       throw error;
@@ -877,7 +1093,13 @@ export const firestoreHelpers = {
   async updateMultiSelectOptionSet(id: string, data: any) {
     try {
       const optionSetRef = doc(multiSelectOptionSetsCol, id);
-      await updateDoc(optionSetRef, data);
+      const updateData = { ...data };
+      if (data.metadata) {
+        updateData.metadata = updateMetadata(data.metadata);
+      } else {
+        updateData.metadata = updateMetadata(createMetadata());
+      }
+      await updateDoc(optionSetRef, updateData);
       console.log("Multi-select option set updated successfully");
     } catch (error) {
       console.error("Error updating multi-select option set:", error);
@@ -937,16 +1159,16 @@ export const firestoreHelpers = {
       // Use human-readable, kebab-case name for document ID
       const setId = createKebabCaseId(optionSet.name);
       const setRef = doc(radioOptionSetsCol, setId);
-      await setDoc(setRef, {
+      const optionSetData = {
         ...optionSet,
-        metadata: {
-          ...(optionSet.metadata || {}),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
+        id: setId,
+        // Ensure business logic fields are set
+        isActive: optionSet.isActive ?? true,
+        metadata: mergeMetadata(optionSet.metadata),
+      };
+      await setDoc(setRef, optionSetData);
       console.log("Radio option set added with ID:", setId);
-      return { id: setId, ...optionSet };
+      return optionSetData;
     } catch (error) {
       console.error("Error adding radio option set:", error);
       throw error;
@@ -956,7 +1178,13 @@ export const firestoreHelpers = {
   async updateRadioOptionSet(id: string, data: any) {
     try {
       const optionSetRef = doc(radioOptionSetsCol, id);
-      await updateDoc(optionSetRef, data);
+      const updateData = { ...data };
+      if (data.metadata) {
+        updateData.metadata = updateMetadata(data.metadata);
+      } else {
+        updateData.metadata = updateMetadata(createMetadata());
+      }
+      await updateDoc(optionSetRef, updateData);
       console.log("Radio option set updated successfully");
     } catch (error) {
       console.error("Error updating radio option set:", error);
@@ -1016,16 +1244,16 @@ export const firestoreHelpers = {
       // Use human-readable, kebab-case name for document ID
       const setId = createKebabCaseId(optionSet.name);
       const setRef = doc(selectOptionSetsCol, setId);
-      await setDoc(setRef, {
+      const optionSetData = {
         ...optionSet,
-        metadata: {
-          ...(optionSet.metadata || {}),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
+        id: setId,
+        // Ensure business logic fields are set
+        isActive: optionSet.isActive ?? true,
+        metadata: mergeMetadata(optionSet.metadata),
+      };
+      await setDoc(setRef, optionSetData);
       console.log("Select option set added with ID:", setId);
-      return { id: setId, ...optionSet };
+      return optionSetData;
     } catch (error) {
       console.error("Error adding select option set:", error);
       throw error;
@@ -1035,7 +1263,13 @@ export const firestoreHelpers = {
   async updateSelectOptionSet(id: string, data: any) {
     try {
       const optionSetRef = doc(selectOptionSetsCol, id);
-      await updateDoc(optionSetRef, data);
+      const updateData = { ...data };
+      if (data.metadata) {
+        updateData.metadata = updateMetadata(data.metadata);
+      } else {
+        updateData.metadata = updateMetadata(createMetadata());
+      }
+      await updateDoc(optionSetRef, updateData);
       console.log("Select option set updated successfully");
     } catch (error) {
       console.error("Error updating select option set:", error);

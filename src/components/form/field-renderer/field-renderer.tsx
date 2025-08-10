@@ -81,7 +81,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         if (!selectedOption) return 'bg-gray-100 text-gray-700 border-gray-200';
 
         // Use shared color utility but adjust for rating display (lighter background)
-        const colorClasses = getColorClasses(selectedOption.color);
+        const colorClasses = getColorClasses(selectedOption.color || 'transparent');
         return colorClasses.replace('bg-', 'bg-').replace('50', '100').replace('border-', 'border-').replace('300', '200');
     };
 

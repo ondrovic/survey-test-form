@@ -1,4 +1,4 @@
-import { Button, DeleteConfirmationModal } from '@/components/common';
+import { DeleteConfirmationModal } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { useModal } from '@/hooks';
@@ -36,7 +36,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
     onShowRatingScaleManager,
     onEditRatingScale,
     onDeleteRatingScale,
-    onCleanupDuplicates,
+    // onCleanupDuplicates,
     onShowRadioOptionSetManager,
     onEditRadioOptionSet,
     onDeleteRadioOptionSet,
@@ -91,15 +91,6 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Option Sets</h2>
-                <div className="flex gap-2">
-                    <Button
-                        onClick={onCleanupDuplicates}
-                        variant="outline"
-                        size="sm"
-                    >
-                        Clean Duplicates
-                    </Button>
-                </div>
             </div>
 
             {/* Rating Scales Section */}

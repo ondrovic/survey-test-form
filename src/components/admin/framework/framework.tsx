@@ -6,6 +6,7 @@ import { useModal } from '@/hooks';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { isSurveyInstanceActive } from '@/utils';
 import { downloadFrameworkResponsesAsExcel } from '@/utils/excel.utils';
+import { createMetadata } from '@/utils/metadata.utils';
 import { Copy, Download, Edit, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -34,17 +35,13 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
 
     const handleCreateSurveyInstance = async (config: SurveyConfig) => {
         try {
-            const instance = {
-                configId: config.id,
-                title: config.title,
-                description: config.description,
-                isActive: true,
-                metadata: {
-                    createdBy: 'admin',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                }
-            };
+                    const instance = {
+            configId: config.id,
+            title: config.title,
+            description: config.description,
+            isActive: true,
+            metadata: createMetadata()
+        };
 
             await firestoreHelpers.addSurveyInstance(instance);
             showSuccess(`Survey instance "${config.title}" created!`);
@@ -74,7 +71,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
 
                     downloadFrameworkResponsesAsExcel(responses, surveyConfig || undefined, {
                         filename,
-                        sheetName: `${instance.title} Responses`
+                        sheetName: "Survey Data"
                     });
 
                     showSuccess(`Successfully downloaded ${responses.length} responses for ${instance.title}`);
@@ -103,7 +100,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
 
                 downloadFrameworkResponsesAsExcel(allResponses, referenceConfig, {
                     filename,
-                    sheetName: 'All Survey Responses'
+                    sheetName: 'Survey Data'
                 });
 
                 showSuccess(`Successfully downloaded ${allResponses.length} total responses`);
@@ -162,6 +159,19 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         }
     };
 
+    const handleMigrateMetadataStructure = async () => {
+        try {
+            showSuccess('Starting metadata structure migration...');
+            const result = await firestoreHelpers.migrateMetadataStructure();
+            const totalMigrated = Object.values(result).reduce((sum: number, r: any) => sum + (r.migrated || r.totalMigrated || 0), 0);
+            showSuccess(`Metadata migration completed! Migrated ${totalMigrated} items across all collections.`);
+            console.log('Migration results:', result);
+        } catch (error) {
+            showError('Failed to migrate metadata structure');
+            console.error('Migration error:', error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -181,7 +191,15 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                         onClick={handleMigrateResponseData}
                         className="text-blue-600 border-blue-600 hover:bg-blue-50"
                     >
-                        Migrate Data
+                        Migrate Collections
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleMigrateMetadataStructure}
+                        className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                    >
+                        Migrate Metadata
                     </Button>
                     <Button onClick={onCreateNewSurvey}>
                         <Plus className="w-4 h-4 mr-2" />

@@ -1,5 +1,6 @@
 import React, { createContext, ReactNode, useContext, useReducer } from 'react';
 import { SurveyConfig, SurveySection, SurveyField } from '../../types/framework.types';
+import { createMetadata, updateMetadata } from '../../utils/metadata.utils';
 
 interface SurveyBuilderState {
     config: SurveyConfig;
@@ -36,8 +37,8 @@ type SurveyBuilderAction =
     | { type: 'UPDATE_FIELD'; payload: { sectionId: string; fieldId: string; updates: Partial<SurveyField> } }
     | { type: 'DELETE_FIELD'; payload: { sectionId: string; fieldId: string } }
     | { type: 'REORDER_FIELDS'; payload: { sectionId: string; fromIndex: number; toIndex: number } }
-    | { type: 'ADD_FIELD_OPTION'; payload: { sectionId: string; fieldId: string; option: { label: string; value: string } } }
-    | { type: 'UPDATE_FIELD_OPTION'; payload: { sectionId: string; fieldId: string; optionIndex: number; updates: { label?: string; value?: string } } }
+    | { type: 'ADD_FIELD_OPTION'; payload: { sectionId: string; fieldId: string; option: { label: string; value: string; color?: string } } }
+    | { type: 'UPDATE_FIELD_OPTION'; payload: { sectionId: string; fieldId: string; optionIndex: number; updates: { label?: string; value?: string; color?: string } } }
     | { type: 'DELETE_FIELD_OPTION'; payload: { sectionId: string; fieldId: string; optionIndex: number } };
 
 const initialState: SurveyBuilderState = {
@@ -46,8 +47,9 @@ const initialState: SurveyBuilderState = {
         title: '',
         description: '',
         sections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        isActive: true,
+        version: '1.0.0',
+        metadata: createMetadata()
     },
     selectedSection: null,
     selectedField: null,
@@ -69,7 +71,11 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
         case 'UPDATE_CONFIG':
             return {
                 ...state,
-                config: { ...state.config, ...action.payload, updatedAt: new Date() }
+                config: { 
+                    ...state.config, 
+                    ...action.payload,
+                    metadata: updateMetadata(state.config.metadata)
+                }
             };
 
         case 'SELECT_SECTION':
@@ -108,22 +114,31 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 config: {
                     ...state.config,
                     sections: [...state.config.sections, action.payload],
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
         case 'UPDATE_SECTION':
+            const updatedConfig = {
+                ...state.config,
+                sections: state.config.sections.map(section =>
+                    section.id === action.payload.sectionId
+                        ? { ...section, ...action.payload.updates }
+                        : section
+                ),
+                metadata: updateMetadata(state.config.metadata)
+            };
+            
+            // Handle section ID changes - update selectedSection if needed
+            let newSelectedSection = state.selectedSection;
+            if (action.payload.updates.id && state.selectedSection === action.payload.sectionId) {
+                newSelectedSection = action.payload.updates.id;
+            }
+            
             return {
                 ...state,
-                config: {
-                    ...state.config,
-                    sections: state.config.sections.map(section =>
-                        section.id === action.payload.sectionId
-                            ? { ...section, ...action.payload.updates }
-                            : section
-                    ),
-                    updatedAt: new Date()
-                }
+                config: updatedConfig,
+                selectedSection: newSelectedSection
             };
 
         case 'DELETE_SECTION':
@@ -132,7 +147,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 config: {
                     ...state.config,
                     sections: state.config.sections.filter(section => section.id !== action.payload),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 },
                 selectedSection: state.selectedSection === action.payload ? null : state.selectedSection,
                 selectedField: state.selectedField === action.payload ? null : state.selectedField
@@ -147,7 +162,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 config: {
                     ...state.config,
                     sections: newSections,
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
@@ -161,29 +176,38 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             ? { ...section, fields: [...section.fields, action.payload.field] }
                             : section
                     ),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
         case 'UPDATE_FIELD':
+            const updatedFieldConfig = {
+                ...state.config,
+                sections: state.config.sections.map(section =>
+                    section.id === action.payload.sectionId
+                        ? {
+                            ...section,
+                            fields: section.fields.map(field =>
+                                field.id === action.payload.fieldId
+                                    ? { ...field, ...action.payload.updates }
+                                    : field
+                            )
+                        }
+                        : section
+                ),
+                metadata: updateMetadata(state.config.metadata)
+            };
+            
+            // Handle field ID changes - update selectedField if needed
+            let newSelectedField = state.selectedField;
+            if (action.payload.updates.id && state.selectedField === action.payload.fieldId) {
+                newSelectedField = action.payload.updates.id;
+            }
+            
             return {
                 ...state,
-                config: {
-                    ...state.config,
-                    sections: state.config.sections.map(section =>
-                        section.id === action.payload.sectionId
-                            ? {
-                                ...section,
-                                fields: section.fields.map(field =>
-                                    field.id === action.payload.fieldId
-                                        ? { ...field, ...action.payload.updates }
-                                        : field
-                                )
-                            }
-                            : section
-                    ),
-                    updatedAt: new Date()
-                }
+                config: updatedFieldConfig,
+                selectedField: newSelectedField
             };
 
         case 'DELETE_FIELD':
@@ -199,7 +223,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             }
                             : section
                     ),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 },
                 selectedField: state.selectedField === action.payload.fieldId ? null : state.selectedField
             };
@@ -222,7 +246,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             }
                             : section
                     ),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
@@ -243,7 +267,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             }
                             : section
                     ),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
@@ -271,7 +295,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             }
                             : section
                     ),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
@@ -295,7 +319,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             }
                             : section
                     ),
-                    updatedAt: new Date()
+                    metadata: updateMetadata(state.config.metadata)
                 }
             };
 
@@ -328,8 +352,8 @@ interface SurveyBuilderContextType {
     updateField: (sectionId: string, fieldId: string, updates: Partial<SurveyField>) => void;
     deleteField: (sectionId: string, fieldId: string) => void;
     reorderFields: (sectionId: string, fromIndex: number, toIndex: number) => void;
-    addFieldOption: (sectionId: string, fieldId: string, option: { label: string; value: string }) => void;
-    updateFieldOption: (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string }) => void;
+    addFieldOption: (sectionId: string, fieldId: string, option: { label: string; value: string; color?: string }) => void;
+    updateFieldOption: (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => void;
     deleteFieldOption: (sectionId: string, fieldId: string, optionIndex: number) => void;
     updateEntireConfig: (config: SurveyConfig) => void;
 }
@@ -422,11 +446,11 @@ export function SurveyBuilderProvider({ children, initialConfig }: { children: R
         dispatch({ type: 'REORDER_FIELDS', payload: { sectionId, fromIndex, toIndex } });
     };
 
-    const addFieldOption = (sectionId: string, fieldId: string, option: { label: string; value: string }) => {
+    const addFieldOption = (sectionId: string, fieldId: string, option: { label: string; value: string; color?: string }) => {
         dispatch({ type: 'ADD_FIELD_OPTION', payload: { sectionId, fieldId, option } });
     };
 
-    const updateFieldOption = (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string }) => {
+    const updateFieldOption = (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => {
         dispatch({ type: 'UPDATE_FIELD_OPTION', payload: { sectionId, fieldId, optionIndex, updates } });
     };
 

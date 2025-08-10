@@ -8,11 +8,11 @@ interface BaseOptionSetItem {
     name: string;
     description?: string;
     options: any[];
+    isActive: boolean;
     metadata?: {
-        createdBy: string;
+        createdBy?: string;
         createdAt: string;
         updatedAt: string;
-        isActive: boolean;
     };
     [key: string]: any;
 }

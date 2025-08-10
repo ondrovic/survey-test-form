@@ -8,6 +8,7 @@ import {
   RatingScaleOption,
   OptionSetOption 
 } from '../types/framework.types';
+import { createMetadata } from '../utils/metadata.utils';
 
 // Common validation functions
 const validateName = (name: string): string | null => {
@@ -83,12 +84,8 @@ export const ratingScaleConfig: OptionSetConfig<RatingScale> = {
     options: [
       { value: '', label: '', color: 'transparent', isDefault: false, order: 0 }
     ] as RatingScaleOption[],
-    metadata: {
-      createdBy: 'admin',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isActive: true,
-    }
+    isActive: true,
+    metadata: createMetadata()
   }),
 };
 
@@ -110,14 +107,10 @@ export const radioOptionSetConfig: OptionSetConfig<RadioOptionSet> = {
     name: '',
     description: '',
     options: [
-      { value: '', label: '', color: '', isDefault: false, order: 0 }
+      { value: '', label: '', color: 'transparent', isDefault: false, order: 0 }
     ] as OptionSetOption[],
-    metadata: {
-      createdBy: 'admin',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isActive: true,
-    }
+    isActive: true,
+    metadata: createMetadata()
   }),
 };
 
@@ -144,12 +137,8 @@ export const multiSelectOptionSetConfig: OptionSetConfig<MultiSelectOptionSet> =
     ] as OptionSetOption[],
     minSelections: 1,
     maxSelections: 3,
-    metadata: {
-      createdBy: 'admin',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isActive: true,
-    }
+    isActive: true,
+    metadata: createMetadata()
   }),
 };
 
@@ -174,11 +163,7 @@ export const selectOptionSetConfig: OptionSetConfig<SelectOptionSet> = {
       { value: '', label: '', color: 'transparent', isDefault: false, order: 0 }
     ] as OptionSetOption[],
     allowMultiple: false,
-    metadata: {
-      createdBy: 'admin',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isActive: true,
-    }
+    isActive: true,
+    metadata: createMetadata()
   }),
 };

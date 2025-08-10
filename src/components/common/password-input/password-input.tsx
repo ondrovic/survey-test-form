@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { Eye, EyeOff } from 'lucide-react';
 import React, { useState } from 'react';
-import { PasswordInputProps } from './PasswordInput.types';
+import { PasswordInputProps } from './password-input.types';
 
 /**
  * Password Input component with built-in visibility toggle
@@ -47,7 +47,7 @@ export const PasswordInput = <T extends string = string>({
     ...props
 }: PasswordInputProps<T>) => {
     const [showPassword, setShowPassword] = useState(false);
-    
+
     const inputId = `${name}-input`;
     const errorId = `${name}-error`;
 
@@ -110,7 +110,7 @@ export const PasswordInput = <T extends string = string>({
                         {...(typeof register === 'function' ? register(name) : register)}
                         {...props}
                     />
-                    
+
                     {showToggle && (
                         <button
                             type="button"
@@ -167,7 +167,7 @@ export const PasswordInput = <T extends string = string>({
                     autoComplete={getAutocompleteValue()}
                     {...props}
                 />
-                
+
                 {showToggle && (
                     <button
                         type="button"

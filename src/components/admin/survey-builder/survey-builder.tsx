@@ -6,6 +6,7 @@ import { useToast } from '../../../contexts/toast-context/index';
 import { ValidationProvider, useValidation } from '../../../contexts/validation-context';
 import { SurveySection } from '../../../types/framework.types';
 import { FieldType, SurveyField } from '../../../types/framework.types';
+import { generateSectionId, generateFieldId, updateSectionId, updateFieldId } from '../../../utils/id.utils';
 import { MultiSelectOptionSetManager } from '../multi-select-option-set-manager';
 import { RadioOptionSetManager } from '../radio-option-set-manager';
 import { RatingScaleManager } from '../rating-scale-manager';
@@ -73,8 +74,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     };
 
     const handleAddSection = () => {
+        const existingSectionIds = state.config.sections.map(s => s.id);
         const newSection: SurveySection = {
-            id: `section-${Date.now()}`,
+            id: generateSectionId('New Section', existingSectionIds),
             title: 'New Section',
             type: 'custom',
             order: state.config.sections.length + 1,
@@ -85,6 +87,18 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     };
 
     const handleUpdateSection = (sectionId: string, updates: Partial<SurveySection>) => {
+        // If title is being updated, consider updating the ID
+        if (updates.title) {
+            const existingSectionIds = state.config.sections
+                .map(s => s.id)
+                .filter(id => id !== sectionId); // Exclude current section ID
+            
+            const newId = updateSectionId(sectionId, updates.title, existingSectionIds);
+            if (newId !== sectionId) {
+                updates.id = newId;
+            }
+        }
+        
         updateSection(sectionId, updates);
     };
 
@@ -93,9 +107,15 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     };
 
     const handleAddField = (sectionId: string, fieldType: FieldType) => {
+        // Get all existing field IDs across all sections for collision detection
+        const existingFieldIds = state.config.sections
+            .flatMap(section => section.fields)
+            .map(field => field.id);
+            
+        const fieldLabel = `New ${fieldType} Field`;
         const newField: SurveyField = {
-            id: `${fieldType}_new_field_${Date.now()}`,
-            label: `New ${fieldType} Field`,
+            id: generateFieldId(fieldType, fieldLabel, existingFieldIds),
+            label: fieldLabel,
             type: fieldType,
             required: false,
         };
@@ -105,6 +125,27 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 
     const handleUpdateField = (sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {
         console.log('🔄 Updating field:', { sectionId, fieldId, updates });
+        
+        // If label is being updated, consider updating the ID
+        if (updates.label) {
+            // Find the current field to get its type
+            const currentField = state.config.sections
+                .find(section => section.id === sectionId)
+                ?.fields.find(field => field.id === fieldId);
+                
+            if (currentField) {
+                const existingFieldIds = state.config.sections
+                    .flatMap(section => section.fields)
+                    .map(field => field.id)
+                    .filter(id => id !== fieldId); // Exclude current field ID
+                
+                const newId = updateFieldId(fieldId, currentField.type, updates.label, existingFieldIds);
+                if (newId !== fieldId) {
+                    updates.id = newId;
+                }
+            }
+        }
+        
         updateField(sectionId, fieldId, updates);
     };
 
@@ -113,10 +154,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     };
 
     const handleAddFieldOption = (sectionId: string, fieldId: string) => {
-        addFieldOption(sectionId, fieldId, { label: 'New Option', value: 'new_option' });
+        addFieldOption(sectionId, fieldId, { label: 'New Option', value: 'new_option', color: 'transparent' });
     };
 
-    const handleUpdateFieldOption = (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string }) => {
+    const handleUpdateFieldOption = (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => {
         updateFieldOption(sectionId, fieldId, optionIndex, updates);
     };
 
