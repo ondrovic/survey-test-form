@@ -53,7 +53,7 @@ export interface CheckboxGroupProps<T extends string | number = string> {
   label?: string;
   required?: boolean;
   error?: string;
-  layout?: "horizontal" | "vertical" | "grid";
+  layout?: "horizontal" | "vertical" | "grid" | "balanced";
   maxSelections?: number;
   minSelections?: number;
   "data-testid"?: string;
@@ -71,7 +71,7 @@ export interface RadioGroupProps<T extends string | number = string> {
   label?: string;
   required?: boolean;
   error?: string;
-  layout?: "horizontal" | "vertical";
+  layout?: "horizontal" | "vertical" | "grid" | "balanced";
   "data-testid"?: string;
 }
 

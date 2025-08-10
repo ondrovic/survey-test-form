@@ -184,15 +184,24 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                         </p>
                     </div>
                 </div>
-                <Input
-                    name="sectionDescription"
-                    label="Description"
-                    value={section.description || ''}
-                    onChange={handleDescriptionChange}
-                    placeholder="Enter section description (optional, max 300 characters)"
-                    error={descriptionError}
-                    className="mt-4"
-                />
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description (optional)
+                    </label>
+                    <textarea
+                        name="sectionDescription"
+                        value={section.description || ''}
+                        onChange={(e) => handleDescriptionChange(e.target.value)}
+                        placeholder="Enter section description (optional, max 300 characters)"
+                        rows={3}
+                        className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            descriptionError ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {descriptionError && (
+                        <p className="mt-1 text-sm text-red-600">{descriptionError}</p>
+                    )}
+                </div>
             </div>
 
             <div className="mb-6">

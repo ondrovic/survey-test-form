@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { getSmartLayoutClasses } from '../../../utils/layout.utils';
 import { RadioGroupProps } from './radio-group.types';
 
 /**
@@ -25,18 +26,14 @@ export const RadioGroup = <T extends string | number = string>({
     label,
     required = false,
     error,
-    layout = 'horizontal',
+    layout = 'balanced',
     'data-testid': testId,
     className
 }: RadioGroupProps<T>) => {
     const groupId = `${name}-group`;
     const errorId = `${name}-error`;
 
-    const layoutClasses = {
-        horizontal: 'flex flex-wrap gap-3',
-        vertical: 'space-y-2',
-        grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'
-    };
+    const layoutClasses = getSmartLayoutClasses(options.length, layout);
 
     const classes = clsx('space-y-2', className);
 
@@ -50,7 +47,7 @@ export const RadioGroup = <T extends string | number = string>({
                     </legend>
 
                     <div
-                        className={layoutClasses[layout]}
+                        className={layoutClasses}
                         role="radiogroup"
                         aria-labelledby={groupId}
                         aria-describedby={error ? errorId : undefined}
@@ -61,13 +58,15 @@ export const RadioGroup = <T extends string | number = string>({
                             const isChecked = selectedValue === option.value;
 
                             return (
-                                <div key={option.value} className="flex items-center">
+                                <div key={option.value} className="w-full">
                                     <label
                                         htmlFor={optionId}
                                         className={clsx(
-                                            'flex items-center px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 transition-colors',
-                                            isChecked && 'border-gray-400 bg-gray-50',
-                                            option.disabled && 'opacity-50 cursor-not-allowed'
+                                            'flex items-center px-3 py-2 border border-gray-300 rounded-lg bg-white transition-colors w-full min-h-[44px]',
+                                            isChecked && 'border-blue-400 bg-blue-50',
+                                            option.disabled 
+                                                ? 'opacity-50 cursor-not-allowed' 
+                                                : 'cursor-pointer hover:border-gray-400 hover:bg-gray-50'
                                         )}
                                     >
                                         <input
@@ -78,9 +77,12 @@ export const RadioGroup = <T extends string | number = string>({
                                             checked={isChecked}
                                             onChange={() => onChange(option.value)}
                                             disabled={option.disabled}
-                                            className="h-4 w-4 text-gray-700 border-gray-300 mr-2"
+                                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3 flex-shrink-0"
                                         />
-                                        <span className="text-sm text-gray-700">
+                                        <span className={clsx(
+                                            "text-sm leading-tight break-words",
+                                            option.disabled ? "text-gray-400" : "text-gray-700"
+                                        )} style={{ wordBreak: 'break-word' }}>
                                             {option.label}
                                         </span>
                                     </label>

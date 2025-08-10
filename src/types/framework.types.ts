@@ -143,11 +143,24 @@ export interface SurveySection {
   metadata?: Record<string, any>;
 }
 
+export interface SurveyPaginatorConfig {
+  renderSectionsAsPages: boolean;
+  showStepIndicator: boolean;
+  showSectionTitles: boolean;
+  allowBackNavigation: boolean;
+  showProgressBar: boolean;
+  showProgressText: boolean;
+  animateTransitions?: boolean;
+  allowSkipping?: boolean;
+}
+
 export interface SurveyConfig {
   id: string;
   title: string;
   description?: string;
   sections: SurveySection[];
+  // Pagination configuration
+  paginatorConfig?: Partial<SurveyPaginatorConfig>;
   // Business logic fields (moved from metadata)
   isActive: boolean;
   version: string;

@@ -236,8 +236,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                         <SurveyDetails
                             title={state.config.title}
                             description={state.config.description || ''}
+                            paginatorConfig={state.config.paginatorConfig}
                             onTitleChange={handleTitleChange}
                             onDescriptionChange={handleDescriptionChange}
+                            onPaginatorConfigChange={(paginatorConfig) => updateConfig({ paginatorConfig })}
                         />
                         <SectionList
                             sections={state.config.sections}

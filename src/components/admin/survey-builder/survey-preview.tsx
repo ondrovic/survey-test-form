@@ -1,5 +1,7 @@
 import React from 'react';
 import { SurveyConfig } from '../../../types/framework.types';
+import { SurveySectionPaginator } from '../../survey/section-paginator';
+import { getBadgeLayoutClasses } from '../../../utils/layout.utils';
 import { OptionSetPreview } from './option-set-preview';
 
 interface SurveyPreviewProps {
@@ -7,6 +9,23 @@ interface SurveyPreviewProps {
 }
 
 export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
+    // Check if pagination is enabled
+    const shouldUsePagination = config.paginatorConfig?.renderSectionsAsPages === true;
+
+    // If pagination is enabled, use the paginator component
+    if (shouldUsePagination) {
+        return (
+            <div className="survey-preview-paginated">
+                <SurveySectionPaginator
+                    sections={config.sections}
+                    config={config.paginatorConfig}
+                    className="min-h-screen"
+                />
+            </div>
+        );
+    }
+
+    // Otherwise, render the traditional single-page view
     return (
         <div className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">{config.title}</h2>
@@ -168,7 +187,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                     />
                                 )}
                                 {field.type === 'rating' && !field.ratingScaleId && field.options && field.options.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className={getBadgeLayoutClasses(field.options.length)}>
                                         {field.options.map((option, index) => (
                                             <span
                                                 key={index}

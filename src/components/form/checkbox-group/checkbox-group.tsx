@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { getSmartLayoutClasses } from '../../../utils/layout.utils';
 import { CheckboxGroupProps } from './checkbox-group.types';
 
 /**
@@ -25,7 +26,7 @@ export const CheckboxGroup = <T extends string | number = string>({
     label,
     required = false,
     error,
-    layout = 'grid',
+    layout = 'balanced',
     maxSelections,
     minSelections,
     'data-testid': testId,
@@ -49,11 +50,7 @@ export const CheckboxGroup = <T extends string | number = string>({
         }
     };
 
-    const layoutClasses = {
-        horizontal: 'flex flex-wrap gap-3',
-        vertical: 'space-y-2',
-        grid: 'flex flex-wrap gap-3'
-    };
+    const layoutClasses = getSmartLayoutClasses(options.length, layout);
 
     const classes = clsx('space-y-2', className);
 
@@ -76,7 +73,7 @@ export const CheckboxGroup = <T extends string | number = string>({
                     </legend>
 
                     <div
-                        className={layoutClasses[layout]}
+                        className={layoutClasses}
                         role="group"
                         aria-labelledby={groupId}
                         aria-describedby={error ? errorId : undefined}
@@ -92,15 +89,15 @@ export const CheckboxGroup = <T extends string | number = string>({
                             const isDisabled = option.disabled || (hasReachedMaxSelections && !isChecked);
 
                             return (
-                                <div key={option.value} className="flex items-center">
+                                <div key={option.value} className="w-full">
                                     <label
                                         htmlFor={optionId}
                                         className={clsx(
-                                            'flex items-center px-3 py-2 border border-gray-300 rounded-lg bg-white transition-colors',
-                                            isChecked && 'border-gray-400 bg-gray-50',
+                                            'flex items-center px-3 py-2 border border-gray-300 rounded-lg bg-white transition-colors w-full min-h-[44px]',
+                                            isChecked && 'border-blue-400 bg-blue-50',
                                             isDisabled 
                                                 ? 'opacity-50 cursor-not-allowed' 
-                                                : 'cursor-pointer hover:border-gray-400'
+                                                : 'cursor-pointer hover:border-gray-400 hover:bg-gray-50'
                                         )}
                                     >
                                         <input
@@ -111,12 +108,12 @@ export const CheckboxGroup = <T extends string | number = string>({
                                             checked={isChecked}
                                             onChange={(e) => handleOptionChange(option.value, e.target.checked)}
                                             disabled={isDisabled}
-                                            className="h-4 w-4 text-gray-700 border-gray-300 mr-2"
+                                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-3 flex-shrink-0"
                                         />
                                         <span className={clsx(
-                                            "text-sm",
+                                            "text-sm leading-tight break-words",
                                             isDisabled ? "text-gray-400" : "text-gray-700"
-                                        )}>
+                                        )} style={{ wordBreak: 'break-word' }}>
                                             {option.label}
                                         </span>
                                     </label>

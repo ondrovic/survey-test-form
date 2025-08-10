@@ -1,6 +1,6 @@
 import { AdminPage } from '@/components/admin';
 import { ErrorBoundary, LoadingSpinner } from '@/components/common';
-import { DynamicForm } from '@/components/form';
+import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { firestoreHelpers } from '@/config/firebase';
 
@@ -277,6 +277,20 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                     </button>
                 </div>
             </div>
+        );
+    }
+
+    // Check if pagination is enabled
+    const shouldUsePagination = surveyConfig.paginatorConfig?.renderSectionsAsPages === true;
+
+    if (shouldUsePagination) {
+        return (
+            <PaginatedSurveyForm
+                config={surveyConfig}
+                onSubmit={handleSubmit}
+                loading={isSubmitting}
+                resetTrigger={resetFormTrigger}
+            />
         );
     }
 
