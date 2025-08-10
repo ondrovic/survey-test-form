@@ -33,7 +33,7 @@ For production deployment, the admin password should be stored as a GitHub secre
 2. **Add the admin password secret**
 
    - Click "New repository secret"
-   - Name: `ADMIN_PASSWORD`
+   - Name: `VITE_ADMIN_PASSWORD`
    - Value: Your secure admin password
    - Click "Add secret"
 
@@ -153,7 +153,7 @@ VITE_ADMIN_PASSWORD=your-secure-admin-password
 
 ### GitHub Secrets
 
-- `ADMIN_PASSWORD`: your-secure-admin-password
+- `VITE_ADMIN_PASSWORD`: your-secure-admin-password
 - `VITE_FIREBASE_API_KEY`: your-firebase-api-key
 - `VITE_FIREBASE_AUTH_DOMAIN`: your-project.firebaseapp.com
 - `VITE_FIREBASE_PROJECT_ID`: your-project-id

@@ -10,6 +10,68 @@ import {
     SurveyInstance
 } from '../../types/framework.types';
 
+/**
+ * Check and update survey instance statuses based on their date ranges
+ */
+async function updateSurveyInstanceStatuses(instances: SurveyInstance[]): Promise<SurveyInstance[]> {
+    const now = new Date();
+    const updatedInstances: SurveyInstance[] = [];
+    let updateCount = 0;
+
+    console.log(`🔍 Checking ${instances.length} survey instances for status updates...`);
+
+    for (const instance of instances) {
+        // Only check instances that have activeDateRange configured
+        if (!instance.activeDateRange?.startDate || !instance.activeDateRange?.endDate) {
+            updatedInstances.push(instance);
+            continue;
+        }
+
+        const startDate = new Date(instance.activeDateRange.startDate);
+        const endDate = new Date(instance.activeDateRange.endDate);
+        
+        console.log(`📅 Survey "${instance.title}": ${startDate.toISOString()} to ${endDate.toISOString()} (now: ${now.toISOString()})`);
+        
+        // Determine what isActive should be based on current time
+        const shouldBeActive = now >= startDate && now <= endDate;
+
+        // Update if status has changed
+        if (shouldBeActive !== instance.isActive) {
+            try {
+                const updatedInstance = {
+                    ...instance,
+                    isActive: shouldBeActive,
+                    metadata: {
+                        ...instance.metadata,
+                        updatedAt: new Date().toISOString()
+                    }
+                };
+
+                // Update in Firestore
+                await firestoreHelpers.updateSurveyInstance(instance.id, updatedInstance);
+                updatedInstances.push(updatedInstance);
+                updateCount++;
+
+                console.log(`✅ Updated survey "${instance.title}": ${instance.isActive} → ${shouldBeActive}`);
+            } catch (error) {
+                console.error(`❌ Failed to update survey "${instance.title}":`, error);
+                updatedInstances.push(instance); // Keep original if update fails
+            }
+        } else {
+            updatedInstances.push(instance);
+            console.log(`⏭️ Survey "${instance.title}": No change needed (already ${instance.isActive})`);
+        }
+    }
+
+    if (updateCount > 0) {
+        console.log(`📊 Survey status check: ${updateCount} instances updated out of ${instances.length}`);
+    } else {
+        console.log(`📊 Survey status check: No updates needed for ${instances.length} instances`);
+    }
+
+    return updatedInstances;
+}
+
 // State interface
 interface SurveyDataState {
     surveyConfigs: SurveyConfig[];
@@ -258,8 +320,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
                 firestoreHelpers.getSurveyInstances(),
             ]);
 
+            // Check and update survey instance statuses based on date ranges
+            const updatedInstances = await updateSurveyInstanceStatuses(instances);
+
             dispatch({ type: 'SET_SURVEY_CONFIGS', payload: configs });
-            dispatch({ type: 'SET_SURVEY_INSTANCES', payload: instances });
+            dispatch({ type: 'SET_SURVEY_INSTANCES', payload: updatedInstances });
             setLastUpdated();
         } catch (error) {
             console.error("Error loading framework data:", error);

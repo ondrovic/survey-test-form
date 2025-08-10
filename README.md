@@ -21,10 +21,15 @@ A professional survey application for collecting service line feedback with Fire
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite
+- **Routing**: React Router DOM v7
 - **Styling**: Tailwind CSS, CSS Custom Properties
 - **Icons**: Lucide React
-- **State Management**: Custom hooks with React patterns
-- **Data Storage**: Firebase Firestore + localStorage fallback
+- **State Management**: React Context + Custom hooks
+- **Form Handling**: React Hook Form
+- **Drag & Drop**: @dnd-kit/core for survey builder
+- **Data Storage**: Firebase Firestore
+- **Excel Export**: xlsx library for admin downloads
+- **reCAPTCHA**: Google reCAPTCHA v2 integration
 - **Deployment**: GitHub Pages
 - **CI/CD**: GitHub Actions
 
@@ -114,7 +119,7 @@ For secure production deployment, set up the following GitHub secrets in your re
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:5173` (Vite default port)
 
 ## 📦 Available Scripts
 
@@ -143,16 +148,18 @@ npm run test:coverage # Run tests with coverage
 service-line-survey/
 ├── src/
 │   ├── components/          # React components
+│   │   ├── admin/          # Admin panel and survey builder
 │   │   ├── common/         # Reusable UI components
 │   │   ├── form/           # Form-specific components
 │   │   └── survey/         # Survey-specific components
+│   ├── contexts/           # React Context providers
 │   ├── hooks/              # Custom React hooks
 │   ├── types/              # TypeScript type definitions
 │   ├── utils/              # Utility functions
-│   ├── constants/          # App constants
+│   ├── config/             # Configuration files
 │   ├── styles/             # Global styles
-│   ├── App.tsx            # Main app component
-│   └── main.tsx           # App entry point
+│   ├── app.tsx             # Main app component
+│   └── main.tsx            # App entry point
 ├── .github/workflows/      # GitHub Actions
 ├── public/                 # Static assets
 └── dist/                   # Build output
@@ -172,10 +179,11 @@ service-line-survey/
 
 ### Custom Hooks
 
-- **useForm**: Form state management with validation
-- **useLocalStorage**: Local storage persistence
-- **useFirebaseStorage**: Firebase data storage with fallback
-- **useValidation**: Form validation utilities
+- **useAuth**: Authentication state management
+- **useToast**: Toast notifications
+- **useSurveyData**: Survey data and configuration management
+- **useSurveyBuilder**: Survey builder state and operations
+- **useAdminTab**: Admin panel tab navigation
 
 ## 🌐 Deployment
 
@@ -223,10 +231,13 @@ npm run build
 
 ### Recent Improvements
 
-- **Fixed Checkbox State Management**: Resolved race condition issues in service line selection checkboxes
-- **Enhanced User Experience**: Improved checkbox interaction with proper state synchronization
-- **Robust Form Handling**: Better handling of complex nested form state updates
-- **Performance Optimizations**: Reduced unnecessary re-renders and improved state management efficiency
+- **Survey Framework Migration**: Upgraded to a new flexible survey framework supporting multiple survey types
+- **Survey Builder**: Complete admin interface for creating and managing surveys
+- **Multi-Select Field Editor**: Bulk editing capabilities for survey fields
+- **Enhanced Admin Panel**: Comprehensive admin features with data export and management
+- **React Router Integration**: Full routing support for admin and survey pages
+- **Drag & Drop Survey Builder**: Intuitive survey creation with drag-and-drop functionality
+- **reCAPTCHA Integration**: Spam protection with Google reCAPTCHA v2
 
 ### Environment Variables
 

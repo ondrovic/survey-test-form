@@ -1,5 +1,7 @@
 # Survey Builder Field Editor Improvements
 
+**Note**: This document describes improvements to the legacy survey builder. The current application has been upgraded to use a new survey framework with enhanced drag-and-drop functionality and comprehensive admin features.
+
 ## Overview
 
 The Survey Builder field editor has been significantly improved to provide a better user experience, especially when working with surveys that have many fields (50+).

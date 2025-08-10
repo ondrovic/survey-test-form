@@ -1,6 +1,6 @@
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter, rectIntersection, pointerWithin, closestCorners } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter, pointerWithin } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
-import React, { useState, useMemo, useCallback, createContext, useContext, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SurveyField } from '../../../types/framework.types';
 
 interface FieldDragContextProps {
