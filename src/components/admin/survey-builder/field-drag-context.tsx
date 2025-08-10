@@ -1,6 +1,6 @@
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter, rectIntersection, pointerWithin, closestCorners } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, createContext, useContext, useRef } from 'react';
 import { SurveyField } from '../../../types/framework.types';
 
 interface FieldDragContextProps {
@@ -15,6 +15,11 @@ export interface FieldContainer {
   sectionId: string;
   subsectionId?: string;
 }
+
+// Ref to track field dragging state without causing re-renders
+let isFieldDraggingRef = { current: false };
+
+export const useIsFieldDragging = () => isFieldDraggingRef.current;
 
 export const FieldDragContext: React.FC<FieldDragContextProps> = ({
   children,
@@ -31,7 +36,7 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 12,
       },
     })
   );
@@ -40,20 +45,13 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
     const fieldId = event.active.id as string;
     const field = fields.find(f => `field-${f.id}` === fieldId);
     
-    console.log('🎯 DRAG START:', {
-      fieldId,
-      activeId: event.active.id,
-      field: field ? { id: field.id, label: field.label, type: field.type } : 'NOT FOUND',
-      dragData: event.active.data.current
-    });
+
     
     if (field) {
+      isFieldDraggingRef.current = true;
       setActiveField(field);
       const data = event.active.data.current as { container: FieldContainer };
-      console.log('🎯 Setting drag data:', {
-        fieldId: field.id,
-        container: data.container
-      });
+
       setDragData({
         fieldId: field.id,
         container: data.container
@@ -64,52 +62,37 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { over } = event;
     
-    console.log('🎯 DRAG END:', {
-      over: over ? {
-        id: over.id,
-        data: over.data.current
-      } : 'NO OVER',
-      dragData: dragData
-    });
+
     
+    isFieldDraggingRef.current = false;
     setActiveField(null);
     
     if (!over || !dragData) {
-      console.log('❌ DRAG END EARLY EXIT:', { hasOver: !!over, hasDragData: !!dragData });
       setDragData(null);
       return;
     }
 
     const overId = over.id as string;
-    console.log('🎯 Processing drop on ID:', overId);
+
     
     let targetContainer: FieldContainer | null = null;
     let targetIndex = 0;
 
     if (overId.startsWith('container-')) {
-      console.log('📦 Dropping on CONTAINER');
       const overData = over.data.current as { container: FieldContainer };
-      console.log('📦 Container data:', overData);
       if (overData?.container) {
         targetContainer = overData.container;
         targetIndex = 0;
-        console.log('📦 Target container set:', targetContainer);
-      }
-    } else if (overId.startsWith('field-')) {
-      console.log('🏷️ Dropping on FIELD');
-      const overData = over.data.current as { container: FieldContainer };
-      console.log('🏷️ Field data:', overData);
-      if (overData?.container) {
-        targetContainer = overData.container;
-        targetIndex = 999;
-        console.log('🏷️ Target container set:', targetContainer);
+
       }
     } else {
-      console.log('❓ Unknown drop target type:', overId);
+
+      setDragData(null);
+      return;
     }
 
     if (!targetContainer) {
-      console.log('❌ NO TARGET CONTAINER FOUND');
+
       setDragData(null);
       return;
     }
@@ -119,25 +102,105 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
       dragData.container.sectionId === targetContainer.sectionId &&
       dragData.container.subsectionId === targetContainer.subsectionId;
 
-    console.log('🔄 Container comparison:', {
-      source: dragData.container,
-      target: targetContainer,
-      isSameContainer
-    });
 
+
+    // Allow moves between different containers OR within same container at different position
     if (!isSameContainer) {
-      console.log('✅ CALLING onFieldMove');
+
       onFieldMove(dragData.fieldId, dragData.container, targetContainer, targetIndex);
     } else {
-      console.log('⏭️ SKIPPING - Same container');
+      // For same container, allow if it's a reorder (different position)
+      // Note: We always allow same-container drops since the targetIndex calculation
+      // should handle proper positioning and the onFieldMove can determine if it's a no-op
+
+      onFieldMove(dragData.fieldId, dragData.container, targetContainer, targetIndex);
     }
 
     setDragData(null);
   }, [dragData, onFieldMove]);
 
+
+
+  // Custom collision detection that prioritizes smaller containers (subsections over sections)
+  const customCollisionDetection = useCallback((args: any) => {
+    // Debug: Log ALL droppable containers (including disabled ones)
+    console.log('🔍 ALL DROPPABLE CONTAINERS IN DND CONTEXT:');
+    console.log('🔍 Total containers:', args.droppableContainers?.length);
+    
+    args.droppableContainers?.forEach((container: any, index: number) => {
+      console.log(`🔍 Container ${index}:`, {
+        id: container.id,
+        disabled: container.disabled,
+        rect: container.rect.current,
+        type: container.data?.current?.container?.type,
+        sectionId: container.data?.current?.container?.sectionId,
+        subsectionId: container.data?.current?.container?.subsectionId,
+        hasData: !!container.data?.current,
+        hasContainerData: !!container.data?.current?.container,
+        fullContainerObject: container.data?.current?.container,
+        containerSubsections: container.data?.current?.container?.subsections?.map((sub: any) => ({
+          id: sub.id,
+          title: sub.title,
+          fieldsCount: sub.fields?.length || 0,
+          hasFields: !!(sub.fields && sub.fields.length > 0)
+        })) || []
+      });
+    });
+    
+    // Debug: Log detailed container information
+    const containerDetails = args.droppableContainers?.map((container: any) => ({
+      id: container.id,
+      containerData: container.data?.current?.container,
+      fullData: container.data?.current
+    }));
+    
+    console.log('🔍 DETAILED Available containers:', containerDetails);
+    
+    // First try pointerWithin to get the most precise hit
+    const pointerCollisions = pointerWithin(args);
+    console.log('🔍 Pointer collisions:', pointerCollisions?.map((c: any) => ({ 
+      id: c.id, 
+      containerType: c.data?.current?.container?.type,
+      sectionId: c.data?.current?.container?.sectionId,
+      subsectionId: c.data?.current?.container?.subsectionId
+    })));
+    
+    if (pointerCollisions.length > 0) {
+      // If multiple collisions, prefer subsection containers
+      // subsection IDs contain '-subsection-' for more specific targeting
+      const subsectionCollision = pointerCollisions.find(collision => {
+        const id = String(collision.id);
+        const isSubsection = id.includes('-subsection-');
+        const containerType = collision.data?.current?.container?.type;
+        console.log('🔍 Checking collision:', { 
+          id, 
+          isSubsection, 
+          containerType,
+          matchesSubsectionPattern: isSubsection,
+          hasSubsectionType: containerType === 'subsection'
+        });
+        return isSubsection;
+      });
+      
+      if (subsectionCollision) {
+        console.log('🎯 Using subsection collision:', subsectionCollision.id);
+        return [subsectionCollision];
+      }
+      
+      console.log('🔍 Using first collision (no subsections found):', pointerCollisions[0].id);
+      return [pointerCollisions[0]];
+    }
+    
+    // Fallback to closest center
+    const closestCollisions = closestCenter(args);
+    console.log('🔍 Using closest center:', closestCollisions?.map((c: any) => c.id));
+    return closestCollisions;
+  }, []);
+
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -146,7 +209,7 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
       {createPortal(
         <DragOverlay>
           {activeField && (
-            <div className="opacity-75 transform rotate-2 shadow-lg">
+            <div className="opacity-75 transform rotate-2 shadow-lg pointer-events-none">
               {renderFieldPreview(activeField)}
             </div>
           )}

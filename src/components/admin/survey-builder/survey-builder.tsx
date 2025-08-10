@@ -320,7 +320,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 allFields.push(...subsection.fields);
             });
         });
-        console.log('📋 ALL FIELDS FOR CONTEXT:', allFields.map(f => ({ id: f.id, label: f.label })));
+
         return allFields;
     };
 

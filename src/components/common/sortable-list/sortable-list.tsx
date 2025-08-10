@@ -41,6 +41,19 @@ export const SortableList: React.FC<SortableListProps> = ({
 
     const activeItem = activeId ? items.find(item => item.id === activeId) : null;
 
+    if (disabled) {
+        // When disabled, render without DndContext to avoid conflicts
+        return (
+            <div className={className}>
+                {items.map((item) => (
+                    <div key={item.id} className={itemClassName}>
+                        {renderItem(item, false)}
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
     return (
         <DndContext
             sensors={sensors}

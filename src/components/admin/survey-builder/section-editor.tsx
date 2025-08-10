@@ -9,7 +9,7 @@ import { FIELD_TYPES } from './survey-builder.types';
 import { SubsectionEditor } from './subsection-editor';
 import { DraggableField } from './draggable-field';
 import { DroppableFieldContainer } from './droppable-field-container';
-import { FieldContainer } from './field-drag-context';
+import { FieldContainer, useIsFieldDragging } from './field-drag-context';
 import { MemoizedFieldItem } from './memoized-field-item';
 
 // Utility function to generate kebab-case identifier from title
@@ -59,13 +59,50 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     onReorderFields,
     onMoveField
 }) => {
+    console.log('🔍 SectionEditor received section data:', {
+        sectionId: section.id,
+        sectionTitle: section.title,
+        sectionFieldsCount: section.fields?.length || 0,
+        sectionFields: section.fields?.map(f => ({ id: f.id, label: f.label })) || [],
+        subsectionsCount: section.subsections?.length || 0,
+        subsectionsDetail: section.subsections?.map(sub => ({
+            id: sub.id,
+            title: sub.title,
+            fieldsCount: sub.fields?.length || 0,
+            fields: sub.fields?.map(f => ({ id: f.id, label: f.label })) || []
+        })) || []
+    });
     const { validateSectionTitle, validateSectionDescription } = useValidation();
+    const isFieldDragging = useIsFieldDragging();
     
     // Memoize the container object to prevent unnecessary re-renders
-    const sectionContainer = useMemo(() => ({ 
-        type: 'section' as const, 
-        sectionId: section.id 
-    }), [section.id]);
+    const sectionContainer = useMemo(() => {
+        const container = { 
+            type: 'section' as const, 
+            sectionId: section.id,
+            subsections: section.subsections || []
+        };
+        console.log('🏗️ Creating section container with subsections:', {
+            sectionId: section.id,
+            subsectionsCount: section.subsections?.length || 0,
+            subsections: section.subsections?.map(sub => ({
+                id: sub.id,
+                title: sub.title,
+                fieldsCount: sub.fields?.length || 0,
+                actualFields: sub.fields?.map(f => ({ id: f.id, label: f.label })) || []
+            })),
+            fullContainer: {
+                ...container,
+                subsections: container.subsections.map(sub => ({
+                    id: sub.id,
+                    title: sub.title,
+                    fieldsCount: sub.fields?.length || 0,
+                    actualFields: sub.fields?.map(f => ({ id: f.id, label: f.label })) || []
+                }))
+            }
+        });
+        return container;
+    }, [section.id, section.subsections]);
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
     const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
     const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
@@ -106,7 +143,13 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     // Load option sets for fields that need them
     useEffect(() => {
         const loadOptionSets = async () => {
-            const fieldsWithOptionSets = section.fields.filter(field =>
+            // Get all fields from both section level and subsections
+            const allFields = [
+                ...(section.fields || []),
+                ...(section.subsections || []).flatMap(subsection => subsection.fields || [])
+            ];
+            
+            const fieldsWithOptionSets = allFields.filter(field =>
                 (field.type === 'radio' && field.radioOptionSetId) ||
                 (field.type === 'multiselect' && field.multiSelectOptionSetId)
             );
@@ -143,7 +186,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         };
 
         loadOptionSets();
-    }, [section.fields, radioOptionSets, multiSelectOptionSets]);
+    }, [section.fields, section.subsections, radioOptionSets, multiSelectOptionSets]);
 
     const getOptionCount = (field: any) => {
         if (field.ratingScaleId) {
@@ -266,6 +309,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                         onReorder={(oldIndex, newIndex) => onReorderSubsections(section.id, oldIndex, newIndex)}
                         className="space-y-4"
                         itemClassName="border rounded-lg"
+                        disabled={true}
                         renderItem={(subsection, _isDragging) => (
                             <div
                                 className={`${selectedSubsectionId === subsection.id
@@ -342,7 +386,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                     className="space-y-4"
                     emptyMessage="Drop fields here or add new fields"
                 >
-                    {section.fields.map((field) => (
+                    {(section.fields || []).map((field) => (
                         <MemoizedFieldItem
                             key={field.id}
                             field={field}

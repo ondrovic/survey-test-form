@@ -521,6 +521,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             <footer className="bg-white border-t mt-12">
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-center">
+                        {/* TODO: Add footer setting that allows you to set custom footer text including copyright year, registered trademark, etc. along with what text to display */}
                         <p className="text-sm text-gray-500">© 2025 Service Line Survey</p>
                     </div>
                 </div>

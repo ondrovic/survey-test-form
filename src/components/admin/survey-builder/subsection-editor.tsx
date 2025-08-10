@@ -78,7 +78,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     // Load option sets for fields that need them
     useEffect(() => {
         const loadOptionSets = async () => {
-            const fieldsWithOptionSets = subsection.fields.filter(field =>
+            const fieldsWithOptionSets = (subsection.fields || []).filter(field =>
                 (field.type === 'radio' && field.radioOptionSetId) ||
                 (field.type === 'multiselect' && field.multiSelectOptionSetId)
             );
@@ -211,7 +211,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
                     className="space-y-2"
                     emptyMessage="Drop fields here or add new fields"
                 >
-                    {subsection.fields.map((field) => (
+                    {(subsection.fields || []).map((field) => (
                         <MemoizedFieldItem
                             key={field.id}
                             field={field}

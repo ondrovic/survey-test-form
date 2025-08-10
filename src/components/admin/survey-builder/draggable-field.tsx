@@ -30,15 +30,11 @@ export const DraggableField: React.FC<DraggableFieldProps> = memo(({
     disabled
   });
 
-  const { setNodeRef: setDropRef } = useDroppable({
-    id: dragId,
-    data: dragData
-  });
-
+  // Fields should only be draggable, not droppable
+  // Containers handle dropping functionality
   const setRefs = useMemo(() => (node: HTMLDivElement | null) => {
     setDragRef(node);
-    setDropRef(node);
-  }, [setDragRef, setDropRef]);
+  }, [setDragRef]);
 
   const style = useMemo(() => transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
