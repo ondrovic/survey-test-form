@@ -4,14 +4,14 @@ import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/surve
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
 import { useToast } from '../../../contexts/toast-context/index';
 import { ValidationProvider, useValidation } from '../../../contexts/validation-context';
-import { SurveySection, SurveySubsection } from '../../../types/framework.types';
-import { FieldType, SurveyField } from '../../../types/framework.types';
-import { generateSectionId, generateFieldId, updateSectionId, updateFieldId } from '../../../utils/id.utils';
+import { FieldType, SurveyField, SurveySection, SurveySubsection } from '../../../types/framework.types';
+import { generateFieldId, generateSectionId, updateFieldId, updateSectionId } from '../../../utils/id.utils';
 import { updateMetadata } from '../../../utils/metadata.utils';
 import { MultiSelectOptionSetManager } from '../multi-select-option-set-manager';
 import { RadioOptionSetManager } from '../radio-option-set-manager';
-import { RatingScaleManager } from '../rating-scale-manager';
+import { RatingScaleManager } from '../rating-option-set-manager';
 import { SelectOptionSetManager } from '../select-option-set-manager';
+import { FieldContainer, FieldDragContext } from './field-drag-context';
 import { FieldEditorModal } from './field-editor-modal';
 import { MultiSelectFieldEditor } from './multi-select-field-editor';
 import { SectionEditor } from './section-editor';
@@ -20,7 +20,6 @@ import { SurveyBuilderProps } from './survey-builder.types';
 import { SurveyDetails } from './survey-details';
 import { SurveyHeader } from './survey-header';
 import { SurveyPreview } from './survey-preview';
-import { FieldDragContext, FieldContainer } from './field-drag-context';
 
 // Wrapper component that provides the context
 export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
@@ -100,13 +99,13 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             const existingSectionIds = state.config.sections
                 .map(s => s.id)
                 .filter(id => id !== sectionId); // Exclude current section ID
-            
+
             const newId = updateSectionId(sectionId, updates.title, existingSectionIds);
             if (newId !== sectionId) {
                 updates.id = newId;
             }
         }
-        
+
         updateSection(sectionId, updates);
     };
 
@@ -139,7 +138,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 ...(section.subsections || []).flatMap(subsection => subsection.fields)
             ])
             .map(field => field.id);
-            
+
         const fieldLabel = `New ${fieldType} Field`;
         const newField: SurveyField = {
             id: generateFieldId(fieldType, fieldLabel, existingFieldIds),
@@ -158,20 +157,20 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     };
 
     const handleUpdateField = (sectionId: string, fieldId: string, updates: Partial<SurveyField>, subsectionId?: string) => {
-        console.log('🔄 Updating field:', { 
-            sectionId, 
-            fieldId, 
-            updates, 
+        console.log('🔄 Updating field:', {
+            sectionId,
+            fieldId,
+            updates,
             subsectionId,
-            isSubsectionField: !!subsectionId 
+            isSubsectionField: !!subsectionId
         });
-        
+
         // If label is being updated, consider updating the ID
         if (updates.label) {
             // Find the current field to get its type
             let currentField: SurveyField | undefined;
             const section = state.config.sections.find(section => section.id === sectionId);
-            
+
             if (section) {
                 if (subsectionId) {
                     const subsection = (section.subsections || []).find(sub => sub.id === subsectionId);
@@ -180,7 +179,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     currentField = section.fields.find(field => field.id === fieldId);
                 }
             }
-                
+
             if (currentField) {
                 const existingFieldIds = state.config.sections
                     .flatMap(section => [
@@ -189,14 +188,14 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     ])
                     .map(field => field.id)
                     .filter(id => id !== fieldId); // Exclude current field ID
-                
+
                 const newId = updateFieldId(fieldId, currentField.type, updates.label, existingFieldIds);
                 if (newId !== fieldId) {
                     updates.id = newId;
                 }
             }
         }
-        
+
         updateField(sectionId, fieldId, updates, subsectionId);
     };
 
@@ -232,32 +231,32 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         const currentConfig = state.config;
         const newSections = currentConfig.sections.map(section => {
             const newSection = { ...section };
-            
+
             // Initialize subsections if they don't exist
             if (!newSection.subsections) {
                 newSection.subsections = [];
             }
-            
+
             // Remove field from source
             if (section.id === fromContainer.sectionId) {
                 if (fromContainer.type === 'section') {
                     newSection.fields = section.fields.filter(f => f.id !== fieldId);
                 } else if (fromContainer.subsectionId) {
-                    newSection.subsections = (section.subsections || []).map(sub => 
-                        sub.id === fromContainer.subsectionId 
+                    newSection.subsections = (section.subsections || []).map(sub =>
+                        sub.id === fromContainer.subsectionId
                             ? { ...sub, fields: sub.fields.filter(f => f.id !== fieldId) }
                             : sub
                     );
                 }
             }
-            
+
             return newSection;
         });
 
         // Find the field to move
         const sourceSection = currentConfig.sections.find(s => s.id === fromContainer.sectionId);
         let field: SurveyField | undefined;
-        
+
         if (fromContainer.type === 'section') {
             field = sourceSection?.fields.find(f => f.id === fieldId);
         } else if (fromContainer.subsectionId) {
@@ -276,8 +275,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 if (toContainer.type === 'section') {
                     newSection.fields = [...section.fields, { ...field }];
                 } else if (toContainer.subsectionId) {
-                    newSection.subsections = (section.subsections || []).map(sub => 
-                        sub.id === toContainer.subsectionId 
+                    newSection.subsections = (section.subsections || []).map(sub =>
+                        sub.id === toContainer.subsectionId
                             ? { ...sub, fields: [...sub.fields, { ...field }] }
                             : sub
                     );
@@ -288,7 +287,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         });
 
         // Update the entire config at once
-        updateConfig({ 
+        updateConfig({
             sections: finalSections,
             metadata: updateMetadata(currentConfig.metadata)
         });
@@ -298,7 +297,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         console.log('📝 Opening field editor for:', fieldId);
         selectField(fieldId);
         showFieldEditorModal(true);
-        
+
         // Debug: Check state after setting
         setTimeout(() => {
             console.log('🔍 Modal state check:', {
@@ -339,10 +338,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             // Validate the entire survey before saving
             const validation = validateSurvey(updatedConfig);
             if (!validation.isValid) {
-                const errorMessage = validation.errors.length > 0 
+                const errorMessage = validation.errors.length > 0
                     ? `Validation failed:\n${validation.errors.slice(0, 3).join('\n')}${validation.errors.length > 3 ? '\n...and more' : ''}`
                     : 'Survey validation failed. Please check all fields.';
-                
+
                 showError(errorMessage);
                 setLoading(false);
                 return;
@@ -367,15 +366,15 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     };
 
     const selectedSection = state.config.sections.find(s => s.id === state.selectedSection);
-    
+
     // Find the selected field and determine if it's in a subsection
     let selectedField: SurveyField | undefined;
     let selectedFieldSubsectionId: string | undefined;
-    
+
     if (selectedSection && state.selectedField) {
         // First check main section fields
         selectedField = selectedSection.fields.find(f => f.id === state.selectedField);
-        
+
         // If not found in main section, check subsections
         if (!selectedField) {
             for (const subsection of (selectedSection.subsections || [])) {

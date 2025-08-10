@@ -130,7 +130,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 </div>
             );
 
-        case 'select':
+        case 'select': {
             // Determine which options to use - select option set or individual options
             let selectOptions = field.options || [];
             let isSelectLoading = false;
@@ -187,8 +187,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                 </div>
             );
+        }
 
-        case 'radio':
+        case 'radio': {
             // Determine which options to use - radio option set or individual options
             let radioOptions = field.options || [];
             let isRadioLoading = false;
@@ -230,8 +231,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     required={field.required}
                 />
             );
+        }
 
-        case 'multiselect':
+        case 'multiselect': {
             // Determine which options to use - multi-select option set or individual options
             let multiSelectOptions = field.options || [];
             let isMultiSelectLoading = false;
@@ -320,8 +322,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     maxSelections={maxSelections}
                 />
             );
+        }
 
-        case 'rating':
+        case 'rating': {
             // Determine which options to use - rating scale or individual options
             let ratingOptions = field.options || [];
             let isLoading = false;
@@ -398,8 +401,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                 </div>
             );
+        }
 
-        case 'multiselectdropdown':
+        case 'multiselectdropdown': {
             // Determine which options to use - select option set (with allowMultiple=true) or individual options
             let multiDropdownOptions = field.options || [];
             let isMultiDropdownLoading = false;
@@ -497,6 +501,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                 </div>
             );
+        }
 
         default:
             return (

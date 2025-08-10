@@ -69,13 +69,14 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
             goToSection(0);
           }
           break;
-        case 'End':
+        case 'End': {
           const lastIndex = sections.length - 1;
           if (canGoToSection(lastIndex)) {
             event.preventDefault();
             goToSection(lastIndex);
           }
           break;
+        }
       }
     };
 

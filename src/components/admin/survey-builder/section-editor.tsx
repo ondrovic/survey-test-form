@@ -250,10 +250,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-2">
+                        <label htmlFor="section-type" className="block text-sm font-semibold text-gray-800 mb-2">
                             Section Type (Auto-generated) *
                         </label>
                         <input
+                            id="section-type"
                             type="text"
                             value={section.type || ''}
                             readOnly
@@ -266,10 +267,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                     </div>
                 </div>
                 <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="section-description" className="block text-sm font-medium text-gray-700 mb-1">
                         Description (optional)
                     </label>
                     <textarea
+                        id="section-description"
                         name="sectionDescription"
                         value={section.description || ''}
                         onChange={(e) => handleDescriptionChange(e.target.value)}
@@ -322,6 +324,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                                             <div
                                                 className="flex items-center gap-2 flex-1 cursor-pointer"
                                                 onClick={() => onSelectSubsection(subsectionData.id)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        onSelectSubsection(subsectionData.id);
+                                                    }
+                                                }}
+                                                role="button"
+                                                tabIndex={0}
                                             >
                                                 <span className="font-medium text-green-700">{subsectionData.title}</span>
                                                 <span className="text-xs text-gray-500">({subsectionData.fields.length} fields)</span>

@@ -3,10 +3,10 @@ import { CheckSquare, Square, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { useToast } from '../../../contexts/toast-context/index';
-import { RatingScale, SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
+import { RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../types/framework.types';
 import { updateMetadata } from '../../../utils/metadata.utils';
 import { Button, Input } from '../../common';
-import { RatingScaleManager } from '../rating-scale-manager';
+import { RatingScaleManager } from '../rating-option-set-manager';
 
 interface MultiSelectFieldEditorProps {
     config: SurveyConfig;
@@ -194,7 +194,7 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
         } finally {
             setLoading(false);
         }
-    }, [selectedFields, bulkUpdateOptions, config, onConfigUpdate]);
+    }, [selectedFields, bulkUpdateOptions, config, onConfigUpdate, showError, showSuccess]);
 
     const handleRatingScaleSelect = useCallback((scaleId: string) => {
         const selectedScale = ratingScales.find(scale => scale.id === scaleId);
@@ -425,6 +425,14 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                                                         : "border-gray-200 hover:border-gray-300"
                                                 )}
                                                 onClick={() => toggleFieldSelection(section.id, field.id, field, section)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        toggleFieldSelection(section.id, field.id, field, section);
+                                                    }
+                                                }}
+                                                role="button"
+                                                tabIndex={0}
                                             >
                                                 <div className="flex items-center mr-3">
                                                     {isFieldSelected(section.id, field.id) ? (

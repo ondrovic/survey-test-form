@@ -23,17 +23,12 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
     return (
         <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
-            onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                    onCancel();
-                }
-            }}
+            role="dialog"
+            aria-modal="true"
         >
             <div
                 className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
-                onClick={(e) => {
-                    e.stopPropagation();
-                }}
+                role="document"
             >
                 <h3 className="text-lg font-semibold mb-4">{title}</h3>
                 <p className="text-gray-600 mb-6">

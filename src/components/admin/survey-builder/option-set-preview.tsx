@@ -30,22 +30,26 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
             setIsLoading(true);
             try {
                 switch (type) {
-                    case 'rating':
+                    case 'rating': {
                         const scale = await firestoreHelpers.getRatingScale(optionSetId);
                         setRatingScale(scale);
                         break;
-                    case 'radio':
+                    }
+                    case 'radio': {
                         const radioSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
                         setRadioOptionSet(radioSet);
                         break;
-                    case 'multiselect':
+                    }
+                    case 'multiselect': {
                         const multiSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
                         setMultiSelectOptionSet(multiSet);
                         break;
-                    case 'select':
+                    }
+                    case 'select': {
                         const selectSet = await firestoreHelpers.getSelectOptionSet(optionSetId);
                         setSelectOptionSet(selectSet);
                         break;
+                    }
                 }
             } catch (error) {
                 console.error(`Error loading ${type} option set for preview:`, error);

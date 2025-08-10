@@ -49,7 +49,7 @@ let surveysCol: any = null;
 let surveyConfigsCol: any = null;
 let surveyInstancesCol: any = null;
 let surveyResponsesCol: any = null;
-let ratingScalesCol: any = null;
+let ratingOptionSetsCol: any = null;
 let radioOptionSetsCol: any = null;
 let multiSelectOptionSetsCol: any = null;
 let selectOptionSetsCol: any = null;
@@ -65,7 +65,7 @@ function initializeFirebase() {
     surveyConfigsCol = collection(firestoreDb, "survey-configs");
     surveyInstancesCol = collection(firestoreDb, "survey-instances");
     surveyResponsesCol = collection(firestoreDb, "survey-responses");
-    ratingScalesCol = collection(firestoreDb, "rating-scale-option-sets");
+    ratingOptionSetsCol = collection(firestoreDb, "rating-option-sets");
     radioOptionSetsCol = collection(firestoreDb, "radio-option-sets");
 
     multiSelectOptionSetsCol = collection(
@@ -85,7 +85,7 @@ function initializeFirebase() {
     surveyConfigsCollection: surveyConfigsCol,
     surveyInstancesCollection: surveyInstancesCol,
     surveyResponsesCollection: surveyResponsesCol,
-    ratingScalesCollection: ratingScalesCol,
+    ratingOptionSetsCollection: ratingOptionSetsCol,
     radioOptionSetsCollection: radioOptionSetsCol,
     multiSelectOptionSetsCollection: multiSelectOptionSetsCol,
     selectOptionSetsCollection: selectOptionSetsCol,
@@ -100,7 +100,7 @@ const {
   surveyConfigsCollection: surveyConfigsCollectionInstance,
   surveyInstancesCollection: surveyInstancesCollectionInstance,
   surveyResponsesCollection: surveyResponsesCollectionInstance,
-  ratingScalesCollection: ratingScalesCollectionInstance,
+  ratingOptionSetsCollection: ratingScalesCollectionInstance,
   radioOptionSetsCollection: radioOptionSetsCollectionInstance,
   multiSelectOptionSetsCollection: multiSelectOptionSetsCollectionInstance,
   selectOptionSetsCollection: selectOptionSetsCollectionInstance,
@@ -837,7 +837,7 @@ export const firestoreHelpers = {
 
   async migrateRatingScalesMetadata() {
     const scales = await getDocs(
-      collection(firestoreDb, "rating-scale-option-sets")
+      collection(firestoreDb, "rating-option-sets")
     );
     let migrated = 0;
 
@@ -957,7 +957,7 @@ export const firestoreHelpers = {
   // Rating Scales
   async getRatingScales() {
     try {
-      const q = query(ratingScalesCol, orderBy("metadata.createdAt", "desc"));
+      const q = query(ratingOptionSetsCol, orderBy("metadata.createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       const scales = querySnapshot.docs.map((doc) => {
         const data = doc.data() as RatingScale;
@@ -975,7 +975,7 @@ export const firestoreHelpers = {
 
   async getRatingScale(id: string) {
     try {
-      const scaleRef = doc(ratingScalesCol, id);
+      const scaleRef = doc(ratingOptionSetsCol, id);
       const scaleDoc = await getDoc(scaleRef);
       if (scaleDoc.exists()) {
         const data = scaleDoc.data() as RatingScale;
@@ -992,7 +992,7 @@ export const firestoreHelpers = {
     try {
       // Use human-readable, kebab-case name for document ID
       const scaleId = createKebabCaseId(scale.name);
-      const scaleRef = doc(ratingScalesCol, scaleId);
+      const scaleRef = doc(ratingOptionSetsCol, scaleId);
       const scaleData = {
         ...scale,
         id: scaleId,
@@ -1010,7 +1010,7 @@ export const firestoreHelpers = {
 
   async updateRatingScale(id: string, data: Partial<RatingScale>) {
     try {
-      const scaleRef = doc(ratingScalesCol, id);
+      const scaleRef = doc(ratingOptionSetsCol, id);
       const updateData = { ...data };
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata as any);
@@ -1026,7 +1026,7 @@ export const firestoreHelpers = {
 
   async deleteRatingScale(id: string) {
     try {
-      const ratingScaleRef = doc(ratingScalesCol, id);
+      const ratingScaleRef = doc(ratingOptionSetsCol, id);
       await deleteDoc(ratingScaleRef);
       console.log("Rating scale deleted successfully");
     } catch (error) {

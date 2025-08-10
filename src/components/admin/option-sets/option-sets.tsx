@@ -1,6 +1,5 @@
 import { DeleteConfirmationModal } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
-import { useToast } from '@/contexts/toast-context/index';
 import { useModal } from '@/hooks';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '@/types';
 import React from 'react';
@@ -48,7 +47,6 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
     onDeleteSelectOptionSet
 }) => {
     const { state: { ratingScales, radioOptionSets, multiSelectOptionSets, selectOptionSets } } = useSurveyData();
-    const { } = useToast();
     const deleteModal = useModal<DeleteModalData>();
 
     const handleDeleteConfirm = () => {

@@ -58,7 +58,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
         const updatedOptions = [...data.options];
         const current = updatedOptions[index];
         const next: TOption = { ...(current as any), ...(update as any) };
-        if (showDefaultToggle && update.hasOwnProperty('isDefault') && (update as any).isDefault === true) {
+        if (showDefaultToggle && Object.prototype.hasOwnProperty.call(update, 'isDefault') && (update as any).isDefault === true) {
             // If setting a default, unset others
             for (let i = 0; i < updatedOptions.length; i++) {
                 if (i !== index) {
@@ -171,7 +171,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                                 />
                                 {showColor && (
                                     <div className="space-y-1">
-                                        <label className="block text-sm font-semibold text-gray-800 mb-2">Color</label>
+                                        <span className="block text-sm font-semibold text-gray-800 mb-2">Color</span>
                                         <ColorSelector
                                             value={option.color || 'transparent'}
                                             onChange={(value) => updateOption(index, { color: String(value) } as Partial<TOption>)}

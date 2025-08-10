@@ -7,7 +7,7 @@ export { AdminOverview } from "./overview/";
 export { AdminPage } from "./page/";
 export { AdminPanel } from "./panel/";
 export { RadioOptionSetManager } from "./radio-option-set-manager/";
-export { RatingScaleManager } from "./rating-scale-manager/";
+export { RatingScaleManager } from "./rating-option-set-manager";
 export { AdminRatingScales } from "./rating-scales/";
 export { SelectOptionSetManager } from "./select-option-set-manager/";
 export { SurveyBuilder } from "./survey-builder/";

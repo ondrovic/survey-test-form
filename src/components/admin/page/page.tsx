@@ -5,7 +5,7 @@ import { MultiSelectOptionSetManager } from '@/components/admin/multi-select-opt
 import { AdminOptionSets } from '@/components/admin/option-sets';
 import { AdminOverview } from '@/components/admin/overview';
 import { RadioOptionSetManager } from '@/components/admin/radio-option-set-manager';
-import { RatingScaleManager } from '@/components/admin/rating-scale-manager';
+import { RatingScaleManager } from '@/components/admin/rating-option-set-manager';
 import { SelectOptionSetManager } from '@/components/admin/select-option-set-manager';
 import { SurveyBuilder } from '@/components/admin/survey-builder';
 import { useAdminTab } from '@/contexts/admin-tab-context/index';
@@ -17,7 +17,7 @@ import { clsx } from 'clsx';
 import React, { useEffect } from 'react';
 import { AdminPageProps } from './page.types';
 
-export const AdminPage: React.FC<AdminPageProps> = ({ }) => {
+export const AdminPage: React.FC<AdminPageProps> = () => {
     const { isAuthenticated, logout } = useAuth();
     const { activeTab, setActiveTab } = useAdminTab();
     const { refreshAll } = useSurveyData();

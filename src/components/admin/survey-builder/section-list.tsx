@@ -49,6 +49,14 @@ export const SectionList: React.FC<SectionListProps> = ({
                                         : 'border-red-200 bg-red-50 hover:border-red-300'
                                 }`}
                             onClick={() => onSelectSection(section.id)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onSelectSection(section.id);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">

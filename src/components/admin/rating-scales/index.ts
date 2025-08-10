@@ -1,1 +1,1 @@
-export { AdminRatingScales } from "./rating-scales";
+export { AdminRatingOptionsSets as AdminRatingScales } from "./rating-scales";

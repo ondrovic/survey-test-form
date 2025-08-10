@@ -205,7 +205,7 @@ export function downloadFrameworkResponsesAsExcel(
 
             // Add main section fields first, then the additional notes
             mainSectionFields.forEach((fieldKey) => {
-              if (!reorderedRow.hasOwnProperty(fieldKey)) {
+              if (!Object.prototype.hasOwnProperty.call(reorderedRow, fieldKey)) {
                 reorderedRow[fieldKey] = row[fieldKey];
                 console.log(`✓ Added main section field "${fieldKey}"`);
               }
@@ -232,7 +232,7 @@ export function downloadFrameworkResponsesAsExcel(
         // No survey config available - preserve original order
         // Just add all remaining fields in their original order
         Object.keys(row).forEach((key) => {
-          if (!reorderedRow.hasOwnProperty(key)) {
+          if (!Object.prototype.hasOwnProperty.call(reorderedRow, key)) {
             reorderedRow[key] = row[key];
           }
         });

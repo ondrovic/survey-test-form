@@ -72,7 +72,7 @@ const initialState: SurveyBuilderState = {
 
 function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAction): SurveyBuilderState {
     switch (action.type) {
-        case 'SET_CONFIG':
+        case 'SET_CONFIG': {
             // Ensure subsections array exists for backward compatibility
             const configWithSubsections = {
                 ...action.payload,
@@ -82,12 +82,13 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 }))
             };
             return { ...state, config: configWithSubsections };
+        }
 
         case 'UPDATE_CONFIG':
             return {
                 ...state,
-                config: { 
-                    ...state.config, 
+                config: {
+                    ...state.config,
                     ...action.payload,
                     metadata: updateMetadata(state.config.metadata)
                 }
@@ -136,7 +137,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 }
             };
 
-        case 'UPDATE_SECTION':
+        case 'UPDATE_SECTION': {
             const updatedConfig = {
                 ...state.config,
                 sections: state.config.sections.map(section =>
@@ -146,20 +147,21 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ),
                 metadata: updateMetadata(state.config.metadata)
             };
-            
+
             // Handle section ID changes - update selectedSection if needed
             let newSelectedSection = state.selectedSection;
             if (action.payload.updates.id && state.selectedSection === action.payload.sectionId) {
                 newSelectedSection = action.payload.updates.id;
             }
-            
+
             return {
                 ...state,
                 config: updatedConfig,
                 selectedSection: newSelectedSection
             };
+        }
 
-        case 'DELETE_SECTION':
+        case 'DELETE_SECTION': {
             return {
                 ...state,
                 config: {
@@ -170,8 +172,9 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 selectedSection: state.selectedSection === action.payload ? null : state.selectedSection,
                 selectedField: state.selectedField === action.payload ? null : state.selectedField
             };
+        }
 
-        case 'REORDER_SECTIONS':
+        case 'REORDER_SECTIONS': {
             const newSections = [...state.config.sections];
             const [movedSection] = newSections.splice(action.payload.fromIndex, 1);
             newSections.splice(action.payload.toIndex, 0, movedSection);
@@ -183,8 +186,9 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                     metadata: updateMetadata(state.config.metadata)
                 }
             };
+        }
 
-        case 'ADD_SUBSECTION':
+        case 'ADD_SUBSECTION': {
             return {
                 ...state,
                 config: {
@@ -197,7 +201,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                     metadata: updateMetadata(state.config.metadata)
                 }
             };
-
+        }
         case 'UPDATE_SUBSECTION':
             return {
                 ...state,
@@ -236,6 +240,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 },
                 selectedSubsection: state.selectedSubsection === action.payload.subsectionId ? null : state.selectedSubsection
             };
+
 
         case 'REORDER_SUBSECTIONS':
             return {
@@ -282,7 +287,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 }
             };
 
-        case 'UPDATE_FIELD':
+        case 'UPDATE_FIELD': {
             const updatedFieldConfig = {
                 ...state.config,
                 sections: state.config.sections.map(section =>
@@ -315,18 +320,19 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ),
                 metadata: updateMetadata(state.config.metadata)
             };
-            
+
             // Handle field ID changes - update selectedField if needed
             let newSelectedField = state.selectedField;
             if (action.payload.updates.id && state.selectedField === action.payload.fieldId) {
                 newSelectedField = action.payload.updates.id;
             }
-            
+
             return {
                 ...state,
                 config: updatedFieldConfig,
                 selectedField: newSelectedField
             };
+        }
 
         case 'DELETE_FIELD':
             return {

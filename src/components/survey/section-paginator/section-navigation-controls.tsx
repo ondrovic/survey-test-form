@@ -13,26 +13,25 @@ export const SectionNavigationControls: React.FC<SectionNavigationControlsProps>
   loading = false,
   className = ''
 }) => {
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (disabled || loading) return;
+  // const handleKeyDown = (event: React.KeyboardEvent) => {
+  //   if (disabled || loading) return;
 
-    if (event.key === 'ArrowLeft' && !isFirstSection) {
-      event.preventDefault();
-      onPrevious();
-    } else if (event.key === 'ArrowRight' && !isLastSection) {
-      event.preventDefault();
-      onNext();
-    } else if (event.key === 'Enter' && isLastSection && onSubmit) {
-      event.preventDefault();
-      onSubmit();
-    }
-  };
+  //   if (event.key === 'ArrowLeft' && !isFirstSection) {
+  //     event.preventDefault();
+  //     onPrevious();
+  //   } else if (event.key === 'ArrowRight' && !isLastSection) {
+  //     event.preventDefault();
+  //     onNext();
+  //   } else if (event.key === 'Enter' && isLastSection && onSubmit) {
+  //     event.preventDefault();
+  //     onSubmit();
+  //   }
+  // };
 
   return (
-    <div 
+    <nav 
       className={`flex items-center justify-between w-full ${className}`}
-      onKeyDown={handleKeyDown}
-      tabIndex={-1}
+      aria-label="Section navigation"
     >
       {/* Previous Button */}
       <div className="flex-shrink-0">
@@ -85,6 +84,6 @@ export const SectionNavigationControls: React.FC<SectionNavigationControlsProps>
           </Button>
         )}
       </div>
-    </div>
+    </nav>
   );
 };

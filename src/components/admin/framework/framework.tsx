@@ -380,7 +380,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
                         <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete "{deleteModal.data.name}"?
+                            Are you sure you want to delete &quot;{deleteModal.data.name}&quot;?
                             This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
@@ -572,10 +572,11 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
 
                         <div className="grid grid-cols-4 gap-2">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">
                                     Start Date
                                 </label>
                                 <input
+                                    id="start-date"
                                     type="datetime-local"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
@@ -584,10 +585,11 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">
                                     End Date
                                 </label>
                                 <input
+                                    id="end-date"
                                     type="datetime-local"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
@@ -669,7 +671,7 @@ const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
 
                     <div className="mb-4">
                         <p className="text-sm text-gray-600 mb-2">
-                            You're about to create a new instance of:
+                            You&apos;re about to create a new instance of:
                         </p>
                         <p className="font-medium text-gray-900">{config.title}</p>
                     </div>

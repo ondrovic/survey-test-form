@@ -45,7 +45,7 @@ function modalReducer(state: ModalState, action: ModalAction): ModalState {
                 },
             };
 
-        case 'TOGGLE_MODAL':
+        case 'TOGGLE_MODAL': {
             const currentModal = state.modals[action.payload.modalId];
             return {
                 ...state,
@@ -57,8 +57,9 @@ function modalReducer(state: ModalState, action: ModalAction): ModalState {
                     },
                 },
             };
+        }
 
-        case 'SET_MODAL_DATA':
+        case 'SET_MODAL_DATA': {
             return {
                 ...state,
                 modals: {
@@ -69,8 +70,9 @@ function modalReducer(state: ModalState, action: ModalAction): ModalState {
                     },
                 },
             };
+        }
 
-        case 'CLOSE_ALL_MODALS':
+        case 'CLOSE_ALL_MODALS': {
             const closedModals: Record<string, { isOpen: boolean; data: any }> = {};
             Object.keys(state.modals).forEach(modalId => {
                 closedModals[modalId] = { isOpen: false, data: null };
@@ -79,6 +81,7 @@ function modalReducer(state: ModalState, action: ModalAction): ModalState {
                 ...state,
                 modals: closedModals,
             };
+        }
 
         default:
             return state;

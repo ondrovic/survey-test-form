@@ -84,6 +84,14 @@ export const MemoizedFieldItem: React.FC<MemoizedFieldItemProps> = memo(({
             <div 
               className="flex items-center gap-2 flex-1 cursor-pointer" 
               onClick={handleSelect}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect();
+                }
+              }}
+              role="button"
+              tabIndex={0}
             >
               <span className={`font-medium ${isSubsection ? 'text-sm' : ''}`}>{field.label}</span>
               <span className={`text-gray-500 ${isSubsection ? 'text-xs' : 'text-sm'}`}>({field.type})</span>

@@ -25,26 +25,25 @@ export const FormNavigationControls: React.FC<FormNavigationControlsProps> = ({
   hasValidationErrors = false,
   className = ''
 }) => {
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (disabled || loading) return;
+  // const handleKeyDown = (event: React.KeyboardEvent) => {
+  //   if (disabled || loading) return;
 
-    if (event.key === 'ArrowLeft' && !isFirstSection) {
-      event.preventDefault();
-      onPrevious();
-    } else if (event.key === 'ArrowRight' && !isLastSection && !hasValidationErrors) {
-      event.preventDefault();
-      onNext();
-    } else if (event.key === 'Enter' && isLastSection && onSubmit && !hasValidationErrors) {
-      event.preventDefault();
-      onSubmit();
-    }
-  };
+  //   if (event.key === 'ArrowLeft' && !isFirstSection) {
+  //     event.preventDefault();
+  //     onPrevious();
+  //   } else if (event.key === 'ArrowRight' && !isLastSection && !hasValidationErrors) {
+  //     event.preventDefault();
+  //     onNext();
+  //   } else if (event.key === 'Enter' && isLastSection && onSubmit && !hasValidationErrors) {
+  //     event.preventDefault();
+  //     onSubmit();
+  //   }
+  // };
 
   return (
-    <div 
+    <nav 
       className={`flex items-center justify-between w-full ${className}`}
-      onKeyDown={handleKeyDown}
-      tabIndex={-1}
+      aria-label="Form navigation"
     >
       {/* Previous Button */}
       <div className="flex-shrink-0">
@@ -116,6 +115,6 @@ export const FormNavigationControls: React.FC<FormNavigationControlsProps> = ({
           </Button>
         )}
       </div>
-    </div>
+    </nav>
   );
 };

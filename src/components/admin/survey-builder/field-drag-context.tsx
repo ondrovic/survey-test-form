@@ -17,7 +17,7 @@ export interface FieldContainer {
 }
 
 // Ref to track field dragging state without causing re-renders
-let isFieldDraggingRef = { current: false };
+const isFieldDraggingRef = { current: false };
 
 export const useIsFieldDragging = () => isFieldDraggingRef.current;
 

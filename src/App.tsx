@@ -170,12 +170,9 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     const navigate = useNavigate();
     const { showSuccess, showError } = useToast();
 
-    // Check if instance is valid
-    if (!instance) {
-        return <NotFoundPage />;
-    }
-
     const loadSurveyConfig = useCallback(async () => {
+        if (!instance) return;
+
         try {
             setLoading(true);
             setError(null);
@@ -192,25 +189,25 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setLoading(false);
         }
-    }, [instance.configId]);
+    }, [instance?.configId]);
 
     useEffect(() => {
         loadSurveyConfig();
     }, [loadSurveyConfig]);
 
     const handleSubmit = useCallback(async (responses: Record<string, any>) => {
+        if (!instance || !surveyConfig) {
+            console.error('❌ No instance or survey config available, cannot submit');
+            showError('Survey configuration not found');
+            return;
+        }
+
         console.log('🔍 handleSubmit called with:', {
             hasSurveyConfig: !!surveyConfig,
             surveyConfigId: surveyConfig?.id,
             responsesCount: Object.keys(responses).length,
             responses: responses
         });
-
-        if (!surveyConfig) {
-            console.error('❌ No survey config available, cannot submit');
-            showError('Survey configuration not found');
-            return;
-        }
 
         setIsSubmitting(true);
         try {
@@ -257,7 +254,12 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [instance.id, surveyConfig, showSuccess, showError]);
+    }, [instance?.id, surveyConfig, showSuccess, showError, navigate]);
+
+    // Check if instance is valid
+    if (!instance) {
+        return <NotFoundPage />;
+    }
 
     if (loading) {
         return <LoadingSpinner fullScreen text="Loading survey..." />;
@@ -325,7 +327,7 @@ function NotFoundPage() {
         <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
             <div className="text-center">
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">Resource Not Found</h1>
-                <p className="text-gray-600 mb-6">The resource you're looking for doesn't exist.</p>
+                <p className="text-gray-600 mb-6">The resource you&apos;re looking for doesn&apos;t exist.</p>
             </div>
         </div>
     );

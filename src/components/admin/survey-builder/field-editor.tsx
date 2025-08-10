@@ -34,10 +34,11 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
                     onChange={(value) => onUpdateField(sectionId, field.id, { label: value })}
                 />
                 <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    <label htmlFor="field-editor-type" className="block text-sm font-semibold text-gray-800 mb-2">
                         Field Type
                     </label>
                     <select
+                        id="field-editor-type"
                         value={field.type}
                         onChange={(e) => onUpdateField(sectionId, field.id, { type: e.target.value as FieldType })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -152,10 +153,11 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
                                     <div key={index} className="flex items-center space-x-3 p-3 border rounded-md bg-gray-50">
                                         <div className="flex-1 grid grid-cols-2 gap-3">
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                <label htmlFor={`option-editor-label-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
                                                     Option Label
                                                 </label>
                                                 <input
+                                                    id={`option-editor-label-${index}`}
                                                     type="text"
                                                     value={option.label}
                                                     onChange={(e) => onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value })}
@@ -164,10 +166,11 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                <label htmlFor={`option-editor-value-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
                                                     Option Value
                                                 </label>
                                                 <input
+                                                    id={`option-editor-value-${index}`}
                                                     type="text"
                                                     value={option.value}
                                                     onChange={(e) => onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value })}

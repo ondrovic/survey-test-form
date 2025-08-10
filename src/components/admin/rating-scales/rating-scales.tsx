@@ -1,26 +1,24 @@
 import { Button } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
-import { useToast } from '@/contexts/toast-context/index';
 import { useModal } from '@/hooks';
 import { RatingScale } from '@/types';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import React from 'react';
 
-interface AdminRatingScalesProps {
+interface AdminRatingOptionsSetsProps {
     onShowRatingScaleManager: () => void;
     onEditRatingScale: (scale: RatingScale) => void;
     onDeleteRatingScale: (scaleId: string) => void;
     // onCleanupDuplicates: () => void;
 }
 
-export const AdminRatingScales: React.FC<AdminRatingScalesProps> = ({
+export const AdminRatingOptionsSets: React.FC<AdminRatingOptionsSetsProps> = ({
     onShowRatingScaleManager,
     onEditRatingScale,
     onDeleteRatingScale,
     // onCleanupDuplicates
 }) => {
     const { state: { ratingScales } } = useSurveyData();
-    const { } = useToast();
     const deleteModal = useModal<{ id: string; name: string }>();
 
     return (
@@ -94,7 +92,7 @@ export const AdminRatingScales: React.FC<AdminRatingScalesProps> = ({
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
                         <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete "{deleteModal.data.name}"?
+                            Are you sure you want to delete &quot;{deleteModal.data.name}&quot;?
                             This action cannot be undone.
                         </p>
                         <div className="flex gap-3">

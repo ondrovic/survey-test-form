@@ -167,10 +167,11 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="subsection-description" className="block text-sm font-medium text-gray-700 mb-1">
                             Description (optional)
                         </label>
                         <textarea
+                            id="subsection-description"
                             name="subsectionDescription"
                             value={subsection.description || ''}
                             onChange={(e) => handleDescriptionChange(e.target.value)}

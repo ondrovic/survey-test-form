@@ -1,10 +1,9 @@
 import { CheckSquare, ChevronDown, List, Plus, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
-import { MultiSelectOptionSet, RadioOptionSet, SelectOptionSet } from '../../../types/framework.types';
-import { FieldType, SurveyField } from '../../../types/framework.types';
-import { Button, Input, Modal } from '../../common';
 import { useValidation } from '../../../contexts/validation-context';
+import { FieldType, MultiSelectOptionSet, RadioOptionSet, SelectOptionSet, SurveyField } from '../../../types/framework.types';
+import { Button, Input, Modal } from '../../common';
 import { OptionSetPreview } from './option-set-preview';
 import { FIELD_TYPES } from './survey-builder.types';
 
@@ -48,16 +47,16 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     const [placeholderError, setPlaceholderError] = useState<string>('');
     const [optionsError, setOptionsError] = useState<string>('');
 
-    if (!field) return null;
-
     // Validation handlers
     const handleLabelChange = (value: string) => {
+        if (!field) return;
         const validation = validateFieldLabel(value);
         setLabelError(validation.isValid ? '' : validation.error || '');
         onUpdateField(sectionId, field.id, { label: value });
     };
 
     const handlePlaceholderChange = (value: string) => {
+        if (!field) return;
         const validation = validateFieldPlaceholder(value);
         setPlaceholderError(validation.isValid ? '' : validation.error || '');
         onUpdateField(sectionId, field.id, { placeholder: value });
@@ -71,6 +70,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     }, [field, validateFieldOptions]);
 
     const handleSave = () => {
+        if (!field) return;
         // Validate all fields before saving
         const labelValidation = validateFieldLabel(field.label);
         const placeholderValidation = validateFieldPlaceholder(field.placeholder || '');
@@ -104,7 +104,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                 document.removeEventListener('keydown', handleEscape);
             };
         }
-        
+
         return undefined;
     }, [isOpen, onClose]);
 
@@ -150,14 +150,16 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         };
 
         loadOptionSets();
-    }, [field?.radioOptionSetId, field?.multiSelectOptionSetId, field?.selectOptionSetId, field?.label, field?.placeholder, validateFieldLabel, validateFieldPlaceholder]);
+    }, [field?.radioOptionSetId, field?.multiSelectOptionSetId, field?.selectOptionSetId, field?.label, field?.placeholder, validateFieldLabel, validateFieldPlaceholder, field, validateOptions]);
 
     // Validate options when they change
     useEffect(() => {
         if (field) {
             validateOptions();
         }
-    }, [field?.options, validateOptions]);
+    }, [field?.options, validateOptions, field]);
+
+    if (!field) return null;
 
     return (
         <Modal
@@ -184,10 +186,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             error={labelError}
                         />
                         <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-2">
+                            <label htmlFor="field-type" className="block text-sm font-semibold text-gray-800 mb-2">
                                 Field Type
                             </label>
                             <select
+                                id="field-type"
                                 value={field.type}
                                 onChange={(e) => onUpdateField(sectionId, field.id, { type: e.target.value as FieldType })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -517,76 +520,76 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             ) : (
                                 // Show individual options
                                 <>
-                                                                    {(field.options || []).map((option, index) => {
-                                    const labelValidation = option.label ? { isValid: true } : { isValid: false, error: 'Label is required' };
-                                    const valueValidation = option.value ? 
-                                        /^[a-zA-Z0-9_-]+$/.test(option.value) ? 
-                                            { isValid: true } : 
-                                            { isValid: false, error: 'Only letters, numbers, underscores, and hyphens allowed' }
-                                        : { isValid: false, error: 'Value is required' };
+                                    {(field.options || []).map((option, index) => {
+                                        const labelValidation = option.label ? { isValid: true } : { isValid: false, error: 'Label is required' };
+                                        const valueValidation = option.value ?
+                                            /^[a-zA-Z0-9_-]+$/.test(option.value) ?
+                                                { isValid: true } :
+                                                { isValid: false, error: 'Only letters, numbers, underscores, and hyphens allowed' }
+                                            : { isValid: false, error: 'Value is required' };
 
-                                    return (
-                                        <div key={index} className="flex items-center space-x-3 p-4 border rounded-md bg-gray-50">
-                                            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                        Label *
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={option.label}
-                                                        onChange={(e) => {
-                                                            onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value });
-                                                            setTimeout(validateOptions, 100); // Re-validate after update
-                                                        }}
-                                                        className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${
-                                                            labelValidation.isValid 
-                                                                ? 'border-gray-300 focus:ring-blue-500' 
-                                                                : 'border-red-300 focus:ring-red-500'
-                                                        }`}
-                                                        placeholder="Option label (required)"
-                                                    />
-                                                    {!labelValidation.isValid && (
-                                                        <p className="text-xs text-red-600 mt-1">{labelValidation.error}</p>
-                                                    )}
+                                        return (
+                                            <div key={index} className="flex items-center space-x-3 p-4 border rounded-md bg-gray-50">
+                                                <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label htmlFor={`option-label-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
+                                                            Label *
+                                                        </label>
+                                                        <input
+                                                            id={`option-label-${index}`}
+                                                            type="text"
+                                                            value={option.label}
+                                                            onChange={(e) => {
+                                                                onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value });
+                                                                setTimeout(validateOptions, 100); // Re-validate after update
+                                                            }}
+                                                            className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${labelValidation.isValid
+                                                                    ? 'border-gray-300 focus:ring-blue-500'
+                                                                    : 'border-red-300 focus:ring-red-500'
+                                                                }`}
+                                                            placeholder="Option label (required)"
+                                                        />
+                                                        {!labelValidation.isValid && (
+                                                            <p className="text-xs text-red-600 mt-1">{labelValidation.error}</p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <label htmlFor={`option-value-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
+                                                            Value *
+                                                        </label>
+                                                        <input
+                                                            id={`option-value-${index}`}
+                                                            type="text"
+                                                            value={option.value}
+                                                            onChange={(e) => {
+                                                                onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value });
+                                                                setTimeout(validateOptions, 100); // Re-validate after update
+                                                            }}
+                                                            className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${valueValidation.isValid
+                                                                    ? 'border-gray-300 focus:ring-blue-500'
+                                                                    : 'border-red-300 focus:ring-red-500'
+                                                                }`}
+                                                            placeholder="option_value (letters, numbers, _, -)"
+                                                        />
+                                                        {!valueValidation.isValid && (
+                                                            <p className="text-xs text-red-600 mt-1">{valueValidation.error}</p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                        Value *
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={option.value}
-                                                        onChange={(e) => {
-                                                            onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value });
-                                                            setTimeout(validateOptions, 100); // Re-validate after update
-                                                        }}
-                                                        className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${
-                                                            valueValidation.isValid 
-                                                                ? 'border-gray-300 focus:ring-blue-500' 
-                                                                : 'border-red-300 focus:ring-red-500'
-                                                        }`}
-                                                        placeholder="option_value (letters, numbers, _, -)"
-                                                    />
-                                                    {!valueValidation.isValid && (
-                                                        <p className="text-xs text-red-600 mt-1">{valueValidation.error}</p>
-                                                    )}
-                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        onDeleteFieldOption(sectionId, field.id, index);
+                                                        setTimeout(validateOptions, 100); // Re-validate after deletion
+                                                    }}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => {
-                                                    onDeleteFieldOption(sectionId, field.id, index);
-                                                    setTimeout(validateOptions, 100); // Re-validate after deletion
-                                                }}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
                                     {(field.options || []).length === 0 && (
                                         <div className="text-center text-gray-500 text-sm py-4 border-2 border-dashed border-gray-300 rounded-md">
                                             <p>No options configured.</p>

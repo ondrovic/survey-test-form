@@ -38,7 +38,16 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
                     )}
                 </button>
                 {headerAction && (
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.stopPropagation();
+                            }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                    >
                         {headerAction}
                     </div>
                 )}

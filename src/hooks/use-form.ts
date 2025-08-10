@@ -52,12 +52,13 @@ export const useForm = (initialState: FormState = {}): UseFormReturn => {
               return rule.message || `${field.label} is required`;
             }
             break;
-          case "email":
+          case "email": {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (value && !emailRegex.test(value)) {
               return rule.message || "Please enter a valid email address";
             }
             break;
+          }
           case "min":
             if (Array.isArray(value)) {
               // For multiselect fields, validate minimum selections
