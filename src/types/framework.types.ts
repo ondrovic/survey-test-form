@@ -50,7 +50,7 @@ export interface RatingScale {
   metadata: {
     createdAt: string;
     updatedAt: string;
-    createdBy?: string;  // Optional, no longer hardcoded
+    createdBy: string;
   };
 }
 
@@ -75,7 +75,7 @@ export interface RadioOptionSet {
   metadata: {
     createdAt: string;
     updatedAt: string;
-    createdBy?: string;  // Optional, no longer hardcoded
+    createdBy: string;
   };
 }
 
@@ -92,7 +92,7 @@ export interface MultiSelectOptionSet {
   metadata: {
     createdAt: string;
     updatedAt: string;
-    createdBy?: string;  // Optional, no longer hardcoded
+    createdBy: string;
   };
 }
 
@@ -108,7 +108,7 @@ export interface SelectOptionSet {
   metadata: {
     createdAt: string;
     updatedAt: string;
-    createdBy?: string;  // Optional, no longer hardcoded
+    createdBy: string;
   };
 }
 
@@ -178,7 +178,7 @@ export interface SurveyConfig {
   metadata: {
     createdAt: string;
     updatedAt: string;
-    createdBy?: string;  // Optional, no longer hardcoded
+    createdBy: string;
     ip?: string;
   };
 }
@@ -206,9 +206,7 @@ export interface SurveyResponse {
   surveyInstanceId: string;
   configVersion: string;
   responses: Record<string, any>;
-  // Business/query field (moved from metadata)
   submittedAt: string;
-  // Technical audit trail only
   metadata: {
     userAgent: string;
     ipAddress?: string;

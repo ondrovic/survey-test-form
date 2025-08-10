@@ -36,7 +36,7 @@ export const CheckboxGroup = <T extends string | number = string>({
     const errorId = `${name}-error`;
     
     const currentSelectionCount = (selectedValues || []).length;
-    const hasReachedMaxSelections = maxSelections && currentSelectionCount >= maxSelections;
+    const hasReachedMaxSelections = Boolean(maxSelections && currentSelectionCount >= maxSelections);
 
     const handleOptionChange = (optionValue: T, checked: boolean) => {
         const currentValues = selectedValues || [];
@@ -81,7 +81,7 @@ export const CheckboxGroup = <T extends string | number = string>({
                     >
                         {options.map((option) => {
                             const optionId = `${name}-${option.value}`;
-                            const isChecked = selectedValues?.includes(option.value) || false;
+                            const isChecked = Boolean(selectedValues?.includes(option.value));
                             
                             // Disable option if:
                             // 1. Option is explicitly disabled, OR

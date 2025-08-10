@@ -180,9 +180,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose, surv
         setState(prev => ({ ...prev, showRatingScaleManager: true }));
     };
 
-    const handleCloseRatingScaleManager = () => {
-        setState(prev => ({ ...prev, showRatingScaleManager: false }));
-    };
+    // const handleCloseRatingScaleManager = () => {
+    //     setState(prev => ({ ...prev, showRatingScaleManager: false }));
+    // };
 
     if (!isVisible) return null;
 

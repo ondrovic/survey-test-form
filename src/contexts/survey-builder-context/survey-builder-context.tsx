@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useContext, useReducer } from 'react';
 import { SurveyConfig, SurveySection, SurveyField, SurveySubsection } from '../../types/framework.types';
-import { createMetadata, updateMetadata } from '../../utils/metadata.utils';
+import { createMetadataSync, updateMetadata } from '../../utils/metadata.utils';
 
 interface SurveyBuilderState {
     config: SurveyConfig;
@@ -55,7 +55,7 @@ const initialState: SurveyBuilderState = {
         sections: [],
         isActive: true,
         version: '1.0.0',
-        metadata: createMetadata()
+        metadata: createMetadataSync()
     },
     selectedSection: null,
     selectedSubsection: null,

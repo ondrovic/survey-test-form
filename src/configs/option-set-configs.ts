@@ -8,7 +8,7 @@ import {
   RatingScaleOption,
   OptionSetOption 
 } from '../types/framework.types';
-import { createMetadata } from '../utils/metadata.utils';
+import { createMetadataSync } from '../utils/metadata.utils';
 
 // Common validation functions
 const validateName = (name: string): string | null => {
@@ -85,7 +85,7 @@ export const ratingScaleConfig: OptionSetConfig<RatingScale> = {
       { value: '', label: '', color: 'transparent', isDefault: false, order: 0 }
     ] as RatingScaleOption[],
     isActive: true,
-    metadata: createMetadata()
+    metadata: createMetadataSync()
   }),
 };
 
@@ -110,7 +110,7 @@ export const radioOptionSetConfig: OptionSetConfig<RadioOptionSet> = {
       { value: '', label: '', color: 'transparent', isDefault: false, order: 0 }
     ] as OptionSetOption[],
     isActive: true,
-    metadata: createMetadata()
+    metadata: createMetadataSync()
   }),
 };
 
@@ -138,7 +138,7 @@ export const multiSelectOptionSetConfig: OptionSetConfig<MultiSelectOptionSet> =
     minSelections: 1,
     maxSelections: 3,
     isActive: true,
-    metadata: createMetadata()
+    metadata: createMetadataSync()
   }),
 };
 
@@ -164,6 +164,6 @@ export const selectOptionSetConfig: OptionSetConfig<SelectOptionSet> = {
     ] as OptionSetOption[],
     allowMultiple: false,
     isActive: true,
-    metadata: createMetadata()
+    metadata: createMetadataSync()
   }),
 };

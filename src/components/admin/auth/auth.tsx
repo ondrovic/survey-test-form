@@ -31,6 +31,16 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
                 </div>
 
                 <form onSubmit={handlePasswordSubmit}>
+                    <input
+                        type="text"
+                        name="username"
+                        value="admin"
+                        autoComplete="username"
+                        style={{ display: 'none' }}
+                        readOnly
+                        tabIndex={-1}
+                        aria-hidden="true"
+                    />
                     <PasswordInput
                         name="adminPassword"
                         label="Admin Password"

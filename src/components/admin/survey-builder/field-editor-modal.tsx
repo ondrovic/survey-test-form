@@ -104,6 +104,8 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                 document.removeEventListener('keydown', handleEscape);
             };
         }
+        
+        return undefined;
     }, [isOpen, onClose]);
 
     // Load option sets and validate when field changes

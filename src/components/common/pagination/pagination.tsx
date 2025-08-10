@@ -1,23 +1,16 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React from 'react';
+import { PaginationProps } from './pagination.types';
 
-interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-    className?: string;
-}
-
-export const Pagination: React.FC<PaginationProps> = ({
+export const Pagination = ({
     currentPage,
     totalPages,
     onPageChange,
     className = ''
-}) => {
+}: PaginationProps) => {
     if (totalPages <= 1) return null;
 
     const getPageNumbers = () => {
-        const pages = [];
+        const pages: (number | string)[] = [];
         const maxVisible = 5;
 
         if (totalPages <= maxVisible) {

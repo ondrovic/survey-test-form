@@ -100,3 +100,6 @@ temp/
 
 # Vite
 .vite/ 
+
+# Coverage
+coverage/

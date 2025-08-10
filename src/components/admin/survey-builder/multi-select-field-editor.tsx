@@ -69,10 +69,10 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
     }, [getSelectedFieldTypes]);
 
     // Get the common field type if all fields are the same type
-    const getCommonFieldType = useCallback(() => {
-        const types = getSelectedFieldTypes();
-        return types.length === 1 ? types[0] : null;
-    }, [getSelectedFieldTypes]);
+    // const getCommonFieldType = useCallback(() => {
+    //     const types = getSelectedFieldTypes();
+    //     return types.length === 1 ? types[0] : null;
+    // }, [getSelectedFieldTypes]);
 
     const analyzeSelectedFields = useCallback((fields: FieldSelection[]) => {
         if (fields.length === 0) {
@@ -232,7 +232,7 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
     // Render field type specific options
     const renderFieldTypeOptions = () => {
         const fieldTypes = getSelectedFieldTypes();
-        const commonType = getCommonFieldType();
+        // const commonType = getCommonFieldType();
 
         return (
             <div className="space-y-6">

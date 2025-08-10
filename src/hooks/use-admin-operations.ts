@@ -45,20 +45,20 @@ export const useAdminOperations = () => {
     [showSuccess, showError, refreshAll]
   );
 
-  const deactivateSurveyInstance = useCallback(
-    async (instanceId: string) => {
-      try {
-        await firestoreHelpers.updateSurveyInstance(instanceId, {
-          isActive: false,
-        });
-        showSuccess("Survey instance deactivated!");
-        await refreshAll();
-      } catch (error) {
-        showError("Failed to deactivate survey instance");
-      }
-    },
-    [showSuccess, showError, refreshAll]
-  );
+  // const deactivateSurveyInstance = useCallback(
+  //   async (instanceId: string) => {
+  //     try {
+  //       await firestoreHelpers.updateSurveyInstance(instanceId, {
+  //         isActive: false,
+  //       });
+  //       showSuccess("Survey instance deactivated!");
+  //       await refreshAll();
+  //     } catch (error) {
+  //       showError("Failed to deactivate survey instance");
+  //     }
+  //   },
+  //   [showSuccess, showError, refreshAll]
+  // );
 
   const permanentlyDeleteSurveyInstance = useCallback(
     async (instanceId: string, instanceName?: string) => {

@@ -224,7 +224,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata);
       } else {
-        updateData.metadata = updateMetadata(createMetadata());
+        updateData.metadata = updateMetadata(await createMetadata());
       }
       await updateDoc(surveyRef, updateData);
     } catch (error) {
@@ -299,7 +299,7 @@ export const firestoreHelpers = {
         // Ensure business logic fields are set
         isActive: config.isActive ?? true,
         version: config.version || "1.0.0",
-        metadata: mergeMetadata(config.metadata),
+        metadata: await mergeMetadata(config.metadata),
       };
       await setDoc(configRef, configData);
       return configData;
@@ -316,7 +316,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata as any);
       } else {
-        updateData.metadata = updateMetadata(createMetadata());
+        updateData.metadata = updateMetadata(await createMetadata());
       }
       await updateDoc(configRef, updateData);
     } catch (error) {
@@ -416,7 +416,7 @@ export const firestoreHelpers = {
       const instanceData = {
         ...instance,
         id: instanceId,
-        metadata: mergeMetadata(instance.metadata),
+        metadata: await mergeMetadata(instance.metadata),
       };
       await setDoc(instanceRef, instanceData);
       return instanceData;
@@ -435,7 +435,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         cleanData.metadata = updateMetadata(data.metadata as any);
       } else {
-        cleanData.metadata = updateMetadata(createMetadata());
+        cleanData.metadata = updateMetadata(await createMetadata());
       }
 
       // Remove undefined values
@@ -998,7 +998,7 @@ export const firestoreHelpers = {
         id: scaleId,
         // Ensure business logic fields are set
         isActive: scale.isActive ?? true,
-        metadata: mergeMetadata(scale.metadata),
+        metadata: await mergeMetadata(scale.metadata),
       };
       await setDoc(scaleRef, scaleData);
       return scaleData;
@@ -1015,7 +1015,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata as any);
       } else {
-        updateData.metadata = updateMetadata(createMetadata());
+        updateData.metadata = updateMetadata(await createMetadata());
       }
       await updateDoc(scaleRef, updateData);
     } catch (error) {
@@ -1079,7 +1079,7 @@ export const firestoreHelpers = {
         id: setId,
         // Ensure business logic fields are set
         isActive: optionSet.isActive ?? true,
-        metadata: mergeMetadata(optionSet.metadata),
+        metadata: await mergeMetadata(optionSet.metadata),
       };
       await setDoc(setRef, optionSetData);
       console.log("Multi-select option set added with ID:", setId);
@@ -1097,7 +1097,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata);
       } else {
-        updateData.metadata = updateMetadata(createMetadata());
+        updateData.metadata = updateMetadata(await createMetadata());
       }
       await updateDoc(optionSetRef, updateData);
       console.log("Multi-select option set updated successfully");
@@ -1164,7 +1164,7 @@ export const firestoreHelpers = {
         id: setId,
         // Ensure business logic fields are set
         isActive: optionSet.isActive ?? true,
-        metadata: mergeMetadata(optionSet.metadata),
+        metadata: await mergeMetadata(optionSet.metadata),
       };
       await setDoc(setRef, optionSetData);
       console.log("Radio option set added with ID:", setId);
@@ -1182,7 +1182,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata);
       } else {
-        updateData.metadata = updateMetadata(createMetadata());
+        updateData.metadata = updateMetadata(await createMetadata());
       }
       await updateDoc(optionSetRef, updateData);
       console.log("Radio option set updated successfully");
@@ -1249,7 +1249,7 @@ export const firestoreHelpers = {
         id: setId,
         // Ensure business logic fields are set
         isActive: optionSet.isActive ?? true,
-        metadata: mergeMetadata(optionSet.metadata),
+        metadata: await mergeMetadata(optionSet.metadata),
       };
       await setDoc(setRef, optionSetData);
       console.log("Select option set added with ID:", setId);
@@ -1267,7 +1267,7 @@ export const firestoreHelpers = {
       if (data.metadata) {
         updateData.metadata = updateMetadata(data.metadata);
       } else {
-        updateData.metadata = updateMetadata(createMetadata());
+        updateData.metadata = updateMetadata(await createMetadata());
       }
       await updateDoc(optionSetRef, updateData);
       console.log("Select option set updated successfully");

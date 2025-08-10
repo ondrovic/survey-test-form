@@ -13,7 +13,7 @@ interface OptionSetPreviewProps {
 export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
     type,
     optionSetId,
-    optionSetName,
+    // optionSetName,
     className = '',
     hideLabel = false
 }) => {
@@ -72,25 +72,25 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
         }
     };
 
-    const getOptionSetName = () => {
-        // Remove ID from name (everything after 'x')
-        return optionSetName?.split('x')[0] || optionSetName;
-    };
+    // const getOptionSetName = () => {
+    //     // Remove ID from name (everything after 'x')
+    //     return optionSetName?.split('x')[0] || optionSetName;
+    // };
 
-    const getOptionSetTypeText = () => {
-        switch (type) {
-            case 'rating':
-                return 'rating scale';
-            case 'radio':
-                return 'option set';
-            case 'multiselect':
-                return 'option set';
-            case 'select':
-                return 'option set';
-            default:
-                return 'option set';
-        }
-    };
+    // const getOptionSetTypeText = () => {
+    //     switch (type) {
+    //         case 'rating':
+    //             return 'rating scale';
+    //         case 'radio':
+    //             return 'option set';
+    //         case 'multiselect':
+    //             return 'option set';
+    //         case 'select':
+    //             return 'option set';
+    //         default:
+    //             return 'option set';
+    //     }
+    // };
 
     const renderOptions = () => {
         if (isLoading) {

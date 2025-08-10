@@ -2,6 +2,13 @@ import { useDroppable } from '@dnd-kit/core';
 import React, { memo, useMemo } from 'react';
 import { FieldContainer } from './field-drag-context';
 
+// Extend Window interface to include custom properties
+declare global {
+  interface Window {
+    _dropzoneRegistry?: Set<string>;
+  }
+}
+
 interface DroppableFieldContainerProps {
   container: FieldContainer;
   children: React.ReactNode;
@@ -26,10 +33,10 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
     });
     return id;
   }, [container.sectionId, container.subsectionId]);
-  
+
   const containerData = useMemo(() => ({ container }), [container]);
   const hasChildren = useMemo(() => React.Children.count(children) > 0, [children]);
-  
+
   const { isOver, setNodeRef } = useDroppable({
     id: containerId,
     data: containerData
@@ -56,7 +63,7 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
       if (!window._dropzoneRegistry) window._dropzoneRegistry = new Set();
       window._dropzoneRegistry.add(containerId);
     }
-    
+
     return () => {
       if (typeof window !== 'undefined' && window._dropzoneRegistry) {
         window._dropzoneRegistry.delete(containerId);
@@ -72,8 +79,8 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
     const baseClasses = `${className} transition-all duration-200 min-h-[80px] rounded-lg relative`;
     // Subsections need higher z-index to be detected over sections
     const zIndexClass = container.type === 'subsection' ? 'z-20' : 'z-10';
-    const borderClasses = isOver 
-      ? `bg-green-50 border-green-400 border-4 border-dashed shadow-lg ${zIndexClass}` 
+    const borderClasses = isOver
+      ? `bg-green-50 border-green-400 border-4 border-dashed shadow-lg ${zIndexClass}`
       : `border-gray-300 border-2 border-dashed hover:border-blue-400 hover:bg-blue-50 ${zIndexClass}`;
     return `${baseClasses} ${borderClasses}`;
   }, [className, isOver, container.type]);
@@ -91,9 +98,9 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
           {container.type === 'subsection' ? container.subsectionId?.slice(-8) : container.sectionId}
         </span>
       </div>
-      
+
       {children}
-      
+
       {!hasChildren && (
         <div className="flex flex-col items-center justify-center h-16 text-gray-500 text-sm">
           <div className="font-medium">{emptyMessage}</div>

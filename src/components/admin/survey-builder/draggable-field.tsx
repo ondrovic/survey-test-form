@@ -1,4 +1,4 @@
-import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { useDraggable } from '@dnd-kit/core';
 import React, { memo, useMemo } from 'react';
 import { FieldContainer } from './field-drag-context';
 

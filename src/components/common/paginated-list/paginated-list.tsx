@@ -1,13 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePagination } from '../../../hooks/use-pagination';
 import { Pagination } from '../pagination/pagination';
+import { PaginatedListProps } from './paginated-list.types';
 
-interface PaginatedListProps<T> {
-    items: T[];
-    itemsPerPage?: number;
-    renderItem: (item: T, index: number) => React.ReactNode;
-    emptyMessage?: string;
-    className?: string;
-}
 
 export const PaginatedList = <T,>({
     items,
@@ -16,20 +11,16 @@ export const PaginatedList = <T,>({
     emptyMessage = 'No items found.',
     className = ''
 }: PaginatedListProps<T>) => {
-    const [currentPage, setCurrentPage] = useState(1);
+    const { currentPage, totalPages, goToPage } = usePagination({
+        totalItems: items.length,
+        itemsPerPage
+    });
 
     const paginatedItems = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         return items.slice(startIndex, endIndex);
     }, [items, currentPage, itemsPerPage]);
-
-    const totalPages = Math.ceil(items.length / itemsPerPage);
-
-    // Reset to first page when items change
-    React.useEffect(() => {
-        setCurrentPage(1);
-    }, [items.length]);
 
     if (items.length === 0) {
         return (
@@ -50,7 +41,7 @@ export const PaginatedList = <T,>({
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
-                        onPageChange={setCurrentPage}
+                        onPageChange={goToPage}
                     />
                 </div>
             )}

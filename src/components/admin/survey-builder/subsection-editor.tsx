@@ -1,12 +1,12 @@
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { MultiSelectOptionSet, RadioOptionSet, SurveySubsection } from '../../../types/framework.types';
 import { FieldType } from '../../../types/framework.types';
 import { Button, Input } from '../../common';
 import { useValidation } from '../../../contexts/validation-context';
-import { FIELD_TYPES } from './survey-builder.types';
-import { DraggableField } from './draggable-field';
+// import { FIELD_TYPES } from './survey-builder.types';
+// import { DraggableField } from './draggable-field';
 import { DroppableFieldContainer } from './droppable-field-container';
 import { MemoizedFieldItem } from './memoized-field-item';
 
@@ -18,7 +18,7 @@ interface SubsectionEditorProps {
     onAddField: (sectionId: string, fieldType: FieldType, subsectionId: string) => void;
     onSelectField: (fieldId: string) => void;
     onOpenFieldEditor: (fieldId: string) => void;
-    onDeleteField: (sectionId: string, fieldId: string, subsectionId: string) => void;
+    onDeleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
     onReorderFields: (sectionId: string, oldIndex: number, newIndex: number, subsectionId: string) => void;
 }
 
@@ -31,7 +31,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     onSelectField,
     onOpenFieldEditor,
     onDeleteField,
-    onReorderFields
+    // onReorderFields
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
     

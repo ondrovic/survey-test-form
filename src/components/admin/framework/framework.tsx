@@ -35,13 +35,13 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
 
     const handleCreateSurveyInstance = async (config: SurveyConfig) => {
         try {
-                    const instance = {
-            configId: config.id,
-            title: config.title,
-            description: config.description,
-            isActive: true,
-            metadata: createMetadata()
-        };
+            const instance = {
+                configId: config.id,
+                title: config.title,
+                description: config.description,
+                isActive: true,
+                metadata: await createMetadata()
+            };
 
             await firestoreHelpers.addSurveyInstance(instance);
             showSuccess(`Survey instance "${config.title}" created!`);
@@ -177,24 +177,24 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Survey Framework</h2>
                 <div className="flex items-center gap-2">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         size="sm"
                         onClick={handleVerifyDataSeparation}
                         className="text-green-600 border-green-600 hover:bg-green-50"
                     >
                         Verify Data
                     </Button>
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         size="sm"
                         onClick={handleMigrateResponseData}
                         className="text-blue-600 border-blue-600 hover:bg-blue-50"
                     >
                         Migrate Collections
                     </Button>
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         size="sm"
                         onClick={handleMigrateMetadataStructure}
                         className="text-purple-600 border-purple-600 hover:bg-purple-50"
@@ -421,23 +421,23 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                             if (updates.isActive !== settingsModal.data?.isActive) {
                                 await onToggleInstanceActive(settingsModal.data?.id || '', updates.isActive, settingsModal.data?.title);
                             }
-                            
+
                             // Apply date range change if it changed
                             const currentDateRange = settingsModal.data?.activeDateRange;
                             const newDateRange = updates.activeDateRange;
                             console.log("Date range comparison:", { currentDateRange, newDateRange });
-                            
+
                             // Normalize both values for comparison (handle undefined vs null)
                             const normalizedCurrent = currentDateRange || null;
                             const normalizedNew = newDateRange || null;
-                            
+
                             if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew)) {
                                 console.log("Date range changed, updating...");
                                 await onUpdateInstanceDateRange(settingsModal.data?.id || '', newDateRange, settingsModal.data?.title);
                             } else {
                                 console.log("Date range unchanged, skipping update");
                             }
-                            
+
                             closeInstanceSettings();
                         } catch (error) {
                             // Error handling is done in the individual functions
@@ -476,16 +476,13 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
     const [endDate, setEndDate] = useState(instance.activeDateRange?.endDate?.slice(0, 16) || '');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Store the original state for comparison
-    const originalHasDateRange = Boolean(instance.activeDateRange?.startDate && instance.activeDateRange?.endDate);
-
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const activeDateRange = startDate && endDate 
+            const activeDateRange = startDate && endDate
                 ? { startDate: new Date(startDate).toISOString(), endDate: new Date(endDate).toISOString() }
                 : null;
-            
+
             await onSave({ isActive, activeDateRange });
         } finally {
             setIsSaving(false);
@@ -499,30 +496,30 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
 
     const hasChanges = () => {
         const currentDateRange = instance.activeDateRange;
-        let newDateRange = null;
+        let newDateRange: { startDate: string; endDate: string } | null = null;
         if (startDate && endDate) {
-            newDateRange = { 
-                startDate: new Date(startDate).toISOString(), 
-                endDate: new Date(endDate).toISOString() 
+            newDateRange = {
+                startDate: new Date(startDate).toISOString(),
+                endDate: new Date(endDate).toISOString()
             };
         }
-        
+
         // Normalize both values for comparison
         const normalizedCurrent = currentDateRange || null;
         const normalizedNew = newDateRange || null;
-        
+
         const activeChanged = isActive !== instance.isActive;
         const dateRangeChanged = JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew);
-        
-        console.log("hasChanges check:", { 
-            activeChanged, 
-            dateRangeChanged, 
-            currentDateRange: normalizedCurrent, 
+
+        console.log("hasChanges check:", {
+            activeChanged,
+            dateRangeChanged,
+            currentDateRange: normalizedCurrent,
             newDateRange: normalizedNew,
             startDate,
             endDate
         });
-        
+
         return activeChanged || dateRangeChanged;
     };
 
@@ -573,7 +570,7 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
                             Leave empty to keep survey active indefinitely. Both dates must be set to enable date restrictions.
                         </p>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-4 gap-2">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Start Date
@@ -631,14 +628,14 @@ const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ instance,
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         onClick={onClose}
                         disabled={isSaving}
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={handleSave}
                         disabled={!hasChanges() || isSaving}
                     >
@@ -658,18 +655,18 @@ interface CreateInstanceModalProps {
     onConfirm: () => void;
 }
 
-const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({ 
-    config, 
-    existingInstances, 
-    onClose, 
-    onConfirm 
+const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
+    config,
+    existingInstances,
+    onClose,
+    onConfirm
 }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
                 <div className="p-6">
                     <h3 className="text-lg font-semibold mb-4">Create New Survey Instance</h3>
-                    
+
                     <div className="mb-4">
                         <p className="text-sm text-gray-600 mb-2">
                             You're about to create a new instance of:
@@ -686,11 +683,10 @@ const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
                                 {existingInstances.map((instance) => (
                                     <div key={instance.id} className="text-xs text-blue-800 flex items-center justify-between">
                                         <span>{instance.id}</span>
-                                        <span className={`px-1 py-0.5 rounded text-xs ${
-                                            instance.isActive 
-                                                ? 'bg-green-100 text-green-700' 
-                                                : 'bg-gray-100 text-gray-600'
-                                        }`}>
+                                        <span className={`px-1 py-0.5 rounded text-xs ${instance.isActive
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-gray-100 text-gray-600'
+                                            }`}>
                                             {instance.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>

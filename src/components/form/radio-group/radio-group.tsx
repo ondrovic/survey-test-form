@@ -26,7 +26,7 @@ export const RadioGroup = <T extends string | number = string>({
     label,
     required = false,
     error,
-    layout = 'balanced',
+    layout,
     'data-testid': testId,
     className
 }: RadioGroupProps<T>) => {

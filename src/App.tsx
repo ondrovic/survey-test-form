@@ -9,7 +9,7 @@ import { AppProvider } from '@/contexts/app-provider';
 import { useAuth } from '@/contexts/auth-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
-import { suppressConsoleWarnings, isSurveyInstanceActive } from '@/utils';
+import { isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 
@@ -87,15 +87,15 @@ function AppContent() {
         let instance = allSurveyInstances.find(instance =>
             instance.id === slugOrId && isSurveyInstanceActive(instance)
         );
-        
+
         // Backward compatibility: if not found by ID, try the old title-based slug method
         if (!instance) {
             instance = allSurveyInstances.find(instance =>
-                instance.title.toLowerCase().replace(/\s+/g, '-') === slugOrId && 
+                instance.title.toLowerCase().replace(/\s+/g, '-') === slugOrId &&
                 isSurveyInstanceActive(instance)
             );
         }
-        
+
         return instance;
     };
 
@@ -166,7 +166,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [resetFormTrigger, setResetFormTrigger] = useState(0); // Add trigger for form reset
+    const [resetFormTrigger] = useState(0); // Add trigger for form reset
     const navigate = useNavigate();
     const { showSuccess, showError } = useToast();
 
@@ -236,7 +236,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 surveyInstanceId: instance.id,
                 configVersion: surveyConfig.version || 'unknown',
                 responses,
-                submittedAt: getCurrentTimestamp(),  // Moved to top-level
+                submittedAt: getCurrentTimestamp(),
                 metadata: {
                     userAgent: navigator.userAgent,
                     ipAddress: ipAddress || undefined,
@@ -289,7 +289,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 config={surveyConfig}
                 onSubmit={handleSubmit}
                 loading={isSubmitting}
-                showSectionPagination={surveyConfig.paginatorConfig?.showSectionPagination !== false}
+                showSectionPagination={surveyConfig.paginatorConfig?.renderSectionsAsPages !== false}
                 resetTrigger={resetFormTrigger}
             />
         );
