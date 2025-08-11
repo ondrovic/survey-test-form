@@ -59,6 +59,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         updateSubsection,
         deleteSubsection,
         reorderSubsections,
+        reorderSectionContent,
         addField,
         updateField,
         deleteField,
@@ -174,13 +175,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 
         // CRITICAL: Prevent any automatic label history additions
         // Only allow label history to be updated through our explicit save function
-        if (updates.metadata && 'labelHistory' in updates.metadata) {
-            // Preserve existing metadata but prevent labelHistory modifications during real-time updates
-            const { labelHistory, ...otherMetadata } = updates.metadata;
-            updates = {
-                ...updates,
-                metadata: otherMetadata
-            };
+        if (updates.labelHistory) {
+            // Preserve existing updates but prevent labelHistory modifications during real-time updates
+            const { labelHistory, ...otherUpdates } = updates;
+            updates = otherUpdates;
             console.log('⚠️ Blocked automatic label history during field update');
         }
 
@@ -219,7 +217,11 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 console.log('🔄 Field has no labelHistory, initializing');
                 
                 // For fields without label history, create initial entry(s)
-                const initialChanges = [];
+                const initialChanges: Array<{
+                    label: string;
+                    changedAt: string;
+                    changedBy?: string;
+                }> = [];
                 
                 // If the labels are different, add both original and current
                 if (originalLabel !== currentLabel) {
@@ -315,6 +317,36 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             newIndex
         });
 
+        // Check if this is a same-container reorder
+        const isSameContainer = 
+            fromContainer.type === toContainer.type &&
+            fromContainer.sectionId === toContainer.sectionId &&
+            fromContainer.subsectionId === toContainer.subsectionId;
+
+        if (isSameContainer) {
+            // Handle same-container reordering using the existing reorderFields function
+            console.log('🔄 Same container reordering detected');
+            
+            // Find the current index of the field
+            const sourceSection = state.config.sections.find(s => s.id === fromContainer.sectionId);
+            let currentIndex = -1;
+            
+            if (fromContainer.type === 'section') {
+                currentIndex = sourceSection?.fields.findIndex(f => f.id === fieldId) ?? -1;
+            } else if (fromContainer.subsectionId) {
+                const subsection = sourceSection?.subsections?.find(sub => sub.id === fromContainer.subsectionId);
+                currentIndex = subsection?.fields.findIndex(f => f.id === fieldId) ?? -1;
+            }
+            
+            if (currentIndex !== -1 && currentIndex !== newIndex) {
+                reorderFields(fromContainer.sectionId, currentIndex, newIndex, fromContainer.subsectionId);
+            }
+            return;
+        }
+
+        // Handle cross-container moves
+        console.log('🔀 Cross-container move detected');
+        
         // Create a single config update that moves the field atomically
         const currentConfig = state.config;
         const newSections = currentConfig.sections.map(section => {
@@ -356,16 +388,25 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             return;
         }
 
-        // Add field to target
+        // Add field to target at specific index
         const finalSections = newSections.map(section => {
             if (section.id === toContainer.sectionId) {
                 const newSection = { ...section };
                 if (toContainer.type === 'section') {
-                    newSection.fields = [...section.fields, { ...field }];
+                    const targetFields = [...section.fields];
+                    targetFields.splice(newIndex, 0, { ...field });
+                    newSection.fields = targetFields;
                 } else if (toContainer.subsectionId) {
                     newSection.subsections = (section.subsections || []).map(sub =>
                         sub.id === toContainer.subsectionId
-                            ? { ...sub, fields: [...sub.fields, { ...field }] }
+                            ? { 
+                                ...sub, 
+                                fields: (() => {
+                                    const targetFields = [...sub.fields];
+                                    targetFields.splice(newIndex, 0, { ...field });
+                                    return targetFields;
+                                })()
+                            }
                             : sub
                     );
                 }
@@ -545,6 +586,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                                         onUpdateSubsection={handleUpdateSubsection}
                                         onDeleteSubsection={handleDeleteSubsection}
                                         onReorderSubsections={handleReorderSubsections}
+                                        onReorderSectionContent={reorderSectionContent}
                                         onSelectSubsection={selectSubsection}
                                         onAddField={handleAddField}
                                         onSelectField={selectField}

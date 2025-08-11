@@ -40,9 +40,18 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
 
     // Handle paginator configuration changes
     const handlePaginatorToggle = (field: keyof SurveyPaginatorConfig, value: boolean) => {
+        const updates: Partial<SurveyPaginatorConfig> = {
+            [field]: value
+        };
+        
+        // When disabling step indicator, also disable section titles since they depend on it
+        if (field === 'showStepIndicator' && !value) {
+            updates.showSectionTitles = false;
+        }
+        
         onPaginatorConfigChange({
             ...paginatorConfig,
-            [field]: value
+            ...updates
         });
     };
 
@@ -101,25 +110,35 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
 
                         {paginatorConfig.renderSectionsAsPages && (
                             <div className="ml-7 space-y-2 border-l-2 border-blue-100 pl-4">
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={paginatorConfig.showStepIndicator !== false}
-                                        onChange={(e) => handlePaginatorToggle('showStepIndicator', e.target.checked)}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <span className="text-xs text-gray-600">Show step indicator</span>
-                                </label>
+                                <div>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={paginatorConfig.showStepIndicator !== false}
+                                            onChange={(e) => handlePaginatorToggle('showStepIndicator', e.target.checked)}
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                        <span className="text-xs text-gray-600">Show step indicator</span>
+                                    </label>
 
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={paginatorConfig.showSectionTitles !== false}
-                                        onChange={(e) => handlePaginatorToggle('showSectionTitles', e.target.checked)}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <span className="text-xs text-gray-600">Show section titles in indicator</span>
-                                </label>
+                                    {/* Nested option - only available when step indicator is enabled */}
+                                    <div className="ml-5 mt-1">
+                                        <label className={`flex items-center gap-2 ${
+                                            paginatorConfig.showStepIndicator === false 
+                                                ? 'opacity-50 cursor-not-allowed' 
+                                                : 'cursor-pointer'
+                                        }`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={paginatorConfig.showStepIndicator !== false && paginatorConfig.showSectionTitles !== false}
+                                                onChange={(e) => handlePaginatorToggle('showSectionTitles', e.target.checked)}
+                                                disabled={paginatorConfig.showStepIndicator === false}
+                                                className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                            />
+                                            <span className="text-xs text-gray-600">Show section titles in indicator</span>
+                                        </label>
+                                    </div>
+                                </div>
 
                                 <label className="flex items-center gap-2">
                                     <input

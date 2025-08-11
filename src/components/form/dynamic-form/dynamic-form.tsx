@@ -6,6 +6,7 @@ import { SurveyConfig, SurveySection, SurveyField } from '../../../types/framewo
 import { Button } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
+import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 
 // Helper function to create descriptive field IDs
 const createDescriptiveFieldId = (section: SurveySection, field: SurveyField): string => {
@@ -955,7 +956,6 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     }, [formState.formData, formState.errors, handleFieldChange, hasSubmitted, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord, isLoading]);
 
     const renderSection = useCallback((section: SurveySection) => {
-
         return (
             <div key={section.id} className="mb-6">
                 <div className="mb-4">
@@ -967,33 +967,33 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     )}
                 </div>
                 
-                {/* Render subsections if they exist */}
-                {section.subsections && section.subsections.length > 0 && (
-                    <div className="space-y-6">
-                        {section.subsections.map((subsection) => (
-                            <div key={subsection.id} className="border-l-4 border-gray-200 pl-4">
-                                <div className="mb-4">
-                                    <h4 className="text-lg font-semibold text-gray-800">
-                                        {subsection.title}
-                                    </h4>
-                                    {subsection.description && (
-                                        <p className="text-gray-600 text-sm">{subsection.description}</p>
-                                    )}
+                {/* Render content using unified ordering */}
+                <div className="space-y-6">
+                    {getOrderedSectionContent(section).map((contentItem) => {
+                        if (contentItem.type === 'subsection') {
+                            const subsection = contentItem.data as any;
+                            return (
+                                <div key={subsection.id} className="border-l-4 border-gray-200 pl-4">
+                                    <div className="mb-4">
+                                        <h4 className="text-lg font-semibold text-gray-800">
+                                            {subsection.title}
+                                        </h4>
+                                        {subsection.description && (
+                                            <p className="text-gray-600 text-sm">{subsection.description}</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-4">
+                                        {subsection.fields.map(renderField)}
+                                    </div>
                                 </div>
-                                <div className="space-y-4">
-                                    {subsection.fields.map(renderField)}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                
-                {/* Section-level fields */}
-                {section.fields.length > 0 && (
-                    <div className="space-y-4">
-                        {section.fields.map(renderField)}
-                    </div>
-                )}
+                            );
+                        } else if (contentItem.type === 'field') {
+                            const field = contentItem.data as any;
+                            return <div key={field.id} className="space-y-4">{renderField(field)}</div>;
+                        }
+                        return null;
+                    })}
+                </div>
             </div>
         );
     }, [renderField]);

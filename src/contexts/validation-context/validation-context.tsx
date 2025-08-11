@@ -206,9 +206,12 @@ export const ValidationProvider: React.FC<ValidationProviderProps> = ({ children
             }
         }
 
-        // Check minimum fields
-        if (section.fields.length < VALIDATION_LIMITS.MIN_FIELDS_PER_SECTION) {
-            errors.push(`Section must have at least ${VALIDATION_LIMITS.MIN_FIELDS_PER_SECTION} field`);
+        // Check minimum content (fields OR subsections)
+        const totalFields = section.fields.length;
+        const totalSubsections = section.subsections?.length || 0;
+        
+        if (totalFields === 0 && totalSubsections === 0) {
+            errors.push('Section must have at least 1 field or 1 subsection');
         }
 
         // Validate each field

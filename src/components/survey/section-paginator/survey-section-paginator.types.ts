@@ -28,6 +28,7 @@ export interface SectionStepIndicatorProps {
   showTitles?: boolean;
   showProgressBar?: boolean;
   showProgressText?: boolean;
+  showStepIndicator?: boolean;
   className?: string;
 }
 

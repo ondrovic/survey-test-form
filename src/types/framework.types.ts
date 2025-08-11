@@ -147,12 +147,21 @@ export interface SurveySubsection {
   metadata?: Record<string, any>;
 }
 
+export interface SectionContent {
+  id: string;
+  type: 'field' | 'subsection';
+  order: number;
+  fieldId?: string;      // Reference to field in fields array
+  subsectionId?: string; // Reference to subsection in subsections array
+}
+
 export interface SurveySection {
   id: string;
   title: string;
   type: string;
   fields: SurveyField[];
   subsections: SurveySubsection[];
+  content?: SectionContent[]; // New unified ordering array
   order: number;
   description?: string;
   metadata?: Record<string, any>;

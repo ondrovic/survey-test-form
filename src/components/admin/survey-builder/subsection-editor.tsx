@@ -31,7 +31,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     onSelectField,
     onOpenFieldEditor,
     onDeleteField,
-    // onReorderFields
+    onReorderFields
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
     

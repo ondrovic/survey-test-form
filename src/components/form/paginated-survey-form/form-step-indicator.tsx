@@ -12,6 +12,7 @@ interface FormStepIndicatorProps {
   showTitles?: boolean;
   showProgressBar?: boolean;
   showProgressText?: boolean;
+  showStepIndicator?: boolean;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
   showTitles = true,
   showProgressBar = true,
   showProgressText = true,
+  showStepIndicator = true,
   className = ''
 }) => {
   const totalSections = sections.length;
@@ -101,10 +103,11 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
       )}
 
       {/* Step Indicator */}
-      <div className={`
-        flex items-start relative
-        ${totalSections <= 4 ? 'justify-between' : 'justify-start gap-4 overflow-x-auto pb-2'}
-      `}>
+      {showStepIndicator && (
+        <div className={`
+          flex items-start relative
+          ${totalSections <= 4 ? 'justify-between' : 'justify-start gap-4 overflow-x-auto pb-2'}
+        `}>
         {/* Connecting Line */}
         <div className={`
           absolute top-4 h-0.5 bg-gray-200 -z-10
@@ -195,7 +198,8 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Error Summary */}
       {hasSubmitted && !sectionValidationStates[currentIndex] && (

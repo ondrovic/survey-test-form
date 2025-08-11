@@ -1,5 +1,5 @@
-import { useDroppable } from '@dnd-kit/core';
-import React, { memo, useMemo } from 'react';
+import { useDroppable, DragOverEvent } from '@dnd-kit/core';
+import React, { memo, useMemo, useCallback, useRef } from 'react';
 import { FieldContainer } from './field-drag-context';
 
 // Extend Window interface to include custom properties
@@ -22,6 +22,8 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
   className = '',
   emptyMessage = 'Drop fields here'
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const containerId = useMemo(() => {
     const id = `container-${container.sectionId}${container.subsectionId ? `-${container.subsectionId}` : ''}`;
     console.log('🏗️ Creating container ID:', {
@@ -34,7 +36,30 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
     return id;
   }, [container.sectionId, container.subsectionId]);
 
-  const containerData = useMemo(() => ({ container }), [container]);
+  // Calculate the insertion index based on cursor position
+  const calculateDropIndex = useCallback((clientY: number): number => {
+    if (!containerRef.current) return 0;
+
+    const fieldElements = containerRef.current.querySelectorAll('[data-drag-handle]');
+    if (fieldElements.length === 0) return 0;
+
+    for (let i = 0; i < fieldElements.length; i++) {
+      const element = fieldElements[i] as HTMLElement;
+      const rect = element.getBoundingClientRect();
+      const midPoint = rect.top + rect.height / 2;
+      
+      if (clientY < midPoint) {
+        return i;
+      }
+    }
+    
+    return fieldElements.length;
+  }, []);
+
+  const containerData = useMemo(() => ({ 
+    container,
+    calculateDropIndex
+  }), [container, calculateDropIndex]);
   const hasChildren = useMemo(() => React.Children.count(children) > 0, [children]);
 
   const { isOver, setNodeRef } = useDroppable({
@@ -54,6 +79,7 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
   });
 
   const debugRef = React.useCallback((node: HTMLElement | null) => {
+    containerRef.current = node;
     setNodeRef(node);
   }, [setNodeRef]);
 

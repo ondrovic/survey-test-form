@@ -466,8 +466,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                             )}
                         </div>
 
-                        {/* Step Indicator */}
-                        {config.paginatorConfig?.showStepIndicator !== false && (
+                        {/* Progress and Step Indicator */}
+                        {(config.paginatorConfig?.showProgressBar !== false || config.paginatorConfig?.showStepIndicator !== false) && (
                             <div className="mb-8">
                                 <FormStepIndicator
                                     sections={config.sections}
@@ -478,6 +478,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                                     showTitles={config.paginatorConfig?.showSectionTitles}
                                     showProgressBar={config.paginatorConfig?.showProgressBar}
                                     showProgressText={config.paginatorConfig?.showProgressText}
+                                    showStepIndicator={config.paginatorConfig?.showStepIndicator}
                                 />
                             </div>
                         )}

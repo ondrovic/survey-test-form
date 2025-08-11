@@ -3,6 +3,7 @@ import React from 'react';
 import { SurveySection } from '../../../types/framework.types';
 import { Button, SortableList } from '../../common';
 import { useValidation } from '../../../contexts/validation-context';
+import { getSectionStats } from '../../../utils/section-content.utils';
 
 interface SectionListProps {
     sections: SurveySection[];
@@ -77,7 +78,29 @@ export const SectionList: React.FC<SectionListProps> = ({
                                 </Button>
                             </div>
                             <div className="text-sm text-gray-500 mt-1">
-                                {section.fields.length} fields
+                                {(() => {
+                                    const sectionData = section as SurveySection;
+                                    const stats = getSectionStats(sectionData);
+                                    const parts: string[] = [];
+                                    
+                                    if (stats.totalFields > 0) {
+                                        if (stats.sectionFields > 0 && stats.subsectionFields > 0) {
+                                            parts.push(`${stats.totalFields} fields (${stats.sectionFields} section, ${stats.subsectionFields} in subsections)`);
+                                        } else if (stats.sectionFields > 0) {
+                                            parts.push(`${stats.sectionFields} fields`);
+                                        } else {
+                                            parts.push(`${stats.subsectionFields} fields in subsections`);
+                                        }
+                                    } else {
+                                        parts.push('0 fields');
+                                    }
+                                    
+                                    if (stats.subsections > 0) {
+                                        parts.push(`${stats.subsections} subsection${stats.subsections !== 1 ? 's' : ''}`);
+                                    }
+                                    
+                                    return parts.join(' • ');
+                                })()}
                                 {!validation.isValid && (
                                     <span className="text-red-600 ml-2">• {validation.errors.length} issue{validation.errors.length !== 1 ? 's' : ''}</span>
                                 )}

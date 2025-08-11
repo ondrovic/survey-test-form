@@ -7,6 +7,7 @@ import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { isSurveyInstanceActive } from '@/utils';
 import { downloadFrameworkResponsesAsExcel } from '@/utils/excel.utils';
 import { createMetadata } from '@/utils/metadata.utils';
+import { getSurveyStats } from '@/utils/section-content.utils';
 import { Copy, Download, Edit, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -184,8 +185,30 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                             <h4 className="font-semibold">{config.title}</h4>
                                             <p className="text-sm text-gray-600">{config.description}</p>
                                             <p className="text-xs text-gray-500">
-                                                {config.sections.length} sections,
-                                                {config.sections.reduce((sum, s) => sum + s.fields.length, 0)} fields
+                                                {(() => {
+                                                    const stats = getSurveyStats(config.sections);
+                                                    const parts: string[] = [];
+                                                    
+                                                    parts.push(`${stats.sections} section${stats.sections !== 1 ? 's' : ''}`);
+                                                    
+                                                    if (stats.totalFields > 0) {
+                                                        if (stats.totalSectionFields > 0 && stats.totalSubsectionFields > 0) {
+                                                            parts.push(`${stats.totalFields} fields (${stats.totalSectionFields} section, ${stats.totalSubsectionFields} in subsections)`);
+                                                        } else if (stats.totalSectionFields > 0) {
+                                                            parts.push(`${stats.totalSectionFields} fields`);
+                                                        } else {
+                                                            parts.push(`${stats.totalSubsectionFields} fields in subsections`);
+                                                        }
+                                                    } else {
+                                                        parts.push('0 fields');
+                                                    }
+                                                    
+                                                    if (stats.totalSubsections > 0) {
+                                                        parts.push(`${stats.totalSubsections} subsection${stats.totalSubsections !== 1 ? 's' : ''}`);
+                                                    }
+                                                    
+                                                    return parts.join(', ');
+                                                })()}
                                                 • {surveyInstances.filter(instance => instance.configId === config.id).length} instances
                                             </p>
                                         </div>

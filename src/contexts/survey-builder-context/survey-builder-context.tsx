@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useContext, useReducer } from 'react';
 import { SurveyConfig, SurveySection, SurveyField, SurveySubsection } from '../../types/framework.types';
 import { createMetadataSync, updateMetadata } from '../../utils/metadata.utils';
+import { ensureContentArray, addContentItem, removeContentItem, reorderContent } from '../../utils/section-content.utils';
 
 interface SurveyBuilderState {
     config: SurveyConfig;
@@ -45,7 +46,8 @@ type SurveyBuilderAction =
     | { type: 'REORDER_FIELDS'; payload: { sectionId: string; subsectionId?: string; fromIndex: number; toIndex: number } }
     | { type: 'ADD_FIELD_OPTION'; payload: { sectionId: string; subsectionId?: string; fieldId: string; option: { label: string; value: string; color?: string } } }
     | { type: 'UPDATE_FIELD_OPTION'; payload: { sectionId: string; subsectionId?: string; fieldId: string; optionIndex: number; updates: { label?: string; value?: string; color?: string } } }
-    | { type: 'DELETE_FIELD_OPTION'; payload: { sectionId: string; subsectionId?: string; fieldId: string; optionIndex: number } };
+    | { type: 'DELETE_FIELD_OPTION'; payload: { sectionId: string; subsectionId?: string; fieldId: string; optionIndex: number } }
+    | { type: 'REORDER_SECTION_CONTENT'; payload: { sectionId: string; fromIndex: number; toIndex: number } };
 
 const initialState: SurveyBuilderState = {
     config: {
@@ -73,10 +75,10 @@ const initialState: SurveyBuilderState = {
 function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAction): SurveyBuilderState {
     switch (action.type) {
         case 'SET_CONFIG': {
-            // Ensure subsections array exists for backward compatibility
+            // Ensure subsections array exists for backward compatibility and add content arrays
             const configWithSubsections = {
                 ...action.payload,
-                sections: action.payload.sections.map(section => ({
+                sections: action.payload.sections.map(section => ensureContentArray({
                     ...section,
                     subsections: section.subsections || []
                 }))
@@ -132,7 +134,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ...state,
                 config: {
                     ...state.config,
-                    sections: [...state.config.sections, { ...action.payload, subsections: action.payload.subsections || [] }],
+                    sections: [...state.config.sections, ensureContentArray({ ...action.payload, subsections: action.payload.subsections || [] })],
                     metadata: updateMetadata(state.config.metadata)
                 }
             };
@@ -193,11 +195,22 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ...state,
                 config: {
                     ...state.config,
-                    sections: state.config.sections.map(section =>
-                        section.id === action.payload.sectionId
-                            ? { ...section, subsections: [...(section.subsections || []), action.payload.subsection] }
-                            : section
-                    ),
+                    sections: state.config.sections.map(section => {
+                        if (section.id === action.payload.sectionId) {
+                            const updatedSection = { 
+                                ...section, 
+                                subsections: [...(section.subsections || []), action.payload.subsection] 
+                            };
+                            // Ensure content array exists before adding to it
+                            const sectionWithContent = ensureContentArray(section);
+                            const newContentItem = addContentItem(section, 'subsection', action.payload.subsection.id);
+                            return {
+                                ...updatedSection,
+                                content: [...(sectionWithContent.content || []), newContentItem]
+                            };
+                        }
+                        return section;
+                    }),
                     metadata: updateMetadata(state.config.metadata)
                 }
             };
@@ -228,14 +241,16 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ...state,
                 config: {
                     ...state.config,
-                    sections: state.config.sections.map(section =>
-                        section.id === action.payload.sectionId
-                            ? {
+                    sections: state.config.sections.map(section => {
+                        if (section.id === action.payload.sectionId) {
+                            return {
                                 ...section,
-                                subsections: (section.subsections || []).filter(subsection => subsection.id !== action.payload.subsectionId)
-                            }
-                            : section
-                    ),
+                                subsections: (section.subsections || []).filter(subsection => subsection.id !== action.payload.subsectionId),
+                                content: removeContentItem(section.content || [], 'subsection', action.payload.subsectionId)
+                            };
+                        }
+                        return section;
+                    }),
                     metadata: updateMetadata(state.config.metadata)
                 },
                 selectedSubsection: state.selectedSubsection === action.payload.subsectionId ? null : state.selectedSubsection
@@ -269,20 +284,32 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ...state,
                 config: {
                     ...state.config,
-                    sections: state.config.sections.map(section =>
-                        section.id === action.payload.sectionId
-                            ? action.payload.subsectionId
-                                ? {
+                    sections: state.config.sections.map(section => {
+                        if (section.id === action.payload.sectionId) {
+                            if (action.payload.subsectionId) {
+                                // Adding field to subsection - don't add to content array
+                                return {
                                     ...section,
                                     subsections: (section.subsections || []).map(subsection =>
                                         subsection.id === action.payload.subsectionId
                                             ? { ...subsection, fields: [...subsection.fields, action.payload.field] }
                                             : subsection
                                     )
-                                }
-                                : { ...section, fields: [...section.fields, action.payload.field] }
-                            : section
-                    ),
+                                };
+                            } else {
+                                // Adding field to section - add to content array
+                                const updatedSection = { ...section, fields: [...section.fields, action.payload.field] };
+                                // Ensure content array exists before adding to it
+                                const sectionWithContent = ensureContentArray(section);
+                                const newContentItem = addContentItem(section, 'field', action.payload.field.id);
+                                return {
+                                    ...updatedSection,
+                                    content: [...(sectionWithContent.content || []), newContentItem]
+                                };
+                            }
+                        }
+                        return section;
+                    }),
                     metadata: updateMetadata(state.config.metadata)
                 }
             };
@@ -359,10 +386,11 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 ...state,
                 config: {
                     ...state.config,
-                    sections: state.config.sections.map(section =>
-                        section.id === action.payload.sectionId
-                            ? action.payload.subsectionId
-                                ? {
+                    sections: state.config.sections.map(section => {
+                        if (section.id === action.payload.sectionId) {
+                            if (action.payload.subsectionId) {
+                                // Deleting field from subsection - don't modify content array
+                                return {
                                     ...section,
                                     subsections: section.subsections.map(subsection =>
                                         subsection.id === action.payload.subsectionId
@@ -372,13 +400,18 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                                             }
                                             : subsection
                                     )
-                                }
-                                : {
+                                };
+                            } else {
+                                // Deleting field from section - remove from content array
+                                return {
                                     ...section,
-                                    fields: section.fields.filter(field => field.id !== action.payload.fieldId)
-                                }
-                            : section
-                    ),
+                                    fields: section.fields.filter(field => field.id !== action.payload.fieldId),
+                                    content: removeContentItem(section.content || [], 'field', action.payload.fieldId)
+                                };
+                            }
+                        }
+                        return section;
+                    }),
                     metadata: updateMetadata(state.config.metadata)
                 },
                 selectedField: state.selectedField === action.payload.fieldId ? null : state.selectedField
@@ -554,6 +587,28 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                 }
             };
 
+        case 'REORDER_SECTION_CONTENT':
+            return {
+                ...state,
+                config: {
+                    ...state.config,
+                    sections: state.config.sections.map(section => {
+                        if (section.id === action.payload.sectionId) {
+                            return {
+                                ...section,
+                                content: reorderContent(
+                                    section.content || [],
+                                    action.payload.fromIndex,
+                                    action.payload.toIndex
+                                )
+                            };
+                        }
+                        return section;
+                    }),
+                    metadata: updateMetadata(state.config.metadata)
+                }
+            };
+
         default:
             return state;
     }
@@ -584,6 +639,7 @@ interface SurveyBuilderContextType {
     updateSubsection: (sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => void;
     deleteSubsection: (sectionId: string, subsectionId: string) => void;
     reorderSubsections: (sectionId: string, fromIndex: number, toIndex: number) => void;
+    reorderSectionContent: (sectionId: string, fromIndex: number, toIndex: number) => void;
     addField: (sectionId: string, field: SurveyField, subsectionId?: string) => void;
     updateField: (sectionId: string, fieldId: string, updates: Partial<SurveyField>, subsectionId?: string) => void;
     deleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
@@ -686,6 +742,10 @@ export function SurveyBuilderProvider({ children, initialConfig }: { children: R
         dispatch({ type: 'REORDER_SUBSECTIONS', payload: { sectionId, fromIndex, toIndex } });
     };
 
+    const reorderSectionContent = (sectionId: string, fromIndex: number, toIndex: number) => {
+        dispatch({ type: 'REORDER_SECTION_CONTENT', payload: { sectionId, fromIndex, toIndex } });
+    };
+
     const addField = (sectionId: string, field: SurveyField, subsectionId?: string) => {
         dispatch({ type: 'ADD_FIELD', payload: { sectionId, subsectionId, field } });
     };
@@ -742,6 +802,7 @@ export function SurveyBuilderProvider({ children, initialConfig }: { children: R
         updateSubsection,
         deleteSubsection,
         reorderSubsections,
+        reorderSectionContent,
         addField,
         updateField,
         deleteField,

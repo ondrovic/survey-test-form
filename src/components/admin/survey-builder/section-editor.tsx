@@ -4,6 +4,7 @@ import { firestoreHelpers } from '../../../config/firebase';
 import { useValidation } from '../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySection, SurveySubsection } from '../../../types/framework.types';
 import { Button, Input, SortableList } from '../../common';
+import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 // import { FIELD_TYPES } from './survey-builder.types';
 import { SubsectionEditor } from './subsection-editor';
 // import { DraggableField } from './draggable-field';
@@ -32,6 +33,7 @@ interface SectionEditorProps {
     onUpdateSubsection: (sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => void;
     onDeleteSubsection: (sectionId: string, subsectionId: string) => void;
     onReorderSubsections: (sectionId: string, oldIndex: number, newIndex: number) => void;
+    onReorderSectionContent?: (sectionId: string, fromIndex: number, toIndex: number) => void;
     onSelectSubsection: (subsectionId: string) => void;
     onAddField: (sectionId: string, fieldType: FieldType, subsectionId?: string) => void;
     onSelectField: (fieldId: string) => void;
@@ -49,7 +51,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     onAddSubsection,
     onUpdateSubsection,
     onDeleteSubsection,
-    onReorderSubsections,
+    // onReorderSubsections, // Not used in unified content system
+    onReorderSectionContent,
     onSelectSubsection,
     onAddField,
     onSelectField,
@@ -286,131 +289,160 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 </div>
             </div>
 
-            {/* Subsections */}
+            {/* Section Content - Unified Fields and Subsections */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h4 className="font-semibold">Subsections</h4>
-                        <p className="text-xs text-gray-500 mt-1">Group related fields together within this section</p>
+                        <h4 className="font-semibold">Section Content</h4>
+                        <p className="text-xs text-gray-500 mt-1">Fields and subsections will be rendered in the order shown below</p>
                     </div>
-                    <Button
-                        size="sm"
-                        onClick={handleAddSubsection}
-                        disabled={!section.title || !section.type || titleError !== ''}
-                        title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Subsection
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            size="sm"
+                            onClick={handleAddSubsection}
+                            disabled={!section.title || !section.type || titleError !== ''}
+                            title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Subsection
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => {
+                                console.log('🟦 ADD FIELD CLICKED:', section.id);
+                                onAddField(section.id, 'text');
+                            }}
+                            disabled={!section.title || !section.type || titleError !== ''}
+                            title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Field
+                        </Button>
+                    </div>
                 </div>
-                {section.subsections && section.subsections.length > 0 && (
-                    <SortableList
-                        items={section.subsections as any[]}
-                        onReorder={(oldIndex, newIndex) => onReorderSubsections(section.id, oldIndex, newIndex)}
-                        className="space-y-4"
-                        itemClassName="border rounded-lg"
-                        disabled={true}
-                        renderItem={(subsection, _isDragging) => {
-                            const subsectionData = subsection as SurveySubsection;
-                            return (
-                                <div
-                                    className={`${selectedSubsectionId === subsectionData.id
-                                        ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                                        : "border-gray-200 hover:border-gray-300"
-                                        } transition-all duration-200`}
-                                >
-                                    <div className="p-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div
-                                                className="flex items-center gap-2 flex-1 cursor-pointer"
-                                                onClick={() => onSelectSubsection(subsectionData.id)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                        e.preventDefault();
-                                                        onSelectSubsection(subsectionData.id);
-                                                    }
-                                                }}
-                                                role="button"
-                                                tabIndex={0}
-                                            >
-                                                <span className="font-medium text-green-700">{subsectionData.title}</span>
+
+                {/* Content Layout Preview */}
+                {onReorderSectionContent && getOrderedSectionContent(section).length > 0 && (
+                    <div className="mb-6">
+                        <h5 className="font-medium text-sm text-gray-700 mb-2">Content Order Preview</h5>
+                        <SortableList
+                            items={getOrderedSectionContent(section).map(item => ({ ...item, id: item.contentId }))}
+                            onReorder={(oldIndex, newIndex) => onReorderSectionContent(section.id, oldIndex, newIndex)}
+                            className="space-y-2"
+                            itemClassName="border rounded-md"
+                            disabled={false}
+                            renderItem={(contentItem, _isDragging) => {
+                                if (contentItem.type === 'subsection') {
+                                    const subsectionData = contentItem.data as SurveySubsection;
+                                    return (
+                                        <div className="p-3 bg-green-50 border-green-200">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-medium text-green-700 text-sm">📁 {subsectionData.title}</span>
                                                 <span className="text-xs text-gray-500">({subsectionData.fields.length} fields)</span>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onDeleteSubsection(section.id, subsectionData.id);
-                                                }}
-                                                className="text-red-500 hover:text-red-700"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
                                         </div>
-                                        <SubsectionEditor
-                                            subsection={subsectionData}
-                                            sectionId={section.id}
-                                            selectedFieldId={selectedFieldId}
-                                            onUpdateSubsection={onUpdateSubsection}
-                                            onAddField={onAddField}
-                                            onSelectField={onSelectField}
-                                            onOpenFieldEditor={onOpenFieldEditor}
-                                            onDeleteField={onDeleteField}
-                                            onReorderFields={onReorderFields}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        }}
-                    />
-                )}
-            </div>
-
-            {/* Section-level Fields */}
-            <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h4 className="font-semibold">Section Fields</h4>
-                        <p className="text-xs text-gray-500 mt-1">
-                            {(section.subsections && section.subsections.length > 0)
-                                ? 'These fields will be hidden in the survey since subsections exist. Consider moving them to a subsection.'
-                                : 'Fields that belong directly to this section (not in a subsection)'
-                            }
-                        </p>
-                    </div>
-                    <Button
-                        size="sm"
-                        onClick={() => {
-                            console.log('🟦 ADD FIELD CLICKED:', section.id);
-                            onAddField(section.id, 'text');
-                        }}
-                        disabled={!section.title || !section.type || titleError !== ''}
-                        title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Field
-                    </Button>
-                </div>
-                <DroppableFieldContainer
-                    container={sectionContainer}
-                    className="space-y-4"
-                    emptyMessage="Drop fields here or add new fields"
-                >
-                    {(section.fields || []).map((field) => (
-                        <MemoizedFieldItem
-                            key={field.id}
-                            field={field}
-                            container={sectionContainer}
-                            isSelected={selectedFieldId === field.id}
-                            onSelectField={onSelectField}
-                            onOpenFieldEditor={onOpenFieldEditor}
-                            onDeleteField={onDeleteField}
-                            sectionId={section.id}
-                            getOptionCount={getOptionCount}
+                                    );
+                                } else if (contentItem.type === 'field') {
+                                    const field = contentItem.data as any;
+                                    return (
+                                        <div className="p-3 bg-blue-50 border-blue-200">
+                                            <span className="font-medium text-blue-700 text-sm">🔷 {field.label}</span>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
                         />
-                    ))}
-                </DroppableFieldContainer>
+                    </div>
+                )}
+
+                {/* Detailed Content Editing */}
+                <div className="space-y-6">
+                    {/* Subsections */}
+                    {section.subsections && section.subsections.length > 0 && (
+                        <div>
+                            <h5 className="font-medium text-sm text-gray-700 mb-3">Subsections</h5>
+                            <div className="space-y-4">
+                                {section.subsections.map((subsection) => (
+                                    <div
+                                        key={subsection.id}
+                                        className={`${selectedSubsectionId === subsection.id
+                                            ? "border-green-500 bg-green-50 ring-2 ring-green-200"
+                                            : "border-gray-200 hover:border-gray-300"
+                                            } border rounded-lg transition-all duration-200`}
+                                    >
+                                        <div className="p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div
+                                                    className="flex items-center gap-2 flex-1 cursor-pointer"
+                                                    onClick={() => onSelectSubsection(subsection.id)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' || e.key === ' ') {
+                                                            e.preventDefault();
+                                                            onSelectSubsection(subsection.id);
+                                                        }
+                                                    }}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                >
+                                                    <span className="font-medium text-green-700">📁 {subsection.title}</span>
+                                                    <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onDeleteSubsection(section.id, subsection.id);
+                                                    }}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            <SubsectionEditor
+                                                subsection={subsection}
+                                                sectionId={section.id}
+                                                selectedFieldId={selectedFieldId}
+                                                onUpdateSubsection={onUpdateSubsection}
+                                                onAddField={onAddField}
+                                                onSelectField={onSelectField}
+                                                onOpenFieldEditor={onOpenFieldEditor}
+                                                onDeleteField={onDeleteField}
+                                                onReorderFields={onReorderFields}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Section Fields */}
+                    <div>
+                        <h5 className="font-medium text-sm text-gray-700 mb-3">Section Fields</h5>
+                        <DroppableFieldContainer
+                            container={sectionContainer}
+                            className="space-y-4 min-h-[120px] p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                            emptyMessage="Drop fields here or add new fields"
+                        >
+                            {section.fields.map((field) => (
+                                <MemoizedFieldItem
+                                    key={field.id}
+                                    field={field}
+                                    container={sectionContainer}
+                                    isSelected={selectedFieldId === field.id}
+                                    onSelectField={onSelectField}
+                                    onOpenFieldEditor={onOpenFieldEditor}
+                                    onDeleteField={onDeleteField}
+                                    sectionId={section.id}
+                                    getOptionCount={getOptionCount}
+                                />
+                            ))}
+                        </DroppableFieldContainer>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

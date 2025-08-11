@@ -2,6 +2,7 @@ import React from 'react';
 import { SurveyField } from '../../../types/framework.types';
 import { FieldRenderer } from '../../form/field-renderer';
 import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
+import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 
 interface InteractiveSectionRendererProps extends PaginatedSectionRendererProps {
   fieldValues: Record<string, any>;
@@ -66,40 +67,42 @@ export const InteractiveSectionRenderer: React.FC<InteractiveSectionRendererProp
 
       {/* Section Content */}
       <div className="space-y-8">
-        {/* Subsections */}
-        {section.subsections?.map((subsection) => (
-          <div key={subsection.id} className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            {/* Subsection Header */}
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">{subsection.title}</h3>
-              {subsection.description && (
-                <p className="text-gray-600">{subsection.description}</p>
-              )}
-            </div>
-
-            {/* Subsection Fields */}
-            <div className="space-y-6">
-              {subsection.fields.map(renderField)}
-
-              {/* Subsection empty state */}
-              {subsection.fields.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="text-sm">No fields in this subsection</p>
+        {/* Render content using unified ordering */}
+        {getOrderedSectionContent(section).map((contentItem) => {
+          if (contentItem.type === 'subsection') {
+            const subsection = contentItem.data as any;
+            return (
+              <div key={subsection.id} className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                {/* Subsection Header */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{subsection.title}</h3>
+                  {subsection.description && (
+                    <p className="text-gray-600">{subsection.description}</p>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
 
-        {/* Section-level Fields */}
-        {section.fields.length > 0 && (
-          <div className="space-y-6">
-            {section.fields.map(renderField)}
-          </div>
-        )}
+                {/* Subsection Fields */}
+                <div className="space-y-6">
+                  {subsection.fields.map(renderField)}
+
+                  {/* Subsection empty state */}
+                  {subsection.fields.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-sm">No fields in this subsection</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          } else if (contentItem.type === 'field') {
+            const field = contentItem.data as any;
+            return <div key={field.id} className="space-y-6">{renderField(field)}</div>;
+          }
+          return null;
+        })}
 
         {/* Empty state */}
-        {section.fields.length === 0 && (!section.subsections || section.subsections.length === 0) && (
+        {getOrderedSectionContent(section).length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg">No content in this section</p>
             <p className="text-sm">Add fields or subsections to this section in the survey builder</p>

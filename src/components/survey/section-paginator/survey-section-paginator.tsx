@@ -110,8 +110,8 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
 
   return (
     <div className={`survey-section-paginator ${className}`}>
-      {/* Step Indicator */}
-      {mergedConfig.showStepIndicator && (
+      {/* Progress and Step Indicator */}
+      {(mergedConfig.showProgressBar || mergedConfig.showStepIndicator) && (
         <div className="mb-8 px-4">
           <SectionStepIndicator
             sections={sections}
@@ -121,6 +121,7 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
             showTitles={mergedConfig.showSectionTitles}
             showProgressBar={mergedConfig.showProgressBar}
             showProgressText={mergedConfig.showProgressText}
+            showStepIndicator={mergedConfig.showStepIndicator}
           />
         </div>
       )}

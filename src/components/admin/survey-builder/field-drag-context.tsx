@@ -1,6 +1,6 @@
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter, pointerWithin } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, DragOverEvent, PointerSensor, useSensor, useSensors, closestCenter, pointerWithin } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { SurveyField } from '../../../types/framework.types';
 
 interface FieldDragContextProps {
@@ -32,6 +32,8 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
     fieldId: string;
     container: FieldContainer;
   } | null>(null);
+  const [lastDragOverY, setLastDragOverY] = useState<number>(0);
+  const cleanupMouseListenerRef = useRef<(() => void) | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -56,16 +58,37 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
         fieldId: field.id,
         container: data.container
       });
+
+      // Add global mouse listener to track cursor position during drag
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        setLastDragOverY(e.clientY);
+      };
+      
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      
+      // Store cleanup function
+      cleanupMouseListenerRef.current = () => {
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+      };
     }
   }, [fields]);
 
+
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { over } = event;
+    const { over, activatorEvent, delta } = event;
     
 
     
     isFieldDraggingRef.current = false;
     setActiveField(null);
+    setLastDragOverY(0);
+    
+    // Clean up global mouse listener if it exists
+    if (cleanupMouseListenerRef.current) {
+      cleanupMouseListenerRef.current();
+      cleanupMouseListenerRef.current = null;
+    }
     
     if (!over || !dragData) {
       setDragData(null);
@@ -79,10 +102,20 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
     let targetIndex = 0;
 
     if (overId.startsWith('container-')) {
-      const overData = over.data.current as { container: FieldContainer };
+      const overData = over.data.current as { 
+        container: FieldContainer;
+        calculateDropIndex?: (clientY: number) => number;
+      };
       if (overData?.container) {
         targetContainer = overData.container;
-        targetIndex = 0;
+        
+        // Calculate the target index based on cursor position
+        if (overData.calculateDropIndex) {
+          // Use the last tracked Y position during drag over
+          targetIndex = overData.calculateDropIndex(lastDragOverY);
+        } else {
+          targetIndex = 0;
+        }
 
       }
     } else {
@@ -117,7 +150,7 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
     }
 
     setDragData(null);
-  }, [dragData, onFieldMove]);
+  }, [dragData, onFieldMove, lastDragOverY]);
 
 
 
