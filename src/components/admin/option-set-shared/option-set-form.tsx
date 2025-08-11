@@ -1,6 +1,6 @@
 import { Plus, Save, Trash2, X } from 'lucide-react';
 import React from 'react';
-import { Button, ColorSelector, Input } from '../../common';
+import { Button, ColorSelector, Input, SortableList } from '../../common';
 
 export type OptionLike = {
     value: string;
@@ -87,11 +87,12 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
         onChange({ ...data, options: updated });
     };
 
-    const moveOption = (index: number, direction: 'up' | 'down') => {
-        const newIndex = direction === 'up' ? index - 1 : index + 1;
-        if (newIndex < 0 || newIndex >= data.options.length) return;
+    const reorderOptions = (oldIndex: number, newIndex: number) => {
         const updated = [...data.options] as TOption[];
-        [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+        const [removed] = updated.splice(oldIndex, 1);
+        updated.splice(newIndex, 0, removed);
+        
+        // Update order property for all items
         for (let i = 0; i < updated.length; i++) {
             (updated[i] as any).order = i;
         }
@@ -149,75 +150,72 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                     </Button>
                 </div>
 
-                <div className="space-y-3">
-                    {data.options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
-                            <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-4' : 'grid-cols-3'} gap-3`}>
-                                <Input
-                                    name={`option-${index}-value`}
-                                    label="Value"
-                                    value={option.value}
-                                    onChange={(value) => updateOption(index, { value: String(value) } as Partial<TOption>)}
-                                    placeholder="e.g., option_value"
-                                    required
-                                />
-                                <Input
-                                    name={`option-${index}-label`}
-                                    label="Label"
-                                    value={option.label}
-                                    onChange={(value) => updateOption(index, { label: String(value) } as Partial<TOption>)}
-                                    placeholder="e.g., Option label"
-                                    required
-                                />
-                                {showColor && (
-                                    <div className="space-y-1">
-                                        <span className="block text-sm font-semibold text-gray-800 mb-2">Color</span>
-                                        <ColorSelector
-                                            value={option.color || 'transparent'}
-                                            onChange={(value) => updateOption(index, { color: String(value) } as Partial<TOption>)}
+                <SortableList
+                    items={data.options.map((option, index) => ({ ...option, id: `option-${index}` }))}
+                    onReorder={reorderOptions}
+                    renderItem={(item, isDragging) => {
+                        const option = item as TOption & { id: string };
+                        const index = data.options.findIndex((_, i) => i === parseInt(option.id.split('-')[1]));
+                        
+                        return (
+                            <div className={`p-3 border border-gray-200 rounded-lg bg-white ${isDragging ? 'shadow-lg' : ''}`}>
+                                <div className="flex items-center justify-between">
+                                    <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-4' : 'grid-cols-3'} gap-3`}>
+                                        <Input
+                                            name={`option-${index}-value`}
+                                            label="Value"
+                                            value={option.value}
+                                            onChange={(value) => updateOption(index, { value: String(value) } as Partial<TOption>)}
+                                            placeholder="e.g., option_value"
+                                            required
                                         />
+                                        <Input
+                                            name={`option-${index}-label`}
+                                            label="Label"
+                                            value={option.label}
+                                            onChange={(value) => updateOption(index, { label: String(value) } as Partial<TOption>)}
+                                            placeholder="e.g., Option label"
+                                            required
+                                        />
+                                        {showColor && (
+                                            <div className="space-y-1">
+                                                <span className="block text-sm font-semibold text-gray-800 mb-2">Color</span>
+                                                <ColorSelector
+                                                    value={option.color || 'transparent'}
+                                                    onChange={(value) => updateOption(index, { color: String(value) } as Partial<TOption>)}
+                                                />
+                                            </div>
+                                        )}
+                                        {showDefaultToggle && (
+                                            <div className="flex items-center mt-6">
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!option.isDefault}
+                                                        onChange={(e) => updateOption(index, { isDefault: e.target.checked } as Partial<TOption>)}
+                                                        className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Default</span>
+                                                </label>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                {showDefaultToggle && (
-                                    <div className="flex items-center mt-6">
-                                        <label className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={!!option.isDefault}
-                                                onChange={(e) => updateOption(index, { isDefault: e.target.checked } as Partial<TOption>)}
-                                                className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-                                            />
-                                            <span className="ml-2 text-sm text-gray-700">Default</span>
-                                        </label>
+                                    <div className="ml-3">
+                                        <button
+                                            onClick={() => removeOption(index)}
+                                            disabled={data.options.length <= 1}
+                                            className="p-2 text-red-400 hover:text-red-600 disabled:opacity-50 hover:bg-red-50 rounded"
+                                            title="Delete option"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
                                     </div>
-                                )}
+                                </div>
                             </div>
-                            <div className="flex flex-col space-y-1">
-                                <button
-                                    onClick={() => moveOption(index, 'up')}
-                                    disabled={index === 0}
-                                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                                >
-                                    ↑
-                                </button>
-                                <button
-                                    onClick={() => moveOption(index, 'down')}
-                                    disabled={index === data.options.length - 1}
-                                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                                >
-                                    ↓
-                                </button>
-                                <button
-                                    onClick={() => removeOption(index)}
-                                    disabled={data.options.length <= 1}
-                                    className="p-1 text-red-400 hover:text-red-600 disabled:opacity-50"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        );
+                    }}
+                    className="space-y-3"
+                />
             </div>
         </div>
     );
