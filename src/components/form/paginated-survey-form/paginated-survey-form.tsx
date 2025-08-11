@@ -8,6 +8,7 @@ import { InteractiveSectionRenderer } from '../../survey/section-paginator/inter
 import { FormStepIndicator } from './form-step-indicator';
 import { FormNavigationControls } from './form-navigation-controls';
 import { PaginatedSurveyFormProps } from './paginated-survey-form.types';
+import { ScrollableContent, SurveyFooter } from '../../common';
 
 // Helper function to create descriptive field IDs
 const createDescriptiveFieldId = (section: SurveySection, field: SurveyField): string => {
@@ -372,11 +373,25 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             // Update form errors to show validation issues
             setErrors({ ...formState.errors, ...validation.errors });
             
-            // Scroll to first error field
+            // Scroll to first error field within the scroll container
             const firstErrorFieldId = Object.keys(validation.errors)[0];
             const firstErrorElement = document.querySelector(`[name="${firstErrorFieldId}"]`) as HTMLElement;
             if (firstErrorElement) {
-                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Find the scroll container
+                const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement;
+                if (scrollContainer) {
+                    const containerRect = scrollContainer.getBoundingClientRect();
+                    const elementRect = firstErrorElement.getBoundingClientRect();
+                    const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+                    
+                    scrollContainer.scrollTo({
+                        top: relativeTop - 80, // 80px offset from top
+                        behavior: 'smooth'
+                    });
+                } else {
+                    // Fallback to regular scroll
+                    firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 firstErrorElement.focus();
             }
             
@@ -416,11 +431,41 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             
             // Navigate to first section with errors
             const firstErrorFieldId = Object.keys(allErrors)[0];
-            const sectionWithError = config.sections.findIndex(section => 
-                section.fields.some(field => field.id === firstErrorFieldId)
-            );
+            let sectionWithError = -1;
+            
+            // Check all sections including subsections for the field with error
+            for (let i = 0; i < config.sections.length; i++) {
+                const section = config.sections[i];
+                const hasError = section.fields.some(field => field.id === firstErrorFieldId) ||
+                    (section.subsections || []).some(subsection => 
+                        subsection.fields.some(field => field.id === firstErrorFieldId)
+                    );
+                if (hasError) {
+                    sectionWithError = i;
+                    break;
+                }
+            }
+            
             if (sectionWithError >= 0) {
                 goToSection(sectionWithError);
+                // After navigation, scroll to the error field
+                setTimeout(() => {
+                    const firstErrorElement = document.querySelector(`[name="${firstErrorFieldId}"]`) as HTMLElement;
+                    if (firstErrorElement) {
+                        const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement;
+                        if (scrollContainer) {
+                            const containerRect = scrollContainer.getBoundingClientRect();
+                            const elementRect = firstErrorElement.getBoundingClientRect();
+                            const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+                            
+                            scrollContainer.scrollTo({
+                                top: relativeTop - 80,
+                                behavior: 'smooth'
+                            });
+                        }
+                        firstErrorElement.focus();
+                    }
+                }, 100); // Small delay to allow section navigation to complete
             }
             return;
         }
@@ -451,11 +496,12 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     }, [config.sections.length, validateSection, formState.formData, hasSubmitted]);
 
     return (
-        <div className={clsx("min-h-screen bg-amber-50/30", className)}>
-            <main className="py-8">
-                <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md">
-                    <div className="px-8 py-8">
-                        <div className="text-center mb-8">
+        <div className={clsx("h-screen bg-amber-50/30 flex flex-col", className)}>
+            <main className="flex-1 py-8 flex min-h-0">
+                <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md flex flex-col w-full h-full">
+                    {/* Fixed Header Section */}
+                    <div className="px-8 pt-8 pb-4 flex-shrink-0">
+                        <div className="text-center mb-6">
                             <h1 className="text-3xl font-bold text-gray-900 mb-3">
                                 {config.title}
                             </h1>
@@ -468,7 +514,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
                         {/* Progress and Step Indicator */}
                         {(config.paginatorConfig?.showProgressBar !== false || config.paginatorConfig?.showStepIndicator !== false) && (
-                            <div className="mb-8">
+                            <div className="mb-4">
                                 <FormStepIndicator
                                     sections={config.sections}
                                     currentIndex={paginationState.currentSectionIndex}
@@ -482,9 +528,22 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                                 />
                             </div>
                         )}
+                    </div>
 
-                        {/* Current Section */}
-                        <div className="mb-8">
+                    {/* Scrollable Content Section */}
+                    <div className="flex-1 px-8 min-h-0 overflow-hidden">
+                        <ScrollableContent
+                            maxHeight="100%"
+                            minHeight="200px"
+                            showScrollIndicators={true}
+                            smoothScroll={true}
+                            mobileOptimized={true}
+                            className="mb-4 h-full"
+                            onScroll={(scrollTop, scrollHeight, clientHeight) => {
+                                // Optional: Track scroll position for analytics or state
+                                console.debug('Section scroll:', { scrollTop, scrollHeight, clientHeight });
+                            }}
+                        >
                             <InteractiveSectionRenderer
                                 section={currentSection}
                                 sectionIndex={paginationState.currentSectionIndex}
@@ -499,34 +558,27 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                                 selectOptionSets={selectOptionSetsRecord}
                                 loadingOptionSets={isLoading}
                             />
-                        </div>
+                        </ScrollableContent>
+                    </div>
 
-                        {/* Navigation Controls */}
-                        <div className="border-t pt-6">
-                            <FormNavigationControls
-                                isFirstSection={paginationState.isFirstSection}
-                                isLastSection={paginationState.isLastSection}
-                                onPrevious={goToPrevious}
-                                onNext={handleNext}
-                                onSubmit={handleSubmit}
-                                disabled={loading}
-                                loading={loading}
-                                hasValidationErrors={hasSubmitted && !currentSectionValidation.isValid}
-                            />
-                        </div>
+                    {/* Fixed Navigation Controls */}
+                    <div className="px-8 pb-8 pt-4 border-t flex-shrink-0">
+                        <FormNavigationControls
+                            isFirstSection={paginationState.isFirstSection}
+                            isLastSection={paginationState.isLastSection}
+                            onPrevious={goToPrevious}
+                            onNext={handleNext}
+                            onSubmit={handleSubmit}
+                            disabled={loading}
+                            loading={loading}
+                            hasValidationErrors={hasSubmitted && !currentSectionValidation.isValid}
+                        />
                     </div>
                 </div>
             </main>
 
             {/* Footer */}
-            <footer className="bg-white border-t mt-12">
-                <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center justify-center">
-                        {/* TODO: Add footer setting that allows you to set custom footer text including copyright year, registered trademark, etc. along with what text to display */}
-                        <p className="text-sm text-gray-500">© 2025 Service Line Survey</p>
-                    </div>
-                </div>
-            </footer>
+            <SurveyFooter config={config.footerConfig} />
         </div>
     );
 };

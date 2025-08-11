@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { SurveyPaginatorConfig } from '../../../types/framework.types';
-import { Input } from '../../common';
+import { SurveyPaginatorConfig, FooterConfig } from '../../../types/framework.types';
+import { Input, Collapsible } from '../../common';
 import { useValidation } from '../../../contexts/validation-context';
 
 interface SurveyDetailsProps {
     title: string;
     description: string;
     paginatorConfig?: Partial<SurveyPaginatorConfig>;
+    footerConfig?: FooterConfig;
     onTitleChange: (value: string) => void;
     onDescriptionChange: (value: string) => void;
     onPaginatorConfigChange: (config: Partial<SurveyPaginatorConfig>) => void;
+    onFooterConfigChange: (config: FooterConfig) => void;
 }
 
 export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
     title,
     description,
     paginatorConfig = {},
+    footerConfig = {},
     onTitleChange,
     onDescriptionChange,
-    onPaginatorConfigChange
+    onPaginatorConfigChange,
+    onFooterConfigChange
 }) => {
     const { validateSurveyTitle, validateSurveyDescription } = useValidation();
     const [titleError, setTitleError] = useState<string>('');
@@ -51,6 +55,14 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
         
         onPaginatorConfigChange({
             ...paginatorConfig,
+            ...updates
+        });
+    };
+
+    // Handle footer configuration changes
+    const handleFooterConfigChange = (updates: Partial<FooterConfig>) => {
+        onFooterConfigChange({
+            ...footerConfig,
             ...updates
         });
     };
@@ -90,8 +102,10 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                 </div>
                 
                 {/* Pagination Configuration */}
-                <div className="border-t pt-4">
-                    <h4 className="font-medium mb-3 text-gray-700">Section Pagination</h4>
+                <Collapsible 
+                    title="Section Pagination" 
+                    defaultExpanded={false}
+                >
                     <div className="space-y-3">
                         <label className="flex items-center gap-3">
                             <input
@@ -182,7 +196,97 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                             </div>
                         )}
                     </div>
-                </div>
+                </Collapsible>
+
+                {/* Footer Configuration */}
+                <Collapsible 
+                    title="Footer Settings" 
+                    defaultExpanded={false}
+                >
+                    <div className="space-y-3">
+                        <label className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                checked={footerConfig.show !== false}
+                                onChange={(e) => handleFooterConfigChange({ show: e.target.checked })}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="text-sm font-medium text-gray-700">
+                                Show footer
+                            </span>
+                        </label>
+                        <p className="text-xs text-gray-500 ml-7">
+                            Display footer at the bottom of the survey
+                        </p>
+
+                        {footerConfig.show !== false && (
+                            <div className="ml-7 space-y-3 border-l-2 border-blue-100 pl-4">
+                                <div>
+                                    <Input
+                                        name="footerOrganization"
+                                        label="Organization Name"
+                                        value={footerConfig.organizationName || ''}
+                                        onChange={(value) => handleFooterConfigChange({ organizationName: value })}
+                                        placeholder="Your Organization Name"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Will be displayed with copyright if enabled
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <Input
+                                        name="footerCustomText"
+                                        label="Custom Footer Text"
+                                        value={footerConfig.text || ''}
+                                        onChange={(value) => handleFooterConfigChange({ text: value })}
+                                        placeholder="Custom footer text"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Overrides Organization Name.
+                                        <br/>Leave empty to use default text.
+                                        <br/>Checkboxes below still apply.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={footerConfig.includeCopyright !== false}
+                                            onChange={(e) => handleFooterConfigChange({ includeCopyright: e.target.checked })}
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                        <span className="text-xs text-gray-600">Prepend copyright symbol and year to any text</span>
+                                    </label>
+
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={footerConfig.autoUpdateYear !== false}
+                                            onChange={(e) => handleFooterConfigChange({ autoUpdateYear: e.target.checked })}
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                        <span className="text-xs text-gray-600">Auto-update year (current: {new Date().getFullYear()})</span>
+                                    </label>
+
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={footerConfig.includeAllRightsReserved || false}
+                                            onChange={(e) => handleFooterConfigChange({ includeAllRightsReserved: e.target.checked })}
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                        <span className="text-xs text-gray-600">Include "All rights reserved"</span>
+                                    </label>
+                                    <p className="text-xs text-gray-400 ml-5">
+                                        Appends ". All rights reserved" to any footer text (custom or generated)
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Collapsible>
             </div>
         </div>
     );

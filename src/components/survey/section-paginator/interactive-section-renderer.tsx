@@ -51,22 +51,22 @@ export const InteractiveSectionRenderer: React.FC<InteractiveSectionRendererProp
   return (
     <div className={`max-w-2xl mx-auto ${className}`}>
       {/* Section Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         {showSectionPagination && (
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
               Section {sectionIndex + 1} of {totalSections}
             </span>
           </div>
         )}
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{section.title}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">{section.title}</h2>
         {section.description && (
           <p className="text-gray-600 text-lg">{section.description}</p>
         )}
       </div>
 
       {/* Section Content */}
-      <div className="space-y-8">
+      <div className="space-y-6 pb-4">
         {/* Render content using unified ordering */}
         {getOrderedSectionContent(section).map((contentItem) => {
           if (contentItem.type === 'subsection') {

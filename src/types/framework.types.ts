@@ -179,6 +179,29 @@ export interface SurveyPaginatorConfig {
   allowSkipping?: boolean;
 }
 
+export interface FooterConfig {
+  /** Whether to show the footer */
+  show?: boolean;
+  /** Custom footer text. If not provided, defaults will be used */
+  text?: string;
+  /** Organization name for copyright */
+  organizationName?: string;
+  /** Whether to include copyright year */
+  includeCopyright?: boolean;
+  /** Whether to auto-update the year */
+  autoUpdateYear?: boolean;
+  /** Whether to include "All rights reserved" text */
+  includeAllRightsReserved?: boolean;
+  /** Additional CSS classes for styling */
+  className?: string;
+  /** Custom links to display in footer */
+  links?: Array<{
+    text: string;
+    url: string;
+    external?: boolean;
+  }>;
+}
+
 export interface SurveyConfig {
   id: string;
   title: string;
@@ -186,6 +209,8 @@ export interface SurveyConfig {
   sections: SurveySection[];
   // Pagination configuration
   paginatorConfig?: Partial<SurveyPaginatorConfig>;
+  // Footer configuration
+  footerConfig?: FooterConfig;
   // Business logic fields (moved from metadata)
   isActive: boolean;
   version: string;

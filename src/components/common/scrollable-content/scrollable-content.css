@@ -1,0 +1,132 @@
+/* Custom scrollbar styling for ScrollableContent */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.scrollable-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:active {
+  background: #64748b;
+}
+
+/* Firefox */
+.scrollable-content {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Hide scrollbar on mobile while maintaining functionality */
+@media (max-width: 768px) {
+  .scrollable-content-mobile-hidden::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+  
+  .scrollable-content-mobile-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}
+
+/* Smooth scroll behavior */
+.scrollable-content-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Touch optimizations for mobile */
+.scrollable-content-touch {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Focus indicators for accessibility */
+.scrollable-content:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.scrollable-content:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Custom animations for scroll indicators */
+.scroll-indicator {
+  transition: opacity 0.3s ease;
+}
+
+.scroll-indicator-fade-in {
+  animation: scrollIndicatorFadeIn 0.3s ease;
+}
+
+.scroll-indicator-fade-out {
+  animation: scrollIndicatorFadeOut 0.3s ease;
+}
+
+@keyframes scrollIndicatorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scrollIndicatorFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Prevent text selection on scroll indicators */
+.scroll-indicator {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Ensure proper z-index layering */
+.scroll-container-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.scroll-indicator {
+  z-index: 10;
+}
+
+/* Responsive height adjustments */
+@media (max-height: 600px) {
+  .scrollable-content-mobile {
+    max-height: calc(100vh - 150px) !important;
+  }
+}
+
+@media (max-height: 500px) {
+  .scrollable-content-mobile {
+    max-height: calc(100vh - 120px) !important;
+  }
+}

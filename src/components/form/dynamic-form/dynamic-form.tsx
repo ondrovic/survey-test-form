@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
 import { SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
-import { Button } from '../../common';
+import { Button, ScrollableContent } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
@@ -1001,9 +1001,10 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
 
     return (
-        <div className={clsx("max-w-4xl mx-auto bg-white rounded-lg shadow-md", className)}>
-            <div className="px-8 py-8">
-                <div className="text-center mb-8">
+        <div className={clsx("max-w-4xl mx-auto bg-white rounded-lg shadow-md flex flex-col", className)} style={{ minHeight: 'calc(100vh - 200px)' }}>
+            {/* Fixed Header Section */}
+            <div className="px-8 pt-8 pb-4 flex-shrink-0">
+                <div className="text-center mb-6">
                     <h1 className="text-3xl font-bold text-gray-900 mb-3">
                         {config.title}
                     </h1>
@@ -1013,28 +1014,46 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         </p>
                     )}
                 </div>
+            </div>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="space-y-6"
+            {/* Scrollable Content Section */}
+            <div className="flex-1 px-8 min-h-0">
+                <ScrollableContent
+                    maxHeight="calc(100vh - 320px)"
+                    minHeight="300px"
+                    showScrollIndicators={true}
+                    smoothScroll={true}
+                    mobileOptimized={true}
+                    className="mb-4"
+                    onScroll={(scrollTop, scrollHeight, clientHeight) => {
+                        // Optional: Track scroll position for analytics or state
+                        console.debug('Form scroll:', { scrollTop, scrollHeight, clientHeight });
+                    }}
                 >
+                    <form
+                        onSubmit={handleSubmit}
+                        className="space-y-6"
+                    >
+                        {config.sections
+                            .sort((a, b) => a.order - b.order)
+                            .map(renderSection)}
+                    </form>
+                </ScrollableContent>
+            </div>
 
-
-                    {config.sections
-                        .sort((a, b) => a.order - b.order)
-                        .map(renderSection)}
-
-                    <div className="flex justify-center pt-6">
-                        <Button
-                            type="submit"
-                            loading={loading}
-                            disabled={loading}
-                            className="px-8 py-3 text-base"
-                        >
-                            Submit Survey
-                        </Button>
-                    </div>
-                </form>
+            {/* Fixed Submit Button */}
+            <div className="px-8 pb-8 pt-4 border-t flex-shrink-0">
+                <div className="flex justify-center">
+                    <Button
+                        type="submit"
+                        loading={loading}
+                        disabled={loading}
+                        className="px-8 py-3 text-base"
+                        onClick={handleSubmit}
+                    >
+                        Submit Survey
+                    </Button>
+                </div>
             </div>
         </div>
     );

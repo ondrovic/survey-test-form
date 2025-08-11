@@ -1,5 +1,5 @@
 import { AdminPage } from '@/components/admin';
-import { ErrorBoundary, LoadingSpinner } from '@/components/common';
+import { ErrorBoundary, LoadingSpinner, SurveyFooter } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { firestoreHelpers } from '@/config/firebase';
@@ -18,8 +18,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
-const currentYear = new Date().getFullYear();
-const copyright = `© ${currentYear}`;
+// Remove hardcoded copyright - now handled by SurveyFooter component
 
 /**
  * Main App component that integrates all survey functionality
@@ -310,13 +309,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             </main>
 
             {/* Footer */}
-            <footer className="bg-white border-t mt-12">
-                <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center justify-center">
-                        <p className="text-sm text-gray-500">{copyright}</p>
-                    </div>
-                </div>
-            </footer>
+            <SurveyFooter config={surveyConfig?.footerConfig} className="mt-12" />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 export { Alert } from "./alert";
 export { Button } from "./button";
+export { Collapsible } from "./collapsible";
 export { CollapsibleSection } from "./collapsible-section/collapsible-section";
 export { ColorSelector } from "./color-selector";
 export { DeleteConfirmationModal } from "./delete-confirmation-modal/delete-confirmation-modal";
@@ -12,3 +13,5 @@ export { PaginatedList } from "./paginated-list/paginated-list";
 export { Pagination } from "./pagination/pagination";
 export { ReCaptcha } from "./re-captcha";
 export { SortableList } from "./sortable-list";
+export { ScrollableContent } from "./scrollable-content";
+export { SurveyFooter } from "./footer";
