@@ -5,7 +5,7 @@ import { useSurveyData } from '../../../contexts/survey-data-context/index';
 import { useToast } from '../../../contexts/toast-context/index';
 import { ValidationProvider, useValidation } from '../../../contexts/validation-context';
 import { FieldType, SurveyField, SurveySection, SurveySubsection } from '../../../types/framework.types';
-import { generateFieldId, generateSectionId, updateFieldId, updateSectionId } from '../../../utils/id.utils';
+import { generateFieldId, generateSectionId, updateSectionId } from '../../../utils/id.utils';
 import { updateMetadata } from '../../../utils/metadata.utils';
 import { MultiSelectOptionSetManager } from '../multi-select-option-set-manager';
 import { RadioOptionSetManager } from '../radio-option-set-manager';
@@ -140,11 +140,18 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             .map(field => field.id);
 
         const fieldLabel = `New ${fieldType} Field`;
+        const fieldId = generateFieldId(fieldType, fieldLabel, existingFieldIds);
+        const now = new Date().toISOString();
+        
         const newField: SurveyField = {
-            id: generateFieldId(fieldType, fieldLabel, existingFieldIds),
+            id: fieldId,
             label: fieldLabel,
             type: fieldType,
             required: false,
+            labelHistory: [{
+                label: fieldLabel,
+                changedAt: now
+            }]
         };
         console.log('📝 Adding field and opening editor:', {
             sectionId,
@@ -165,38 +172,119 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             isSubsectionField: !!subsectionId
         });
 
-        // If label is being updated, consider updating the ID
-        if (updates.label) {
-            // Find the current field to get its type
-            let currentField: SurveyField | undefined;
-            const section = state.config.sections.find(section => section.id === sectionId);
-
-            if (section) {
-                if (subsectionId) {
-                    const subsection = (section.subsections || []).find(sub => sub.id === subsectionId);
-                    currentField = subsection?.fields.find(field => field.id === fieldId);
-                } else {
-                    currentField = section.fields.find(field => field.id === fieldId);
-                }
-            }
-
-            if (currentField) {
-                const existingFieldIds = state.config.sections
-                    .flatMap(section => [
-                        ...section.fields,
-                        ...(section.subsections || []).flatMap(subsection => subsection.fields)
-                    ])
-                    .map(field => field.id)
-                    .filter(id => id !== fieldId); // Exclude current field ID
-
-                const newId = updateFieldId(fieldId, currentField.type, updates.label, existingFieldIds);
-                if (newId !== fieldId) {
-                    updates.id = newId;
-                }
-            }
+        // CRITICAL: Prevent any automatic label history additions
+        // Only allow label history to be updated through our explicit save function
+        if (updates.metadata && 'labelHistory' in updates.metadata) {
+            // Preserve existing metadata but prevent labelHistory modifications during real-time updates
+            const { labelHistory, ...otherMetadata } = updates.metadata;
+            updates = {
+                ...updates,
+                metadata: otherMetadata
+            };
+            console.log('⚠️ Blocked automatic label history during field update');
         }
 
         updateField(sectionId, fieldId, updates, subsectionId);
+    };
+
+    // New function to handle field changes when saving (not on every keystroke)
+    const handleSaveFieldChanges = (sectionId: string, fieldId: string, originalLabel: string, currentLabel: string, subsectionId?: string) => {
+        console.log('🔍 handleSaveFieldChanges called:', {
+            sectionId,
+            fieldId,
+            originalLabel,
+            currentLabel,
+            labelChanged: originalLabel !== currentLabel
+        });
+        
+        // Find the current field to update its metadata
+        let currentField: SurveyField | undefined;
+        const section = state.config.sections.find(section => section.id === sectionId);
+
+        if (section) {
+            if (subsectionId) {
+                const subsection = (section.subsections || []).find(sub => sub.id === subsectionId);
+                currentField = subsection?.fields.find(field => field.id === fieldId);
+            } else {
+                currentField = section.fields.find(field => field.id === fieldId);
+            }
+        }
+
+        if (currentField) {
+            // Track label changes for data integrity and export purposes (only on save)
+            const now = new Date().toISOString();
+            
+            // If field has no labelHistory, initialize it
+            if (!currentField.labelHistory) {
+                console.log('🔄 Field has no labelHistory, initializing');
+                
+                // For fields without label history, create initial entry(s)
+                const initialChanges = [];
+                
+                // If the labels are different, add both original and current
+                if (originalLabel !== currentLabel) {
+                    initialChanges.push({
+                        label: originalLabel,
+                        changedAt: now
+                    });
+                    initialChanges.push({
+                        label: currentLabel,
+                        changedAt: now
+                    });
+                    console.log(`📝 Creating label history with change: ${originalLabel} → ${currentLabel}`);
+                } else {
+                    // If they're the same, just add the current label as initial entry
+                    initialChanges.push({
+                        label: currentLabel,
+                        changedAt: now
+                    });
+                    console.log(`📝 Creating label history with initial label: ${currentLabel}`);
+                }
+                
+                const updates: Partial<SurveyField> = {
+                    labelHistory: initialChanges
+                };
+                
+                updateField(sectionId, fieldId, updates, subsectionId);
+                console.log(`📝 Initialized labelHistory for field ${fieldId}`, updates);
+                console.log(`🔄 Remember to save the survey to persist label history to database`);
+                return;
+            }
+            
+            // Field already has labelHistory, check if we need to add new entry
+            const currentLabelHistory = currentField.labelHistory || [];
+            
+            // Only add if label actually changed
+            if (originalLabel !== currentLabel) {
+                // Avoid adding duplicate consecutive labels
+                const lastEntry = currentLabelHistory[currentLabelHistory.length - 1];
+                if (!lastEntry || lastEntry.label !== currentLabel) {
+                    // Create a completely new, clean label history entry
+                    const newLabelHistoryEntry = {
+                        label: currentLabel,
+                        changedAt: now
+                    };
+                    
+                    // Create new labelHistory array
+                    const updatedLabelHistory = [
+                        ...currentLabelHistory,
+                        newLabelHistoryEntry
+                    ];
+                    
+                    // Update labelHistory directly on the field
+                    updateField(sectionId, fieldId, { labelHistory: updatedLabelHistory }, subsectionId);
+                    
+                    console.log(`📝 Field label saved: ${originalLabel} → ${currentLabel} (ID: ${fieldId} preserved)`);
+                    console.log(`📝 Added clean label history entry:`, newLabelHistoryEntry);
+                    console.log(`📝 Updated labelHistory:`, updatedLabelHistory);
+                    console.log(`🔄 Remember to save the survey to persist label history to database`);
+                } else {
+                    console.log(`📝 Duplicate label entry avoided (ID: ${fieldId})`);
+                }
+            } else {
+                console.log(`📝 Field label unchanged, no history entry needed (ID: ${fieldId})`);
+            }
+        }
     };
 
     const handleDeleteField = (sectionId: string, fieldId: string, subsectionId?: string) => {
@@ -608,10 +696,12 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                         }}
                         field={selectedField}
                         sectionId={selectedSection.id}
+                        subsectionId={selectedFieldSubsectionId}
                         onUpdateField={(sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {
                             console.log('🔧 Update wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
                             handleUpdateField(sectionId, fieldId, updates, selectedFieldSubsectionId);
                         }}
+                        onSaveFieldChanges={handleSaveFieldChanges}
                         onAddFieldOption={(sectionId: string, fieldId: string) => {
                             console.log('🔧 Add field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
                             handleAddFieldOption(sectionId, fieldId, selectedFieldSubsectionId);

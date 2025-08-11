@@ -299,22 +299,42 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                                     subsection.id === action.payload.subsectionId
                                         ? {
                                             ...subsection,
-                                            fields: subsection.fields.map(field =>
-                                                field.id === action.payload.fieldId
-                                                    ? { ...field, ...action.payload.updates }
-                                                    : field
-                                            )
+                                            fields: subsection.fields.map(field => {
+                                                if (field.id === action.payload.fieldId) {
+                                                    // Debug logging for label history modifications
+                                                    if (action.payload.updates.labelHistory) {
+                                                        console.log('🔍 Label history being updated in reducer:', {
+                                                            fieldId: field.id,
+                                                            fieldLabel: field.label,
+                                                            newLabelHistory: action.payload.updates.labelHistory,
+                                                            historyCount: action.payload.updates.labelHistory?.length || 0
+                                                        });
+                                                    }
+                                                    return { ...field, ...action.payload.updates };
+                                                }
+                                                return field;
+                                            })
                                         }
                                         : subsection
                                 )
                             }
                             : {
                                 ...section,
-                                fields: section.fields.map(field =>
-                                    field.id === action.payload.fieldId
-                                        ? { ...field, ...action.payload.updates }
-                                        : field
-                                )
+                                fields: section.fields.map(field => {
+                                    if (field.id === action.payload.fieldId) {
+                                        // Debug logging for label history modifications
+                                        if (action.payload.updates.labelHistory) {
+                                            console.log('🔍 Label history being updated in reducer (section level):', {
+                                                fieldId: field.id,
+                                                fieldLabel: field.label,
+                                                newLabelHistory: action.payload.updates.labelHistory,
+                                                historyCount: action.payload.updates.labelHistory?.length || 0
+                                            });
+                                        }
+                                        return { ...field, ...action.payload.updates };
+                                    }
+                                    return field;
+                                })
                             }
                         : section
                 ),

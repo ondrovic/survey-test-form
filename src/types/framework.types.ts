@@ -130,7 +130,12 @@ export interface SurveyField {
   validation?: ValidationRule[];
   placeholder?: string;
   defaultValue?: any;
-  metadata?: Record<string, any>;
+  // Track label history for data export/migration purposes
+  labelHistory?: Array<{
+    label: string;
+    changedAt: string;
+    changedBy?: string;
+  }>;
 }
 
 export interface SurveySubsection {
@@ -160,6 +165,7 @@ export interface SurveyPaginatorConfig {
   allowBackNavigation: boolean;
   showProgressBar: boolean;
   showProgressText: boolean;
+  showSectionPagination: boolean;
   animateTransitions?: boolean;
   allowSkipping?: boolean;
 }

@@ -1,4 +1,4 @@
-import { CheckSquare, ChevronDown, List, Plus, Star, Trash2 } from 'lucide-react';
+import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { useValidation } from '../../../contexts/validation-context';
@@ -14,13 +14,15 @@ interface FieldEditorModalProps {
     field: SurveyField | null;
     sectionId: string;
     onUpdateField: (sectionId: string, fieldId: string, updates: Partial<SurveyField>) => void;
+    onSaveFieldChanges?: (sectionId: string, fieldId: string, originalLabel: string, currentLabel: string, subsectionId?: string) => void;
     onAddFieldOption: (sectionId: string, fieldId: string) => void;
-    onUpdateFieldOption: (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string }) => void;
+    onUpdateFieldOption: (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => void;
     onDeleteFieldOption: (sectionId: string, fieldId: string, optionIndex: number) => void;
     onShowRatingScaleManager: () => void;
     onShowRadioOptionSetManager: () => void;
     onShowMultiSelectOptionSetManager: () => void;
     onShowSelectOptionSetManager: () => void;
+    subsectionId?: string;
 }
 
 export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
@@ -30,13 +32,15 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     field,
     sectionId,
     onUpdateField,
+    onSaveFieldChanges,
     onAddFieldOption,
     onUpdateFieldOption,
     onDeleteFieldOption,
     onShowRatingScaleManager,
     onShowRadioOptionSetManager,
     onShowMultiSelectOptionSetManager,
-    onShowSelectOptionSetManager
+    onShowSelectOptionSetManager,
+    subsectionId
 }) => {
     const { validateFieldLabel, validateFieldPlaceholder, validateFieldOptions } = useValidation();
     const [loadedRadioOptionSet, setLoadedRadioOptionSet] = useState<RadioOptionSet | null>(null);
@@ -46,6 +50,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     const [labelError, setLabelError] = useState<string>('');
     const [placeholderError, setPlaceholderError] = useState<string>('');
     const [optionsError, setOptionsError] = useState<string>('');
+    const [showLabelHistory, setShowLabelHistory] = useState(false);
+    
+    // Track the original label when the modal opens to detect actual changes
+    const [originalLabel, setOriginalLabel] = useState<string>('');
 
     // Validation handlers
     const handleLabelChange = (value: string) => {
@@ -81,6 +89,23 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         setOptionsError(optionsValidation.isValid ? '' : optionsValidation.error || '');
 
         if (labelValidation.isValid && placeholderValidation.isValid && optionsValidation.isValid) {
+            // Always call save function for label history tracking (even if label didn't change)
+            // This ensures existing fields get initialized with label history
+            if (onSaveFieldChanges) {
+                console.log('🔍 Calling onSaveFieldChanges:', {
+                    sectionId,
+                    fieldId: field.id,
+                    originalLabel,
+                    currentLabel: field.label,
+                    subsectionId,
+                    labelChanged: originalLabel !== field.label,
+                    hasLabelHistory: !!field.labelHistory
+                });
+                onSaveFieldChanges(sectionId, field.id, originalLabel, field.label, subsectionId);
+            } else {
+                console.log('🔍 No onSaveFieldChanges function provided');
+            }
+            
             onSave();
             onClose();
         }
@@ -89,6 +114,17 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     const handleCancel = () => {
         onClose();
     };
+
+    // Reset original label when modal opens/closes
+    useEffect(() => {
+        if (isOpen && field) {
+            setOriginalLabel(field.label);
+            console.log('🔄 Modal opened - Original label set to:', field.label);
+        } else if (!isOpen) {
+            setOriginalLabel('');
+            console.log('🔄 Modal closed - Original label reset');
+        }
+    }, [isOpen, field?.id]); // Only reset when modal opens or field changes
 
     // Add keyboard shortcut to close modal with Escape
     useEffect(() => {
@@ -160,6 +196,15 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     }, [field?.options, validateOptions, field]);
 
     if (!field) return null;
+
+    // Debug: Log label history status
+    if (field.labelHistory && field.labelHistory.length > 0) {
+        console.log('📝 Field has label history:', {
+            fieldId: field.id,
+            historyCount: field.labelHistory.length,
+            latestLabel: field.labelHistory[field.labelHistory.length - 1]?.label
+        });
+    }
 
     return (
         <Modal
@@ -265,6 +310,71 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         </div>
                     )}
                 </div>
+
+                {/* Label History Section */}
+                {field.labelHistory && field.labelHistory.length > 1 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex-1">
+                                Label History
+                            </h3>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setShowLabelHistory(!showLabelHistory)}
+                                className="ml-4 text-gray-500 hover:text-gray-700"
+                            >
+                                {showLabelHistory ? (
+                                    <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                    <ChevronRight className="w-4 h-4" />
+                                )}
+                                <span className="ml-1 text-sm">
+                                    {showLabelHistory ? 'Hide' : 'Show'} ({field.labelHistory.length} changes)
+                                </span>
+                            </Button>
+                        </div>
+
+                        {showLabelHistory && (
+                            <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="flex items-center text-blue-700 mb-3">
+                                    <Clock className="w-4 h-4 mr-2" />
+                                    <span className="text-sm font-medium">
+                                        Track of all label changes for data export and migration purposes
+                                    </span>
+                                </div>
+                                <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {field.labelHistory
+                                        .slice()
+                                        .reverse() // Show most recent first
+                                        .map((entry, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-start justify-between p-3 bg-white rounded border border-blue-100"
+                                            >
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-gray-900 text-sm">
+                                                        "{entry.label}"
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {new Date(entry.changedAt).toLocaleString()}
+                                                        {entry.changedBy && (
+                                                            <span className="ml-2">by {entry.changedBy}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {index === 0 && (
+                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                                        Current
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Field Options Configuration */}
                 {FIELD_TYPES.find(t => t.value === field.type)?.hasOptions && (

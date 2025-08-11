@@ -76,22 +76,17 @@ export const updateSectionId = (
 };
 
 // Update field ID when label changes
+// NOTE: For data integrity, field IDs should remain stable once created
+// This function now preserves existing IDs to maintain survey response mapping
 export const updateFieldId = (
   currentId: string,
-  type: string,
-  newLabel: string,
-  existingFieldIds: string[] = []
+  _type: string,
+  _newLabel: string,
+  _existingFieldIds: string[] = []
 ): string => {
-  const labelPart = createKebabCase(newLabel) || "untitled";
-  const newBaseId = `${type}-${labelPart}`;
-  
-  // If the current ID already matches what we'd generate, keep it
-  if (currentId === newBaseId || currentId.startsWith(`${newBaseId}-`)) {
-    return currentId;
-  }
-  
-  // Generate new ID
-  return generateFieldId(type, newLabel, existingFieldIds);
+  // ALWAYS preserve the existing ID to maintain data integrity
+  // This prevents breaking the mapping between survey responses and fields
+  return currentId;
 };
 
 // Re-export for consistency with existing code
