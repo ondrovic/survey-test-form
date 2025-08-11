@@ -1,4 +1,6 @@
 import { Button } from '@/components/common';
+import { ConnectionStatus } from '@/components/survey/connection-status/connection-status';
+import { useConnectionStatus } from '@/hooks';
 import React from 'react';
 
 interface AdminHeaderProps {
@@ -10,6 +12,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     title = 'Survey Administration',
     onLogout
 }) => {
+    const { connected, loading, error, isAuthenticated, retry } = useConnectionStatus();
+
     return (
         <header className="bg-white shadow-sm border-b">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,6 +22,13 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                         <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        <ConnectionStatus 
+                            connected={connected}
+                            loading={loading}
+                            error={error}
+                            isAuthenticated={isAuthenticated}
+                            onRetry={retry}
+                        />
                         <Button variant="outline" onClick={onLogout}>
                             Logout
                         </Button>

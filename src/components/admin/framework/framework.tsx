@@ -135,18 +135,6 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         settingsModal.close();
     };
 
-    const handleMigrateResponseData = async () => {
-        try {
-            showSuccess('Starting data migration...');
-            const result = await firestoreHelpers.migrateSurveyResponsesToInstanceCollections();
-            showSuccess(`Migration completed! Migrated ${result.totalMigrated} responses across ${result.instancesProcessed} instances.`);
-            console.log('Migration results:', result);
-        } catch (error) {
-            showError('Failed to migrate response data');
-            console.error('Migration error:', error);
-        }
-    };
-
     const handleVerifyDataSeparation = async () => {
         try {
             showSuccess('Verifying data separation...');
@@ -156,19 +144,6 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         } catch (error) {
             showError('Failed to verify data separation');
             console.error('Verification error:', error);
-        }
-    };
-
-    const handleMigrateMetadataStructure = async () => {
-        try {
-            showSuccess('Starting metadata structure migration...');
-            const result = await firestoreHelpers.migrateMetadataStructure();
-            const totalMigrated = Object.values(result).reduce((sum: number, r: any) => sum + (r.migrated || r.totalMigrated || 0), 0);
-            showSuccess(`Metadata migration completed! Migrated ${totalMigrated} items across all collections.`);
-            console.log('Migration results:', result);
-        } catch (error) {
-            showError('Failed to migrate metadata structure');
-            console.error('Migration error:', error);
         }
     };
 
@@ -184,22 +159,6 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                         className="text-green-600 border-green-600 hover:bg-green-50"
                     >
                         Verify Data
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleMigrateResponseData}
-                        className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                    >
-                        Migrate Collections
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleMigrateMetadataStructure}
-                        className="text-purple-600 border-purple-600 hover:bg-purple-50"
-                    >
-                        Migrate Metadata
                     </Button>
                     <Button onClick={onCreateNewSurvey}>
                         <Plus className="w-4 h-4 mr-2" />
