@@ -7,7 +7,7 @@ export const RatingScalesOverviewCard: React.FC<{
     onNavigateToOptionSets: () => void;
 }> = ({ ratingScales, onNavigateToOptionSets }) => (
     <OverviewCard
-        title="Rating Scale Option Sets"
+        title="Rating Option Sets"
         description="Create and manage reusable rating scales with default values"
         statistics={[{ label: 'Available Scales', value: `${ratingScales.length} scales` }]}
         actionLabel="Manage Rating Option Sets"

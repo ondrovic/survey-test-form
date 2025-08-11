@@ -484,7 +484,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                             if (selectedField) {
                                 handleUpdateField(selectedSection!.id, selectedField.id, {
                                     ratingScaleId: scaleId,
-                                    ratingScaleName: `Rating Scale ${scaleId}`
+                                    ratingScaleName: `Rating Option Set ${scaleId}`,
+                                    options: [] // Clear individual options when using rating scale
                                 }, selectedFieldSubsectionId);
                             }
                             showRatingScaleManager(false);
@@ -516,14 +517,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                                     const optionSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
                                     handleUpdateField(selectedSection!.id, selectedField.id, {
                                         radioOptionSetId: optionSetId,
-                                        radioOptionSetName: optionSet?.name || `Radio Option Set ${optionSetId}`
+                                        radioOptionSetName: optionSet?.name || `Radio Option Set ${optionSetId}`,
+                                        options: [] // Clear individual options when using option set
                                     }, selectedFieldSubsectionId);
                                 } catch (error) {
                                     console.error('Error fetching option set name:', error);
                                     // Fallback to generic name if fetch fails
                                     handleUpdateField(selectedSection!.id, selectedField.id, {
                                         radioOptionSetId: optionSetId,
-                                        radioOptionSetName: `Radio Option Set ${optionSetId}`
+                                        radioOptionSetName: `Radio Option Set ${optionSetId}`,
+                                        options: [] // Clear individual options when using option set
                                     }, selectedFieldSubsectionId);
                                 }
                             }
@@ -545,14 +548,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                                     const optionSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
                                     handleUpdateField(selectedSection!.id, selectedField.id, {
                                         multiSelectOptionSetId: optionSetId,
-                                        multiSelectOptionSetName: optionSet?.name || `Multi-Select Option Set ${optionSetId}`
+                                        multiSelectOptionSetName: optionSet?.name || `Multi-Select Option Set ${optionSetId}`,
+                                        options: [] // Clear individual options when using option set
                                     }, selectedFieldSubsectionId);
                                 } catch (error) {
                                     console.error('Error fetching option set name:', error);
                                     // Fallback to generic name if fetch fails
                                     handleUpdateField(selectedSection!.id, selectedField.id, {
                                         multiSelectOptionSetId: optionSetId,
-                                        multiSelectOptionSetName: `Multi-Select Option Set ${optionSetId}`
+                                        multiSelectOptionSetName: `Multi-Select Option Set ${optionSetId}`,
+                                        options: [] // Clear individual options when using option set
                                     }, selectedFieldSubsectionId);
                                 }
                             }
@@ -574,14 +579,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                                     const optionSet = await firestoreHelpers.getSelectOptionSet(optionSetId);
                                     handleUpdateField(selectedSection!.id, selectedField.id, {
                                         selectOptionSetId: optionSetId,
-                                        selectOptionSetName: optionSet?.name || `Select Option Set ${optionSetId}`
+                                        selectOptionSetName: optionSet?.name || `Select Option Set ${optionSetId}`,
+                                        options: [] // Clear individual options when using option set
                                     }, selectedFieldSubsectionId);
                                 } catch (error) {
                                     console.error('Error fetching option set name:', error);
                                     // Fallback to generic name if fetch fails
                                     handleUpdateField(selectedSection!.id, selectedField.id, {
                                         selectOptionSetId: optionSetId,
-                                        selectOptionSetName: `Select Option Set ${optionSetId}`
+                                        selectOptionSetName: `Select Option Set ${optionSetId}`,
+                                        options: [] // Clear individual options when using option set
                                     }, selectedFieldSubsectionId);
                                 }
                             }

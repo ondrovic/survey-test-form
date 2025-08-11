@@ -93,7 +93,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
 
             {/* Rating Scales Section */}
             <OptionSetSection<RatingScale>
-                title="Rating Scale Option Sets"
+                title="Rating Option Sets"
                 items={ratingScales || []}
                 onCreateNew={onShowRatingScaleManager}
                 onEdit={onEditRatingScale}

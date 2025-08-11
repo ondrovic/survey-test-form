@@ -67,6 +67,38 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     setError(null);
     try {
       const items = await config.firestoreHelpers.get();
+      
+      // If no rating scales exist, create a default one for testing
+      if (config.type === 'rating-scale' && items.length === 0) {
+        console.log('🔄 No rating scales found, creating default one...');
+        try {
+          const defaultRatingScale = {
+            name: 'Default Priority Scale',
+            description: 'High, Medium, Low, Not Important priority scale',
+            options: [
+              { value: 'high', label: 'High', color: '#10b981', isDefault: true, order: 0 },
+              { value: 'medium', label: 'Medium', color: '#f59e0b', isDefault: false, order: 1 },
+              { value: 'low', label: 'Low', color: '#ef4444', isDefault: false, order: 2 },
+              { value: 'not_important', label: 'Not Important', color: '#6b7280', isDefault: false, order: 3 }
+            ],
+            isActive: true,
+            metadata: {
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              createdBy: 'system-default'
+            }
+          };
+          
+          const created = await config.firestoreHelpers.create(defaultRatingScale as any);
+          if (created) {
+            console.log('✅ Created default rating scale:', created.id);
+            return [created];
+          }
+        } catch (createError) {
+          console.error('Failed to create default rating scale:', createError);
+        }
+      }
+      
       return items;
     } catch (err) {
       const errorMsg = `Failed to load ${config.displayName.toLowerCase()}s`;
