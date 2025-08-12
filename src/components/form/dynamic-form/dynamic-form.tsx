@@ -2,11 +2,11 @@ import { clsx } from 'clsx';
 import React, { useCallback } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
-import { SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
-import { Button, ScrollableContent } from '../../common';
+import { SurveyConfig, SurveyField, SurveySection } from '../../../types/framework.types';
+import { getOrderedSectionContent } from '../../../utils/section-content.utils';
+import { Button, ScrollableContent, SurveyFooter } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
-import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 
 // Helper function to create descriptive field IDs
 const createDescriptiveFieldId = (section: SurveySection, field: SurveyField): string => {
@@ -41,7 +41,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     // Use context providers
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
-    
+
     // Track if form has been submitted to control when to show validation
     const [hasSubmitted, setHasSubmitted] = React.useState(false);
 
@@ -91,7 +91,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     const processAllFields = useCallback((section: SurveySection, callback: (field: SurveyField) => void) => {
         // Process section-level fields
         section.fields.forEach(callback);
-        
+
         // Process subsection fields
         if (section.subsections) {
             section.subsections.forEach(subsection => {
@@ -301,7 +301,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     // Helper function to check if a field value is considered "empty" based on field type
     const isFieldEmpty = useCallback((field: SurveyField, value: any): boolean => {
         if (value === null || value === undefined) return true;
-        
+
         switch (field.type) {
             case 'multiselect':
             case 'multiselectdropdown':
@@ -371,17 +371,17 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             // For multiselect inline (uses multiSelectOptionSetId)
             if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
                 const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
-                
+
                 if (optionSet.minSelections && value.length < optionSet.minSelections) {
                     setFieldError(fieldId, `Please select at least ${optionSet.minSelections} option${optionSet.minSelections === 1 ? '' : 's'}`);
                     return;
                 }
-                
+
                 if (optionSet.maxSelections && value.length > optionSet.maxSelections) {
                     setFieldError(fieldId, `Please select at most ${optionSet.maxSelections} option${optionSet.maxSelections === 1 ? '' : 's'}`);
                     return;
                 }
-                
+
                 // Validate that all selected values exist in the option set
                 const validOptionValues = optionSet.options.map(opt => opt.value);
                 const invalidValues = value.filter(val => !validOptionValues.includes(val));
@@ -393,7 +393,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             // For multiselectdropdown (uses selectOptionSetId)
             else if (field.type === 'multiselectdropdown' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
                 const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-                
+
                 // Validate that all selected values exist in the option set
                 const validOptionValues = optionSet.options.map(opt => opt.value);
                 const invalidValues = value.filter(val => !validOptionValues.includes(val));
@@ -555,7 +555,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
-        
+
         // Only validate if form has been submitted and there was already an error for this field
         if (hasSubmitted && formState.errors[fieldId]) {
             setTimeout(() => validateField(fieldId, value), 300);
@@ -588,15 +588,15 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         const validationErrors: Record<string, string> = {};
         allFields.forEach(field => {
             let fieldValue = formState.formData[field.id];
-            
+
             // Normalize multiselect field values to arrays
             if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && !Array.isArray(fieldValue)) {
                 console.log('⚠️ Normalizing multiselect field value to array:', { fieldId: field.id, originalValue: fieldValue });
                 fieldValue = fieldValue ? [fieldValue] : [];
             }
-            
+
             const isEmpty = isFieldEmpty(field, fieldValue);
-            
+
             console.log('🔍 Validating field:', {
                 fieldId: field.id,
                 fieldLabel: field.label,
@@ -611,7 +611,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 hasOptions: !!field.options?.length,
                 willError: field.required && isEmpty
             });
-            
+
             // Required field validation
             if (field.required && isEmpty) {
                 console.log('❌ Required field is empty:', { fieldId: field.id, fieldType: field.type, fieldValue });
@@ -621,22 +621,22 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
             // Skip validation for empty non-required fields UNLESS they have validation rules OR are multiselect fields
             const isMultiSelectField = field.type === 'multiselect' || field.type === 'multiselectdropdown';
-            const hasOptionSet = (field.type === 'multiselect' && field.multiSelectOptionSetId) || 
-                                (field.type === 'multiselectdropdown' && field.selectOptionSetId);
-            
+            const hasOptionSet = (field.type === 'multiselect' && field.multiSelectOptionSetId) ||
+                (field.type === 'multiselectdropdown' && field.selectOptionSetId);
+
             if (isEmpty && !field.required && !field.validation?.length && !isMultiSelectField) {
                 console.log('⏭️ Skipping validation for empty non-required field without validation rules:', field.id);
                 return;
             }
-            
+
             // For multiselect fields, always continue to validation even if empty and non-required
             if (isMultiSelectField) {
-                console.log('🔄 Continuing validation for multiselect field:', { 
-                    fieldId: field.id, 
-                    hasOptionSet, 
+                console.log('🔄 Continuing validation for multiselect field:', {
+                    fieldId: field.id,
+                    hasOptionSet,
                     hasValidationRules: !!field.validation?.length,
                     isRequired: field.required,
-                    isEmpty 
+                    isEmpty
                 });
             }
 
@@ -672,29 +672,29 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     hasValidationRules: !!field.validation?.length,
                     validationRules: field.validation
                 });
-                
+
                 // Ensure multiselect fields always have array values
                 if (!Array.isArray(fieldValue)) {
                     console.log('⚠️ Multiselect field value is not an array, treating as empty array:', { fieldId: field.id, fieldValue });
                     fieldValue = [];
                 }
             }
-            
+
             if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(fieldValue)) {
                 // For multiselect inline (uses multiSelectOptionSetId)
                 if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
                     const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
-                    
+
                     if (optionSet.minSelections && fieldValue.length < optionSet.minSelections) {
                         validationErrors[field.id] = `Please select at least ${optionSet.minSelections} option${optionSet.minSelections === 1 ? '' : 's'}`;
                         return;
                     }
-                    
+
                     if (optionSet.maxSelections && fieldValue.length > optionSet.maxSelections) {
                         validationErrors[field.id] = `Please select at most ${optionSet.maxSelections} option${optionSet.maxSelections === 1 ? '' : 's'}`;
                         return;
                     }
-                    
+
                     // Validate that all selected values exist in the option set
                     const validOptionValues = optionSet.options.map(opt => opt.value);
                     const invalidValues = fieldValue.filter(val => !validOptionValues.includes(val));
@@ -706,7 +706,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 // For multiselectdropdown (uses selectOptionSetId)
                 else if (field.type === 'multiselectdropdown' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
                     const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-                    
+
                     // Validate that all selected values exist in the option set
                     const validOptionValues = optionSet.options.map(opt => opt.value);
                     const invalidValues = fieldValue.filter(val => !validOptionValues.includes(val));
@@ -882,7 +882,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     }
                 }
             }
-            
+
             // Comprehensive multiselect validation - ensure ALL multiselect fields require at least one selection
             if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(fieldValue) && fieldValue.length === 0) {
                 // Only add validation if no error was already set
@@ -890,12 +890,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     console.log('🎯 COMPREHENSIVE: Empty multiselect field requires validation:', {
                         fieldId: field.id,
                         fieldType: field.type,
-                        hasOptionSet: (field.type === 'multiselect' && field.multiSelectOptionSetId) || 
-                                     (field.type === 'multiselectdropdown' && field.selectOptionSetId),
+                        hasOptionSet: (field.type === 'multiselect' && field.multiSelectOptionSetId) ||
+                            (field.type === 'multiselectdropdown' && field.selectOptionSetId),
                         hasValidationRules: !!field.validation?.length,
                         isRequired: field.required
                     });
-                    
+
                     // DEFAULT RULE: ALL multiselect fields should require at least one selection
                     // This covers all cases that the specific validation missed
                     validationErrors[field.id] = 'Please select at least 1 option';
@@ -907,7 +907,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             console.log('❌ Form validation failed, errors:', validationErrors);
             // Set the validation errors in the form state so they show in the UI
             setErrors(validationErrors);
-            
+
             // Scroll to the first error field
             const firstErrorFieldId = Object.keys(validationErrors)[0];
             const firstErrorElement = document.querySelector(`[name="${firstErrorFieldId}"]`) as HTMLElement;
@@ -915,7 +915,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstErrorElement.focus();
             }
-            
+
             return;
         }
 
@@ -957,39 +957,39 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     const renderSection = useCallback((section: SurveySection) => {
         return (
-            <div key={section.id} className="mb-6">
-                <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <div key={section.id} className="mb-8">
+                <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
                         {section.title}
                     </h3>
                     {section.description && (
-                        <p className="text-gray-600">{section.description}</p>
+                        <p className="text-gray-600 text-lg">{section.description}</p>
                     )}
                 </div>
-                
+
                 {/* Render content using unified ordering */}
                 <div className="space-y-6">
                     {getOrderedSectionContent(section).map((contentItem) => {
                         if (contentItem.type === 'subsection') {
                             const subsection = contentItem.data as any;
                             return (
-                                <div key={subsection.id} className="border-l-4 border-gray-200 pl-4">
-                                    <div className="mb-4">
-                                        <h4 className="text-lg font-semibold text-gray-800">
+                                <div key={subsection.id} className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                    <div className="mb-6">
+                                        <h4 className="text-xl font-semibold text-gray-800 mb-2">
                                             {subsection.title}
                                         </h4>
                                         {subsection.description && (
-                                            <p className="text-gray-600 text-sm">{subsection.description}</p>
+                                            <p className="text-gray-600">{subsection.description}</p>
                                         )}
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         {subsection.fields.map(renderField)}
                                     </div>
                                 </div>
                             );
                         } else if (contentItem.type === 'field') {
                             const field = contentItem.data as any;
-                            return <div key={field.id} className="space-y-4">{renderField(field)}</div>;
+                            return <div key={field.id}>{renderField(field)}</div>;
                         }
                         return null;
                     })}
@@ -1001,60 +1001,66 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
 
     return (
-        <div className={clsx("max-w-4xl mx-auto bg-white rounded-lg shadow-md flex flex-col", className)} style={{ minHeight: 'calc(100vh - 200px)' }}>
-            {/* Fixed Header Section */}
-            <div className="px-8 pt-8 pb-4 flex-shrink-0">
-                <div className="text-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                        {config.title}
-                    </h1>
-                    {config.description && (
-                        <p className="text-lg text-gray-600">
-                            {config.description}
-                        </p>
-                    )}
-                </div>
-            </div>
+        <div className={clsx("h-screen bg-amber-50/30 flex flex-col", className)}>
+            <main className="flex-1 py-8 flex min-h-0">
+                <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md flex flex-col w-full h-full">
+                    {/* Fixed Header Section */}
+                    <div className="px-8 pt-8 pb-4 flex-shrink-0">
+                        <div className="text-center mb-6">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                                {config.title}
+                            </h1>
+                            {config.description && (
+                                <p className="text-lg text-gray-600">
+                                    {config.description}
+                                </p>
+                            )}
+                        </div>
+                    </div>
 
-            {/* Scrollable Content Section */}
-            <div className="flex-1 px-8 min-h-0">
-                <ScrollableContent
-                    maxHeight="calc(100vh - 320px)"
-                    minHeight="300px"
-                    showScrollIndicators={true}
-                    smoothScroll={true}
-                    mobileOptimized={true}
-                    className="mb-4"
-                    onScroll={(scrollTop, scrollHeight, clientHeight) => {
-                        // Optional: Track scroll position for analytics or state
-                        console.debug('Form scroll:', { scrollTop, scrollHeight, clientHeight });
-                    }}
-                >
-                    <form
-                        onSubmit={handleSubmit}
-                        className="space-y-6"
-                    >
-                        {config.sections
-                            .sort((a, b) => a.order - b.order)
-                            .map(renderSection)}
-                    </form>
-                </ScrollableContent>
-            </div>
+                    {/* Scrollable Content Section */}
+                    <div className="flex-1 pl-12 pr-8 min-h-0 overflow-hidden">
+                        <ScrollableContent
+                            maxHeight="100%"
+                            minHeight="200px"
+                            showScrollIndicators={true}
+                            smoothScroll={true}
+                            mobileOptimized={true}
+                            className="mb-6 h-full"
+                            onScroll={(scrollTop, scrollHeight, clientHeight) => {
+                                // Optional: Track scroll position for analytics or state
+                                console.debug('Form scroll:', { scrollTop, scrollHeight, clientHeight });
+                            }}
+                        >
+                            <div className="py-4">
+                                <form onSubmit={handleSubmit} className="space-y-8">
+                                    {config.sections
+                                        .sort((a, b) => a.order - b.order)
+                                        .map(renderSection)}
+                                </form>
+                            </div>
+                        </ScrollableContent>
+                    </div>
 
-            {/* Fixed Submit Button */}
-            <div className="px-8 pb-8 pt-4 border-t flex-shrink-0">
-                <div className="flex justify-center">
-                    <Button
-                        type="submit"
-                        loading={loading}
-                        disabled={loading}
-                        className="px-8 py-3 text-base"
-                        onClick={handleSubmit}
-                    >
-                        Submit Survey
-                    </Button>
+                    {/* Fixed Submit Button */}
+                    <div className="px-12 pb-8 pt-6 border-t flex-shrink-0">
+                        <div className="flex justify-center">
+                            <Button
+                                type="submit"
+                                loading={loading}
+                                disabled={loading}
+                                className="px-8 py-3 text-base"
+                                onClick={handleSubmit}
+                            >
+                                Submit Survey
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </main>
+
+            {/* Footer */}
+            <SurveyFooter config={config.footerConfig} />
         </div>
     );
 };

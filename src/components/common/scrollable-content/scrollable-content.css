@@ -2,8 +2,8 @@
 
 /* Webkit browsers (Chrome, Safari, Edge) */
 .scrollable-content::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 .scrollable-content::-webkit-scrollbar-track {
@@ -31,6 +31,17 @@
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
+/* Add right padding to prevent content from being hidden behind scrollbar */
+/* This ensures the scrollbar doesn't overlay form content, especially in the non-paginated form view */
+.scrollable-content {
+  padding-right: 16px;
+}
+
+/* Ensure proper spacing for form content */
+.scrollable-content form {
+  padding-right: 4px;
+}
+
 /* Hide scrollbar on mobile while maintaining functionality */
 @media (max-width: 768px) {
   .scrollable-content-mobile-hidden::-webkit-scrollbar {
@@ -41,6 +52,11 @@
   .scrollable-content-mobile-hidden {
     scrollbar-width: none;
     -ms-overflow-style: none;
+  }
+  
+  /* Remove right padding on mobile since scrollbar is hidden */
+  .scrollable-content-mobile-hidden {
+    padding-right: 0;
   }
 }
 

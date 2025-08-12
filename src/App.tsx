@@ -297,20 +297,12 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     }
 
     return (
-        <div className="min-h-screen bg-amber-50/30">
-            {/* Main Content */}
-            <main className="py-8">
-                <DynamicForm
-                    config={surveyConfig}
-                    onSubmit={handleSubmit}
-                    loading={isSubmitting}
-                    resetTrigger={resetFormTrigger}
-                />
-            </main>
-
-            {/* Footer */}
-            <SurveyFooter config={surveyConfig?.footerConfig} className="mt-12" />
-        </div>
+        <DynamicForm
+            config={surveyConfig}
+            onSubmit={handleSubmit}
+            loading={isSubmitting}
+            resetTrigger={resetFormTrigger}
+        />
     );
 }
 
