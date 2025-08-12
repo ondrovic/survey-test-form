@@ -325,11 +325,25 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     // Enhanced field validation with option set support
     const validateField = useCallback((fieldId: string, value: any) => {
-        // Find the field definition
+        // Find the field definition (including in subsections)
         let field: SurveyField | undefined;
         config.sections.forEach(section => {
+            // Check section-level fields
             const foundField = section.fields.find(f => f.id === fieldId);
-            if (foundField) field = foundField;
+            if (foundField) {
+                field = foundField;
+                return;
+            }
+            
+            // Check subsection fields
+            if (section.subsections) {
+                section.subsections.forEach(subsection => {
+                    const foundSubField = subsection.fields.find(f => f.id === fieldId);
+                    if (foundSubField) {
+                        field = foundSubField;
+                    }
+                });
+            }
         });
 
         if (!field) return;
@@ -566,10 +580,18 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         e.preventDefault();
         setHasSubmitted(true);
 
-        // Get all fields from config for validation
+        // Get all fields from config for validation (including subsection fields)
         const allFields: SurveyField[] = [];
         config.sections.forEach(section => {
+            // Add section-level fields
             allFields.push(...section.fields);
+            
+            // Add subsection fields
+            if (section.subsections) {
+                section.subsections.forEach(subsection => {
+                    allFields.push(...subsection.fields);
+                });
+            }
         });
 
         console.log('📋 Validation check:', {
@@ -883,11 +905,11 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 }
             }
 
-            // Comprehensive multiselect validation - ensure ALL multiselect fields require at least one selection
+            // Comprehensive multiselect validation - ensure required multiselect fields have at least one selection
             if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(fieldValue) && fieldValue.length === 0) {
-                // Only add validation if no error was already set
-                if (!validationErrors[field.id]) {
-                    console.log('🎯 COMPREHENSIVE: Empty multiselect field requires validation:', {
+                // Only add validation if no error was already set AND field is required
+                if (!validationErrors[field.id] && field.required) {
+                    console.log('🎯 COMPREHENSIVE: Empty required multiselect field requires validation:', {
                         fieldId: field.id,
                         fieldType: field.type,
                         hasOptionSet: (field.type === 'multiselect' && field.multiSelectOptionSetId) ||
@@ -896,8 +918,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         isRequired: field.required
                     });
 
-                    // DEFAULT RULE: ALL multiselect fields should require at least one selection
-                    // This covers all cases that the specific validation missed
+                    // DEFAULT RULE: Required multiselect fields should have at least one selection
+                    // This covers cases where required validation might have been missed
                     validationErrors[field.id] = 'Please select at least 1 option';
                 }
             }
