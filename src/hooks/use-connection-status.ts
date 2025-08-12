@@ -9,6 +9,7 @@ interface ConnectionStatus {
   error: string | null;
   isAuthenticated: boolean;
   retry: () => void;
+  lastCheckedAt: Date | null;
 }
 
 /**
@@ -19,6 +20,8 @@ export const useConnectionStatus = (): ConnectionStatus => {
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
+  // Track only when the last check completed (success or failure)
 
   const checkConnection = async () => {
     try {
@@ -36,6 +39,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
       setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
       setLoading(false);
+      setLastCheckedAt(new Date());
     }
   };
 
@@ -50,11 +54,39 @@ export const useConnectionStatus = (): ConnectionStatus => {
     }
   }, [authLoading]);
 
+  // Poll periodically to keep status fresh
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    const POLL_INTERVAL_MS = 60_000; // 1 minute
+    const intervalId = setInterval(() => {
+      checkConnection();
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [authLoading, isAuthenticated]);
+
+  // Re-check on window focus for responsiveness
+  useEffect(() => {
+    if (authLoading) return;
+
+    const handleFocus = () => {
+      // Avoid spamming if already checking
+      if (!loading) {
+        checkConnection();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [authLoading, loading]);
+
   return {
     connected,
     loading: loading || authLoading,
     error,
     isAuthenticated,
     retry,
+    lastCheckedAt,
   };
 };

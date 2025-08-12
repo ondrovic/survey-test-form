@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import { AlertCircle, ChevronDown, Loader2, RefreshCw, UserX, Wifi, WifiOff } from 'lucide-react';
 import React, { useRef, useState, useEffect } from 'react';
+import { formatDate } from '@/utils/date.utils';
 import { ConnectionStatusProps } from './connection-status.types';
 
 /**
@@ -23,7 +24,8 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     error,
     onRetry,
     isAuthenticated = true,
-    className
+    className,
+    lastCheckedAt
 }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,6 +41,8 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Display an absolute timestamp that changes only when checks occur
 
     // Theme configurations for different states
     const themes = {
@@ -261,7 +265,9 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                     {/* Connection Info */}
                     <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
                         <p className="text-xs text-gray-600">
-                            {connected ? 'Last checked: Just now' : 'Status: Not connected'}
+                            {connected ? (
+                                lastCheckedAt ? `Checked: ${formatDate(lastCheckedAt)}` : 'Last checked: —'
+                            ) : 'Status: Not connected'}
                         </p>
                     </div>
                 </div>

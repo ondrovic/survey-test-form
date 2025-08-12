@@ -5,4 +5,5 @@ export interface ConnectionStatusProps {
   onRetry?: () => void;
   isAuthenticated?: boolean;
   className?: string;
+  lastCheckedAt?: Date | null;
 }

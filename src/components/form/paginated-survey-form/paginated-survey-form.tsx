@@ -2,7 +2,8 @@ import { clsx } from 'clsx';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
-import { SurveyConfig, SurveySection, SurveyField } from '../../../types/framework.types';
+import { SurveySection, SurveyField } from '../../../types/framework.types';
+import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
 import { useSectionPagination } from '../../survey/section-paginator';
 import { InteractiveSectionRenderer } from '../../survey/section-paginator/interactive-section-renderer';
 import { FormStepIndicator } from './form-step-indicator';
@@ -10,39 +11,7 @@ import { FormNavigationControls } from './form-navigation-controls';
 import { PaginatedSurveyFormProps } from './paginated-survey-form.types';
 import { ScrollableContent, SurveyFooter } from '../../common';
 
-// Helper function to create descriptive field IDs
-const createDescriptiveFieldId = (section: SurveySection, field: SurveyField): string => {
-    const sectionSlug = section.title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    const fieldSlug = field.label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    return `${sectionSlug}_${fieldSlug}`;
-};
-
-// Helper function to transform form state to use descriptive IDs
-const transformFormStateToDescriptiveIds = (formState: Record<string, any>, config: SurveyConfig): Record<string, any> => {
-    const transformedResponses: Record<string, any> = {};
-
-    config.sections.forEach(section => {
-        // Process section-level fields
-        section.fields.forEach(field => {
-            const descriptiveId = createDescriptiveFieldId(section, field);
-            if (formState[field.id] !== undefined) {
-                transformedResponses[descriptiveId] = formState[field.id];
-            }
-        });
-
-        // Process subsection fields
-        section.subsections?.forEach(subsection => {
-            subsection.fields.forEach(field => {
-                const descriptiveId = createDescriptiveFieldId(section, field);
-                if (formState[field.id] !== undefined) {
-                    transformedResponses[descriptiveId] = formState[field.id];
-                }
-            });
-        });
-    });
-
-    return transformedResponses;
-};
+// Removed local helpers in favor of shared utils (DRY)
 
 export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     config,

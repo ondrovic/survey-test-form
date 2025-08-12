@@ -12,7 +12,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     title = 'Survey Administration',
     onLogout
 }) => {
-    const { connected, loading, error, isAuthenticated, retry } = useConnectionStatus();
+    const { connected, loading, error, isAuthenticated, retry, lastCheckedAt } = useConnectionStatus();
 
     return (
         <header className="bg-white shadow-sm border-b">
@@ -28,6 +28,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                             error={error}
                             isAuthenticated={isAuthenticated}
                             onRetry={retry}
+                            lastCheckedAt={lastCheckedAt}
                         />
                         <Button variant="outline" onClick={onLogout}>
                             Logout

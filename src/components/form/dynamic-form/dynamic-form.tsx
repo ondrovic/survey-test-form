@@ -2,34 +2,14 @@ import { clsx } from 'clsx';
 import React, { useCallback } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
-import { SurveyConfig, SurveyField, SurveySection } from '../../../types/framework.types';
+import { SurveyField, SurveySection } from '../../../types/framework.types';
+import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 import { Button, ScrollableContent, SurveyFooter } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
 
-// Helper function to create descriptive field IDs
-const createDescriptiveFieldId = (section: SurveySection, field: SurveyField): string => {
-    const sectionSlug = section.title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    const fieldSlug = field.label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    return `${sectionSlug}_${fieldSlug}`;
-};
-
-// Helper function to transform form state to use descriptive IDs
-const transformFormStateToDescriptiveIds = (formState: Record<string, any>, config: SurveyConfig): Record<string, any> => {
-    const transformedResponses: Record<string, any> = {};
-
-    config.sections.forEach(section => {
-        section.fields.forEach(field => {
-            const descriptiveId = createDescriptiveFieldId(section, field);
-            if (formState[field.id] !== undefined) {
-                transformedResponses[descriptiveId] = formState[field.id];
-            }
-        });
-    });
-
-    return transformedResponses;
-};
+// Removed local helpers in favor of shared utils (DRY)
 
 export const DynamicForm: React.FC<DynamicFormProps> = ({
     config,
