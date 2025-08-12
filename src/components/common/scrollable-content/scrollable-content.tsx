@@ -29,6 +29,10 @@ export interface ScrollableContentProps {
    * Whether to use mobile-optimized scrolling on small screens
    */
   mobileOptimized?: boolean;
+  /**
+   * When this value changes, scrollbars reset to top
+   */
+  resetTrigger?: any;
 }
 
 export const ScrollableContent: React.FC<ScrollableContentProps> = ({
@@ -39,7 +43,8 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
   showScrollIndicators = true,
   smoothScroll = true,
   onScroll,
-  mobileOptimized = true
+  mobileOptimized = true,
+  resetTrigger
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollState, setScrollState] = useState({
@@ -92,40 +97,34 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
     updateScrollState();
   }, [children]);
 
+  // When resetTrigger changes, scroll to top
+  useEffect(() => {
+    if (resetTrigger !== undefined) {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({ top: 0, behavior: smoothScroll ? 'smooth' : 'auto' });
+      }
+    }
+  }, [resetTrigger, smoothScroll]);
+
   const handleScroll = () => {
     updateScrollState();
   };
 
-  // Scroll to top method (can be exposed via ref)
+  // Internal helpers
   const scrollToTop = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: 0,
-        behavior: smoothScroll ? 'smooth' : 'auto'
-      });
-    }
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({ top: 0, behavior: smoothScroll ? 'smooth' : 'auto' });
   };
 
-  // Scroll to element method
   const scrollToElement = (element: HTMLElement) => {
-    if (scrollRef.current && element) {
-      const containerRect = scrollRef.current.getBoundingClientRect();
-      const elementRect = element.getBoundingClientRect();
-      const relativeTop = elementRect.top - containerRect.top + scrollRef.current.scrollTop;
-      
-      scrollRef.current.scrollTo({
-        top: relativeTop - 20, // 20px offset from top
-        behavior: smoothScroll ? 'smooth' : 'auto'
-      });
-    }
+    if (!scrollRef.current || !element) return;
+    const containerRect = scrollRef.current.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const relativeTop = elementRect.top - containerRect.top + scrollRef.current.scrollTop;
+    scrollRef.current.scrollTo({ top: relativeTop - 20, behavior: smoothScroll ? 'smooth' : 'auto' });
   };
 
-  // Expose methods via imperative handle if needed
-  React.useImperativeHandle(scrollRef, () => ({
-    scrollToTop,
-    scrollToElement,
-    scrollTo: (options: ScrollToOptions) => scrollRef.current?.scrollTo(options)
-  }));
+  // Note: imperative handle removed to avoid ref recursion; use props/state instead
 
   const containerClasses = clsx(
     'relative overflow-hidden scroll-container-wrapper',

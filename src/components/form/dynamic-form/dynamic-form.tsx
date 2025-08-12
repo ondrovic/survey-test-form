@@ -5,6 +5,7 @@ import { useSurveyData } from '../../../contexts/survey-data-context';
 import { SurveyField, SurveySection } from '../../../types/framework.types';
 import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
+import { validateAllFields, validateFieldValue } from '../utils/validation.utils';
 import { Button, ScrollableContent, SurveyFooter } from '../../common';
 import { FieldRenderer } from '../field-renderer';
 import { DynamicFormProps } from './dynamic-form.types';
@@ -278,274 +279,27 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         });
     }, [selectOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
 
-    // Helper function to check if a field value is considered "empty" based on field type
-    const isFieldEmpty = useCallback((field: SurveyField, value: any): boolean => {
-        if (value === null || value === undefined) return true;
+    // Removed local isFieldEmpty; use validateFieldValue for checks
 
-        switch (field.type) {
-            case 'multiselect':
-            case 'multiselectdropdown':
-                return Array.isArray(value) ? value.length === 0 : true;
-            case 'text':
-            case 'email':
-            case 'textarea':
-            case 'number':
-                return String(value).trim() === '';
-            case 'select':
-                // For single select, empty string or exactly empty string means no selection
-                return value === '' || value === null || value === undefined;
-            case 'radio':
-            case 'rating':
-                // For radio/rating, empty string or exactly empty string means no selection
-                return value === '' || value === null || value === undefined;
-            default:
-                return !value || value === '';
-        }
-    }, []);
-
-    // Enhanced field validation with option set support
+    // Enhanced field validation using shared utils
     const validateField = useCallback((fieldId: string, value: any) => {
-        // Find the field definition (including in subsections)
         let field: SurveyField | undefined;
-        config.sections.forEach(section => {
-            // Check section-level fields
-            const foundField = section.fields.find(f => f.id === fieldId);
-            if (foundField) {
-                field = foundField;
-                return;
-            }
-            
-            // Check subsection fields
-            if (section.subsections) {
-                section.subsections.forEach(subsection => {
-                    const foundSubField = subsection.fields.find(f => f.id === fieldId);
-                    if (foundSubField) {
-                        field = foundSubField;
-                    }
-                });
-            }
-        });
-
+        for (const section of config.sections) {
+            field = section.fields.find(f => f.id === fieldId);
+            if (field) break;
+            field = section.subsections?.flatMap(s => s.fields).find(f => f.id === fieldId);
+            if (field) break;
+        }
         if (!field) return;
 
-        // Clear any existing error for this field
-        setFieldError(fieldId, '');
-
-        // Check if required field is empty
-        if (field.required && isFieldEmpty(field, value)) {
-            setFieldError(fieldId, 'This field is required');
-            return;
-        }
-
-        // Skip validation for empty non-required fields
-        if (isFieldEmpty(field, value) && !field.required) {
-            return;
-        }
-
-        // Email validation
-        if (field.type === 'email' && value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-                setFieldError(fieldId, 'Please enter a valid email address');
-                return;
-            }
-        }
-
-        // Number validation
-        if (field.type === 'number' && value) {
-            const numValue = Number(value);
-            if (isNaN(numValue)) {
-                setFieldError(fieldId, 'Please enter a valid number');
-                return;
-            }
-        }
-
-        // Multi-select field validation (both multiselect and multiselectdropdown)
-        if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(value)) {
-            // For multiselect inline (uses multiSelectOptionSetId)
-            if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
-                const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
-
-                if (optionSet.minSelections && value.length < optionSet.minSelections) {
-                    setFieldError(fieldId, `Please select at least ${optionSet.minSelections} option${optionSet.minSelections === 1 ? '' : 's'}`);
-                    return;
-                }
-
-                if (optionSet.maxSelections && value.length > optionSet.maxSelections) {
-                    setFieldError(fieldId, `Please select at most ${optionSet.maxSelections} option${optionSet.maxSelections === 1 ? '' : 's'}`);
-                    return;
-                }
-
-                // Validate that all selected values exist in the option set
-                const validOptionValues = optionSet.options.map(opt => opt.value);
-                const invalidValues = value.filter(val => !validOptionValues.includes(val));
-                if (invalidValues.length > 0) {
-                    setFieldError(fieldId, 'Some selected options are no longer available');
-                    return;
-                }
-            }
-            // For multiselectdropdown (uses selectOptionSetId)
-            else if (field.type === 'multiselectdropdown' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
-                const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-
-                // Validate that all selected values exist in the option set
-                const validOptionValues = optionSet.options.map(opt => opt.value);
-                const invalidValues = value.filter(val => !validOptionValues.includes(val));
-                if (invalidValues.length > 0) {
-                    setFieldError(fieldId, 'Some selected options are no longer available');
-                    return;
-                }
-            }
-            // For both types using individual field options (validate integrity)
-            if (field.options && field.options.length > 0) {
-                // Validate that all selected values exist in individual field options
-                const validOptionValues = field.options.map(opt => opt.value);
-                const invalidValues = value.filter(val => !validOptionValues.includes(val));
-                if (invalidValues.length > 0) {
-                    setFieldError(fieldId, 'Some selected options are no longer available');
-                    return;
-                }
-            }
-        }
-
-        // Radio and select field validation
-        if ((field.type === 'radio' || field.type === 'select') && value) {
-            if (field.radioOptionSetId && radioOptionSetsRecord[field.radioOptionSetId]) {
-                // Validate that the selected value exists in the radio option set
-                const optionSet = radioOptionSetsRecord[field.radioOptionSetId];
-                const validOptionValues = optionSet.options.map(opt => opt.value);
-                if (!validOptionValues.includes(value)) {
-                    setFieldError(fieldId, 'Selected option is no longer available');
-                    return;
-                }
-            } else if (field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
-                // Validate that the selected value exists in the select option set
-                const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-                const validOptionValues = optionSet.options.map(opt => opt.value);
-                if (!validOptionValues.includes(value)) {
-                    setFieldError(fieldId, 'Selected option is no longer available');
-                    return;
-                }
-            } else if (field.options && field.options.length > 0) {
-                // Validate that the selected value exists in individual field options
-                const validOptionValues = field.options.map(opt => opt.value);
-                if (!validOptionValues.includes(value)) {
-                    setFieldError(fieldId, 'Selected option is no longer available');
-                    return;
-                }
-            }
-        }
-
-        // Rating field validation
-        if (field.type === 'rating' && value) {
-            if (field.ratingScaleId && ratingScalesRecord[field.ratingScaleId]) {
-                // Validate that the selected value exists in the rating scale
-                const ratingScale = ratingScalesRecord[field.ratingScaleId];
-                const validOptionValues = ratingScale.options.map(opt => opt.value);
-                if (!validOptionValues.includes(value)) {
-                    setFieldError(fieldId, 'Selected rating is no longer available');
-                    return;
-                }
-            } else if (field.options && field.options.length > 0) {
-                // Validate that the selected value exists in individual field options
-                const validOptionValues = field.options.map(opt => opt.value);
-                if (!validOptionValues.includes(value)) {
-                    setFieldError(fieldId, 'Selected rating is no longer available');
-                    return;
-                }
-            }
-        }
-
-        // Individual field validation rules (applied to ALL fields regardless of option sets)
-        if (field.validation && field.validation.length > 0) {
-            for (const rule of field.validation) {
-                let validationError: string | null = null;
-
-                switch (rule.type) {
-                    case 'email':
-                        if (value && field.type !== 'email') {
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                            if (!emailRegex.test(value)) {
-                                validationError = rule.message || 'Please enter a valid email address';
-                            }
-                        }
-                        break;
-
-                    case 'min':
-                        if (Array.isArray(value)) {
-                            // For multiselect fields, validate minimum selections
-                            if (value.length < (rule.value || 0)) {
-                                validationError = rule.message || `Please select at least ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                            }
-                        } else if (value && typeof value === 'string') {
-                            // For text fields, validate minimum length
-                            if (value.length < (rule.value || 0)) {
-                                validationError = rule.message || `Must be at least ${rule.value} characters`;
-                            }
-                        } else if (value && typeof value === 'number') {
-                            // For number fields, validate minimum value
-                            if (value < (rule.value || 0)) {
-                                validationError = rule.message || `Must be at least ${rule.value}`;
-                            }
-                        }
-                        break;
-
-                    case 'max':
-                        if (Array.isArray(value)) {
-                            // For multiselect fields, validate maximum selections
-                            if (value.length > (rule.value || 0)) {
-                                validationError = rule.message || `Please select at most ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                            }
-                        } else if (value && typeof value === 'string') {
-                            // For text fields, validate maximum length
-                            if (value.length > (rule.value || 0)) {
-                                validationError = rule.message || `Must be no more than ${rule.value} characters`;
-                            }
-                        } else if (value && typeof value === 'number') {
-                            // For number fields, validate maximum value
-                            if (value > (rule.value || 0)) {
-                                validationError = rule.message || `Must be no more than ${rule.value}`;
-                            }
-                        }
-                        break;
-
-                    case 'minSelections':
-                        if (Array.isArray(value) && value.length < (rule.value || 0)) {
-                            validationError = rule.message || `Please select at least ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                        }
-                        break;
-
-                    case 'maxSelections':
-                        if (Array.isArray(value) && value.length > (rule.value || 0)) {
-                            validationError = rule.message || `Please select at most ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                        }
-                        break;
-
-                    case 'pattern':
-                        if (value && rule.value && typeof value === 'string') {
-                            const regex = new RegExp(rule.value);
-                            if (!regex.test(value)) {
-                                validationError = rule.message || 'Invalid format';
-                            }
-                        }
-                        break;
-
-                    case 'required':
-                        // Required validation is already handled above
-                        break;
-
-                    case 'custom':
-                        // Custom validation would need to be implemented per use case
-                        break;
-                }
-
-                if (validationError) {
-                    setFieldError(fieldId, validationError);
-                    return; // Stop at first validation error for this field
-                }
-            }
-        }
-    }, [config, setFieldError, isFieldEmpty, multiSelectOptionSetsRecord, radioOptionSetsRecord, selectOptionSetsRecord, ratingScalesRecord]);
+        const error = validateFieldValue(field, value, {
+            ratingScales: ratingScalesRecord,
+            radioOptionSets: radioOptionSetsRecord,
+            multiSelectOptionSets: multiSelectOptionSetsRecord,
+            selectOptionSets: selectOptionSetsRecord,
+        });
+        setFieldError(fieldId, error || '');
+    }, [config.sections, setFieldError, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
@@ -586,323 +340,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         // Clear any existing errors first
         setErrors({});
 
-        // Comprehensive validation - check all field types and validation rules
-        const validationErrors: Record<string, string> = {};
-        allFields.forEach(field => {
-            let fieldValue = formState.formData[field.id];
-
-            // Normalize multiselect field values to arrays
-            if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && !Array.isArray(fieldValue)) {
-                console.log('⚠️ Normalizing multiselect field value to array:', { fieldId: field.id, originalValue: fieldValue });
-                fieldValue = fieldValue ? [fieldValue] : [];
-            }
-
-            const isEmpty = isFieldEmpty(field, fieldValue);
-
-            console.log('🔍 Validating field:', {
-                fieldId: field.id,
-                fieldLabel: field.label,
-                fieldType: field.type,
-                fieldValue,
-                isEmpty,
-                isRequired: field.required,
-                hasValidationRules: !!field.validation?.length,
-                validationRules: field.validation,
-                hasMultiSelectOptionSetId: !!field.multiSelectOptionSetId,
-                hasSelectOptionSetId: !!field.selectOptionSetId,
-                hasOptions: !!field.options?.length,
-                willError: field.required && isEmpty
-            });
-
-            // Required field validation
-            if (field.required && isEmpty) {
-                console.log('❌ Required field is empty:', { fieldId: field.id, fieldType: field.type, fieldValue });
-                validationErrors[field.id] = 'This field is required';
-                return;
-            }
-
-            // Skip validation for empty non-required fields UNLESS they have validation rules OR are multiselect fields
-            const isMultiSelectField = field.type === 'multiselect' || field.type === 'multiselectdropdown';
-            const hasOptionSet = (field.type === 'multiselect' && field.multiSelectOptionSetId) ||
-                (field.type === 'multiselectdropdown' && field.selectOptionSetId);
-
-            if (isEmpty && !field.required && !field.validation?.length && !isMultiSelectField) {
-                console.log('⏭️ Skipping validation for empty non-required field without validation rules:', field.id);
-                return;
-            }
-
-            // For multiselect fields, always continue to validation even if empty and non-required
-            if (isMultiSelectField) {
-                console.log('🔄 Continuing validation for multiselect field:', {
-                    fieldId: field.id,
-                    hasOptionSet,
-                    hasValidationRules: !!field.validation?.length,
-                    isRequired: field.required,
-                    isEmpty
-                });
-            }
-
-            // Email validation
-            if (field.type === 'email' && fieldValue) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(fieldValue)) {
-                    validationErrors[field.id] = 'Please enter a valid email address';
-                    return;
-                }
-            }
-
-            // Number validation
-            if (field.type === 'number' && fieldValue) {
-                const numValue = Number(fieldValue);
-                if (isNaN(numValue)) {
-                    validationErrors[field.id] = 'Please enter a valid number';
-                    return;
-                }
-            }
-
-            // Multi-select field validation (both multiselect and multiselectdropdown)
-            if (field.type === 'multiselect' || field.type === 'multiselectdropdown') {
-                console.log('🔍 Processing multiselect field:', {
-                    fieldId: field.id,
-                    fieldType: field.type,
-                    fieldValue,
-                    isArray: Array.isArray(fieldValue),
-                    fieldValueType: typeof fieldValue,
-                    hasMultiSelectOptionSetId: !!field.multiSelectOptionSetId,
-                    hasSelectOptionSetId: !!field.selectOptionSetId,
-                    hasOptions: !!field.options?.length,
-                    hasValidationRules: !!field.validation?.length,
-                    validationRules: field.validation
-                });
-
-                // Ensure multiselect fields always have array values
-                if (!Array.isArray(fieldValue)) {
-                    console.log('⚠️ Multiselect field value is not an array, treating as empty array:', { fieldId: field.id, fieldValue });
-                    fieldValue = [];
-                }
-            }
-
-            if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(fieldValue)) {
-                // For multiselect inline (uses multiSelectOptionSetId)
-                if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
-                    const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
-
-                    if (optionSet.minSelections && fieldValue.length < optionSet.minSelections) {
-                        validationErrors[field.id] = `Please select at least ${optionSet.minSelections} option${optionSet.minSelections === 1 ? '' : 's'}`;
-                        return;
-                    }
-
-                    if (optionSet.maxSelections && fieldValue.length > optionSet.maxSelections) {
-                        validationErrors[field.id] = `Please select at most ${optionSet.maxSelections} option${optionSet.maxSelections === 1 ? '' : 's'}`;
-                        return;
-                    }
-
-                    // Validate that all selected values exist in the option set
-                    const validOptionValues = optionSet.options.map(opt => opt.value);
-                    const invalidValues = fieldValue.filter(val => !validOptionValues.includes(val));
-                    if (invalidValues.length > 0) {
-                        validationErrors[field.id] = 'Some selected options are no longer available';
-                        return;
-                    }
-                }
-                // For multiselectdropdown (uses selectOptionSetId)
-                else if (field.type === 'multiselectdropdown' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
-                    const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-
-                    // Validate that all selected values exist in the option set
-                    const validOptionValues = optionSet.options.map(opt => opt.value);
-                    const invalidValues = fieldValue.filter(val => !validOptionValues.includes(val));
-                    if (invalidValues.length > 0) {
-                        validationErrors[field.id] = 'Some selected options are no longer available';
-                        return;
-                    }
-                }
-                // For both types using individual field options (validate integrity)
-                if (field.options && field.options.length > 0) {
-                    // Validate that all selected values exist in individual field options
-                    const validOptionValues = field.options.map(opt => opt.value);
-                    const invalidValues = fieldValue.filter(val => !validOptionValues.includes(val));
-                    if (invalidValues.length > 0) {
-                        validationErrors[field.id] = 'Some selected options are no longer available';
-                        return;
-                    }
-                }
-            }
-
-            // Radio and select field validation
-            if ((field.type === 'radio' || field.type === 'select') && fieldValue) {
-                if (field.radioOptionSetId && radioOptionSetsRecord[field.radioOptionSetId]) {
-                    // Validate that the selected value exists in the radio option set
-                    const optionSet = radioOptionSetsRecord[field.radioOptionSetId];
-                    const validOptionValues = optionSet.options.map(opt => opt.value);
-                    if (!validOptionValues.includes(fieldValue)) {
-                        validationErrors[field.id] = 'Selected option is no longer available';
-                        return;
-                    }
-                } else if (field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
-                    // Validate that the selected value exists in the select option set
-                    const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-                    const validOptionValues = optionSet.options.map(opt => opt.value);
-                    if (!validOptionValues.includes(fieldValue)) {
-                        validationErrors[field.id] = 'Selected option is no longer available';
-                        return;
-                    }
-                } else if (field.options && field.options.length > 0) {
-                    // Validate that the selected value exists in individual field options
-                    const validOptionValues = field.options.map(opt => opt.value);
-                    if (!validOptionValues.includes(fieldValue)) {
-                        validationErrors[field.id] = 'Selected option is no longer available';
-                        return;
-                    }
-                }
-            }
-
-            // Rating field validation
-            if (field.type === 'rating' && fieldValue) {
-                if (field.ratingScaleId && ratingScalesRecord[field.ratingScaleId]) {
-                    // Validate that the selected value exists in the rating scale
-                    const ratingScale = ratingScalesRecord[field.ratingScaleId];
-                    const validOptionValues = ratingScale.options.map(opt => opt.value);
-                    if (!validOptionValues.includes(fieldValue)) {
-                        validationErrors[field.id] = 'Selected rating is no longer available';
-                        return;
-                    }
-                } else if (field.options && field.options.length > 0) {
-                    // Validate that the selected value exists in individual field options
-                    const validOptionValues = field.options.map(opt => opt.value);
-                    if (!validOptionValues.includes(fieldValue)) {
-                        validationErrors[field.id] = 'Selected rating is no longer available';
-                        return;
-                    }
-                }
-            }
-
-            // Debug logging for multiselect fields (can be removed in production)
-            if ((field.type === 'multiselect' || field.type === 'multiselectdropdown')) {
-                console.log('🧪 Multiselect validation:', {
-                    fieldId: field.id,
-                    fieldType: field.type,
-                    selectionCount: Array.isArray(fieldValue) ? fieldValue.length : 'N/A',
-                    hasValidationRules: !!field.validation?.length
-                });
-            }
-
-            // Individual field validation rules (applied to ALL fields regardless of option sets)
-            if (field.validation && field.validation.length > 0) {
-                console.log('📝 Applying individual validation rules for field:', field.id, field.validation);
-                for (const rule of field.validation) {
-                    let validationError: string | null = null;
-
-                    switch (rule.type) {
-                        case 'email':
-                            if (fieldValue && field.type !== 'email') {
-                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                if (!emailRegex.test(fieldValue)) {
-                                    validationError = rule.message || 'Please enter a valid email address';
-                                }
-                            }
-                            break;
-
-                        case 'min':
-                            if (Array.isArray(fieldValue)) {
-                                // For multiselect fields, validate minimum selections
-                                if (fieldValue.length < (rule.value || 0)) {
-                                    validationError = rule.message || `Please select at least ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                                }
-                            } else if (fieldValue && typeof fieldValue === 'string') {
-                                // For text fields, validate minimum length
-                                if (fieldValue.length < (rule.value || 0)) {
-                                    validationError = rule.message || `Must be at least ${rule.value} characters`;
-                                }
-                            } else if (fieldValue && typeof fieldValue === 'number') {
-                                // For number fields, validate minimum value
-                                if (fieldValue < (rule.value || 0)) {
-                                    validationError = rule.message || `Must be at least ${rule.value}`;
-                                }
-                            }
-                            break;
-
-                        case 'max':
-                            if (Array.isArray(fieldValue)) {
-                                // For multiselect fields, validate maximum selections
-                                if (fieldValue.length > (rule.value || 0)) {
-                                    validationError = rule.message || `Please select at most ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                                }
-                            } else if (fieldValue && typeof fieldValue === 'string') {
-                                // For text fields, validate maximum length
-                                if (fieldValue.length > (rule.value || 0)) {
-                                    validationError = rule.message || `Must be no more than ${rule.value} characters`;
-                                }
-                            } else if (fieldValue && typeof fieldValue === 'number') {
-                                // For number fields, validate maximum value
-                                if (fieldValue > (rule.value || 0)) {
-                                    validationError = rule.message || `Must be no more than ${rule.value}`;
-                                }
-                            }
-                            break;
-
-                        case 'minSelections':
-                            if (Array.isArray(fieldValue)) {
-                                console.log('🔍 Checking minSelections rule:', { fieldValue, ruleValue: rule.value, willFail: fieldValue.length < (rule.value || 0) });
-                                if (fieldValue.length < (rule.value || 0)) {
-                                    validationError = rule.message || `Please select at least ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                                }
-                            }
-                            break;
-
-                        case 'maxSelections':
-                            if (Array.isArray(fieldValue)) {
-                                console.log('🔍 Checking maxSelections rule:', { fieldValue, ruleValue: rule.value, willFail: fieldValue.length > (rule.value || 0) });
-                                if (fieldValue.length > (rule.value || 0)) {
-                                    validationError = rule.message || `Please select at most ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                                }
-                            }
-                            break;
-
-                        case 'pattern':
-                            if (fieldValue && rule.value && typeof fieldValue === 'string') {
-                                const regex = new RegExp(rule.value);
-                                if (!regex.test(fieldValue)) {
-                                    validationError = rule.message || 'Invalid format';
-                                }
-                            }
-                            break;
-
-                        case 'required':
-                            // Required validation is already handled above
-                            break;
-
-                        case 'custom':
-                            // Custom validation would need to be implemented per use case
-                            break;
-                    }
-
-                    if (validationError) {
-                        console.log('❌ Validation error found:', validationError);
-                        validationErrors[field.id] = validationError;
-                        return; // Stop at first validation error for this field
-                    }
-                }
-            }
-
-            // Comprehensive multiselect validation - ensure required multiselect fields have at least one selection
-            if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(fieldValue) && fieldValue.length === 0) {
-                // Only add validation if no error was already set AND field is required
-                if (!validationErrors[field.id] && field.required) {
-                    console.log('🎯 COMPREHENSIVE: Empty required multiselect field requires validation:', {
-                        fieldId: field.id,
-                        fieldType: field.type,
-                        hasOptionSet: (field.type === 'multiselect' && field.multiSelectOptionSetId) ||
-                            (field.type === 'multiselectdropdown' && field.selectOptionSetId),
-                        hasValidationRules: !!field.validation?.length,
-                        isRequired: field.required
-                    });
-
-                    // DEFAULT RULE: Required multiselect fields should have at least one selection
-                    // This covers cases where required validation might have been missed
-                    validationErrors[field.id] = 'Please select at least 1 option';
-                }
-            }
+        // Use shared validation across all fields to produce per-field errors
+        const { errors: validationErrors } = validateAllFields(formState.formData, config, {
+            ratingScales: ratingScalesRecord,
+            radioOptionSets: radioOptionSetsRecord,
+            multiSelectOptionSets: multiSelectOptionSetsRecord,
+            selectOptionSets: selectOptionSetsRecord,
         });
 
         if (Object.keys(validationErrors).length > 0) {
@@ -934,7 +377,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             // The error will be handled by the parent component
             console.error('Form submission error:', error);
         }
-    }, [formState.formData, formState.errors, onSubmit, config, isFieldEmpty, setErrors, multiSelectOptionSetsRecord, radioOptionSetsRecord, selectOptionSetsRecord, ratingScalesRecord]);
+    }, [formState.formData, formState.errors, onSubmit, config, setErrors, multiSelectOptionSetsRecord, radioOptionSetsRecord, selectOptionSetsRecord, ratingScalesRecord]);
 
     const renderField = useCallback((field: SurveyField) => {
         // Only show error if form has been submitted
@@ -1029,6 +472,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             smoothScroll={true}
                             mobileOptimized={true}
                             className="mb-6 h-full"
+                            resetTrigger={config.id}
                             onScroll={(scrollTop, scrollHeight, clientHeight) => {
                                 // Optional: Track scroll position for analytics or state
                                 console.debug('Form scroll:', { scrollTop, scrollHeight, clientHeight });

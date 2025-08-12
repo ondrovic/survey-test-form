@@ -10,6 +10,7 @@ import { FormStepIndicator } from './form-step-indicator';
 import { FormNavigationControls } from './form-navigation-controls';
 import { PaginatedSurveyFormProps } from './paginated-survey-form.types';
 import { ScrollableContent, SurveyFooter } from '../../common';
+import { validateAllFields, validateSection as validateSectionShared, validateFieldValue } from '../utils/validation.utils';
 
 // Removed local helpers in favor of shared utils (DRY)
 
@@ -171,11 +172,28 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
         
-        // Clear field error when user starts typing
-        if (formState.errors[fieldId]) {
-            setFieldError(fieldId, '');
+        // Live-validate if already submitted or field has an error
+        if (hasSubmitted || formState.errors[fieldId]) {
+            let field: SurveyField | undefined;
+            for (const section of config.sections) {
+                field = section.fields.find(f => f.id === fieldId);
+                if (field) break;
+                field = section.subsections?.flatMap(s => s.fields).find(f => f.id === fieldId);
+                if (field) break;
+            }
+            if (field) {
+                const err = validateFieldValue(field, value, {
+                    ratingScales: ratingScalesRecord,
+                    radioOptionSets: radioOptionSetsRecord,
+                    multiSelectOptionSets: multiSelectOptionSetsRecord,
+                    selectOptionSets: selectOptionSetsRecord,
+                });
+                setFieldError(fieldId, err || '');
+            } else if (formState.errors[fieldId]) {
+                setFieldError(fieldId, '');
+            }
         }
-    }, [setFieldValue, setFieldError, formState.errors]);
+    }, [setFieldValue, setFieldError, formState.errors, hasSubmitted, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
     // Helper function to check if a field value is considered "empty"
     const isFieldEmpty = useCallback((field: SurveyField, value: any): boolean => {
@@ -201,136 +219,13 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
     // Enhanced validation function for a specific section
     const validateSection = useCallback((sectionIndex: number): { isValid: boolean; errors: Record<string, string> } => {
-        const section = config.sections[sectionIndex];
-        if (!section) return { isValid: true, errors: {} };
-
-        const sectionErrors: Record<string, string> = {};
-
-        processAllFields(section, (field) => {
-            const fieldValue = formState.formData[field.id];
-            const isEmpty = isFieldEmpty(field, fieldValue);
-
-            // Required field validation
-            if (field.required && isEmpty) {
-                sectionErrors[field.id] = 'This field is required';
-                return;
-            }
-
-            // Skip validation for empty non-required fields
-            if (isEmpty && !field.required && !field.validation?.length) {
-                return;
-            }
-
-            // Email validation
-            if (field.type === 'email' && fieldValue) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(fieldValue)) {
-                    sectionErrors[field.id] = 'Please enter a valid email address';
-                    return;
-                }
-            }
-
-            // Number validation
-            if (field.type === 'number' && fieldValue) {
-                const numValue = Number(fieldValue);
-                if (isNaN(numValue)) {
-                    sectionErrors[field.id] = 'Please enter a valid number';
-                    return;
-                }
-            }
-
-            // Multi-select field validation
-            if ((field.type === 'multiselect' || field.type === 'multiselectdropdown') && Array.isArray(fieldValue)) {
-                // For multiselect inline (uses multiSelectOptionSetId)
-                if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
-                    const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
-                    
-                    if (optionSet.minSelections && fieldValue.length < optionSet.minSelections) {
-                        sectionErrors[field.id] = `Please select at least ${optionSet.minSelections} option${optionSet.minSelections === 1 ? '' : 's'}`;
-                        return;
-                    }
-                    
-                    if (optionSet.maxSelections && fieldValue.length > optionSet.maxSelections) {
-                        sectionErrors[field.id] = `Please select at most ${optionSet.maxSelections} option${optionSet.maxSelections === 1 ? '' : 's'}`;
-                        return;
-                    }
-                }
-            }
-
-            // Individual field validation rules
-            if (field.validation && field.validation.length > 0) {
-                for (const rule of field.validation) {
-                    let validationError: string | null = null;
-
-                    switch (rule.type) {
-                        case 'required':
-                            if (isEmpty) {
-                                validationError = rule.message || 'This field is required';
-                            }
-                            break;
-                        case 'email':
-                            if (fieldValue && field.type !== 'email') {
-                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                if (!emailRegex.test(fieldValue)) {
-                                    validationError = rule.message || 'Please enter a valid email address';
-                                }
-                            }
-                            break;
-                        case 'min':
-                            if (Array.isArray(fieldValue)) {
-                                if (fieldValue.length < (rule.value || 0)) {
-                                    validationError = rule.message || `Please select at least ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                                }
-                            } else if (fieldValue && typeof fieldValue === 'string') {
-                                if (fieldValue.length < (rule.value || 0)) {
-                                    validationError = rule.message || `Must be at least ${rule.value} characters`;
-                                }
-                            }
-                            break;
-                        case 'max':
-                            if (Array.isArray(fieldValue)) {
-                                if (fieldValue.length > (rule.value || 0)) {
-                                    validationError = rule.message || `Please select at most ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                                }
-                            } else if (fieldValue && typeof fieldValue === 'string') {
-                                if (fieldValue.length > (rule.value || 0)) {
-                                    validationError = rule.message || `Must be no more than ${rule.value} characters`;
-                                }
-                            }
-                            break;
-                        case 'minSelections':
-                            if (Array.isArray(fieldValue) && fieldValue.length < (rule.value || 0)) {
-                                validationError = rule.message || `Please select at least ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                            }
-                            break;
-                        case 'maxSelections':
-                            if (Array.isArray(fieldValue) && fieldValue.length > (rule.value || 0)) {
-                                validationError = rule.message || `Please select at most ${rule.value} option${rule.value === 1 ? '' : 's'}`;
-                            }
-                            break;
-                        case 'pattern':
-                            if (fieldValue && rule.value && typeof fieldValue === 'string') {
-                                const regex = new RegExp(rule.value);
-                                if (!regex.test(fieldValue)) {
-                                    validationError = rule.message || 'Invalid format';
-                                }
-                            }
-                            break;
-                    }
-
-                    if (validationError) {
-                        sectionErrors[field.id] = validationError;
-                        break;
-                    }
-                }
-            }
+        return validateSectionShared(sectionIndex, formState.formData, config, {
+            ratingScales: ratingScalesRecord,
+            radioOptionSets: radioOptionSetsRecord,
+            multiSelectOptionSets: multiSelectOptionSetsRecord,
+            selectOptionSets: selectOptionSetsRecord,
         });
-
-        return {
-            isValid: Object.keys(sectionErrors).length === 0,
-            errors: sectionErrors
-        };
-    }, [config.sections, formState.formData, isFieldEmpty, multiSelectOptionSetsRecord, processAllFields]);
+    }, [config, formState.formData, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
     // Handle next button with validation
     const handleNext = useCallback(() => {
@@ -383,17 +278,13 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     const handleSubmit = useCallback(async () => {
         setHasSubmitted(true);
         
-        // Validate all sections
-        let allSectionsValid = true;
-        const allErrors: Record<string, string> = {};
-        
-        for (let i = 0; i < config.sections.length; i++) {
-            const validation = validateSection(i);
-            if (!validation.isValid) {
-                allSectionsValid = false;
-                Object.assign(allErrors, validation.errors);
-            }
-        }
+        // Validate entire form using shared validator (returns per-field errors)
+        const { isValid: allSectionsValid, errors: allErrors } = validateAllFields(formState.formData, config, {
+            ratingScales: ratingScalesRecord,
+            radioOptionSets: radioOptionSetsRecord,
+            multiSelectOptionSets: multiSelectOptionSetsRecord,
+            selectOptionSets: selectOptionSetsRecord,
+        });
 
         if (!allSectionsValid) {
             setErrors(allErrors);
@@ -401,8 +292,6 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             // Navigate to first section with errors
             const firstErrorFieldId = Object.keys(allErrors)[0];
             let sectionWithError = -1;
-            
-            // Check all sections including subsections for the field with error
             for (let i = 0; i < config.sections.length; i++) {
                 const section = config.sections[i];
                 const hasError = section.fields.some(field => field.id === firstErrorFieldId) ||
@@ -414,10 +303,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                     break;
                 }
             }
-            
             if (sectionWithError >= 0) {
                 goToSection(sectionWithError);
-                // After navigation, scroll to the error field
                 setTimeout(() => {
                     const firstErrorElement = document.querySelector(`[name="${firstErrorFieldId}"]`) as HTMLElement;
                     if (firstErrorElement) {
@@ -426,15 +313,11 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                             const containerRect = scrollContainer.getBoundingClientRect();
                             const elementRect = firstErrorElement.getBoundingClientRect();
                             const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
-                            
-                            scrollContainer.scrollTo({
-                                top: relativeTop - 80,
-                                behavior: 'smooth'
-                            });
+                            scrollContainer.scrollTo({ top: relativeTop - 80, behavior: 'smooth' });
                         }
                         firstErrorElement.focus();
                     }
-                }, 100); // Small delay to allow section navigation to complete
+                }, 100);
             }
             return;
         }
@@ -445,7 +328,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         } catch (error) {
             console.error('Form submission error:', error);
         }
-    }, [config.sections, formState.formData, onSubmit, setErrors, goToSection, validateSection]);
+    }, [formState.formData, onSubmit, setErrors, goToSection, config, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
     const currentSection = config.sections[paginationState.currentSectionIndex];
 
@@ -508,6 +391,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                             smoothScroll={true}
                             mobileOptimized={true}
                             className="mb-4 h-full"
+                            resetTrigger={paginationState.currentSectionIndex}
                             onScroll={(scrollTop, scrollHeight, clientHeight) => {
                                 // Optional: Track scroll position for analytics or state
                                 console.debug('Section scroll:', { scrollTop, scrollHeight, clientHeight });
