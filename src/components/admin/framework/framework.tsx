@@ -8,8 +8,10 @@ import { isSurveyInstanceActive } from '@/utils';
 import { downloadFrameworkResponsesAsExcel } from '@/utils/excel.utils';
 import { createMetadata } from '@/utils/metadata.utils';
 import { getSurveyStats } from '@/utils/section-content.utils';
-import { Copy, Download, Edit, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react';
+import { BarChart3, Copy, Download, Edit, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { baseRoute } from '@/routes';
 
 interface AdminFrameworkProps {
     onCreateNewSurvey: () => void;
@@ -28,6 +30,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     onToggleInstanceActive,
     onUpdateInstanceDateRange
 }) => {
+    const navigate = useNavigate();
     const { state: { surveyConfigs, surveyInstances }, refreshAll } = useSurveyData();
     const { showSuccess, showError } = useToast();
     const deleteModal = useModal<{ type: 'config' | 'instance'; id: string; name: string }>();
@@ -112,7 +115,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     };
 
     const generateSurveyUrl = (instance: SurveyInstance) => {
-        return `${window.location.origin}/survey-test-form/${instance.id}`;
+        return `${window.location.origin}${baseRoute}/${instance.id}`;
     };
 
     const copySurveyUrl = async (url: string) => {
@@ -338,6 +341,14 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                             >
                                                 <Download className="w-4 h-4 mr-1" />
                                                 Download
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => navigate(`${baseRoute}/admin/visualize/${instance.id}`)}
+                                            >
+                                                <BarChart3 className="w-4 h-4 mr-1" />
+                                                Visualize
                                             </Button>
                                             <Button
                                                 size="sm"
@@ -690,7 +701,7 @@ const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
                             <p>
                                 <strong>Survey URL will be:</strong><br />
                                 <code className="text-xs bg-green-100 px-1 py-0.5 rounded break-all">
-                                    {window.location.origin}/survey-test-form/{config.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-{(existingInstances.length + 1).toString().padStart(3, '0')}
+                                    {window.location.origin}{baseRoute}/{config.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-{(existingInstances.length + 1).toString().padStart(3, '0')}
                                 </code>
                             </p>
                         </div>

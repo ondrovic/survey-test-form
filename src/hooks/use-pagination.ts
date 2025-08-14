@@ -76,3 +76,5 @@ export const usePagination = ({
     goToLastPage,
   };
 };
+
+export default usePagination;

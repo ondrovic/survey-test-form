@@ -1,5 +1,6 @@
 import { AdminPage } from '@/components/admin';
-import { ErrorBoundary, LoadingSpinner, SurveyFooter } from '@/components/common';
+import { AdminVisualizationPage } from '@/components/admin/visualization/visualization';
+import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { firestoreHelpers } from '@/config/firebase';
@@ -17,6 +18,7 @@ import { isReCaptchaConfigured, verifyReCaptchaTokenWithFirebase } from '@/utils
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import { baseRoute } from '@/routes';
 
 // Remove hardcoded copyright - now handled by SurveyFooter component
 
@@ -110,8 +112,9 @@ function AppContent() {
         <ErrorBoundary>
             <Routes>
                 <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path="/survey-test-form/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path="/survey-confirmation/:slug" element={
+                <Route path={`${baseRoute}/admin/visualize/:instanceId`} element={<AdminVisualizationPage />} />
+                <Route path={`${baseRoute}/admin`} element={<AdminPage onBack={() => navigate('/')} />} />
+                <Route path={`/survey-confirmation/:slug`} element={
                     (() => {
                         const slug = window.location.pathname.split('/').pop() || '';
                         const instance = getSurveyInstanceBySlug(slug);
@@ -122,7 +125,7 @@ function AppContent() {
                         }
                     })()
                 } />
-                <Route path="/survey-test-form/:slug" element={
+                <Route path={`${baseRoute}/:slug`} element={
                     (() => {
                         const slug = window.location.pathname.split('/').pop() || '';
                         const instance = getSurveyInstanceBySlug(slug);

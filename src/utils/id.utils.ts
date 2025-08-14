@@ -7,10 +7,11 @@ const createKebabCase = (text: string): string => {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, "-")         // Replace spaces with hyphens
-    .replace(/-+/g, "-")          // Replace multiple hyphens with single
-    .replace(/^-+|-+$/g, "");     // Remove leading/trailing hyphens
+    .replace(/&/g, 'and')           // Replace & with 'and' first
+    .replace(/[^a-z0-9\s-_]/g, '')  // Keep underscores temporarily
+    .replace(/[\s_]+/g, "-")        // Replace spaces AND underscores with hyphens
+    .replace(/-+/g, "-")            // Replace multiple hyphens with single
+    .replace(/^-+|-+$/g, "");       // Remove leading/trailing hyphens
 };
 
 // Generate unique section ID based on title with collision handling
