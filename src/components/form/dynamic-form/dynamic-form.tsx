@@ -3,11 +3,11 @@ import React, { useCallback } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
 import { SurveyField, SurveySection } from '../../../types/framework.types';
-import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
-import { validateAllFields, validateFieldValue } from '../utils/validation.utils';
 import { Button, ScrollableContent, SurveyFooter } from '../../common';
 import { FieldRenderer } from '../field-renderer';
+import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
+import { validateAllFields, validateFieldValue } from '../utils/validation.utils';
 import { DynamicFormProps } from './dynamic-form.types';
 
 // Removed local helpers in favor of shared utils (DRY)
@@ -163,7 +163,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         });
 
         return initialState;
-    }, [config.sections, ratingScalesRecord, processAllFields]);
+    }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
 
     // Initialize form state with default values
     const setupFormState = useCallback(() => {
@@ -319,7 +319,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         config.sections.forEach(section => {
             // Add section-level fields
             allFields.push(...section.fields);
-            
+
             // Add subsection fields
             if (section.subsections) {
                 section.subsections.forEach(subsection => {
@@ -475,7 +475,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             resetTrigger={config.id}
                             onScroll={(scrollTop, scrollHeight, clientHeight) => {
                                 // Optional: Track scroll position for analytics or state
-                                console.debug('Form scroll:', { scrollTop, scrollHeight, clientHeight });
+                                // Removed excessive logging to improve performance
                             }}
                         >
                             <div className="py-4">

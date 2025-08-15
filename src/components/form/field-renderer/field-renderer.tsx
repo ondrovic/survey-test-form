@@ -47,9 +47,24 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             }
         };
 
+        // Throttled scroll handler to prevent excessive calls
+        let scrollTimeout: NodeJS.Timeout | null = null;
         const handleScroll = () => {
-            if (openDropdown) {
-                setOpenDropdown(null);
+            console.log('🔍 Scroll event fired, openDropdown:', openDropdown);
+            if (openDropdown && !scrollTimeout) {
+                scrollTimeout = setTimeout(() => {
+                    // Only close dropdown if we're not in a scrollable container
+                    // This prevents the dropdown from closing when scrolling within the form
+                    const scrollableParent = dropdownRef.current?.closest('.scrollable-content');
+                    console.log('🔍 Scroll timeout triggered, scrollableParent:', scrollableParent);
+                    if (!scrollableParent) {
+                        console.log('🔍 Closing dropdown due to scroll outside scrollable container');
+                        setOpenDropdown(null);
+                    } else {
+                        console.log('🔍 Keeping dropdown open - inside scrollable container');
+                    }
+                    scrollTimeout = null;
+                }, 300); // Increased timeout to be less aggressive
             }
         };
 
@@ -60,13 +75,16 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('resize', handleResize);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             window.removeEventListener('scroll', handleScroll);
             window.removeEventListener('resize', handleResize);
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
         };
     }, [openDropdown]);
 
@@ -283,7 +301,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             // Extract min/max selections from option set or validation rules
             let minSelections: number | undefined;
             let maxSelections: number | undefined;
-            
+
             if (field.multiSelectOptionSetId && multiSelectOptionSets[field.multiSelectOptionSetId]) {
                 // Use option set constraints
                 const optionSet = multiSelectOptionSets[field.multiSelectOptionSetId];
@@ -449,9 +467,12 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         <button
                             type="button"
                             onClick={(e) => {
+                                console.log('🔍 Dropdown button clicked for field:', field.id);
+                                console.log('🔍 Current openDropdown state:', openDropdown);
                                 e.preventDefault();
                                 e.stopPropagation();
                                 const newOpenDropdown = openDropdown === field.id ? null : field.id;
+                                console.log('🔍 Setting new openDropdown to:', newOpenDropdown);
                                 setOpenDropdown(newOpenDropdown);
                             }}
                             className={clsx(
@@ -460,8 +481,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                             )}
                         >
                             <span className="truncate">
-                                {selectedLabels.length > 0 
-                                    ? selectedLabels.length === 1 
+                                {selectedLabels.length > 0
+                                    ? selectedLabels.length === 1
                                         ? selectedLabels[0]
                                         : `${selectedLabels.length} selected`
                                     : field.placeholder || 'Select options...'
@@ -471,7 +492,16 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         </button>
 
                         {openDropdown === field.id && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div
+                                className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                style={{
+                                    position: 'absolute',
+                                    zIndex: 9999,
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0
+                                }}
+                            >
                                 {multiDropdownOptions.map((option) => {
                                     const isSelected = selectedValues.includes(option.value);
                                     return (

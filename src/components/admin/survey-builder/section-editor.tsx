@@ -1,10 +1,10 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { useValidation } from '../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySection, SurveySubsection } from '../../../types/framework.types';
-import { Button, Input, SortableList } from '../../common';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
+import { Button, Input, SortableList } from '../../common';
 // import { FIELD_TYPES } from './survey-builder.types';
 import { SubsectionEditor } from './subsection-editor';
 // import { DraggableField } from './draggable-field';
@@ -76,6 +76,43 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     });
     const { validateSectionTitle, validateSectionDescription } = useValidation();
     // const isFieldDragging = useIsFieldDragging();
+
+    // State to track which subsections are expanded
+    const [expandedSubsections, setExpandedSubsections] = useState<Set<string>>(new Set());
+
+    // Auto-expand subsections that are selected or have selected fields
+    useEffect(() => {
+        const newExpanded = new Set<string>();
+
+        // Always expand the selected subsection
+        if (selectedSubsectionId) {
+            newExpanded.add(selectedSubsectionId);
+        }
+
+        // Expand subsections that contain the selected field
+        if (selectedFieldId && section.subsections) {
+            for (const subsection of section.subsections) {
+                if (subsection.fields.some(field => field.id === selectedFieldId)) {
+                    newExpanded.add(subsection.id);
+                }
+            }
+        }
+
+        setExpandedSubsections(newExpanded);
+    }, [selectedSubsectionId, selectedFieldId, section.subsections]);
+
+    // Toggle subsection expansion
+    const toggleSubsection = (subsectionId: string) => {
+        setExpandedSubsections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(subsectionId)) {
+                newSet.delete(subsectionId);
+            } else {
+                newSet.add(subsectionId);
+            }
+            return newSet;
+        });
+    };
 
     // Memoize the container object to prevent unnecessary re-renders
     const sectionContainer = useMemo(() => {
@@ -363,61 +400,90 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                         <div>
                             <h5 className="font-medium text-sm text-gray-700 mb-3">Subsections</h5>
                             <div className="space-y-4">
-                                {section.subsections.map((subsection) => (
-                                    <div
-                                        key={subsection.id}
-                                        className={`${selectedSubsectionId === subsection.id
-                                            ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                                            : "border-gray-200 hover:border-gray-300"
-                                            } border rounded-lg transition-all duration-200`}
-                                    >
-                                        <div className="p-4">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div
-                                                    className="flex items-center gap-2 flex-1 cursor-pointer"
-                                                    onClick={() => onSelectSubsection(subsection.id)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' || e.key === ' ') {
-                                                            e.preventDefault();
-                                                            onSelectSubsection(subsection.id);
-                                                        }
-                                                    }}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                >
-                                                    <span className="font-medium text-green-700">📁 {subsection.title}</span>
-                                                    <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
+                                {section.subsections.map((subsection) => {
+                                    const isExpanded = expandedSubsections.has(subsection.id);
+                                    const isSelected = selectedSubsectionId === subsection.id;
+                                    const hasSelectedField = selectedFieldId && subsection.fields.some(f => f.id === selectedFieldId);
+
+                                    return (
+                                        <div
+                                            key={subsection.id}
+                                            className={`${isSelected
+                                                ? "border-green-500 bg-green-50 ring-2 ring-green-200"
+                                                : "border-gray-200 hover:border-gray-300"
+                                                } border rounded-lg transition-all duration-200`}
+                                        >
+                                            {/* Subsection Header - Always Visible */}
+                                            <div className="p-4">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2 flex-1">
+                                                        <button
+                                                            onClick={() => toggleSubsection(subsection.id)}
+                                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                                            title={isExpanded ? "Collapse subsection" : "Expand subsection"}
+                                                        >
+                                                            {isExpanded ? (
+                                                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                                                            ) : (
+                                                                <ChevronRight className="w-4 h-4 text-gray-600" />
+                                                            )}
+                                                        </button>
+                                                        <div
+                                                            className="flex items-center gap-2 flex-1 cursor-pointer"
+                                                            onClick={() => onSelectSubsection(subsection.id)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                                    e.preventDefault();
+                                                                    onSelectSubsection(subsection.id);
+                                                                }
+                                                            }}
+                                                            role="button"
+                                                            tabIndex={0}
+                                                        >
+                                                            <span className="font-medium text-green-700">📁 {subsection.title}</span>
+                                                            <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
+                                                            {(isSelected || hasSelectedField) && (
+                                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                                    Active
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onDeleteSubsection(section.id, subsection.id);
+                                                        }}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
                                                 </div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onDeleteSubsection(section.id, subsection.id);
-                                                    }}
-                                                    className="text-red-500 hover:text-red-700"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
+
+                                                {/* Subsection Content - Collapsible */}
+                                                {isExpanded && (
+                                                    <SubsectionEditor
+                                                        subsection={subsection}
+                                                        sectionId={section.id}
+                                                        selectedFieldId={selectedFieldId}
+                                                        onUpdateSubsection={onUpdateSubsection}
+                                                        onAddField={onAddField}
+                                                        onSelectField={onSelectField}
+                                                        onOpenFieldEditor={onOpenFieldEditor}
+                                                        onDeleteField={onDeleteField}
+                                                        onReorderFields={onReorderFields}
+                                                    />
+                                                )}
                                             </div>
-                                            <SubsectionEditor
-                                                subsection={subsection}
-                                                sectionId={section.id}
-                                                selectedFieldId={selectedFieldId}
-                                                onUpdateSubsection={onUpdateSubsection}
-                                                onAddField={onAddField}
-                                                onSelectField={onSelectField}
-                                                onOpenFieldEditor={onOpenFieldEditor}
-                                                onDeleteField={onDeleteField}
-                                                onReorderFields={onReorderFields}
-                                            />
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Section Fields */}
                     <div>
                         <h5 className="font-medium text-sm text-gray-700 mb-3">Section Fields</h5>

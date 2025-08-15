@@ -1,8 +1,8 @@
 import React from 'react';
 import { SurveyField } from '../../../types/framework.types';
+import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 import { FieldRenderer } from '../../form/field-renderer';
 import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
-import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 
 interface InteractiveSectionRendererProps extends PaginatedSectionRendererProps {
   fieldValues: Record<string, any>;
@@ -30,7 +30,7 @@ export const InteractiveSectionRenderer: React.FC<InteractiveSectionRendererProp
   loadingOptionSets,
   className = ''
 }) => {
-  const renderField = (field: SurveyField) => {
+  const renderField = React.useCallback((field: SurveyField) => {
     return (
       <FieldRenderer
         key={field.id}
@@ -46,7 +46,7 @@ export const InteractiveSectionRenderer: React.FC<InteractiveSectionRendererProp
         loadingOptionSets={loadingOptionSets}
       />
     );
-  };
+  }, [fieldValues, fieldErrors, onFieldChange, ratingScales, loadingOptionSets, radioOptionSets, multiSelectOptionSets, selectOptionSets]);
 
   return (
     <div className={`max-w-2xl mx-auto ${className}`}>

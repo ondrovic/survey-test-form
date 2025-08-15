@@ -47,6 +47,9 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
   resetTrigger
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTimeRef = useRef<number>(0);
+  const isScrollingRef = useRef<boolean>(false);
   const [scrollState, setScrollState] = useState({
     isScrollable: false,
     canScrollUp: false,
@@ -75,14 +78,50 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
       isNearTop,
       isNearBottom
     });
+  }, []);
 
-    // Call external scroll handler
-    if (onScroll) {
+  // Separate function for external scroll callback with aggressive throttling
+  const handleExternalScroll = useCallback((scrollTop: number, scrollHeight: number, clientHeight: number) => {
+    if (!onScroll) return;
+
+    // If we're currently scrolling, completely skip the callback to prevent interference
+    if (isScrollingRef.current) {
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastScroll = now - lastScrollTimeRef.current;
+
+    // Only call onScroll if enough time has passed (500ms throttling - very aggressive)
+    if (timeSinceLastScroll >= 500) {
+      lastScrollTimeRef.current = now;
       onScroll(scrollTop, scrollHeight, clientHeight);
+    } else {
+      // Clear existing timeout and set a new one
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        // Only call if we're not currently scrolling
+        if (!isScrollingRef.current) {
+          lastScrollTimeRef.current = Date.now();
+          onScroll(scrollTop, scrollHeight, clientHeight);
+        }
+      }, 500 - timeSinceLastScroll);
     }
   }, [onScroll]);
 
-  // Update scroll state on mount and resize
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Update scroll state on mount and resize - INTENTIONALLY EMPTY DEPENDENCIES
   useEffect(() => {
     updateScrollState();
 
@@ -90,12 +129,14 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [updateScrollState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // This should only run once on mount
 
-  // Update scroll state when children change
+  // Update scroll state when children change - INTENTIONALLY EMPTY DEPENDENCIES
   useEffect(() => {
     updateScrollState();
-  }, [children, updateScrollState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [children]); // Only depend on children, not updateScrollState
 
   // When resetTrigger changes, scroll to top
   useEffect(() => {
@@ -104,12 +145,33 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
         scrollRef.current.scrollTo({ top: 0, behavior: smoothScroll ? 'smooth' : 'auto' });
       }
     }
-  }, [resetTrigger, smoothScroll, updateScrollState]);
+  }, [resetTrigger, smoothScroll]);
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
+    // Set scrolling flag to prevent other operations during scroll
+    isScrollingRef.current = true;
+
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Update scroll state immediately for visual feedback
     updateScrollState();
-  };
 
+    // Get current scroll position for external callback
+    if (scrollRef.current && onScroll) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      handleExternalScroll(scrollTop, scrollHeight, clientHeight);
+    }
+
+    // Reset scrolling flag after a delay to allow for scroll completion
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+      // Debounced scroll state update to prevent excessive re-renders
+      updateScrollState();
+    }, 150); // Wait 150ms after scroll stops
+  }, [updateScrollState, handleExternalScroll, onScroll]);
 
 
   // Note: imperative handle removed to avoid ref recursion; use props/state instead

@@ -2,15 +2,15 @@ import { clsx } from 'clsx';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
-import { SurveySection, SurveyField } from '../../../types/framework.types';
-import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
+import { SurveyField, SurveySection } from '../../../types/framework.types';
+import { ScrollableContent, SurveyFooter } from '../../common';
 import { useSectionPagination } from '../../survey/section-paginator';
 import { InteractiveSectionRenderer } from '../../survey/section-paginator/interactive-section-renderer';
-import { FormStepIndicator } from './form-step-indicator';
+import { transformFormStateToDescriptiveIds } from '../utils/transform.utils';
+import { validateAllFields, validateFieldValue, validateSection as validateSectionShared } from '../utils/validation.utils';
 import { FormNavigationControls } from './form-navigation-controls';
+import { FormStepIndicator } from './form-step-indicator';
 import { PaginatedSurveyFormProps } from './paginated-survey-form.types';
-import { ScrollableContent, SurveyFooter } from '../../common';
-import { validateAllFields, validateSection as validateSectionShared, validateFieldValue } from '../utils/validation.utils';
 
 // Removed local helpers in favor of shared utils (DRY)
 
@@ -25,7 +25,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     // Use context providers - reuse ALL logic from DynamicForm
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
-    
+
     // Track pagination state
     const {
         state: paginationState,
@@ -87,7 +87,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     const processAllFields = useCallback((section: SurveySection, callback: (field: SurveyField) => void) => {
         // Process section-level fields
         section.fields.forEach(callback);
-        
+
         // Process subsection fields
         if (section.subsections) {
             section.subsections.forEach(subsection => {
@@ -131,7 +131,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         });
 
         return initialState;
-    }, [config.sections, ratingScalesRecord, processAllFields]);
+    }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
 
     // Initialize form state
     const setupFormState = useCallback(() => {
@@ -171,7 +171,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
-        
+
         // Live-validate if already submitted or field has an error
         if (hasSubmitted || formState.errors[fieldId]) {
             let field: SurveyField | undefined;
@@ -210,13 +210,13 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     // Handle next button with validation
     const handleNext = useCallback(() => {
         setHasSubmitted(true);
-        
+
         const validation = validateSection(paginationState.currentSectionIndex);
-        
+
         if (!validation.isValid) {
             // Update form errors to show validation issues
             setErrors({ ...formState.errors, ...validation.errors });
-            
+
             // Scroll to first error field within the scroll container
             const firstErrorFieldId = Object.keys(validation.errors)[0];
             const firstErrorElement = document.querySelector(`[name="${firstErrorFieldId}"]`) as HTMLElement;
@@ -227,7 +227,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                     const containerRect = scrollContainer.getBoundingClientRect();
                     const elementRect = firstErrorElement.getBoundingClientRect();
                     const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
-                    
+
                     scrollContainer.scrollTo({
                         top: relativeTop - 80, // 80px offset from top
                         behavior: 'smooth'
@@ -238,10 +238,10 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                 }
                 firstErrorElement.focus();
             }
-            
+
             return; // Don't proceed to next section
         }
-        
+
         // Clear any existing errors for this section
         const currentSection = config.sections[paginationState.currentSectionIndex];
         const clearedErrors = { ...formState.errors };
@@ -249,7 +249,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             delete clearedErrors[field.id];
         });
         setErrors(clearedErrors);
-        
+
         // Proceed to next section
         goToNext();
     }, [paginationState.currentSectionIndex, validateSection, setErrors, formState.errors, config.sections, goToNext]);
@@ -257,7 +257,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     // Handle form submission with full validation (reuse DynamicForm logic)
     const handleSubmit = useCallback(async () => {
         setHasSubmitted(true);
-        
+
         // Validate entire form using shared validator (returns per-field errors)
         const { isValid: allSectionsValid, errors: allErrors } = validateAllFields(formState.formData, config, {
             ratingScales: ratingScalesRecord,
@@ -268,14 +268,14 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
         if (!allSectionsValid) {
             setErrors(allErrors);
-            
+
             // Navigate to first section with errors
             const firstErrorFieldId = Object.keys(allErrors)[0];
             let sectionWithError = -1;
             for (let i = 0; i < config.sections.length; i++) {
                 const section = config.sections[i];
                 const hasError = section.fields.some(field => field.id === firstErrorFieldId) ||
-                    (section.subsections || []).some(subsection => 
+                    (section.subsections || []).some(subsection =>
                         subsection.fields.some(field => field.id === firstErrorFieldId)
                     );
                 if (hasError) {
@@ -310,12 +310,10 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         }
     }, [formState.formData, onSubmit, setErrors, goToSection, config, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
-    const currentSection = config.sections[paginationState.currentSectionIndex];
-
     // Check if current section has validation errors
     const currentSectionValidation = React.useMemo(() => {
         return validateSection(paginationState.currentSectionIndex);
-    }, [validateSection, paginationState.currentSectionIndex]);
+    }, [validateSection, paginationState.currentSectionIndex, formState.formData, hasSubmitted]);
 
     // Calculate section validation states for step indicator
     const sectionValidationStates = React.useMemo(() => {
@@ -325,7 +323,23 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             states[i] = validation.isValid;
         }
         return states;
-    }, [config.sections.length, validateSection]);
+    }, [config.sections.length, validateSection, formState.formData, hasSubmitted]);
+
+    // Create a stable reset trigger that only changes when actually navigating sections
+    const scrollResetTrigger = React.useMemo(() => {
+        return `section-${paginationState.currentSectionIndex}`;
+    }, [paginationState.currentSectionIndex]);
+
+    // Memoize the current section to prevent unnecessary re-renders
+    const currentSection = React.useMemo(() => {
+        return config.sections[paginationState.currentSectionIndex];
+    }, [config.sections, paginationState.currentSectionIndex]);
+
+    // Memoize the onScroll callback to prevent unnecessary re-renders
+    const handleScroll = React.useCallback((scrollTop: number, scrollHeight: number, clientHeight: number) => {
+        // Optional: Track scroll position for analytics or state
+        // Removed excessive logging to improve performance
+    }, []);
 
     return (
         <div className={clsx("h-screen bg-amber-50/30 flex flex-col", className)}>
@@ -371,11 +385,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                             smoothScroll={true}
                             mobileOptimized={true}
                             className="mb-4 h-full"
-                            resetTrigger={paginationState.currentSectionIndex}
-                            onScroll={(scrollTop, scrollHeight, clientHeight) => {
-                                // Optional: Track scroll position for analytics or state
-                                console.debug('Section scroll:', { scrollTop, scrollHeight, clientHeight });
-                            }}
+                            resetTrigger={scrollResetTrigger}
+                            onScroll={handleScroll}
                         >
                             <InteractiveSectionRenderer
                                 section={currentSection}

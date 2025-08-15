@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import React from 'react';
 import { getSmartLayoutClasses } from '../../../utils/layout.utils';
 import { RadioGroupProps } from './radio-group.types';
 
@@ -18,7 +19,7 @@ import { RadioGroupProps } from './radio-group.types';
  * />
  * ```
  */
-export const RadioGroup = <T extends string | number = string>({
+export const RadioGroup = React.memo(<T extends string | number = string>({
     name,
     options,
     selectedValue,
@@ -64,8 +65,8 @@ export const RadioGroup = <T extends string | number = string>({
                                         className={clsx(
                                             'flex items-center px-3 py-2 border border-gray-300 rounded-lg bg-white transition-colors w-full min-h-[44px]',
                                             isChecked && 'border-blue-400 bg-blue-50',
-                                            option.disabled 
-                                                ? 'opacity-50 cursor-not-allowed' 
+                                            option.disabled
+                                                ? 'opacity-50 cursor-not-allowed'
                                                 : 'cursor-pointer hover:border-gray-400 hover:bg-gray-50'
                                         )}
                                     >
@@ -104,4 +105,4 @@ export const RadioGroup = <T extends string | number = string>({
             )}
         </div>
     );
-}; 
+}); 

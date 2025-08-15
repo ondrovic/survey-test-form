@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import React from 'react';
 import { getSmartLayoutClasses } from '../../../utils/layout.utils';
 import { CheckboxGroupProps } from './checkbox-group.types';
 
@@ -18,7 +19,7 @@ import { CheckboxGroupProps } from './checkbox-group.types';
  * />
  * ```
  */
-export const CheckboxGroup = <T extends string | number = string>({
+export const CheckboxGroup = React.memo(<T extends string | number = string>({
     name,
     options,
     selectedValues,
@@ -34,7 +35,7 @@ export const CheckboxGroup = <T extends string | number = string>({
 }: CheckboxGroupProps<T>) => {
     const groupId = `${name}-group`;
     const errorId = `${name}-error`;
-    
+
     const currentSelectionCount = (selectedValues || []).length;
     const hasReachedMaxSelections = Boolean(maxSelections && currentSelectionCount >= maxSelections);
 
@@ -82,7 +83,7 @@ export const CheckboxGroup = <T extends string | number = string>({
                         {options.map((option) => {
                             const optionId = `${name}-${option.value}`;
                             const isChecked = Boolean(selectedValues?.includes(option.value));
-                            
+
                             // Disable option if:
                             // 1. Option is explicitly disabled, OR
                             // 2. Max selections reached AND this option is not currently selected
@@ -95,8 +96,8 @@ export const CheckboxGroup = <T extends string | number = string>({
                                         className={clsx(
                                             'flex items-center px-3 py-2 border border-gray-300 rounded-lg bg-white transition-colors w-full min-h-[44px]',
                                             isChecked && 'border-blue-400 bg-blue-50',
-                                            isDisabled 
-                                                ? 'opacity-50 cursor-not-allowed' 
+                                            isDisabled
+                                                ? 'opacity-50 cursor-not-allowed'
                                                 : 'cursor-pointer hover:border-gray-400 hover:bg-gray-50'
                                         )}
                                     >
@@ -135,4 +136,4 @@ export const CheckboxGroup = <T extends string | number = string>({
             )}
         </div>
     );
-}; 
+}); 
