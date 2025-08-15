@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
@@ -532,6 +532,99 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         isPreviewMode: state.isPreviewMode
     });
 
+    // Memoize the onScaleSelect callback to prevent infinite re-renders
+    const handleScaleSelect = useCallback((scaleId: string) => {
+        if (selectedField) {
+            handleUpdateField(selectedSection!.id, selectedField.id, {
+                ratingScaleId: scaleId,
+                ratingScaleName: `Rating Option Set ${scaleId}`,
+                options: [] // Clear individual options when using rating scale
+            }, selectedFieldSubsectionId);
+        }
+        showRatingScaleManager(false);
+    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showRatingScaleManager]);
+
+    // Memoize the radio option set selection callback
+    const handleRadioOptionSetSelect = useCallback(async (optionSetId: string) => {
+        if (selectedField) {
+            try {
+                // Fetch the actual option set to get its name
+                const optionSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
+                handleUpdateField(selectedSection!.id, selectedField.id, {
+                    radioOptionSetId: optionSetId,
+                    radioOptionSetName: optionSet?.name || `Radio Option Set ${optionSetId}`,
+                    options: [] // Clear individual options when using option set
+                }, selectedFieldSubsectionId);
+            } catch (error) {
+                console.error('Error fetching option set name:', error);
+                // Fallback to generic name if fetch fails
+                handleUpdateField(selectedSection!.id, selectedField.id, {
+                    radioOptionSetId: optionSetId,
+                    radioOptionSetName: `Radio Option Set ${optionSetId}`,
+                    options: [] // Clear individual options when using option set
+                }, selectedFieldSubsectionId);
+            }
+        }
+        showRadioOptionSetManager(false);
+    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showRadioOptionSetManager]);
+
+    // Memoize the multi-select option set selection callback
+    const handleMultiSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
+        console.log('🎯 Selected multi-select option set:', optionSetId);
+        if (selectedField) {
+            try {
+                // Fetch the actual option set to get its name
+                const optionSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
+                handleUpdateField(selectedSection!.id, selectedField.id, {
+                    multiSelectOptionSetId: optionSetId,
+                    multiSelectOptionSetName: optionSet?.name || `Multi-Select Option Set ${optionSetId}`,
+                    options: [] // Clear individual options when using option set
+                }, selectedFieldSubsectionId);
+            } catch (error) {
+                console.error('Error fetching option set name:', error);
+                // Fallback to generic name if fetch fails
+                handleUpdateField(selectedSection!.id, selectedField.id, {
+                    multiSelectOptionSetId: optionSetId,
+                    multiSelectOptionSetName: `Multi-Select Option Set ${optionSetId}`,
+                    options: [] // Clear individual options when using option set
+                }, selectedFieldSubsectionId);
+            }
+        }
+        showMultiSelectOptionSetManager(false);
+    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showMultiSelectOptionSetManager]);
+
+    // Memoize the select option set selection callback
+    const handleSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
+        if (selectedField) {
+            try {
+                // Fetch the actual option set to get its name
+                const optionSet = await firestoreHelpers.getSelectOptionSet(optionSetId);
+                handleUpdateField(selectedSection!.id, selectedField.id, {
+                    selectOptionSetId: optionSetId,
+                    selectOptionSetName: optionSet?.name || `Select Option Set ${optionSetId}`,
+                    options: [] // Clear individual options when using option set
+                }, selectedFieldSubsectionId);
+            } catch (error) {
+                console.error('Error fetching option set name:', error);
+                // Fallback to generic name if fetch fails
+                handleUpdateField(selectedSection!.id, selectedField.id, {
+                    selectOptionSetId: optionSetId,
+                    selectOptionSetName: `Select Option Set ${optionSetId}`,
+                    options: [] // Clear individual options when using option set
+                }, selectedFieldSubsectionId);
+            }
+        }
+        showSelectOptionSetManager(false);
+    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showSelectOptionSetManager]);
+
+    // Memoize the close callbacks to prevent unnecessary re-renders
+    const handleCloseRatingScaleManager = useCallback(() => showRatingScaleManager(false), [showRatingScaleManager]);
+    const handleCloseMultiSelectEditor = useCallback(() => showMultiSelectEditor(false), [showMultiSelectEditor]);
+    const handleCloseFieldEditorModal = useCallback(() => showFieldEditorModal(false), [showFieldEditorModal]);
+    const handleCloseRadioOptionSetManager = useCallback(() => showRadioOptionSetManager(false), [showRadioOptionSetManager]);
+    const handleCloseMultiSelectOptionSetManager = useCallback(() => showMultiSelectOptionSetManager(false), [showMultiSelectOptionSetManager]);
+    const handleCloseSelectOptionSetManager = useCallback(() => showSelectOptionSetManager(false), [showSelectOptionSetManager]);
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
@@ -612,18 +705,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 {state.showRatingScaleManager && (
                     <RatingScaleManager
                         isVisible={state.showRatingScaleManager}
-                        onClose={() => showRatingScaleManager(false)}
-                        onScaleSelect={(scaleId) => {
-                            if (selectedField) {
-                                handleUpdateField(selectedSection!.id, selectedField.id, {
-                                    ratingScaleId: scaleId,
-                                    ratingScaleName: `Rating Option Set ${scaleId}`,
-                                    options: [] // Clear individual options when using rating scale
-                                }, selectedFieldSubsectionId);
-                            }
-                            showRatingScaleManager(false);
-                        }}
-
+                        onClose={handleCloseRatingScaleManager}
+                        onScaleSelect={handleScaleSelect}
                     />
                 )}
 
@@ -634,7 +717,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                         onConfigUpdate={(updatedConfig) => {
                             updateEntireConfig(updatedConfig);
                         }}
-                        onClose={() => showMultiSelectEditor(false)}
+                        onClose={handleCloseMultiSelectEditor}
                     />
                 )}
 
@@ -642,29 +725,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 {state.showRadioOptionSetManager && (
                     <RadioOptionSetManager
                         isVisible={state.showRadioOptionSetManager}
-                        onClose={() => showRadioOptionSetManager(false)}
-                        onOptionSetSelect={async (optionSetId) => {
-                            if (selectedField) {
-                                try {
-                                    // Fetch the actual option set to get its name
-                                    const optionSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
-                                    handleUpdateField(selectedSection!.id, selectedField.id, {
-                                        radioOptionSetId: optionSetId,
-                                        radioOptionSetName: optionSet?.name || `Radio Option Set ${optionSetId}`,
-                                        options: [] // Clear individual options when using option set
-                                    }, selectedFieldSubsectionId);
-                                } catch (error) {
-                                    console.error('Error fetching option set name:', error);
-                                    // Fallback to generic name if fetch fails
-                                    handleUpdateField(selectedSection!.id, selectedField.id, {
-                                        radioOptionSetId: optionSetId,
-                                        radioOptionSetName: `Radio Option Set ${optionSetId}`,
-                                        options: [] // Clear individual options when using option set
-                                    }, selectedFieldSubsectionId);
-                                }
-                            }
-                            showRadioOptionSetManager(false);
-                        }}
+                        onClose={handleCloseRadioOptionSetManager}
+                        onOptionSetSelect={handleRadioOptionSetSelect}
                     />
                 )}
 
@@ -672,30 +734,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 {state.showMultiSelectOptionSetManager && (
                     <MultiSelectOptionSetManager
                         isVisible={state.showMultiSelectOptionSetManager}
-                        onClose={() => showMultiSelectOptionSetManager(false)}
-                        onOptionSetSelect={async (optionSetId) => {
-                            console.log('🎯 Selected multi-select option set:', optionSetId);
-                            if (selectedField) {
-                                try {
-                                    // Fetch the actual option set to get its name
-                                    const optionSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
-                                    handleUpdateField(selectedSection!.id, selectedField.id, {
-                                        multiSelectOptionSetId: optionSetId,
-                                        multiSelectOptionSetName: optionSet?.name || `Multi-Select Option Set ${optionSetId}`,
-                                        options: [] // Clear individual options when using option set
-                                    }, selectedFieldSubsectionId);
-                                } catch (error) {
-                                    console.error('Error fetching option set name:', error);
-                                    // Fallback to generic name if fetch fails
-                                    handleUpdateField(selectedSection!.id, selectedField.id, {
-                                        multiSelectOptionSetId: optionSetId,
-                                        multiSelectOptionSetName: `Multi-Select Option Set ${optionSetId}`,
-                                        options: [] // Clear individual options when using option set
-                                    }, selectedFieldSubsectionId);
-                                }
-                            }
-                            showMultiSelectOptionSetManager(false);
-                        }}
+                        onClose={handleCloseMultiSelectOptionSetManager}
+                        onOptionSetSelect={handleMultiSelectOptionSetSelect}
                     />
                 )}
 
@@ -703,30 +743,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 {state.showSelectOptionSetManager && (
                     <SelectOptionSetManager
                         isVisible={state.showSelectOptionSetManager}
-                        onClose={() => showSelectOptionSetManager(false)}
+                        onClose={handleCloseSelectOptionSetManager}
                         filterMultiple={selectedField?.type === 'multiselectdropdown' ? true : selectedField?.type === 'select' ? false : undefined}
-                        onOptionSetSelect={async (optionSetId) => {
-                            if (selectedField) {
-                                try {
-                                    // Fetch the actual option set to get its name
-                                    const optionSet = await firestoreHelpers.getSelectOptionSet(optionSetId);
-                                    handleUpdateField(selectedSection!.id, selectedField.id, {
-                                        selectOptionSetId: optionSetId,
-                                        selectOptionSetName: optionSet?.name || `Select Option Set ${optionSetId}`,
-                                        options: [] // Clear individual options when using option set
-                                    }, selectedFieldSubsectionId);
-                                } catch (error) {
-                                    console.error('Error fetching option set name:', error);
-                                    // Fallback to generic name if fetch fails
-                                    handleUpdateField(selectedSection!.id, selectedField.id, {
-                                        selectOptionSetId: optionSetId,
-                                        selectOptionSetName: `Select Option Set ${optionSetId}`,
-                                        options: [] // Clear individual options when using option set
-                                    }, selectedFieldSubsectionId);
-                                }
-                            }
-                            showSelectOptionSetManager(false);
-                        }}
+                        onOptionSetSelect={handleSelectOptionSetSelect}
                     />
                 )}
 
@@ -734,10 +753,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 {state.showFieldEditorModal && selectedField && selectedSection && (
                     <FieldEditorModal
                         isOpen={state.showFieldEditorModal}
-                        onClose={() => showFieldEditorModal(false)}
+                        onClose={handleCloseFieldEditorModal}
                         onSave={() => {
                             // Save is handled automatically as changes are applied in real-time
-                            showFieldEditorModal(false);
+                            handleCloseFieldEditorModal();
                         }}
                         field={selectedField}
                         sectionId={selectedSection.id}

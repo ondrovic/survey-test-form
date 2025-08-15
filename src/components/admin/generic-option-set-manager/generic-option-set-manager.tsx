@@ -43,7 +43,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     const loadedItems = await loadItems(config);
     console.log('📊 Loaded items:', loadedItems.length, 'items for', config.displayName);
     setItems(loadedItems);
-  }, [config, selectionMode, loadItems]);
+  }, [selectionMode, loadItems]);
 
   // Load items when component becomes visible, but only in selection mode
   // In creation mode, we don't need to load existing items
@@ -55,7 +55,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     } else {
       console.log('❌ Not loading items:', { isVisible, selectionMode, reason: !isVisible ? 'not visible' : !selectionMode ? 'not in selection mode' : 'unknown' });
     }
-  }, [isVisible, selectionMode, loadItemsData, config.displayName]);
+  }, [isVisible, selectionMode, loadItemsData]);
 
   // Seed from props/context once per open to support direct-to-form flows
   useEffect(() => {

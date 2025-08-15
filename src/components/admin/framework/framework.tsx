@@ -3,6 +3,7 @@ import { firestoreHelpers } from '@/config/firebase';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { useModal } from '@/hooks';
+import { baseRoute } from '@/routes';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { isSurveyInstanceActive } from '@/utils';
 import { downloadFrameworkResponsesAsExcel } from '@/utils/excel.utils';
@@ -11,7 +12,6 @@ import { getSurveyStats } from '@/utils/section-content.utils';
 import { BarChart3, Copy, Download, Edit, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { baseRoute } from '@/routes';
 
 interface AdminFrameworkProps {
     onCreateNewSurvey: () => void;
@@ -191,9 +191,9 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                                 {(() => {
                                                     const stats = getSurveyStats(config.sections);
                                                     const parts: string[] = [];
-                                                    
+
                                                     parts.push(`${stats.sections} section${stats.sections !== 1 ? 's' : ''}`);
-                                                    
+
                                                     if (stats.totalFields > 0) {
                                                         if (stats.totalSectionFields > 0 && stats.totalSubsectionFields > 0) {
                                                             parts.push(`${stats.totalFields} fields (${stats.totalSectionFields} section, ${stats.totalSubsectionFields} in subsections)`);
@@ -205,11 +205,11 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                                                     } else {
                                                         parts.push('0 fields');
                                                     }
-                                                    
+
                                                     if (stats.totalSubsections > 0) {
                                                         parts.push(`${stats.totalSubsections} subsection${stats.totalSubsections !== 1 ? 's' : ''}`);
                                                     }
-                                                    
+
                                                     return parts.join(', ');
                                                 })()}
                                                 • {surveyInstances.filter(instance => instance.configId === config.id).length} instances
@@ -261,103 +261,107 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
                         <div className="space-y-4">
                             {surveyInstances.map((instance) => (
                                 <div key={instance.id} className="border rounded-lg p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h4 className="font-semibold">
-                                                {instance.title}
-                                                <span className="ml-2 text-sm font-normal text-blue-600">
-                                                    (ID: {instance.id})
-                                                </span>
-                                            </h4>
-                                            <p className="text-sm text-gray-600">{instance.description}</p>
-                                            <p className="text-xs text-gray-500">
-                                                Config: {surveyConfigs.find(c => c.id === instance.configId)?.title || instance.configId}
-                                            </p>
-                                            <div className="flex items-center gap-4 mt-2">
-                                                <span className={`px-2 py-1 text-xs rounded-full ${isSurveyInstanceActive(instance)
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-gray-100 text-gray-800"
-                                                    }`}>
-                                                    {isSurveyInstanceActive(instance) ? 'Active' : 'Inactive'}
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                    Created: {new Date(instance.metadata.createdAt).toLocaleDateString()}
-                                                </span>
-                                                {instance.activeDateRange && (
-                                                    <span className="text-xs text-blue-600">
-                                                        {new Date(instance.activeDateRange.startDate).toLocaleDateString()} - {new Date(instance.activeDateRange.endDate).toLocaleDateString()}
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="font-semibold">
+                                                    {instance.title}
+                                                    <span className="ml-2 text-sm font-normal text-blue-600">
+                                                        (ID: {instance.id})
                                                     </span>
-                                                )}
-                                            </div>
-                                            <div className="mt-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-gray-500">URL:</span>
-                                                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                                        {generateSurveyUrl(instance)}
-                                                    </code>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => copySurveyUrl(generateSurveyUrl(instance))}
-                                                        className={`text-gray-500 hover:text-gray-700 ${!isSurveyInstanceActive(instance) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        title={isSurveyInstanceActive(instance) ? "Copy URL" : "Survey is inactive - URL disabled"}
-                                                        disabled={!isSurveyInstanceActive(instance)}
-                                                    >
-                                                        <Copy className="w-3 h-3" />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => openSurveyInNewTab(generateSurveyUrl(instance))}
-                                                        className={`text-gray-500 hover:text-gray-700 ${!isSurveyInstanceActive(instance) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        title={isSurveyInstanceActive(instance) ? "Open survey in new tab" : "Survey is inactive - URL disabled"}
-                                                        disabled={!isSurveyInstanceActive(instance)}
-                                                    >
-                                                        <ExternalLink className="w-3 h-3" />
-                                                    </Button>
+                                                </h4>
+                                                <p className="text-sm text-gray-600">{instance.description}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    Config: {surveyConfigs.find(c => c.id === instance.configId)?.title || instance.configId}
+                                                </p>
+                                                <div className="flex items-center gap-4 mt-2">
+                                                    <span className={`px-2 py-1 text-xs rounded-full ${isSurveyInstanceActive(instance)
+                                                        ? "bg-green-100 text-green-800"
+                                                        : "bg-gray-100 text-gray-800"
+                                                        }`}>
+                                                        {isSurveyInstanceActive(instance) ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">
+                                                        Created: {new Date(instance.metadata.createdAt).toLocaleDateString()}
+                                                    </span>
+                                                    {instance.activeDateRange && (
+                                                        <span className="text-xs text-blue-600">
+                                                            {new Date(instance.activeDateRange.startDate).toLocaleDateString()} - {new Date(instance.activeDateRange.endDate).toLocaleDateString()}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => onToggleInstanceActive(instance.id, !instance.isActive, instance.title)}
+                                                >
+                                                    {instance.isActive ? 'Deactivate' : 'Activate'}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => openInstanceSettings(instance)}
+                                                >
+                                                    <Settings className="w-4 h-4 mr-1" />
+                                                    Settings
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleDownloadFrameworkData(instance.id)}
+                                                >
+                                                    <Download className="w-4 h-4 mr-1" />
+                                                    Download
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => navigate(`${baseRoute}/admin/visualize/${instance.id}`)}
+                                                >
+                                                    <BarChart3 className="w-4 h-4 mr-1" />
+                                                    Visualize
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => deleteModal.open({ type: 'instance', id: instance.id, name: instance.title })}
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                    Delete
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => onToggleInstanceActive(instance.id, !instance.isActive, instance.title)}
-                                            >
-                                                {instance.isActive ? 'Deactivate' : 'Activate'}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => openInstanceSettings(instance)}
-                                            >
-                                                <Settings className="w-4 h-4 mr-1" />
-                                                Settings
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleDownloadFrameworkData(instance.id)}
-                                            >
-                                                <Download className="w-4 h-4 mr-1" />
-                                                Download
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => navigate(`${baseRoute}/admin/visualize/${instance.id}`)}
-                                            >
-                                                <BarChart3 className="w-4 h-4 mr-1" />
-                                                Visualize
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => deleteModal.open({ type: 'instance', id: instance.id, name: instance.title })}
-                                            >
-                                                <Trash2 className="w-4 h-4 mr-1" />
-                                                Delete
-                                            </Button>
+
+                                        {/* URL Section - Now gets full width */}
+                                        <div className="w-full">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-gray-500">URL:</span>
+                                                <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 min-w-0 break-all">
+                                                    {generateSurveyUrl(instance)}
+                                                </code>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => copySurveyUrl(generateSurveyUrl(instance))}
+                                                    className={`text-gray-500 hover:text-gray-700 flex-shrink-0 ${!isSurveyInstanceActive(instance) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title={isSurveyInstanceActive(instance) ? "Copy URL" : "Survey is inactive - URL disabled"}
+                                                    disabled={!isSurveyInstanceActive(instance)}
+                                                >
+                                                    <Copy className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => openSurveyInNewTab(generateSurveyUrl(instance))}
+                                                    className={`text-gray-500 hover:text-gray-700 flex-shrink-0 ${!isSurveyInstanceActive(instance) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title={isSurveyInstanceActive(instance) ? "Open survey in new tab" : "Survey is inactive - URL disabled"}
+                                                    disabled={!isSurveyInstanceActive(instance)}
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

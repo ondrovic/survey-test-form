@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback } from 'react';
 import { useToast } from '../toast-context';
 
 // Generic base interface for all option sets
@@ -62,7 +62,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const loadItems = async <T extends BaseOptionSet>(config: OptionSetConfig<T>): Promise<T[]> => {
+  const loadItems = useCallback(async <T extends BaseOptionSet>(config: OptionSetConfig<T>): Promise<T[]> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -108,9 +108,9 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showError]);
 
-  const createItem = async <T extends BaseOptionSet>(
+  const createItem = useCallback(async <T extends BaseOptionSet>(
     config: OptionSetConfig<T>, 
     data: Omit<T, 'id'>
   ): Promise<T | null> => {
@@ -153,9 +153,9 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showError, showSuccess]);
 
-  const updateItem = async <T extends BaseOptionSet>(
+  const updateItem = useCallback(async <T extends BaseOptionSet>(
     config: OptionSetConfig<T>, 
     id: string, 
     data: Partial<T>
@@ -203,9 +203,9 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showError, showSuccess]);
 
-  const deleteItem = async <T extends BaseOptionSet>(
+  const deleteItem = useCallback(async <T extends BaseOptionSet>(
     config: OptionSetConfig<T>, 
     id: string, 
     name: string
@@ -225,7 +225,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showError, showSuccess]);
 
   const value: OptionSetCrudContextType = {
     loadItems,
