@@ -143,7 +143,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         const fieldLabel = `New ${fieldType} Field`;
         const fieldId = generateFieldId(fieldType, fieldLabel, existingFieldIds);
         const now = new Date().toISOString();
-        
+
         const newField: SurveyField = {
             id: fieldId,
             label: fieldLabel,
@@ -177,6 +177,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         // Only allow label history to be updated through our explicit save function
         if (updates.labelHistory) {
             // Preserve existing updates but prevent labelHistory modifications during real-time updates
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { labelHistory, ...otherUpdates } = updates;
             updates = otherUpdates;
             console.log('⚠️ Blocked automatic label history during field update');
@@ -194,7 +195,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             currentLabel,
             labelChanged: originalLabel !== currentLabel
         });
-        
+
         // Find the current field to update its metadata
         let currentField: SurveyField | undefined;
         const section = state.config.sections.find(section => section.id === sectionId);
@@ -211,18 +212,18 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         if (currentField) {
             // Track label changes for data integrity and export purposes (only on save)
             const now = new Date().toISOString();
-            
+
             // If field has no labelHistory, initialize it
             if (!currentField.labelHistory) {
                 console.log('🔄 Field has no labelHistory, initializing');
-                
+
                 // For fields without label history, create initial entry(s)
                 const initialChanges: Array<{
                     label: string;
                     changedAt: string;
                     changedBy?: string;
                 }> = [];
-                
+
                 // If the labels are different, add both original and current
                 if (originalLabel !== currentLabel) {
                     initialChanges.push({
@@ -242,20 +243,20 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                     });
                     console.log(`📝 Creating label history with initial label: ${currentLabel}`);
                 }
-                
+
                 const updates: Partial<SurveyField> = {
                     labelHistory: initialChanges
                 };
-                
+
                 updateField(sectionId, fieldId, updates, subsectionId);
                 console.log(`📝 Initialized labelHistory for field ${fieldId}`, updates);
                 console.log(`🔄 Remember to save the survey to persist label history to database`);
                 return;
             }
-            
+
             // Field already has labelHistory, check if we need to add new entry
             const currentLabelHistory = currentField.labelHistory || [];
-            
+
             // Only add if label actually changed
             if (originalLabel !== currentLabel) {
                 // Avoid adding duplicate consecutive labels
@@ -266,16 +267,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                         label: currentLabel,
                         changedAt: now
                     };
-                    
+
                     // Create new labelHistory array
                     const updatedLabelHistory = [
                         ...currentLabelHistory,
                         newLabelHistoryEntry
                     ];
-                    
+
                     // Update labelHistory directly on the field
                     updateField(sectionId, fieldId, { labelHistory: updatedLabelHistory }, subsectionId);
-                    
+
                     console.log(`📝 Field label saved: ${originalLabel} → ${currentLabel} (ID: ${fieldId} preserved)`);
                     console.log(`📝 Added clean label history entry:`, newLabelHistoryEntry);
                     console.log(`📝 Updated labelHistory:`, updatedLabelHistory);
@@ -318,7 +319,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         });
 
         // Check if this is a same-container reorder
-        const isSameContainer = 
+        const isSameContainer =
             fromContainer.type === toContainer.type &&
             fromContainer.sectionId === toContainer.sectionId &&
             fromContainer.subsectionId === toContainer.subsectionId;
@@ -326,18 +327,18 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         if (isSameContainer) {
             // Handle same-container reordering using the existing reorderFields function
             console.log('🔄 Same container reordering detected');
-            
+
             // Find the current index of the field
             const sourceSection = state.config.sections.find(s => s.id === fromContainer.sectionId);
             let currentIndex = -1;
-            
+
             if (fromContainer.type === 'section') {
                 currentIndex = sourceSection?.fields.findIndex(f => f.id === fieldId) ?? -1;
             } else if (fromContainer.subsectionId) {
                 const subsection = sourceSection?.subsections?.find(sub => sub.id === fromContainer.subsectionId);
                 currentIndex = subsection?.fields.findIndex(f => f.id === fieldId) ?? -1;
             }
-            
+
             if (currentIndex !== -1 && currentIndex !== newIndex) {
                 reorderFields(fromContainer.sectionId, currentIndex, newIndex, fromContainer.subsectionId);
             }
@@ -346,7 +347,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 
         // Handle cross-container moves
         console.log('🔀 Cross-container move detected');
-        
+
         // Create a single config update that moves the field atomically
         const currentConfig = state.config;
         const newSections = currentConfig.sections.map(section => {
@@ -399,8 +400,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 } else if (toContainer.subsectionId) {
                     newSection.subsections = (section.subsections || []).map(sub =>
                         sub.id === toContainer.subsectionId
-                            ? { 
-                                ...sub, 
+                            ? {
+                                ...sub,
                                 fields: (() => {
                                     const targetFields = [...sub.fields];
                                     targetFields.splice(newIndex, 0, { ...field });

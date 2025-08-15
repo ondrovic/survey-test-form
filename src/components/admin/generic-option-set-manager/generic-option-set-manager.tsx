@@ -1,5 +1,5 @@
 import { Check, Edit, Plus, Trash2, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
 import { useModal } from '../../../hooks';
@@ -37,6 +37,14 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const hasSeededRef = useRef(false);
   const selectionMode = !!onOptionSetSelect;
 
+  // Define loadItemsData function before using it in useEffect
+  const loadItemsData = useCallback(async () => {
+    console.log('🔄 Loading items for:', config.displayName, 'in selection mode:', selectionMode);
+    const loadedItems = await loadItems(config);
+    console.log('📊 Loaded items:', loadedItems.length, 'items for', config.displayName);
+    setItems(loadedItems);
+  }, [config, selectionMode, loadItems]);
+
   // Load items when component becomes visible, but only in selection mode
   // In creation mode, we don't need to load existing items
   useEffect(() => {
@@ -47,7 +55,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     } else {
       console.log('❌ Not loading items:', { isVisible, selectionMode, reason: !isVisible ? 'not visible' : !selectionMode ? 'not in selection mode' : 'unknown' });
     }
-  }, [isVisible, selectionMode]);
+  }, [isVisible, selectionMode, loadItemsData, config.displayName]);
 
   // Seed from props/context once per open to support direct-to-form flows
   useEffect(() => {
@@ -89,13 +97,6 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
       setEditingItem(null);
     }
   }, [isVisible]);
-
-  const loadItemsData = async () => {
-    console.log('🔄 Loading items for:', config.displayName, 'in selection mode:', selectionMode);
-    const loadedItems = await loadItems(config);
-    console.log('📊 Loaded items:', loadedItems.length, 'items for', config.displayName);
-    setItems(loadedItems);
-  };
 
   const handleCreateNew = () => {
     const defaultItem = config.defaultItem();

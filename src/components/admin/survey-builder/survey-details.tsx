@@ -277,10 +277,10 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                             onChange={(e) => handleFooterConfigChange({ includeAllRightsReserved: e.target.checked })}
                                             className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                         />
-                                        <span className="text-xs text-gray-600">Include "All rights reserved"</span>
+                                        <span className="text-xs text-gray-600">Include &ldquo;All rights reserved&rdquo;</span>
                                     </label>
                                     <p className="text-xs text-gray-400 ml-5">
-                                        Appends ". All rights reserved" to any footer text (custom or generated)
+                                        Appends &ldquo;. All rights reserved&rdquo; to any footer text (custom or generated)
                                     </p>
                                 </div>
                             </div>

@@ -124,7 +124,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             setOriginalLabel('');
             console.log('🔄 Modal closed - Original label reset');
         }
-    }, [isOpen, field?.id]); // Only reset when modal opens or field changes
+    }, [isOpen, field]); // Only reset when modal opens or field changes
 
     // Add keyboard shortcut to close modal with Escape
     useEffect(() => {
@@ -354,7 +354,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                             >
                                                 <div className="flex-1">
                                                     <div className="font-medium text-gray-900 text-sm">
-                                                        "{entry.label}"
+                                                        &ldquo;{entry.label}&rdquo;
                                                     </div>
                                                     <div className="text-xs text-gray-500 mt-1">
                                                         {new Date(entry.changedAt).toLocaleString()}

@@ -20,7 +20,7 @@ export interface InputProps<T = string> {
 export interface BaseButtonProps {
   children: ReactNode;
   variant?: "primary" | "secondary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "form" | "fixed";
   disabled?: boolean;
   loading?: boolean;
   icon?: ReactNode;

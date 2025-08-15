@@ -131,7 +131,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         });
 
         return initialState;
-    }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
+    }, [config.sections, ratingScalesRecord, processAllFields]);
 
     // Initialize form state
     const setupFormState = useCallback(() => {
@@ -195,27 +195,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         }
     }, [setFieldValue, setFieldError, formState.errors, hasSubmitted, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
-    // Helper function to check if a field value is considered "empty"
-    const isFieldEmpty = useCallback((field: SurveyField, value: any): boolean => {
-        if (value === null || value === undefined) return true;
-        
-        switch (field.type) {
-            case 'multiselect':
-            case 'multiselectdropdown':
-                return Array.isArray(value) ? value.length === 0 : true;
-            case 'text':
-            case 'email':
-            case 'textarea':
-            case 'number':
-                return String(value).trim() === '';
-            case 'select':
-            case 'radio':
-            case 'rating':
-                return value === '' || value === null || value === undefined;
-            default:
-                return !value || value === '';
-        }
-    }, []);
+
 
     // Enhanced validation function for a specific section
     const validateSection = useCallback((sectionIndex: number): { isValid: boolean; errors: Record<string, string> } => {
@@ -335,7 +315,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     // Check if current section has validation errors
     const currentSectionValidation = React.useMemo(() => {
         return validateSection(paginationState.currentSectionIndex);
-    }, [validateSection, paginationState.currentSectionIndex, formState.formData, hasSubmitted]);
+    }, [validateSection, paginationState.currentSectionIndex]);
 
     // Calculate section validation states for step indicator
     const sectionValidationStates = React.useMemo(() => {
@@ -345,7 +325,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
             states[i] = validation.isValid;
         }
         return states;
-    }, [config.sections.length, validateSection, formState.formData, hasSubmitted]);
+    }, [config.sections.length, validateSection]);
 
     return (
         <div className={clsx("h-screen bg-amber-50/30 flex flex-col", className)}>

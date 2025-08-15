@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
 import { clsx } from 'clsx';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './scrollable-content.css';
 
 export interface ScrollableContentProps {
@@ -56,12 +56,12 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
   });
 
   // Check if content is scrollable and update scroll indicators
-  const updateScrollState = () => {
+  const updateScrollState = useCallback(() => {
     if (!scrollRef.current) return;
 
     const element = scrollRef.current;
     const { scrollTop, scrollHeight, clientHeight } = element;
-    
+
     const isScrollable = scrollHeight > clientHeight;
     const canScrollUp = scrollTop > 0;
     const canScrollDown = scrollTop < scrollHeight - clientHeight;
@@ -80,22 +80,22 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
     if (onScroll) {
       onScroll(scrollTop, scrollHeight, clientHeight);
     }
-  };
+  }, [onScroll]);
 
   // Update scroll state on mount and resize
   useEffect(() => {
     updateScrollState();
-    
+
     const handleResize = () => updateScrollState();
     window.addEventListener('resize', handleResize);
-    
+
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [updateScrollState]);
 
   // Update scroll state when children change
   useEffect(() => {
     updateScrollState();
-  }, [children]);
+  }, [children, updateScrollState]);
 
   // When resetTrigger changes, scroll to top
   useEffect(() => {
@@ -104,25 +104,13 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
         scrollRef.current.scrollTo({ top: 0, behavior: smoothScroll ? 'smooth' : 'auto' });
       }
     }
-  }, [resetTrigger, smoothScroll]);
+  }, [resetTrigger, smoothScroll, updateScrollState]);
 
   const handleScroll = () => {
     updateScrollState();
   };
 
-  // Internal helpers
-  const scrollToTop = () => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollTo({ top: 0, behavior: smoothScroll ? 'smooth' : 'auto' });
-  };
 
-  const scrollToElement = (element: HTMLElement) => {
-    if (!scrollRef.current || !element) return;
-    const containerRect = scrollRef.current.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    const relativeTop = elementRect.top - containerRect.top + scrollRef.current.scrollTop;
-    scrollRef.current.scrollTo({ top: relativeTop - 20, behavior: smoothScroll ? 'smooth' : 'auto' });
-  };
 
   // Note: imperative handle removed to avoid ref recursion; use props/state instead
 
@@ -144,7 +132,7 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
 
   const scrollStyle: React.CSSProperties = {
     minHeight,
-    maxHeight: mobileOptimized ? 
+    maxHeight: mobileOptimized ?
       `min(${maxHeight}, calc(100vh - 180px))` : // Account for mobile viewport
       maxHeight,
     // Custom scrollbar styling
@@ -167,7 +155,6 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
         onScroll={handleScroll}
         role="region"
         aria-label="Scrollable content"
-        tabIndex={0} // Make focusable for keyboard navigation
       >
         {children}
       </div>

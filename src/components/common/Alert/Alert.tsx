@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
 import React from 'react';
-import { AlertProps } from './alert.types';
+import { AlertProps } from './Alert.types';
 
 /**
  * Alert component for displaying success, error, warning, and info messages

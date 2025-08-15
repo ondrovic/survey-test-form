@@ -191,7 +191,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setLoading(false);
         }
-    }, [instance?.configId]);
+    }, [instance]);
 
     useEffect(() => {
         loadSurveyConfig();
@@ -256,7 +256,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [instance?.id, surveyConfig, showSuccess, showError, navigate]);
+    }, [instance, surveyConfig, showSuccess, showError, navigate]);
 
     // Check if instance is valid
     if (!instance) {

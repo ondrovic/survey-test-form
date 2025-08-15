@@ -1,4 +1,4 @@
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, DragOverEvent, PointerSensor, useSensor, useSensors, closestCenter, pointerWithin } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter, pointerWithin } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
 import React, { useState, useCallback, useRef } from 'react';
 import { SurveyField } from '../../../types/framework.types';
@@ -76,7 +76,7 @@ export const FieldDragContext: React.FC<FieldDragContextProps> = ({
 
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { over, activatorEvent, delta } = event;
+    const { over } = event;
     
 
     

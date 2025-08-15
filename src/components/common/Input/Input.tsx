@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import React from 'react';
-import { InputProps } from './input.types';
+import { InputProps } from './Input.types';
 
 /**
  * Generic Input component with validation and accessibility support

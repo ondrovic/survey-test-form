@@ -1,10 +1,9 @@
 import { Plus } from 'lucide-react';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { firestoreHelpers } from '../../../config/firebase';
-import { MultiSelectOptionSet, RadioOptionSet, SurveySubsection } from '../../../types/framework.types';
-import { FieldType } from '../../../types/framework.types';
-import { Button, Input } from '../../common';
 import { useValidation } from '../../../contexts/validation-context';
+import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySubsection } from '../../../types/framework.types';
+import { Button, Input } from '../../common';
 // import { FIELD_TYPES } from './survey-builder.types';
 // import { DraggableField } from './draggable-field';
 import { DroppableFieldContainer } from './droppable-field-container';
@@ -30,18 +29,17 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     onAddField,
     onSelectField,
     onOpenFieldEditor,
-    onDeleteField,
-    onReorderFields
+    onDeleteField
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
-    
+
     // Memoize the container object to prevent unnecessary re-renders
-    const subsectionContainer = useMemo(() => ({ 
-        type: 'subsection' as const, 
-        sectionId, 
-        subsectionId: subsection.id 
+    const subsectionContainer = useMemo(() => ({
+        type: 'subsection' as const,
+        sectionId,
+        subsectionId: subsection.id
     }), [sectionId, subsection.id]);
-    
+
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
     const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
     const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
@@ -52,7 +50,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     const handleTitleChange = (newTitle: string) => {
         const validation = validateSectionTitle(newTitle);
         setTitleError(validation.isValid ? '' : validation.error || '');
-        
+
         onUpdateSubsection(sectionId, subsection.id, { title: newTitle });
     };
 
@@ -60,7 +58,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     const handleDescriptionChange = (newDescription: string) => {
         const validation = validateSectionDescription(newDescription);
         setDescriptionError(validation.isValid ? '' : validation.error || '');
-        
+
         onUpdateSubsection(sectionId, subsection.id, { description: newDescription });
     };
 
@@ -68,7 +66,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
     useEffect(() => {
         const titleValidation = validateSectionTitle(subsection.title);
         setTitleError(titleValidation.isValid ? '' : titleValidation.error || '');
-        
+
         if (subsection.description) {
             const descValidation = validateSectionDescription(subsection.description);
             setDescriptionError(descValidation.isValid ? '' : descValidation.error || '');
@@ -177,9 +175,8 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
                             onChange={(e) => handleDescriptionChange(e.target.value)}
                             placeholder="Enter subsection description (optional, max 300 characters)"
                             rows={2}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                descriptionError ? 'border-red-500' : 'border-gray-300'
-                            }`}
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${descriptionError ? 'border-red-500' : 'border-gray-300'
+                                }`}
                         />
                         {descriptionError && (
                             <p className="mt-1 text-sm text-red-600">{descriptionError}</p>
@@ -194,8 +191,8 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
                         <h5 className="font-medium text-sm">Fields</h5>
                         <p className="text-xs text-gray-500 mt-1">Click on a field to select it, then use the edit button to modify</p>
                     </div>
-                    <Button 
-                        size="sm" 
+                    <Button
+                        size="sm"
                         onClick={() => {
                             console.log('🟨 ADD SUBSECTION FIELD CLICKED:', sectionId, subsection.id);
                             onAddField(sectionId, 'text', subsection.id);

@@ -163,7 +163,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         });
 
         return initialState;
-    }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
+    }, [config.sections, ratingScalesRecord, processAllFields]);
 
     // Initialize form state with default values
     const setupFormState = useCallback(() => {
