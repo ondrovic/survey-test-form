@@ -103,3 +103,6 @@ temp/
 
 # Coverage
 coverage/
+
+# .claude
+.claude/

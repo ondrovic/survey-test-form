@@ -227,7 +227,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             label="Field Label *"
                             value={field.label}
                             onChange={handleLabelChange}
-                            placeholder="Enter field label (1-100 characters)"
+                            placeholder="Enter field label (1-500 characters)"
                             error={labelError}
                         />
                         <div>

@@ -86,13 +86,13 @@ export const combineValidations = (...validations: FieldValidationResult[]): Fie
 // Validation constants
 export const VALIDATION_LIMITS = {
     SURVEY_TITLE_MIN: 3,
-    SURVEY_TITLE_MAX: 100,
+    SURVEY_TITLE_MAX: 500,
     SURVEY_DESCRIPTION_MAX: 500,
     SECTION_TITLE_MIN: 2,
     SECTION_TITLE_MAX: 80,
     SECTION_DESCRIPTION_MAX: 300,
     FIELD_LABEL_MIN: 1,
-    FIELD_LABEL_MAX: 100,
+    FIELD_LABEL_MAX: 500,
     FIELD_PLACEHOLDER_MAX: 150,
     OPTION_LABEL_MIN: 1,
     OPTION_LABEL_MAX: 50,

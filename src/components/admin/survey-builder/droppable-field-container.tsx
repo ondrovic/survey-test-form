@@ -25,15 +25,7 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
   const containerRef = useRef<HTMLDivElement>(null);
 
   const containerId = useMemo(() => {
-    const id = `container-${container.sectionId}${container.subsectionId ? `-${container.subsectionId}` : ''}`;
-    console.log('🏗️ Creating container ID:', {
-      containerId: id,
-      containerType: container.type,
-      sectionId: container.sectionId,
-      subsectionId: container.subsectionId,
-      isSubsection: !!container.subsectionId
-    });
-    return id;
+    return `container-${container.sectionId}${container.subsectionId ? `-${container.subsectionId}` : ''}`;
   }, [container.sectionId, container.subsectionId, container.type]);
 
   // Calculate the insertion index based on cursor position
@@ -59,23 +51,13 @@ export const DroppableFieldContainer: React.FC<DroppableFieldContainerProps> = m
   const containerData = useMemo(() => ({
     container,
     calculateDropIndex
-  }), [container, calculateDropIndex]);
+  }), [container.type, container.sectionId, container.subsectionId, calculateDropIndex]);
+  
   const hasChildren = useMemo(() => React.Children.count(children) > 0, [children]);
 
   const { isOver, setNodeRef } = useDroppable({
     id: containerId,
     data: containerData
-  });
-
-  console.log('🔧 useDroppable hook called:', {
-    containerId,
-    containerType: container.type,
-    sectionId: container.sectionId,
-    subsectionId: container.subsectionId,
-    hasSubsections: !!(container as any).subsections?.length,
-    subsectionsCount: (container as any).subsections?.length || 0,
-    fullContainer: container,
-    isOver
   });
 
   const debugRef = React.useCallback((node: HTMLDivElement | null) => {

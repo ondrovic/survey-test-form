@@ -3,7 +3,7 @@ import { AdminVisualizationPage } from '@/components/admin/visualization/visuali
 import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
-import { firestoreHelpers } from '@/config/firebase';
+import { firestoreHelpers, initializeDatabase } from '@/config/database';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -44,7 +44,8 @@ function AppContent() {
         try {
             setIsMigrating(true);
 
-
+            // Initialize database service first
+            await initializeDatabase();
 
             // Get all survey instances
             const instances = await firestoreHelpers.getSurveyInstances();
@@ -191,7 +192,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setLoading(false);
         }
-    }, [instance]);
+    }, [instance?.id]);
 
     useEffect(() => {
         loadSurveyConfig();
@@ -256,7 +257,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [instance, surveyConfig, showSuccess, showError, navigate]);
+    }, [instance?.id, surveyConfig?.id, showSuccess, showError, navigate]);
 
     // Check if instance is valid
     if (!instance) {

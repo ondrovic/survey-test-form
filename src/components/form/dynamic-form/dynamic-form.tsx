@@ -22,6 +22,17 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     // Use context providers
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
+    
+    console.log('🔍 DynamicForm - SurveyData context state:', {
+        isLoading: surveyDataState.isLoading,
+        ratingScalesCount: surveyDataState.ratingScales?.length || 0,
+        radioOptionSetsCount: surveyDataState.radioOptionSets?.length || 0,
+        multiSelectOptionSetsCount: surveyDataState.multiSelectOptionSets?.length || 0,
+        selectOptionSetsCount: surveyDataState.selectOptionSets?.length || 0,
+        error: surveyDataState.error,
+        lastUpdated: surveyDataState.lastUpdated,
+        surveyDataState: surveyDataState
+    });
 
     // Track if form has been submitted to control when to show validation
     const [hasSubmitted, setHasSubmitted] = React.useState(false);
@@ -55,6 +66,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 record[set.id] = set;
             });
         }
+        console.log('🔍 DynamicForm - multiSelectOptionSetsRecord updated:', {
+            isArray: Array.isArray(multiSelectOptionSets),
+            count: multiSelectOptionSets?.length || 0,
+            recordKeys: Object.keys(record),
+            sets: multiSelectOptionSets?.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length })) || []
+        });
         return record;
     }, [multiSelectOptionSets]);
 

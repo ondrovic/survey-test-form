@@ -61,19 +61,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     onReorderFields,
     // onMoveField
 }) => {
-    console.log('🔍 SectionEditor received section data:', {
-        sectionId: section.id,
-        sectionTitle: section.title,
-        sectionFieldsCount: section.fields?.length || 0,
-        sectionFields: section.fields?.map(f => ({ id: f.id, label: f.label })) || [],
-        subsectionsCount: section.subsections?.length || 0,
-        subsectionsDetail: section.subsections?.map(sub => ({
-            id: sub.id,
-            title: sub.title,
-            fieldsCount: sub.fields?.length || 0,
-            fields: sub.fields?.map(f => ({ id: f.id, label: f.label })) || []
-        })) || []
-    });
     const { validateSectionTitle, validateSectionDescription } = useValidation();
     // const isFieldDragging = useIsFieldDragging();
 
@@ -84,30 +71,30 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     useEffect(() => {
         const newExpanded = new Set<string>();
 
-        // Always expand the selected subsection
+        // Always expand the selected subsection (mutually exclusive)
         if (selectedSubsectionId) {
             newExpanded.add(selectedSubsectionId);
         }
-
-        // Expand subsections that contain the selected field
-        if (selectedFieldId && section.subsections) {
+        // If no subsection is selected but a field is selected in a subsection, expand that subsection
+        else if (selectedFieldId && section.subsections) {
             for (const subsection of section.subsections) {
                 if (subsection.fields.some(field => field.id === selectedFieldId)) {
                     newExpanded.add(subsection.id);
+                    break; // Only expand one subsection (mutually exclusive)
                 }
             }
         }
 
         setExpandedSubsections(newExpanded);
-    }, [selectedSubsectionId, selectedFieldId, section.subsections]);
+    }, [selectedSubsectionId, selectedFieldId, section.id]);
 
-    // Toggle subsection expansion
+    // Toggle subsection expansion (mutually exclusive)
     const toggleSubsection = (subsectionId: string) => {
         setExpandedSubsections(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(subsectionId)) {
-                newSet.delete(subsectionId);
-            } else {
+            const newSet = new Set<string>();
+            // If the clicked subsection is already expanded, collapse it (empty set)
+            // Otherwise, expand only the clicked subsection (mutually exclusive)
+            if (!prev.has(subsectionId)) {
                 newSet.add(subsectionId);
             }
             return newSet;
@@ -121,25 +108,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             sectionId: section.id,
             subsections: section.subsections || []
         };
-        console.log('🏗️ Creating section container with subsections:', {
-            sectionId: section.id,
-            subsectionsCount: section.subsections?.length || 0,
-            subsections: section.subsections?.map(sub => ({
-                id: sub.id,
-                title: sub.title,
-                fieldsCount: sub.fields?.length || 0,
-                actualFields: sub.fields?.map(f => ({ id: f.id, label: f.label })) || []
-            })),
-            fullContainer: {
-                ...container,
-                subsections: container.subsections.map(sub => ({
-                    id: sub.id,
-                    title: sub.title,
-                    fieldsCount: sub.fields?.length || 0,
-                    actualFields: sub.fields?.map(f => ({ id: f.id, label: f.label })) || []
-                }))
-            }
-        });
         return container;
     }, [section.id, section.subsections]);
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
@@ -225,7 +193,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         };
 
         loadOptionSets();
-    }, [section.fields, section.subsections, radioOptionSets, multiSelectOptionSets]);
+    }, [section.id]);
 
     const getOptionCount = (field: any) => {
         if (field.ratingScaleId) {
@@ -272,10 +240,13 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             metadata: {}
         };
         onAddSubsection(section.id, newSubsection);
+        
+        // Auto-expand the new subsection (mutually exclusive)
+        setExpandedSubsections(new Set([newSubsection.id]));
     };
 
     return (
-        <div>
+        <div data-section-id={section.id}>
             <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-4">Section: {section.title}</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -408,6 +379,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                                     return (
                                         <div
                                             key={subsection.id}
+                                            data-subsection-id={subsection.id}
                                             className={`${isSelected
                                                 ? "border-green-500 bg-green-50 ring-2 ring-green-200"
                                                 : "border-gray-200 hover:border-gray-300"
@@ -442,11 +414,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                                                         >
                                                             <span className="font-medium text-green-700">📁 {subsection.title}</span>
                                                             <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
-                                                            {(isSelected || hasSelectedField) && (
-                                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                                                    Active
-                                                                </span>
-                                                            )}
                                                         </div>
                                                     </div>
                                                     <Button

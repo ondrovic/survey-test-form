@@ -113,7 +113,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = ({
         };
 
         loadOptionSets();
-    }, [subsection.fields, radioOptionSets, multiSelectOptionSets]);
+    }, [subsection.id]);
 
     const getOptionCount = (field: any) => {
         if (field.ratingScaleId) {

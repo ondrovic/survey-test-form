@@ -265,7 +265,12 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 isLoading: loadingOptionSets,
                 loadedOptionSets: Object.keys(multiSelectOptionSets),
                 availableOptionSets: Object.keys(multiSelectOptionSets),
-                fieldOptions: field.options?.length || 0
+                fieldOptions: field.options?.length || 0,
+                multiSelectOptionSetsKeys: Object.keys(multiSelectOptionSets),
+                multiSelectOptionSetsValues: Object.values(multiSelectOptionSets).map(set => ({ id: set?.id, name: set?.name, optionsCount: set?.options?.length })),
+                totalOptionSetsProvided: Object.keys(multiSelectOptionSets).length,
+                isObjectEmpty: Object.keys(multiSelectOptionSets).length === 0,
+                typeOfMultiSelectOptionSets: typeof multiSelectOptionSets
             });
 
             if (field.multiSelectOptionSetId) {

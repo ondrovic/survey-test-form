@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from 'react';
-import { firestoreHelpers } from '../../config/firebase';
+import { firestoreHelpers, getDatabaseProviderInfo } from '../../config/database';
 import { SurveyData } from '../../types/survey.types';
 import {
     MultiSelectOptionSet,
@@ -312,6 +312,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const loadFrameworkData = useCallback(async () => {
         try {
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.warn('⚠️ Database not initialized yet, skipping framework data loading');
+                return;
+            }
             setLoading(true);
             setError(null);
 
@@ -352,6 +357,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const loadRatingScales = useCallback(async () => {
         try {
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.warn('⚠️ Database not initialized yet, skipping rating scales loading');
+                return;
+            }
             const scales = await firestoreHelpers.getRatingScales();
             dispatch({ type: 'SET_RATING_SCALES', payload: scales });
         } catch (error) {
@@ -361,28 +371,58 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const loadRadioOptionSets = useCallback(async () => {
         try {
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.warn('⚠️ Database not initialized yet, skipping radio option sets loading');
+                return;
+            }
+            console.log('🔍 Loading radio option sets...');
             const optionSets = await firestoreHelpers.getRadioOptionSets();
+            console.log('✅ Radio option sets loaded:', {
+                count: optionSets.length,
+                optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
+            });
             dispatch({ type: 'SET_RADIO_OPTION_SETS', payload: optionSets });
         } catch (error) {
-            console.error("Error loading radio option sets:", error);
+            console.error("❌ Error loading radio option sets:", error);
         }
     }, []);
 
     const loadMultiSelectOptionSets = useCallback(async () => {
         try {
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.warn('⚠️ Database not initialized yet, skipping multi-select option sets loading');
+                return;
+            }
+            console.log('🔍 Loading multi-select option sets...');
             const optionSets = await firestoreHelpers.getMultiSelectOptionSets();
+            console.log('✅ Multi-select option sets loaded:', {
+                count: optionSets.length,
+                optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
+            });
             dispatch({ type: 'SET_MULTI_SELECT_OPTION_SETS', payload: optionSets });
         } catch (error) {
-            console.error("Error loading multi-select option sets:", error);
+            console.error("❌ Error loading multi-select option sets:", error);
         }
     }, []);
 
     const loadSelectOptionSets = useCallback(async () => {
         try {
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.warn('⚠️ Database not initialized yet, skipping select option sets loading');
+                return;
+            }
+            console.log('🔍 Loading select option sets...');
             const optionSets = await firestoreHelpers.getSelectOptionSets();
+            console.log('✅ Select option sets loaded:', {
+                count: optionSets.length,
+                optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
+            });
             dispatch({ type: 'SET_SELECT_OPTION_SETS', payload: optionSets });
         } catch (error) {
-            console.error("Error loading select option sets:", error);
+            console.error("❌ Error loading select option sets:", error);
         }
     }, []);
 
@@ -460,10 +500,20 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         dispatch({ type: 'DELETE_MULTI_SELECT_OPTION_SET', payload: id });
     }, []);
 
-    // Auto-load data on mount
+    // Auto-load data on mount and retry when database becomes available
     useEffect(() => {
         if (autoLoad) {
-            refreshAll();
+            const tryLoadData = async () => {
+                const dbInfo = getDatabaseProviderInfo();
+                if (dbInfo.isInitialized) {
+                    console.log('✅ Database is ready, loading survey data...');
+                    refreshAll();
+                } else {
+                    console.log('⏳ Database not ready yet, will retry in 1 second...');
+                    setTimeout(tryLoadData, 1000);
+                }
+            };
+            tryLoadData();
         }
     }, [autoLoad, refreshAll]);
 

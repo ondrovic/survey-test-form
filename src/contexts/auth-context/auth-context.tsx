@@ -1,4 +1,4 @@
-import { authHelpers } from "@/config/firebase";
+import { authHelpers, initializeDatabase } from "@/config/database";
 import { cookieUtils } from "@/utils/cookie.utils";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -44,6 +44,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             try {
                 setIsLoading(true);
                 setError(null);
+
+                // Initialize database service first
+                await initializeDatabase();
 
                 // Check if admin is already authenticated via cookie
                 const hasAdminAuth = checkAuth();

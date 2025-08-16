@@ -86,7 +86,7 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                         label="Title *"
                         value={title}
                         onChange={handleTitleChange}
-                        placeholder="Enter survey title (3-100 characters)"
+                        placeholder="Enter survey title (3-500 characters)"
                         error={titleError}
                     />
                 </div>

@@ -92,6 +92,14 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         };
         addSection(newSection);
         selectSection(newSection.id);
+        
+        // Focus on the new section after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            const sectionElement = document.querySelector(`[data-section-id="${newSection.id}"]`);
+            if (sectionElement) {
+                sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
     const handleUpdateSection = (sectionId: string, updates: Partial<SurveySection>) => {
@@ -117,6 +125,15 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     // Subsection handlers
     const handleAddSubsection = (sectionId: string, subsection: SurveySubsection) => {
         addSubsection(sectionId, subsection);
+        selectSubsection(subsection.id);
+        
+        // Focus on the new subsection after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            const subsectionElement = document.querySelector(`[data-subsection-id="${subsection.id}"]`);
+            if (subsectionElement) {
+                subsectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
     const handleUpdateSubsection = (sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => {
@@ -523,14 +540,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         }
     }
 
-    console.log('🎯 SurveyBuilder render called:', {
-        configTitle: state.config.title,
-        sectionsCount: state.config.sections.length,
-        selectedSectionId: state.selectedSection,
-        selectedFieldId: state.selectedField,
-        selectedFieldSubsectionId: selectedFieldSubsectionId,
-        isPreviewMode: state.isPreviewMode
-    });
 
     // Memoize the onScaleSelect callback to prevent infinite re-renders
     const handleScaleSelect = useCallback((scaleId: string) => {

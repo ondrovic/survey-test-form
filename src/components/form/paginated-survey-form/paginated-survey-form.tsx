@@ -25,6 +25,16 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     // Use context providers - reuse ALL logic from DynamicForm
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
+    
+    console.log('🔍 PaginatedSurveyForm - SurveyData context state:', {
+        isLoading: surveyDataState.isLoading,
+        ratingScalesCount: surveyDataState.ratingScales?.length || 0,
+        radioOptionSetsCount: surveyDataState.radioOptionSets?.length || 0,
+        multiSelectOptionSetsCount: surveyDataState.multiSelectOptionSets?.length || 0,
+        selectOptionSetsCount: surveyDataState.selectOptionSets?.length || 0,
+        error: surveyDataState.error,
+        lastUpdated: surveyDataState.lastUpdated
+    });
 
     // Track pagination state
     const {
@@ -70,6 +80,12 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                 record[set.id] = set;
             });
         }
+        console.log('🔍 PaginatedSurveyForm - multiSelectOptionSetsRecord updated:', {
+            isArray: Array.isArray(multiSelectOptionSets),
+            count: multiSelectOptionSets?.length || 0,
+            recordKeys: Object.keys(record),
+            sets: multiSelectOptionSets?.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length })) || []
+        });
         return record;
     }, [multiSelectOptionSets]);
 
