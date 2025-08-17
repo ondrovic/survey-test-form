@@ -75,6 +75,17 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
     };
 
     if (chartItem.series.type === 'histogram') {
+      // For histogram data, allow user to choose chart type
+      if (chartType === 'vertical') {
+        return <VerticalBarChart {...commonProps} />;
+      }
+      if (chartType === 'donut') {
+        return <DonutChart {...commonProps} />;
+      }
+      if (chartType === 'horizontal') {
+        return <BarChart {...commonProps} />;
+      }
+      // Default to histogram chart
       return <Histogram counts={chartItem.series.counts} />;
     }
     if (chartType === 'vertical') {

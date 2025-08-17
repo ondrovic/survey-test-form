@@ -1,10 +1,12 @@
-import { Check, Edit, Plus, Trash2, X } from 'lucide-react';
+import { Check, Edit, Plus, Trash2, Upload, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
 import { useModal } from '../../../hooks';
-import { Button, DeleteConfirmationModal } from '../../common';
+import { useGenericImportExport } from '../../../hooks';
+import { Button, DeleteConfirmationModal, GenericImportModal } from '../../common';
 import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
+import { ExportableDataType } from '../../../utils/generic-import-export.utils';
 
 interface GenericOptionSetManagerProps<T extends BaseOptionSet> {
   isVisible: boolean;
@@ -30,7 +32,9 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
 }: GenericOptionSetManagerProps<T>) => {
   const { loadItems, createItem, updateItem, deleteItem, isLoading } = useOptionSetCrud();
   const { refreshAll } = useSurveyData();
+  const { exportItem, importItem } = useGenericImportExport();
   const deleteModal = useModal<{ id: string; name: string }>();
+  const importModal = useModal();
   const [items, setItems] = useState<T[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<T> | null>(null);
 
@@ -168,6 +172,43 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     onClose();
   };
 
+
+  // Map config type to export data type
+  const getExportDataType = (): ExportableDataType => {
+    switch (config.type) {
+      case 'rating-scale':
+        return 'rating-scale';
+      case 'radio':
+        return 'radio-option-set';
+      case 'multi-select':
+        return 'multi-select-option-set';
+      case 'select':
+        return 'select-option-set';
+      default:
+        throw new Error(`Unknown option set type: ${config.type}`);
+    }
+  };
+
+  const handleExport = (item: T) => {
+    const dataType = getExportDataType();
+    exportItem(item, dataType);
+  };
+
+  const handleImport = () => {
+    importModal.open();
+  };
+
+  const handleImportFile = async (file: File) => {
+    const dataType = getExportDataType();
+    const success = await importItem(file, dataType);
+    if (success) {
+      // Refresh local items
+      await loadItemsData();
+      importModal.close();
+    }
+    return success;
+  };
+
   // Prepare current editing data for form
   const currentEditingData = editingItem || (propEditingOptionSet ? {
     ...propEditingOptionSet,
@@ -200,7 +241,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
               onChange={(updated) => setEditingItem(updated as any)}
               onSave={handleSave}
               onCancel={handleCancel}
-              showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio'}
+              showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio' || config.type === 'select' || config.type === 'multi-select'}
               showColor={true}
               renderAdditionalFields={renderAdditionalFields}
             />
@@ -213,7 +254,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
               onChange={(updated) => setEditingItem(updated as any)}
               onSave={handleSave}
               onCancel={handleCancel}
-              showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio'}
+              showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio' || config.type === 'select' || config.type === 'multi-select'}
               showColor={true}
               renderAdditionalFields={renderAdditionalFields}
             />
@@ -222,13 +263,23 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">{config.displayName}s</h3>
-                <Button
-                  onClick={handleCreateNew}
-                  variant="primary"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New {config.displayName}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleImport}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import {config.displayName}
+                  </Button>
+                  <Button
+                    onClick={handleCreateNew}
+                    variant="primary"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New {config.displayName}
+                  </Button>
+                </div>
               </div>
 
               {isLoading ? (
@@ -282,6 +333,14 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                             Edit
                           </Button>
                           <Button
+                            onClick={() => handleExport(item)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                          <Button
                             onClick={() => handleDelete(item)}
                             variant="secondary"
                             size="sm"
@@ -322,6 +381,15 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
         onConfirm={handleDeleteConfirm}
         onCancel={() => deleteModal.close()}
         message="Are you sure you want to delete '{itemName}'? This action cannot be undone."
+      />
+
+      {/* Import Modal */}
+      <GenericImportModal
+        isOpen={importModal.isOpen}
+        onClose={importModal.close}
+        onImport={handleImportFile}
+        dataType={getExportDataType()}
+        title={`Import ${config.displayName}`}
       />
     </div>
   );

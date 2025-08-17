@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { useValidation } from '../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySection, SurveySubsection } from '../../../types/framework.types';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
@@ -374,7 +374,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                                 {section.subsections.map((subsection) => {
                                     const isExpanded = expandedSubsections.has(subsection.id);
                                     const isSelected = selectedSubsectionId === subsection.id;
-                                    const hasSelectedField = selectedFieldId && subsection.fields.some(f => f.id === selectedFieldId);
 
                                     return (
                                         <div

@@ -228,11 +228,14 @@ export interface SurveyInstance {
   configId: string;
   title: string;
   description?: string;
+  slug?: string; // Human-readable URL slug
   isActive: boolean;
   activeDateRange?: {
     startDate: string; // ISO string
     endDate: string; // ISO string
   };
+  // Pagination configuration
+  paginatorConfig?: Partial<SurveyPaginatorConfig>;
   metadata: {
     createdBy: string;
     createdAt: string;

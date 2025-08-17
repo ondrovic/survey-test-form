@@ -19,7 +19,7 @@ import { CheckboxGroupProps } from './checkbox-group.types';
  * />
  * ```
  */
-export const CheckboxGroup = React.memo(<T extends string | number = string>({
+const CheckboxGroupComponent = <T extends string | number = string>({
     name,
     options,
     selectedValues,
@@ -136,4 +136,8 @@ export const CheckboxGroup = React.memo(<T extends string | number = string>({
             )}
         </div>
     );
-}); 
+};
+
+CheckboxGroupComponent.displayName = 'CheckboxGroup';
+
+export const CheckboxGroup = React.memo(CheckboxGroupComponent) as typeof CheckboxGroupComponent;

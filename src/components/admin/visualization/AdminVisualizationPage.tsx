@@ -22,7 +22,7 @@ const VisualizationContent: React.FC = () => {
   const { state, updateState, filters } = useVisualization();
 
   // Load data
-  const { loading, error, config, responses, computeAggregatedSeries } = useVisualizationData(instanceId);
+  const { loading, error, config, responses, instance, computeAggregatedSeries } = useVisualizationData(instanceId);
   
   // Filter data
   const { filteredResponses, submissionsByDay, todayCount, seriesMatchesSearch } = useFilters(responses);
@@ -65,6 +65,7 @@ const VisualizationContent: React.FC = () => {
           {/* Stats Panel */}
           <StatsPanel
             instanceId={instanceId}
+            instance={instance}
             totalResponses={responses.length}
             startDate={filters.startDate}
             endDate={filters.endDate}

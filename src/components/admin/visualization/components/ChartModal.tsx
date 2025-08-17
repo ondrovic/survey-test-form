@@ -47,6 +47,17 @@ export const ChartModal: React.FC = () => {
     };
 
     if (selectedChart.series.type === 'histogram') {
+      // For histogram data, allow user to choose chart type
+      if (chartType === 'vertical') {
+        return <VerticalBarChart {...commonProps} />;
+      }
+      if (chartType === 'donut') {
+        return <DonutChart {...commonProps} />;
+      }
+      if (chartType === 'horizontal') {
+        return <BarChart {...commonProps} />;
+      }
+      // Default to histogram chart
       return <Histogram counts={selectedChart.series.counts} />;
     }
     if (chartType === 'vertical') {
@@ -65,7 +76,7 @@ export const ChartModal: React.FC = () => {
       role="presentation"
     >
       <div
-        className="bg-white/95 backdrop-blur-md shadow-2xl border border-gray-200/50 w-full max-w-[95vw] xl:max-w-7xl max-h-[95vh] overflow-hidden transform transition-all duration-300 ease-out scale-100 opacity-100"
+        className="bg-white/95 backdrop-blur-md shadow-2xl border border-gray-200/50 w-full max-w-[95vw] xl:max-w-7xl max-h-[95vh] overflow-hidden transform transition-all duration-300 ease-out scale-100 opacity-100 rounded-lg"
         role="dialog"
         aria-modal="true"
         aria-label="Chart details modal"

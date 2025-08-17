@@ -32,10 +32,18 @@ export const useModalState = <T = any>(initialData: T | null = null) => {
     }));
   }, []);
 
+  const updateData = useCallback((data: T) => {
+    setState(prev => ({
+      ...prev,
+      data: data
+    }));
+  }, []);
+
   return {
     ...state,
     open,
     close,
-    toggle
+    toggle,
+    updateData
   };
 };

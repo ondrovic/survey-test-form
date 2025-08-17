@@ -1,5 +1,5 @@
 import { OptionSetConfig } from '../contexts/option-set-crud-context';
-import { firestoreHelpers } from '../config/firebase';
+import { firestoreHelpers } from '../config/database';
 import { 
   RatingScale, 
   RadioOptionSet, 
@@ -69,10 +69,10 @@ export const ratingScaleConfig: OptionSetConfig<RatingScale> = {
   type: 'rating-scale',
   displayName: 'Rating Scale',
   firestoreHelpers: {
-    get: firestoreHelpers.getRatingScales,
-    create: firestoreHelpers.addRatingScale,
-    update: firestoreHelpers.updateRatingScale,
-    delete: firestoreHelpers.deleteRatingScale,
+    get: () => firestoreHelpers.getRatingScales(),
+    create: (data: Omit<RatingScale, 'id'>) => firestoreHelpers.addRatingScale(data as RatingScale),
+    update: (id: string, data: Partial<RatingScale>) => firestoreHelpers.updateRatingScale(id, data),
+    delete: (id: string) => firestoreHelpers.deleteRatingScale(id),
   },
   validation: {
     validateName,
@@ -94,10 +94,10 @@ export const radioOptionSetConfig: OptionSetConfig<RadioOptionSet> = {
   type: 'radio',
   displayName: 'Radio Option Set',
   firestoreHelpers: {
-    get: firestoreHelpers.getRadioOptionSets,
-    create: firestoreHelpers.addRadioOptionSet,
-    update: firestoreHelpers.updateRadioOptionSet,
-    delete: firestoreHelpers.deleteRadioOptionSet,
+    get: () => firestoreHelpers.getRadioOptionSets(),
+    create: (data: Omit<RadioOptionSet, 'id'>) => firestoreHelpers.addRadioOptionSet(data as RadioOptionSet),
+    update: (id: string, data: Partial<RadioOptionSet>) => firestoreHelpers.updateRadioOptionSet(id, data),
+    delete: (id: string) => firestoreHelpers.deleteRadioOptionSet(id),
   },
   validation: {
     validateName,
@@ -119,10 +119,10 @@ export const multiSelectOptionSetConfig: OptionSetConfig<MultiSelectOptionSet> =
   type: 'multi-select',
   displayName: 'Multi-Select Option Set',
   firestoreHelpers: {
-    get: firestoreHelpers.getMultiSelectOptionSets,
-    create: firestoreHelpers.addMultiSelectOptionSet,
-    update: firestoreHelpers.updateMultiSelectOptionSet,
-    delete: firestoreHelpers.deleteMultiSelectOptionSet,
+    get: () => firestoreHelpers.getMultiSelectOptionSets(),
+    create: (data: Omit<MultiSelectOptionSet, 'id'>) => firestoreHelpers.addMultiSelectOptionSet(data as MultiSelectOptionSet),
+    update: (id: string, data: Partial<MultiSelectOptionSet>) => firestoreHelpers.updateMultiSelectOptionSet(id, data),
+    delete: (id: string) => firestoreHelpers.deleteMultiSelectOptionSet(id),
   },
   validation: {
     validateName,
@@ -147,10 +147,10 @@ export const selectOptionSetConfig: OptionSetConfig<SelectOptionSet> = {
   type: 'select',
   displayName: 'Select Option Set',
   firestoreHelpers: {
-    get: firestoreHelpers.getSelectOptionSets,
-    create: firestoreHelpers.addSelectOptionSet,
-    update: firestoreHelpers.updateSelectOptionSet,
-    delete: firestoreHelpers.deleteSelectOptionSet,
+    get: () => firestoreHelpers.getSelectOptionSets(),
+    create: (data: Omit<SelectOptionSet, 'id'>) => firestoreHelpers.addSelectOptionSet(data as SelectOptionSet),
+    update: (id: string, data: Partial<SelectOptionSet>) => firestoreHelpers.updateSelectOptionSet(id, data),
+    delete: (id: string) => firestoreHelpers.deleteSelectOptionSet(id),
   },
   validation: {
     validateName,

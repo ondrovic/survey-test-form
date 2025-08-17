@@ -3,18 +3,19 @@ import { AdminVisualizationPage } from '@/components/admin/visualization/visuali
 import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
-import { firestoreHelpers, initializeDatabase } from '@/config/database';
+import { firestoreHelpers, initializeDatabase, getDatabaseProviderInfo } from '@/config/database';
 
 
 import { AppProvider } from '@/contexts/app-provider';
 import { useAuth } from '@/contexts/auth-context/index';
+import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 
-import { isReCaptchaConfigured, verifyReCaptchaTokenWithFirebase } from '@/utils/recaptcha.utils';
+import { isReCaptchaConfigured, verifyReCaptchaTokenClientSide } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Route, Routes, useNavigate } from 'react-router-dom';
@@ -44,8 +45,23 @@ function AppContent() {
         try {
             setIsMigrating(true);
 
-            // Initialize database service first
+            // Wait for database to be properly initialized
+            // The auth context should have already initialized it, but let's be safe
             await initializeDatabase();
+
+            // Wait a bit more to ensure the database is fully ready
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Verify database is ready before proceeding
+            if (!getDatabaseProviderInfo().isInitialized) {
+                console.warn('Database not fully initialized yet, retrying...');
+                const retryDelay = parseInt(import.meta.env.VITE_DATABASE_RETRY_DELAY) || 60000;
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                
+                if (!getDatabaseProviderInfo().isInitialized) {
+                    throw new Error('Database initialization timeout');
+                }
+            }
 
             // Get all survey instances
             const instances = await firestoreHelpers.getSurveyInstances();
@@ -85,12 +101,19 @@ function AppContent() {
     }, [isAuthenticated, initializeFramework]);
 
     const getSurveyInstanceBySlug = (slugOrId: string) => {
-        // First, try to find by instance ID (new method)
+        // First, try to find by slug (preferred method)
         let instance = allSurveyInstances.find(instance =>
-            instance.id === slugOrId && isSurveyInstanceActive(instance)
+            instance.slug === slugOrId && isSurveyInstanceActive(instance)
         );
 
-        // Backward compatibility: if not found by ID, try the old title-based slug method
+        // Fallback: try to find by instance ID (for existing instances without slug)
+        if (!instance) {
+            instance = allSurveyInstances.find(instance =>
+                instance.id === slugOrId && isSurveyInstanceActive(instance)
+            );
+        }
+
+        // Backward compatibility: if not found by slug or ID, try the old title-based slug method
         if (!instance) {
             instance = allSurveyInstances.find(instance =>
                 instance.title.toLowerCase().replace(/\s+/g, '-') === slugOrId &&
@@ -172,6 +195,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     const [resetFormTrigger] = useState(0); // Add trigger for form reset
     const navigate = useNavigate();
     const { showSuccess, showError } = useToast();
+    const { refreshAll } = useSurveyData();
 
     const loadSurveyConfig = useCallback(async () => {
         if (!instance) return;
@@ -194,9 +218,16 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         }
     }, [instance?.id]);
 
+    // Load survey config and ensure all option sets are loaded
     useEffect(() => {
-        loadSurveyConfig();
-    }, [loadSurveyConfig]);
+        const loadData = async () => {
+            await Promise.all([
+                loadSurveyConfig(),
+                refreshAll() // Ensure all option sets are loaded
+            ]);
+        };
+        loadData();
+    }, [loadSurveyConfig, refreshAll]);
 
     const handleSubmit = useCallback(async (responses: Record<string, any>) => {
         if (!instance || !surveyConfig) {
@@ -222,7 +253,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 
             // Verify reCAPTCHA if enabled
             if (isReCaptchaConfigured() && responses.recaptchaToken) {
-                const isValid = await verifyReCaptchaTokenWithFirebase(responses.recaptchaToken);
+                const isValid = await verifyReCaptchaTokenClientSide(responses.recaptchaToken);
                 if (!isValid) {
                     throw new Error('reCAPTCHA verification failed');
                 }
@@ -243,13 +274,14 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 }
             };
 
-            console.log('Submitting survey response to Firebase...', surveyResponse);
+            console.log('Submitting survey response to database...', surveyResponse);
             await firestoreHelpers.addSurveyResponse(surveyResponse);
             console.log('Survey response submitted successfully!');
             showSuccess('Survey submitted!');
 
             // Redirect to confirmation page instead of resetting form
-            navigate(`/survey-confirmation/${instance.id}`);
+            const urlParam = instance.slug || instance.id;
+            navigate(`/survey-confirmation/${urlParam}`);
         } catch (err) {
             console.error('Survey submission error:', err);
             showError('Failed to submit survey. Please try again.');

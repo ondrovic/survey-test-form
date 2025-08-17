@@ -8,30 +8,13 @@ import {
   SelectOptionSet
 } from './framework.types';
 
-export type DatabaseProvider = 'firebase' | 'supabase' | 'postgres';
+export type DatabaseProvider = 'supabase';
 
 export interface DatabaseConfig {
   provider: DatabaseProvider;
-  firebase?: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-    measurementId?: string;
-  };
-  supabase?: {
+  supabase: {
     url: string;
     anonKey: string;
-  };
-  postgres?: {
-    host: string;
-    port: number;
-    database: string;
-    username: string;
-    password: string;
-    ssl?: boolean;
   };
 }
 
@@ -70,30 +53,49 @@ export interface DatabaseHelpers {
   // Rating Scales
   getRatingScales(): Promise<RatingScale[]>;
   getRatingScale(id: string): Promise<RatingScale | null>;
-  addRatingScale(scale: Omit<RatingScale, 'id'>): Promise<RatingScale>;
+  addRatingScale(scale: RatingScale | Omit<RatingScale, 'id'>): Promise<RatingScale>;
   updateRatingScale(id: string, data: Partial<RatingScale>): Promise<void>;
   deleteRatingScale(id: string): Promise<void>;
 
   // Radio Option Sets
   getRadioOptionSets(): Promise<RadioOptionSet[]>;
   getRadioOptionSet(id: string): Promise<RadioOptionSet | null>;
-  addRadioOptionSet(optionSet: Omit<RadioOptionSet, 'id'>): Promise<RadioOptionSet>;
+  addRadioOptionSet(optionSet: RadioOptionSet | Omit<RadioOptionSet, 'id'>): Promise<RadioOptionSet>;
   updateRadioOptionSet(id: string, data: Partial<RadioOptionSet>): Promise<void>;
   deleteRadioOptionSet(id: string): Promise<void>;
 
   // Multi-Select Option Sets
   getMultiSelectOptionSets(): Promise<MultiSelectOptionSet[]>;
   getMultiSelectOptionSet(id: string): Promise<MultiSelectOptionSet | null>;
-  addMultiSelectOptionSet(optionSet: Omit<MultiSelectOptionSet, 'id'>): Promise<MultiSelectOptionSet>;
+  addMultiSelectOptionSet(optionSet: MultiSelectOptionSet | Omit<MultiSelectOptionSet, 'id'>): Promise<MultiSelectOptionSet>;
   updateMultiSelectOptionSet(id: string, data: Partial<MultiSelectOptionSet>): Promise<void>;
   deleteMultiSelectOptionSet(id: string): Promise<void>;
 
   // Select Option Sets
   getSelectOptionSets(): Promise<SelectOptionSet[]>;
   getSelectOptionSet(id: string): Promise<SelectOptionSet | null>;
-  addSelectOptionSet(optionSet: Omit<SelectOptionSet, 'id'>): Promise<SelectOptionSet>;
+  addSelectOptionSet(optionSet: SelectOptionSet | Omit<SelectOptionSet, 'id'>): Promise<SelectOptionSet>;
   updateSelectOptionSet(id: string, data: Partial<SelectOptionSet>): Promise<void>;
   deleteSelectOptionSet(id: string): Promise<void>;
+
+  // Survey Instance Status Management
+  updateSurveyInstanceStatuses(): Promise<{ success: boolean; activated: number; deactivated: number; message: string }>;
+  getUpcomingStatusChanges(hoursAhead?: number): Promise<{
+    upcoming_activations: Array<{ id: string; title: string; slug?: string; active_date_range: any }>;
+    upcoming_deactivations: Array<{ id: string; title: string; slug?: string; active_date_range: any }>;
+    check_time: string;
+    hours_ahead: number;
+  }>;
+  getSurveyInstanceStatusChanges(instanceId?: string): Promise<Array<{
+    id: string;
+    instance_id: string;
+    old_status: boolean | null;
+    new_status: boolean;
+    reason: string;
+    changed_at: string;
+    changed_by: string;
+    details: any;
+  }>>;
 }
 
 export interface DatabaseProvider_Interface {

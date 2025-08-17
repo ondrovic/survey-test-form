@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { firestoreHelpers } from '@/config/firebase';
+import { firestoreHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { SurveyConfig, SurveyResponse } from '@/types';
 import { AggregatedSeries, OptionSets } from '../types';
@@ -10,6 +10,7 @@ export const useVisualizationData = (instanceId?: string) => {
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<SurveyConfig | undefined>(undefined);
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
+  const [instance, setInstance] = useState<any>(undefined);
 
   const { state: surveyDataState } = useSurveyData();
 
@@ -67,21 +68,26 @@ export const useVisualizationData = (instanceId?: string) => {
         setLoading(true);
         setError(null);
         
-        const [instanceResponses, legacyResponses, instances] = await Promise.all([
-          firestoreHelpers.getSurveyResponsesFromCollection(instanceId).catch(() => []),
-          firestoreHelpers.getSurveyResponses(instanceId).catch(() => []),
-          firestoreHelpers.getSurveyInstances(),
-        ]);
+        // First get all instances to find the actual instance
+        const instances = await firestoreHelpers.getSurveyInstances();
         
-        const instance = instances.find((i) => i.id === instanceId);
-        const cfg = instance ? await firestoreHelpers.getSurveyConfig(instance.configId) : undefined;
+        // Find instance by either ID or slug
+        const instanceData = instances.find((i) => i.id === instanceId || i.slug === instanceId);
+        
+        if (!instanceData) {
+          throw new Error(`Instance not found: ${instanceId}`);
+        }
+        
+        // Get responses using the actual instance ID
+        const responses = await firestoreHelpers.getSurveyResponsesFromCollection(instanceData.id).catch(() => []);
+        const cfg = instanceData ? await firestoreHelpers.getSurveyConfig(instanceData.configId) : undefined;
         
         if (!isMounted) return;
         
-        // Merge instance-specific and legacy responses
-        const combined = [...instanceResponses, ...legacyResponses];
-        setResponses(combined);
+        // Use only the instance-specific responses (no duplication)
+        setResponses(responses);
         setConfig(cfg || undefined);
+        setInstance(instanceData);
       } catch (e) {
         if (!isMounted) return;
         setError('Failed to load data');
@@ -107,6 +113,7 @@ export const useVisualizationData = (instanceId?: string) => {
     error,
     config,
     responses,
+    instance,
     computeAggregatedSeries,
     optionSets
   };

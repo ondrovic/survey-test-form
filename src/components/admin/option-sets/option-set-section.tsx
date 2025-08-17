@@ -1,6 +1,8 @@
-import { Button, CollapsibleSection, PaginatedList } from '@/components/common';
-import { Edit, Plus, Trash2 } from 'lucide-react';
-import React from 'react';
+import { Button, CollapsibleSection, PaginatedList, GenericImportModal } from '@/components/common';
+import { Edit, Plus, Trash2, Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { useGenericImportExport } from '@/hooks';
+import { ExportableDataType } from '@/utils/generic-import-export.utils';
 
 // Base interface for all option set items
 interface BaseOptionSetItem {
@@ -28,6 +30,7 @@ interface OptionSetSectionProps<T extends BaseOptionSetItem = BaseOptionSetItem>
     renderItemDetails?: (item: T) => React.ReactNode;
     defaultExpanded?: boolean;
     itemsPerPage?: number;
+    dataType: ExportableDataType; // Add data type for import/export
 }
 
 export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem>({
@@ -39,11 +42,31 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
     createButtonLabel,
     emptyMessage,
     renderItemDetails,
-    defaultExpanded = true,
-    itemsPerPage = 3
+    defaultExpanded = false,
+    itemsPerPage = 3,
+    dataType
 }: OptionSetSectionProps<T>) => {
-    // Start expanded if there are items, collapsed if empty
-    const actualDefaultExpanded = items.length > 0 ? defaultExpanded : false;
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const { exportItem, importItem } = useGenericImportExport();
+    
+    // Start collapsed by default to show counts before expanding
+    const actualDefaultExpanded = defaultExpanded;
+
+    const handleExport = (item: T) => {
+        exportItem(item, dataType);
+    };
+
+    const handleImport = () => {
+        setIsImportModalOpen(true);
+    };
+
+    const handleImportFile = async (file: File) => {
+        const success = await importItem(file, dataType);
+        if (success) {
+            setIsImportModalOpen(false);
+        }
+        return success;
+    };
     const renderItem = (item: T) => (
         <div key={item.id} className="border rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -68,6 +91,14 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                     <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => handleExport(item)}
+                    >
+                        <Upload className="w-4 h-4 mr-1" />
+                        Export
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => onDelete(item)}
                     >
                         <Trash2 className="w-4 h-4 mr-1" />
@@ -78,18 +109,26 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
         </div>
     );
 
-    const createButton = (
-        <Button onClick={onCreateNew} size="sm" className="w-32">
-            <Plus className="w-4 h-4 mr-2" />
-            {createButtonLabel}
-        </Button>
+    const headerActions = (
+        <div className="flex items-center gap-2">
+            <Button onClick={handleImport} size="sm" variant="outline">
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+            </Button>
+            <Button onClick={onCreateNew} size="sm" className="w-32">
+                <Plus className="w-4 h-4 mr-2" />
+                {createButtonLabel}
+            </Button>
+        </div>
     );
 
     return (
+        <>
         <CollapsibleSection
             title={title}
+            count={items.length}
             defaultExpanded={actualDefaultExpanded}
-            headerAction={createButton}
+            headerAction={headerActions}
         >
             <div className="space-y-4">
                 <PaginatedList
@@ -100,5 +139,15 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                 />
             </div>
         </CollapsibleSection>
+        
+        {/* Import Modal */}
+        <GenericImportModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImport={handleImportFile}
+            dataType={dataType}
+            title={`Import ${title}`}
+        />
+        </>
     );
 };

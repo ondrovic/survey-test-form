@@ -100,28 +100,31 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                 onDelete={(scale) => openDeleteModal(scale, 'rating')}
                 createButtonLabel="Rating"
                 emptyMessage="No rating scales found. Create your first rating scale to get started."
+                dataType="rating-scale"
             />
 
             {/* Radio Option Sets Section */}
             <OptionSetSection<RadioOptionSet>
-                title="Radio Options"
+                title="Radio Option Sets"
                 items={radioOptionSets || []}
                 onCreateNew={onShowRadioOptionSetManager}
                 onEdit={onEditRadioOptionSet}
                 onDelete={(optionSet) => openDeleteModal(optionSet, 'radio')}
                 createButtonLabel="Radio"
                 emptyMessage="No radio option sets found. Create your first radio option set to get started."
+                dataType="radio-option-set"
             />
 
             {/* Multi-Select Option Sets Section */}
             <OptionSetSection<MultiSelectOptionSet>
-                title="Multi-Select Options"
+                title="Multi-Select Option Sets"
                 items={multiSelectOptionSets || []}
                 onCreateNew={onShowMultiSelectOptionSetManager}
                 onEdit={onEditMultiSelectOptionSet}
                 onDelete={(optionSet) => openDeleteModal(optionSet, 'multi-select')}
                 createButtonLabel="Multi-Select"
                 emptyMessage="No multi-select option sets found. Create your first multi-select option set to get started."
+                dataType="multi-select-option-set"
                 renderItemDetails={(optionSet) =>
                     optionSet.minSelections && optionSet.maxSelections ? (
                         <span>, {optionSet.minSelections}-{optionSet.maxSelections} selections</span>
@@ -131,13 +134,14 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
 
             {/* Select Option Sets Section */}
             <OptionSetSection<SelectOptionSet>
-                title="Select Options"
+                title="Select Option Sets"
                 items={selectOptionSets || []}
                 onCreateNew={onShowSelectOptionSetManager}
                 onEdit={onEditSelectOptionSet}
                 onDelete={(optionSet) => openDeleteModal(optionSet, 'select')}
                 createButtonLabel="Select"
                 emptyMessage="No select option sets found. Create your first select option set to get started."
+                dataType="select-option-set"
                 renderItemDetails={(optionSet) =>
                     optionSet.allowMultiple ? (
                         <span>, multiple selections allowed</span>

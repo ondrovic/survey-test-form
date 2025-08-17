@@ -1,0 +1,77 @@
+name: Update Survey Instance Status
+
+on:
+  schedule:
+    # Run every 6 hours at the top of the hour
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual triggering
+    inputs:
+      dry_run:
+        description: 'Dry run mode (just check what would change)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  update-survey-status:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Update Survey Instance Statuses
+        run: |
+          echo "🔄 Starting survey instance status update..."
+          
+          # Call the Supabase RPC function to update statuses
+          RESPONSE=$(curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/update_survey_instance_statuses" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json")
+          
+          echo "📊 Response from status update:"
+          echo "$RESPONSE" | jq '.'
+          
+          # Extract results
+          ACTIVATED=$(echo "$RESPONSE" | jq -r '.activated // 0')
+          DEACTIVATED=$(echo "$RESPONSE" | jq -r '.deactivated // 0')
+          SUCCESS=$(echo "$RESPONSE" | jq -r '.success // false')
+          
+          echo "✅ Activated surveys: $ACTIVATED"
+          echo "❌ Deactivated surveys: $DEACTIVATED"
+          
+          if [ "$SUCCESS" = "true" ]; then
+            echo "✅ Survey status update completed successfully"
+          else
+            echo "❌ Survey status update failed"
+            exit 1
+          fi
+
+      - name: Check Upcoming Status Changes
+        run: |
+          echo "🔮 Checking for upcoming status changes in the next 24 hours..."
+          
+          UPCOMING=$(curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/get_upcoming_status_changes" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"hours_ahead": 24}')
+          
+          echo "📋 Upcoming changes:"
+          echo "$UPCOMING" | jq '.'
+          
+          # Count upcoming changes
+          UPCOMING_ACTIVATIONS=$(echo "$UPCOMING" | jq -r '.upcoming_activations | length // 0')
+          UPCOMING_DEACTIVATIONS=$(echo "$UPCOMING" | jq -r '.upcoming_deactivations | length // 0')
+          
+          echo "🟢 Surveys activating in next 24h: $UPCOMING_ACTIVATIONS"
+          echo "🔴 Surveys deactivating in next 24h: $UPCOMING_DEACTIVATIONS"
+          
+          # TODO: In the future, this is where we would send email notifications
+
+      - name: Log Activity Summary
+        run: |
+          echo "📈 Survey Status Update Summary:"
+          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Status: Completed successfully ✅"
+          echo "This job runs every 6 hours to automatically activate/deactivate surveys based on their date ranges."

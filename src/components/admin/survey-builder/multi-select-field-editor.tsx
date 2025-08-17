@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { CheckSquare, Square, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { useToast } from '../../../contexts/toast-context/index';
 import { RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../types/framework.types';
 import { updateMetadata } from '../../../utils/metadata.utils';

@@ -143,7 +143,12 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
 
             <div>
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">Options</h4>
+                    <div className="flex items-center space-x-2">
+                        <h4 className="font-medium text-gray-900">Options</h4>
+                        <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                            {data.options.length} {data.options.length === 1 ? 'option' : 'options'}
+                        </span>
+                    </div>
                     <Button onClick={addOption} variant="secondary" size="sm">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Option

@@ -50,6 +50,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
     // Track if form has been submitted to control when to show validation
     const [hasSubmitted, setHasSubmitted] = useState(false);
+    // Track which sections have been validated (for progressive validation)
+    const [validatedSections, setValidatedSections] = useState<Set<number>>(new Set());
 
     // Extract data from survey data context
     const { ratingScales, radioOptionSets, multiSelectOptionSets, selectOptionSets, isLoading } = surveyDataState;
@@ -185,11 +187,97 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         });
     }, [ratingScalesRecord, config, formState.formData, setFieldValue, processAllFields]);
 
+    // Set default values when radio option sets are loaded
+    useEffect(() => {
+        config.sections.forEach(section => {
+            processAllFields(section, (field) => {
+                if (field.type === 'radio' && field.radioOptionSetId && radioOptionSetsRecord[field.radioOptionSetId]) {
+                    const optionSet = radioOptionSetsRecord[field.radioOptionSetId];
+                    const defaultOption = optionSet.options.find(opt => opt.isDefault);
+                    // Only set default value if there is a default option and no value is currently set
+                    if (defaultOption && formState.formData[field.id] === undefined) {
+                        setFieldValue(field.id, defaultOption.value);
+                    }
+                }
+            });
+        });
+    }, [radioOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
+
+    // Set default values when multi-select option sets are loaded
+    useEffect(() => {
+        config.sections.forEach(section => {
+            processAllFields(section, (field) => {
+                if (field.type === 'multiselect' && field.multiSelectOptionSetId && multiSelectOptionSetsRecord[field.multiSelectOptionSetId]) {
+                    const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
+                    const defaultOptions = optionSet.options.filter(opt => opt.isDefault);
+                    // Only set default values if there are default options and no value is currently set
+                    if (defaultOptions.length > 0 && formState.formData[field.id] === undefined) {
+                        const defaultValues = defaultOptions.map(opt => opt.value);
+                        setFieldValue(field.id, defaultValues);
+                    }
+                }
+            });
+        });
+    }, [multiSelectOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
+
+    // Set default values when select option sets are loaded
+    useEffect(() => {
+        config.sections.forEach(section => {
+            processAllFields(section, (field) => {
+                if (field.type === 'select' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
+                    const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
+                    const defaultOption = optionSet.options.find(opt => opt.isDefault);
+                    console.log('🔍 Select option set loaded for field:', {
+                        fieldId: field.id,
+                        fieldLabel: field.label,
+                        optionSetId: field.selectOptionSetId,
+                        hasDefaultOption: !!defaultOption,
+                        defaultValue: defaultOption?.value,
+                        currentValue: formState.formData[field.id]
+                    });
+                    // Only set default value if there is a default option and no value is currently set
+                    if (defaultOption && formState.formData[field.id] === undefined) {
+                        console.log('🔄 Setting default value for select field:', field.id, defaultOption.value);
+                        setFieldValue(field.id, defaultOption.value);
+                    }
+                } else if (field.type === 'multiselectdropdown' && field.selectOptionSetId && selectOptionSetsRecord[field.selectOptionSetId]) {
+                    const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
+                    const defaultOptions = optionSet.options.filter(opt => opt.isDefault);
+                    console.log('🔍 Multi-select dropdown option set loaded for field:', {
+                        fieldId: field.id,
+                        fieldLabel: field.label,
+                        optionSetId: field.selectOptionSetId,
+                        hasDefaultOptions: defaultOptions.length > 0,
+                        currentValue: formState.formData[field.id]
+                    });
+                    // Only set default values if there are default options and no value is currently set
+                    if (defaultOptions.length > 0 && formState.formData[field.id] === undefined) {
+                        const defaultValues = defaultOptions.map(opt => opt.value);
+                        console.log('🔄 Setting default values for multi-select dropdown field:', field.id, defaultValues);
+                        setFieldValue(field.id, defaultValues);
+                    }
+                }
+            });
+        });
+    }, [selectOptionSetsRecord, config, formState.formData, setFieldValue, processAllFields]);
+
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
 
-        // Live-validate if already submitted or field has an error
-        if (hasSubmitted || formState.errors[fieldId]) {
+        // Find which section this field belongs to
+        let fieldSectionIndex = -1;
+        for (let i = 0; i < config.sections.length; i++) {
+            const section = config.sections[i];
+            const fieldInSection = section.fields.find(f => f.id === fieldId) || 
+                                 section.subsections?.flatMap(s => s.fields).find(f => f.id === fieldId);
+            if (fieldInSection) {
+                fieldSectionIndex = i;
+                break;
+            }
+        }
+
+        // Live-validate if form has been submitted, current section has been validated, or field has an error
+        if (hasSubmitted || validatedSections.has(fieldSectionIndex) || formState.errors[fieldId]) {
             let field: SurveyField | undefined;
             for (const section of config.sections) {
                 field = section.fields.find(f => f.id === fieldId);
@@ -209,7 +297,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                 setFieldError(fieldId, '');
             }
         }
-    }, [setFieldValue, setFieldError, formState.errors, hasSubmitted, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
+    }, [setFieldValue, setFieldError, formState.errors, hasSubmitted, validatedSections, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
 
 
 
@@ -225,7 +313,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
     // Handle next button with validation
     const handleNext = useCallback(() => {
-        setHasSubmitted(true);
+        // Mark current section as validated
+        setValidatedSections(prev => new Set([...prev, paginationState.currentSectionIndex]));
 
         const validation = validateSection(paginationState.currentSectionIndex);
 
@@ -352,7 +441,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     }, [config.sections, paginationState.currentSectionIndex]);
 
     // Memoize the onScroll callback to prevent unnecessary re-renders
-    const handleScroll = React.useCallback((scrollTop: number, scrollHeight: number, clientHeight: number) => {
+    const handleScroll = React.useCallback((_scrollTop: number, _scrollHeight: number, _clientHeight: number) => {
         // Optional: Track scroll position for analytics or state
         // Removed excessive logging to improve performance
     }, []);
@@ -382,7 +471,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                                     currentIndex={paginationState.currentSectionIndex}
                                     visitedIndices={paginationState.visitedSections}
                                     sectionValidationStates={sectionValidationStates}
-                                    hasSubmitted={hasSubmitted}
+                                    hasSubmitted={hasSubmitted || validatedSections.has(paginationState.currentSectionIndex)}
                                     showTitles={config.paginatorConfig?.showSectionTitles}
                                     showProgressBar={config.paginatorConfig?.showProgressBar}
                                     showProgressText={config.paginatorConfig?.showProgressText}
@@ -410,7 +499,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                                 totalSections={paginationState.totalSections}
                                 showSectionPagination={showSectionPagination}
                                 fieldValues={formState.formData}
-                                fieldErrors={hasSubmitted ? formState.errors : {}}
+                                fieldErrors={hasSubmitted || validatedSections.has(paginationState.currentSectionIndex) ? formState.errors : {}}
                                 onFieldChange={handleFieldChange}
                                 ratingScales={ratingScalesRecord}
                                 radioOptionSets={radioOptionSetsRecord}

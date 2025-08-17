@@ -1,22 +1,36 @@
 # Service Line Survey
 
-A professional survey application for collecting service line feedback with Firebase integration and Excel export functionality.
+A comprehensive survey framework application built on Supabase with advanced survey building, automated status management, and data visualization capabilities.
 
-<!-- Last updated: 2025-01-08 -->
+<!-- Last updated: 2025-01-17 -->
 
 ## 🚀 Features
 
+### Core Survey System
 - **Modern React 18 + TypeScript**: Built with the latest React features and strict TypeScript
 - **Professional UI/UX**: Clean, accessible design with smooth animations
-- **Interactive Service Line Selection**: Checkbox-based service line selection with proper state management
-- **Expandable Rating Sections**: Click to expand and select High/Medium/Low ratings for selected services
-- **Firebase Firestore Integration**: Store survey data in Firebase Firestore
-- **Local Storage Fallback**: Works offline with browser storage
-- **Form Validation**: Comprehensive client-side validation with real-time feedback
+- **Supabase Database**: PostgreSQL-powered database with advanced features
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile
 - **Accessibility**: Full ARIA compliance and keyboard navigation
-- **Auto-deployment**: GitHub Actions workflow for seamless deployment
-- **Robust State Management**: Proper handling of complex nested form state with race condition prevention
+
+### Survey Management
+- **Visual Survey Builder**: Drag-and-drop interface for creating complex surveys
+- **Dynamic Form Rendering**: Support for multiple field types (text, radio, checkbox, rating, etc.)
+- **Survey Instances**: Create multiple instances of surveys with different configurations
+- **Automated Status Management**: Time-based activation/deactivation with audit trails
+- **Slug-based URLs**: Human-readable survey URLs for easy sharing
+
+### Data & Analytics
+- **Advanced Data Visualization**: Interactive charts and graphs for survey responses
+- **Real-time Filtering**: Filter and analyze data by date ranges, sections, and fields
+- **Excel Export**: Export survey data and configurations for external analysis
+- **Audit Trail**: Complete logging of all survey instance status changes
+
+### Admin Features
+- **Comprehensive Admin Panel**: Manage surveys, option sets, and view analytics
+- **Import/Export System**: Backup and restore survey configurations
+- **Generic Option Set Management**: Reusable rating scales, radio sets, and multi-select options
+- **Security**: reCAPTCHA integration and secure authentication
 
 ## 🛠️ Tech Stack
 
@@ -27,18 +41,21 @@ A professional survey application for collecting service line feedback with Fire
 - **State Management**: React Context + Custom hooks
 - **Form Handling**: React Hook Form
 - **Drag & Drop**: @dnd-kit/core for survey builder
-- **Data Storage**: Firebase Firestore
+- **Data Storage**: Supabase PostgreSQL database
+- **Database**: PostgreSQL (via Supabase), Firestore (Firebase)
+- **Charts**: Custom chart components with visualization utilities
 - **Excel Export**: xlsx library for admin downloads
 - **reCAPTCHA**: Google reCAPTCHA v2 integration
-- **Deployment**: GitHub Pages
-- **CI/CD**: GitHub Actions
+- **Deployment**: GitHub Pages → Netlify (planned)
+- **CI/CD**: GitHub Actions with automated survey status management
+- **Automation**: Database functions and triggers for scheduled tasks
 
 ## 📋 Prerequisites
 
-- Node.js 20+ (required for Firebase compatibility)
+- Node.js 20+
 - npm or yarn
-- Firebase account (for data storage)
-- Firebase project setup
+- Supabase account
+- Supabase project setup
 
 ## 🚀 Quick Start
 
@@ -77,14 +94,14 @@ VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
 **⚠️ Important:** The `.env.local` file is for local development only and should never be committed to the repository.
 
-### 4. Firebase Setup
+### 4. Database Setup
 
-Follow the detailed setup guide in [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to:
-
-1. Create a Firebase project
-2. Set up Firestore database
-3. Get your Firebase configuration
-4. Configure security rules
+Follow [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) to set up your Supabase database with:
+- Full SQL database capabilities
+- Advanced data visualization
+- Automated status management
+- Better performance for complex queries
+- Complete audit trail system
 
 ### 5. GitHub Secrets Setup (Production Deployment)
 
@@ -93,23 +110,14 @@ For secure production deployment, set up the following GitHub secrets in your re
 **🔒 This is required for production deployment only. Local development uses `.env.local`.**
 
 1. **Go to your repository Settings → Secrets and variables → Actions**
-2. **Add the following repository secrets:**
+2. **Add the following repository secrets based on your database provider:**
 
-   | Secret Name                         | Description                  | Required |
-   | ----------------------------------- | ---------------------------- | -------- |
-   | `VITE_FIREBASE_API_KEY`             | Firebase API key             | Yes      |
-   | `VITE_FIREBASE_AUTH_DOMAIN`         | Firebase auth domain         | Yes      |
-   | `VITE_FIREBASE_PROJECT_ID`          | Firebase project ID          | Yes      |
-   | `VITE_FIREBASE_STORAGE_BUCKET`      | Firebase storage bucket      | Yes      |
-   | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | Yes      |
-   | `VITE_FIREBASE_APP_ID`              | Firebase app ID              | Yes      |
-   | `VITE_FIREBASE_MEASUREMENT_ID`      | Firebase measurement ID      | Optional |
-
-3. **Get these values from your Firebase Console:**
-   - Go to Project Settings → General → Your apps
-   - Copy the values from your Firebase configuration object
-
-**Note:** These secrets are used during the GitHub Actions build process and are not exposed in the deployed application.
+   | Secret Name                    | Description               | Required |
+   | ------------------------------ | ------------------------- | -------- |
+   | `VITE_SUPABASE_URL`           | Supabase project URL      | Yes      |
+   | `VITE_SUPABASE_ANON_KEY`      | Supabase anon key         | Yes      |
+   | `SUPABASE_SERVICE_ROLE_KEY`   | For automated status mgmt | Yes      |
+   | `VITE_ADMIN_PASSWORD`         | Admin panel password      | Yes      |
 
 **📖 Detailed Setup Guide:** See [GITHUB_SECRETS_SETUP.md](./GITHUB_SECRETS_SETUP.md) for step-by-step instructions.
 
@@ -229,34 +237,35 @@ npm run build
 
 **Both use the same Firebase configuration values, but in different secure environments.**
 
-### Recent Improvements
+### Key System Features
 
-- **Survey Framework Migration**: Upgraded to a new flexible survey framework supporting multiple survey types
-- **Survey Builder**: Complete admin interface for creating and managing surveys
-- **Multi-Select Field Editor**: Bulk editing capabilities for survey fields
-- **Enhanced Admin Panel**: Comprehensive admin features with data export and management
-- **React Router Integration**: Full routing support for admin and survey pages
-- **Drag & Drop Survey Builder**: Intuitive survey creation with drag-and-drop functionality
-- **reCAPTCHA Integration**: Spam protection with Google reCAPTCHA v2
+- **Supabase Integration**: Full PostgreSQL database with advanced SQL capabilities
+- **Automated Survey Management**: Time-based activation/deactivation with GitHub Actions
+- **Advanced Data Visualization**: Interactive charts with filtering and export capabilities
+- **Survey Framework**: Complete admin interface for creating and managing surveys
+- **Import/Export System**: Backup and restore survey configurations and data
+- **Audit Trail**: Complete logging of all system changes and user actions
+- **Slug-based URLs**: Human-readable survey links for better user experience
+- **Security**: Admin authentication and reCAPTCHA spam protection
 
 ### Environment Variables
 
-| Variable                            | Description                  | Required |
-| ----------------------------------- | ---------------------------- | -------- |
-| `VITE_FIREBASE_API_KEY`             | Firebase API key             | Yes      |
-| `VITE_FIREBASE_AUTH_DOMAIN`         | Firebase auth domain         | Yes      |
-| `VITE_FIREBASE_PROJECT_ID`          | Firebase project ID          | Yes      |
-| `VITE_FIREBASE_STORAGE_BUCKET`      | Firebase storage bucket      | Yes      |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | Yes      |
-| `VITE_FIREBASE_APP_ID`              | Firebase app ID              | Yes      |
-| `VITE_FIREBASE_MEASUREMENT_ID`      | Firebase measurement ID      | Optional |
+| Variable                    | Description               | Required |
+| --------------------------- | ------------------------- | -------- |
+| `VITE_SUPABASE_URL`        | Supabase project URL      | Yes      |
+| `VITE_SUPABASE_ANON_KEY`   | Supabase anon key         | Yes      |
+| `VITE_ADMIN_PASSWORD`       | Admin panel password      | Yes      |
 
-### Firebase Setup
+### Database Setup
 
-1. Create a Firebase project in the [Firebase Console](https://console.firebase.google.com/)
-2. Set up Firestore database in test mode
-3. Get your Firebase configuration from Project Settings
-4. The app will automatically create the data collection structure
+Set up your Supabase database:
+
+1. Create a Supabase project at [https://supabase.com](https://supabase.com)
+2. Run the setup script from `scripts/setup-supabase.sql`
+3. Configure environment variables
+4. Includes automated status management and advanced features
+
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) and [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed setup instructions.
 
 ## 🧪 Testing
 

@@ -1,7 +1,7 @@
 import { Button } from '@/components/common';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { isSurveyInstanceActive } from '@/utils';
-import { BarChart3, Copy, Download, ExternalLink, Settings, Trash2 } from 'lucide-react';
+import { BarChart3, Copy, Download, ExternalLink, Settings, Trash2, Upload } from 'lucide-react';
 import React from 'react';
 
 interface SurveyInstanceCardProps {
@@ -11,10 +11,11 @@ interface SurveyInstanceCardProps {
   onToggleActive: (instance: SurveyInstance) => void;
   onSettings: (instance: SurveyInstance) => void;
   onDownload: (instanceId: string) => void;
-  onVisualize: (instanceId: string) => void;
+  onVisualize: () => void;
   onDelete: (instance: SurveyInstance) => void;
   onCopyUrl: (url: string) => void;
   onOpenUrl: (url: string) => void;
+  onExport?: (instance: SurveyInstance) => void;
 }
 
 export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
@@ -27,7 +28,8 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
   onVisualize,
   onDelete,
   onCopyUrl,
-  onOpenUrl
+  onOpenUrl,
+  onExport
 }) => {
   const isActive = isSurveyInstanceActive(instance);
 
@@ -89,11 +91,21 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onVisualize(instance.id)}
+              onClick={onVisualize}
             >
               <BarChart3 className="w-4 h-4 mr-1" />
               Visualize
             </Button>
+            {onExport && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onExport(instance)}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                Export
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"

@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer, useRef } from 'react';
 import { firestoreHelpers, getDatabaseProviderInfo } from '../../config/database';
 import { SurveyData } from '../../types/survey.types';
 import {
@@ -112,6 +112,9 @@ type SurveyDataAction =
     | { type: 'ADD_MULTI_SELECT_OPTION_SET'; payload: MultiSelectOptionSet }
     | { type: 'UPDATE_MULTI_SELECT_OPTION_SET'; payload: MultiSelectOptionSet }
     | { type: 'DELETE_MULTI_SELECT_OPTION_SET'; payload: string }
+    | { type: 'ADD_SELECT_OPTION_SET'; payload: SelectOptionSet }
+    | { type: 'UPDATE_SELECT_OPTION_SET'; payload: SelectOptionSet }
+    | { type: 'DELETE_SELECT_OPTION_SET'; payload: string }
     | { type: 'SET_LAST_UPDATED'; payload: Date }
     | { type: 'RESET_STATE' };
 
@@ -244,6 +247,23 @@ function surveyDataReducer(state: SurveyDataState, action: SurveyDataAction): Su
                 multiSelectOptionSets: state.multiSelectOptionSets.filter(set => set.id !== action.payload)
             };
 
+        case 'ADD_SELECT_OPTION_SET':
+            return { ...state, selectOptionSets: [...state.selectOptionSets, action.payload] };
+
+        case 'UPDATE_SELECT_OPTION_SET':
+            return {
+                ...state,
+                selectOptionSets: state.selectOptionSets.map(set =>
+                    set.id === action.payload.id ? action.payload : set
+                )
+            };
+
+        case 'DELETE_SELECT_OPTION_SET':
+            return {
+                ...state,
+                selectOptionSets: state.selectOptionSets.filter(set => set.id !== action.payload)
+            };
+
         case 'SET_LAST_UPDATED':
             return { ...state, lastUpdated: action.payload };
 
@@ -273,15 +293,18 @@ interface SurveyDataContextType {
     addSurveyInstance: (instance: SurveyInstance) => void;
     updateSurveyInstance: (instance: SurveyInstance) => void;
     deleteSurveyInstance: (id: string) => void;
-    addRatingScale: (scale: RatingScale) => void;
+    addRatingScale: (scale: RatingScale) => Promise<void>;
     updateRatingScale: (scale: RatingScale) => void;
     deleteRatingScale: (id: string) => void;
-    addRadioOptionSet: (optionSet: RadioOptionSet) => void;
+    addRadioOptionSet: (optionSet: RadioOptionSet) => Promise<void>;
     updateRadioOptionSet: (optionSet: RadioOptionSet) => void;
     deleteRadioOptionSet: (id: string) => void;
-    addMultiSelectOptionSet: (optionSet: MultiSelectOptionSet) => void;
+    addMultiSelectOptionSet: (optionSet: MultiSelectOptionSet) => Promise<void>;
     updateMultiSelectOptionSet: (optionSet: MultiSelectOptionSet) => void;
     deleteMultiSelectOptionSet: (id: string) => void;
+    addSelectOptionSet: (optionSet: SelectOptionSet) => Promise<void>;
+    updateSelectOptionSet: (optionSet: SelectOptionSet) => void;
+    deleteSelectOptionSet: (id: string) => void;
 }
 
 const SurveyDataContext = createContext<SurveyDataContextType | undefined>(undefined);
@@ -341,6 +364,13 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const loadLegacyData = useCallback(async () => {
         try {
+            // Check if database is initialized
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.log('⏳ Legacy data - Database not ready yet, skipping load...');
+                return;
+            }
+
             setLoading(true);
             setError(null);
 
@@ -428,6 +458,14 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const refreshAll = useCallback(async () => {
         console.log("refreshAll called - starting data reload...");
+        
+        // Check if database is initialized before proceeding
+        const dbInfo = getDatabaseProviderInfo();
+        if (!dbInfo.isInitialized) {
+            console.log('⏳ refreshAll - Database not ready yet, skipping data reload...');
+            return;
+        }
+        
         await Promise.all([
             loadFrameworkData(),
             loadLegacyData(),
@@ -464,8 +502,14 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         dispatch({ type: 'DELETE_SURVEY_INSTANCE', payload: id });
     }, []);
 
-    const addRatingScale = useCallback((scale: RatingScale) => {
-        dispatch({ type: 'ADD_RATING_SCALE', payload: scale });
+    const addRatingScale = useCallback(async (scale: RatingScale) => {
+        try {
+            await firestoreHelpers.addRatingScale(scale);
+            dispatch({ type: 'ADD_RATING_SCALE', payload: scale });
+        } catch (error) {
+            console.error('Failed to add rating scale:', error);
+            throw error;
+        }
     }, []);
 
     const updateRatingScale = useCallback((scale: RatingScale) => {
@@ -476,8 +520,14 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         dispatch({ type: 'DELETE_RATING_SCALE', payload: id });
     }, []);
 
-    const addRadioOptionSet = useCallback((optionSet: RadioOptionSet) => {
-        dispatch({ type: 'ADD_RADIO_OPTION_SET', payload: optionSet });
+    const addRadioOptionSet = useCallback(async (optionSet: RadioOptionSet) => {
+        try {
+            await firestoreHelpers.addRadioOptionSet(optionSet);
+            dispatch({ type: 'ADD_RADIO_OPTION_SET', payload: optionSet });
+        } catch (error) {
+            console.error('Failed to add radio option set:', error);
+            throw error;
+        }
     }, []);
 
     const updateRadioOptionSet = useCallback((optionSet: RadioOptionSet) => {
@@ -488,8 +538,14 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         dispatch({ type: 'DELETE_RADIO_OPTION_SET', payload: id });
     }, []);
 
-    const addMultiSelectOptionSet = useCallback((optionSet: MultiSelectOptionSet) => {
-        dispatch({ type: 'ADD_MULTI_SELECT_OPTION_SET', payload: optionSet });
+    const addMultiSelectOptionSet = useCallback(async (optionSet: MultiSelectOptionSet) => {
+        try {
+            await firestoreHelpers.addMultiSelectOptionSet(optionSet);
+            dispatch({ type: 'ADD_MULTI_SELECT_OPTION_SET', payload: optionSet });
+        } catch (error) {
+            console.error('Failed to add multi-select option set:', error);
+            throw error;
+        }
     }, []);
 
     const updateMultiSelectOptionSet = useCallback((optionSet: MultiSelectOptionSet) => {
@@ -500,20 +556,37 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         dispatch({ type: 'DELETE_MULTI_SELECT_OPTION_SET', payload: id });
     }, []);
 
-    // Auto-load data on mount and retry when database becomes available
+    const addSelectOptionSet = useCallback(async (optionSet: SelectOptionSet) => {
+        try {
+            await firestoreHelpers.addSelectOptionSet(optionSet);
+            dispatch({ type: 'ADD_SELECT_OPTION_SET', payload: optionSet });
+        } catch (error) {
+            console.error('Failed to add select option set:', error);
+            throw error;
+        }
+    }, []);
+
+    const updateSelectOptionSet = useCallback((optionSet: SelectOptionSet) => {
+        dispatch({ type: 'UPDATE_SELECT_OPTION_SET', payload: optionSet });
+    }, []);
+
+    const deleteSelectOptionSet = useCallback((id: string) => {
+        dispatch({ type: 'DELETE_SELECT_OPTION_SET', payload: id });
+    }, []);
+
+    // Auto-load data on mount - use ref to avoid dependency issues
+    const autoLoadRef = useRef(false);
     useEffect(() => {
-        if (autoLoad) {
-            const tryLoadData = async () => {
-                const dbInfo = getDatabaseProviderInfo();
-                if (dbInfo.isInitialized) {
-                    console.log('✅ Database is ready, loading survey data...');
-                    refreshAll();
-                } else {
-                    console.log('⏳ Database not ready yet, will retry in 1 second...');
-                    setTimeout(tryLoadData, 1000);
-                }
-            };
-            tryLoadData();
+        if (autoLoad && !autoLoadRef.current) {
+            const dbInfo = getDatabaseProviderInfo();
+            if (dbInfo.isInitialized) {
+                console.log('✅ Database is ready, loading survey data...');
+                autoLoadRef.current = true; // Prevent multiple loads
+                refreshAll();
+            } else {
+                console.log('⏳ Database not ready yet, skipping auto-load (will load when database becomes ready)...');
+                // Don't create infinite retry loops - let the auth context handle database initialization
+            }
         }
     }, [autoLoad, refreshAll]);
 
@@ -542,6 +615,9 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         addMultiSelectOptionSet,
         updateMultiSelectOptionSet,
         deleteMultiSelectOptionSet,
+        addSelectOptionSet,
+        updateSelectOptionSet,
+        deleteSelectOptionSet,
     };
 
     return (

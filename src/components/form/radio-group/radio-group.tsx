@@ -19,7 +19,7 @@ import { RadioGroupProps } from './radio-group.types';
  * />
  * ```
  */
-export const RadioGroup = React.memo(<T extends string | number = string>({
+const RadioGroupComponent = <T extends string | number = string>({
     name,
     options,
     selectedValue,
@@ -105,4 +105,8 @@ export const RadioGroup = React.memo(<T extends string | number = string>({
             )}
         </div>
     );
-}); 
+};
+
+RadioGroupComponent.displayName = 'RadioGroup';
+
+export const RadioGroup = React.memo(RadioGroupComponent) as typeof RadioGroupComponent;

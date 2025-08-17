@@ -1,27 +1,50 @@
-import { DatabaseConfig, DatabaseProvider_Interface, AuthHelpers, DatabaseHelpers } from '../types/database.types';
+import {
+  AuthHelpers,
+  DatabaseConfig,
+  DatabaseHelpers,
+  DatabaseProvider_Interface,
+} from "../types/database.types";
 
 class DatabaseService {
   private provider: DatabaseProvider_Interface | null = null;
   private config: DatabaseConfig | null = null;
 
   async initialize(config: DatabaseConfig): Promise<void> {
+    // Prevent re-initialization if already initialized with the same provider
+    if (
+      this.provider &&
+      this.config?.provider === config.provider &&
+      this.provider.isInitialized()
+    ) {
+      console.log(
+        `Database service already initialized with ${config.provider} provider`
+      );
+      return;
+    }
+
+    // If we have a different provider, clean up first
+    if (this.provider && this.config?.provider !== config.provider) {
+      console.log(
+        `Switching from ${this.config?.provider} to ${config.provider} provider`
+      );
+      this.provider = null;
+    }
+
     this.config = config;
-    
-    switch (config.provider) {
-      case 'firebase':
-        const { FirebaseProvider } = await import('../providers/firebase.provider');
-        this.provider = new FirebaseProvider();
-        break;
-      case 'supabase':
-        const { SupabaseProvider } = await import('../providers/supabase.provider');
-        this.provider = new SupabaseProvider();
-        break;
-      case 'postgres':
-        const { PostgresProvider } = await import('../providers/postgres.provider');
-        this.provider = new PostgresProvider();
-        break;
-      default:
-        throw new Error(`Unknown database provider: ${config.provider}`);
+
+    // Only create new provider if we don't have one
+    if (!this.provider) {
+      switch (config.provider) {
+        case "supabase": {
+          const { SupabaseProvider } = await import(
+            "../providers/supabase.provider"
+          );
+          this.provider = SupabaseProvider;
+          break;
+        }
+        default:
+          throw new Error(`Unknown database provider: ${config.provider}`);
+      }
     }
 
     await this.provider.initialize(config);
@@ -29,14 +52,14 @@ class DatabaseService {
 
   get authHelpers(): AuthHelpers {
     if (!this.provider) {
-      throw new Error('Database service not initialized');
+      throw new Error("Database service not initialized");
     }
     return this.provider.authHelpers;
   }
 
   get databaseHelpers(): DatabaseHelpers {
     if (!this.provider) {
-      throw new Error('Database service not initialized');
+      throw new Error("Database service not initialized");
     }
     return this.provider.databaseHelpers;
   }
@@ -46,7 +69,7 @@ class DatabaseService {
   }
 
   getCurrentProvider(): string {
-    return this.config?.provider ?? 'none';
+    return this.config?.provider ?? "none";
   }
 }
 

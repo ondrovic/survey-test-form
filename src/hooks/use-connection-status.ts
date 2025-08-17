@@ -1,6 +1,5 @@
 import { useAuth } from '@/contexts/auth-context';
-import { db } from '@/config/firebase';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
+import { firestoreHelpers, getDatabaseProviderInfo } from '@/config/database';
 import { useEffect, useState } from 'react';
 
 interface ConnectionStatus {
@@ -13,7 +12,8 @@ interface ConnectionStatus {
 }
 
 /**
- * Hook to monitor Firebase connection status and authentication state
+ * Hook to monitor database connection status and authentication state
+ * Works with any configured database provider (Firebase, Supabase, PostgreSQL)
  */
 export const useConnectionStatus = (): ConnectionStatus => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -28,13 +28,26 @@ export const useConnectionStatus = (): ConnectionStatus => {
       setLoading(true);
       setError(null);
       
-      // Try a simple Firebase operation to test connection
-      const testQuery = query(collection(db, 'survey-configs'), limit(1));
-      await getDocs(testQuery);
+      // Check if database is initialized
+      const dbInfo = getDatabaseProviderInfo();
+      if (!dbInfo.isInitialized) {
+        console.log('⏳ Connection status - Database not ready yet, skipping connection check...');
+        setConnected(false);
+        setError('Database service initializing...');
+        setLoading(false);
+        setLastCheckedAt(new Date());
+        // Don't create infinite retry loops - let the auth context handle database initialization
+        return;
+      }
+      
+      // Try a simple database operation to test connection
+      // This works with any provider (Firebase, Supabase, PostgreSQL)
+      await firestoreHelpers.getSurveyConfigs();
       
       setConnected(true);
+      setError(null);
     } catch (err) {
-      console.error('Firebase connection test failed:', err);
+      console.error('Database connection test failed:', err);
       setConnected(false);
       setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
@@ -60,7 +73,10 @@ export const useConnectionStatus = (): ConnectionStatus => {
 
     const POLL_INTERVAL_MS = 60_000; // 1 minute
     const intervalId = setInterval(() => {
-      checkConnection();
+      const dbInfo = getDatabaseProviderInfo();
+      if (dbInfo.isInitialized) {
+        checkConnection();
+      }
     }, POLL_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
@@ -71,8 +87,9 @@ export const useConnectionStatus = (): ConnectionStatus => {
     if (authLoading) return;
 
     const handleFocus = () => {
-      // Avoid spamming if already checking
-      if (!loading) {
+      // Avoid spamming if already checking or if database isn't ready
+      const dbInfo = getDatabaseProviderInfo();
+      if (!loading && dbInfo.isInitialized) {
         checkConnection();
       }
     };

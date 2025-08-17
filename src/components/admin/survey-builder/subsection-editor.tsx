@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { useValidation } from '../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySubsection } from '../../../types/framework.types';
 import { Button, Input } from '../../common';

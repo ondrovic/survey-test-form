@@ -1,6 +1,6 @@
 import { Download, Eye, EyeOff, Lock, Plus, Star } from 'lucide-react';
 import React, { useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { useToast } from '../../../contexts/toast-context/index';
 import { SurveyData } from '../../../types/survey.types';
 import { SurveyConfig, SurveyInstance } from '../../../types/framework.types';

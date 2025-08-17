@@ -17,7 +17,7 @@ export const useRelativeTime = (
     if (ageMs < 60_000) return 1_000; // update every second for < 1 min
     if (ageMs < 60 * 60_000) return 30_000; // every 30s for < 1 hour
     return 5 * 60_000; // every 5 minutes beyond that
-  }, [date, tick]);
+  }, [date]);
 
   useEffect(() => {
     if (!intervalMs) return;

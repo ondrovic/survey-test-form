@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { firestoreHelpers } from '../config/firebase';
+import { firestoreHelpers } from '../config/database';
 
 interface UseSurveyCountReturn {
     count: number | null;

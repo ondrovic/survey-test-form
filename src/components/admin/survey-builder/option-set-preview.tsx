@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '../../../types/framework.types';
 
 interface OptionSetPreviewProps {

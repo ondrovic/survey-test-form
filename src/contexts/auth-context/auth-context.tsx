@@ -1,4 +1,4 @@
-import { authHelpers, initializeDatabase } from "@/config/database";
+import { authHelpers, initializeDatabase, retryDatabaseInitialization } from "@/config/database";
 import { cookieUtils } from "@/utils/cookie.utils";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -39,14 +39,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Initialize authentication
     useEffect(() => {
+        let isMounted = true; // Prevent state updates if component unmounts
+        
         const initializeAuth = async () => {
             console.log("🚀 AuthContext - initializeAuth() started");
             try {
                 setIsLoading(true);
                 setError(null);
 
-                // Initialize database service first
-                await initializeDatabase();
+                // Initialize database service first with retry logic
+                try {
+                    await retryDatabaseInitialization();
+                } catch (dbError) {
+                    console.error("❌ AuthContext - Database initialization failed after retries:", dbError);
+                    // Try once more with the regular method in case it's a transient issue
+                    await initializeDatabase();
+                }
+
+                // Only proceed if component is still mounted
+                if (!isMounted) return;
 
                 // Check if admin is already authenticated via cookie
                 const hasAdminAuth = checkAuth();
@@ -54,26 +65,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 if (hasAdminAuth) {
                     console.log("✅ AuthContext - Admin already authenticated, setting isAuthenticated = true");
-                    setIsAuthenticated(true);
+                    if (isMounted) setIsAuthenticated(true);
                 } else {
                     console.log("👤 AuthContext - No admin auth, initializing anonymous auth for regular users");
                     // If not admin authenticated, initialize anonymous auth for regular users
                     // but don't set isAuthenticated to true for admin routes
                     await authHelpers.signInAnonymously();
                     console.log("👤 AuthContext - Anonymous auth initialized, setting isAuthenticated = false");
-                    setIsAuthenticated(false); // Admin routes should not be accessible
+                    if (isMounted) setIsAuthenticated(false); // Admin routes should not be accessible
                 }
             } catch (error) {
-                console.error("❌ AuthContext - Failed to sign in anonymously:", error);
-                setError("Authentication failed");
+                console.error("❌ AuthContext - Failed to initialize:", error);
+                
+                if (!isMounted) return;
+                
+                // Provide user-friendly error messages
+                if (error instanceof Error) {
+                    if (error.message.includes('Database tables not found')) {
+                        setError("Database not set up. Please contact administrator.");
+                    } else if (error.message.includes('Connection test timeout')) {
+                        setError("Database connection timeout. Please check your internet connection.");
+                    } else {
+                        setError("Authentication failed. Please try refreshing the page.");
+                    }
+                } else {
+                    setError("Authentication failed");
+                }
                 setIsAuthenticated(false);
             } finally {
-                console.log("🏁 AuthContext - Setting isLoading = false");
-                setIsLoading(false);
+                if (isMounted) {
+                    console.log("🏁 AuthContext - Setting isLoading = false");
+                    setIsLoading(false);
+                }
             }
         };
 
         initializeAuth();
+        
+        // Cleanup function to prevent state updates if component unmounts
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const login = async (password: string): Promise<boolean> => {

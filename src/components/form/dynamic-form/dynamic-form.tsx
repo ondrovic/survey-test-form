@@ -490,7 +490,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             mobileOptimized={true}
                             className="mb-6 h-full"
                             resetTrigger={config.id}
-                            onScroll={(scrollTop, scrollHeight, clientHeight) => {
+                            onScroll={(_scrollTop, _scrollHeight, _clientHeight) => {
                                 // Optional: Track scroll position for analytics or state
                                 // Removed excessive logging to improve performance
                             }}

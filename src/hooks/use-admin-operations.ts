@@ -1,4 +1,4 @@
-import { firestoreHelpers } from "@/config/firebase";
+import { firestoreHelpers } from "@/config/database";
 import { useSurveyData } from "@/contexts/survey-data-context/index";
 import { useToast } from "@/contexts/toast-context";
 import { RatingScale, SurveyResponse } from "@/types";

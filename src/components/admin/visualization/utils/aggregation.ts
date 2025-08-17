@@ -213,11 +213,34 @@ const createHistogramBuckets = (counts: Record<string, number>) => {
   
   if (numericValues.length === 0) return null;
   
+  const uniqueValues = [...new Set(numericValues)];
+  
+  // If we have 5 or fewer unique values, show them as individual values instead of ranges
+  if (uniqueValues.length <= 5) {
+    const buckets: Record<string, number> = {};
+    uniqueValues.sort((a, b) => a - b).forEach(value => {
+      buckets[String(value)] = 0;
+    });
+    
+    numericValues.forEach((v) => {
+      buckets[String(v)] = (buckets[String(v)] || 0) + 1;
+    });
+    
+    return buckets;
+  }
+  
+  // For many values, create histogram buckets
   const min = Math.min(...numericValues);
   const max = Math.max(...numericValues);
-  const bucketCount = 10;
+  const bucketCount = Math.min(10, uniqueValues.length);
   const width = (max - min) || 1;
   const buckets: Record<string, number> = {};
+  
+  // If min === max (all values are the same), just show the single value
+  if (min === max) {
+    buckets[String(min)] = numericValues.length;
+    return buckets;
+  }
   
   for (let i = 0; i < bucketCount; i++) {
     const from = min + (i / bucketCount) * width;

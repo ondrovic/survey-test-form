@@ -7,7 +7,9 @@ export const useSurveyUrls = () => {
   const { showSuccess, showError } = useToast();
 
   const generateSurveyUrl = useCallback((instance: SurveyInstance) => {
-    return `${window.location.origin}${baseRoute}/${instance.id}`;
+    // Use slug if available, otherwise fall back to id for backward compatibility
+    const urlIdentifier = instance.slug || instance.id;
+    return `${window.location.origin}${baseRoute}/${urlIdentifier}`;
   }, []);
 
   const copySurveyUrl = useCallback(async (url: string) => {

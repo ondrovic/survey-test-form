@@ -1,4 +1,3 @@
-import { getFunctions, httpsCallable } from "firebase/functions";
 
 /**
  * reCAPTCHA utility functions for token verification
@@ -59,6 +58,34 @@ export async function verifyReCaptchaToken(
 }
 
 /**
+ * Simple client-side reCAPTCHA verification (for when secret key is not available)
+ * Note: For production use, implement server-side verification
+ * @param token - The reCAPTCHA token from the frontend
+ * @returns Promise<boolean> - Whether the token is valid
+ */
+export async function verifyReCaptchaTokenClientSide(
+  token: string
+): Promise<boolean> {
+  // For now, just check if token exists
+  // In production, you should implement proper server-side verification
+  // using Supabase Edge Functions or similar server-side solution
+  if (!token || token.trim() === '') {
+    console.error("reCAPTCHA token is empty");
+    return false;
+  }
+  
+  // Basic token format validation
+  if (token.length < 20) {
+    console.error("reCAPTCHA token appears to be invalid");
+    return false;
+  }
+  
+  // TODO: Implement proper server-side verification with Supabase Edge Functions
+  console.log("reCAPTCHA token received and basic validation passed");
+  return true;
+}
+
+/**
  * Get reCAPTCHA site key from environment variables
  * @returns string | undefined - The site key or undefined if not configured
  */
@@ -74,22 +101,30 @@ export function isReCaptchaConfigured(): boolean {
   return !!getReCaptchaSiteKey();
 }
 
-/**
- * Verify reCAPTCHA token using Firebase Cloud Function
- * @param token - The reCAPTCHA token from the frontend
- * @returns Promise<boolean> - Whether the token is valid
- */
-export async function verifyReCaptchaTokenWithFirebase(
-  token: string
-): Promise<boolean> {
-  try {
-    const functions = getFunctions();
-    const verifyRecaptcha = httpsCallable(functions, "verifyRecaptcha");
-
-    const result = await verifyRecaptcha({ token });
-    return (result.data as any).success;
-  } catch (error) {
-    console.error("Error verifying reCAPTCHA token:", error);
-    return false;
-  }
-}
+// /**
+//  * Simple client-side reCAPTCHA verification
+//  * Note: For production use, implement server-side verification
+//  * @param token - The reCAPTCHA token from the frontend
+//  * @returns Promise<boolean> - Whether the token is valid
+//  */
+// export async function verifyReCaptchaToken(
+//   token: string
+// ): Promise<boolean> {
+//   // For now, just check if token exists
+//   // In production, you should implement proper server-side verification
+//   // using Supabase Edge Functions or similar server-side solution
+//   if (!token || token.trim() === '') {
+//     console.error("reCAPTCHA token is empty");
+//     return false;
+//   }
+  
+//   // Basic token format validation
+//   if (token.length < 20) {
+//     console.error("reCAPTCHA token appears to be invalid");
+//     return false;
+//   }
+  
+//   // TODO: Implement proper server-side verification with Supabase Edge Functions
+//   console.log("reCAPTCHA token received and basic validation passed");
+//   return true;
+// }

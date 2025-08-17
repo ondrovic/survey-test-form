@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
 import { useToast } from '../../../contexts/toast-context/index';
@@ -498,7 +498,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 await firestoreHelpers.updateSurveyConfig(editingConfig.id, updatedConfig);
                 showSuccess(`Survey configuration "${updatedConfig.title}" updated!`);
             } else {
-                await firestoreHelpers.addSurveyConfig(updatedConfig);
+                // Remove the empty ID when creating new config
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { id: _unusedId, ...configWithoutId } = updatedConfig;
+                await firestoreHelpers.addSurveyConfig(configWithoutId);
                 showSuccess(`Survey configuration "${updatedConfig.title}" created!`);
             }
 

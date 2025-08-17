@@ -6,6 +6,8 @@ export { ColorSelector } from "./color-selector";
 export { DeleteConfirmationModal } from "./delete-confirmation-modal/delete-confirmation-modal";
 export { ErrorBoundary } from "./error-boundary";
 export { SurveyFooter } from "./footer";
+export { GenericImportModal } from "./generic-import-modal";
+export { ImportConfigModal } from "./import-config-modal";
 export { Input } from "./input";
 export { LoadingSpinner } from "./loading-spinner";
 export { Modal } from "./modal";

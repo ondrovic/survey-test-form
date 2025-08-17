@@ -1,6 +1,6 @@
 import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { firestoreHelpers } from '../../../config/firebase';
+import { firestoreHelpers } from '../../../config/database';
 import { useValidation } from '../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SelectOptionSet, SurveyField } from '../../../types/framework.types';
 import { Button, Input, Modal } from '../../common';

@@ -1,7 +1,7 @@
 import { Button } from '@/components/common';
-import { SurveyConfig, SurveyInstance } from '@/types';
+import { SurveyConfig } from '@/types';
 import { getSurveyStats } from '@/utils/section-content.utils';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, Download } from 'lucide-react';
 import React from 'react';
 
 interface SurveyConfigCardProps {
@@ -10,6 +10,7 @@ interface SurveyConfigCardProps {
   onEdit: (config: SurveyConfig) => void;
   onCreateInstance: (config: SurveyConfig) => void;
   onDelete: (config: SurveyConfig) => void;
+  onExport: (config: SurveyConfig) => void;
 }
 
 export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
@@ -17,7 +18,8 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
   instanceCount,
   onEdit,
   onCreateInstance,
-  onDelete
+  onDelete,
+  onExport
 }) => {
   const stats = getSurveyStats(config.sections);
   
@@ -71,6 +73,14 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
           >
             <Plus className="w-4 h-4 mr-1" />
             Create Instance
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onExport(config)}
+          >
+            <Download className="w-4 h-4 mr-1" />
+            Export
           </Button>
           <Button
             size="sm"

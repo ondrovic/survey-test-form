@@ -16,15 +16,22 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
   onSave 
 }) => {
   const [isActive, setIsActive] = useState(instance.isActive);
-  const [startDate, setStartDate] = useState(instance.activeDateRange?.startDate?.slice(0, 16) || '');
-  const [endDate, setEndDate] = useState(instance.activeDateRange?.endDate?.slice(0, 16) || '');
+  const [startDate, setStartDate] = useState(
+    instance.activeDateRange?.startDate ? new Date(instance.activeDateRange.startDate).toISOString().slice(0, 10) : ''
+  );
+  const [endDate, setEndDate] = useState(
+    instance.activeDateRange?.endDate ? new Date(instance.activeDateRange.endDate).toISOString().slice(0, 10) : ''
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const activeDateRange = startDate && endDate
-        ? { startDate: new Date(startDate).toISOString(), endDate: new Date(endDate).toISOString() }
+        ? { 
+            startDate: new Date(startDate + 'T00:00:00').toISOString(), // Start at 12:00:00 AM
+            endDate: new Date(endDate + 'T23:59:59').toISOString()       // End at 11:59:59 PM
+          }
         : null;
 
       await onSave({ isActive, activeDateRange });
@@ -43,8 +50,8 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
     let newDateRange: { startDate: string; endDate: string } | null = null;
     if (startDate && endDate) {
       newDateRange = {
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString()
+        startDate: new Date(startDate + 'T00:00:00').toISOString(),
+        endDate: new Date(endDate + 'T23:59:59').toISOString()
       };
     }
 
@@ -104,6 +111,7 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
             <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
             <p className="text-sm text-gray-600 mb-3">
               Leave empty to keep survey active indefinitely. Both dates must be set to enable date restrictions.
+              Start date begins at 12:00:00 AM, end date ends at 11:59:59 PM.
             </p>
 
             <div className="grid grid-cols-1 gap-4">
@@ -113,7 +121,7 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
                 </label>
                 <input
                   id="start-date"
-                  type="datetime-local"
+                  type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -126,7 +134,7 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
                 </label>
                 <input
                   id="end-date"
-                  type="datetime-local"
+                  type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

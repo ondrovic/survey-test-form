@@ -1,6 +1,17 @@
 # Database Setup Guide
 
-This application now supports multiple database providers: Firebase, Supabase, and PostgreSQL. You can choose which provider to use based on your needs.
+This application uses **Supabase** as its database provider. Supabase provides a PostgreSQL database with advanced features including automated survey management and real-time capabilities.
+
+## Why Supabase?
+
+✅ **Full SQL Database**: PostgreSQL with advanced query capabilities  
+✅ **Automated Status Management**: Time-based survey activation/deactivation  
+✅ **Advanced Data Visualization**: Rich charts and analytics  
+✅ **Complete Audit Trail**: Track all survey changes and user actions  
+✅ **Real-time Updates**: Live data synchronization  
+✅ **GitHub Actions Integration**: Scheduled automation workflows  
+✅ **Self-hosted Option**: Deploy on your own infrastructure if needed  
+✅ **Predictable Pricing**: Fixed-tier pricing model
 
 ## Configuration
 
@@ -10,150 +21,221 @@ Set your database provider in your `.env` file:
 VITE_DATABASE_PROVIDER=firebase  # or 'supabase' or 'postgres'
 ```
 
-## Firebase Setup (Default)
+## Quick Start
 
-Firebase is the default provider and requires no database schema setup.
+Get started with Supabase in just a few steps:
 
-1. Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/)
-2. Enable Firestore Database
-3. Set up your environment variables:
+1. **Create Account**: Sign up at [https://supabase.com](https://supabase.com)
+2. **Create Project**: Start a new project in your desired region
+3. **Run Setup Script**: Execute `scripts/setup-supabase.sql` in the Supabase SQL Editor
+4. **Configure Environment**: Set up your environment variables
+5. **Start Building**: Create your first survey!
 
-```env
-VITE_DATABASE_PROVIDER=firebase
-VITE_FIREBASE_API_KEY=your-api-key-here
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
-```
+Detailed instructions are available in [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
 
-## Supabase Setup
+## Supabase Setup (Recommended)
 
-Supabase provides a PostgreSQL database with a nice dashboard and real-time capabilities.
+Supabase provides a PostgreSQL database with advanced features including automated survey status management.
 
-1. Create a Supabase project at [https://supabase.com/](https://supabase.com/)
-2. Run the database migration:
+### Why Choose Supabase?
+- ✅ **Automated Status Management**: Surveys automatically activate/deactivate based on date ranges
+- ✅ **Advanced Data Visualization**: Rich charts and analytics
+- ✅ **Audit Trail**: Complete logging of all survey changes
+- ✅ **SQL Capabilities**: Complex queries and data analysis
+- ✅ **GitHub Actions Integration**: Scheduled automation
+
+### Setup Steps
+
+1. **Create a Supabase project** at [https://supabase.com/](https://supabase.com/)
+2. **Run the database setup script**:
    - Go to your Supabase dashboard
    - Navigate to SQL Editor
-   - Copy and paste the contents of `database/migrations/001_initial_schema.sql`
-   - Execute the migration
-3. Set up your environment variables:
+   - Copy and paste the contents of `scripts/setup-supabase.sql`
+   - Execute the script
+   
+   This creates:
+   - All survey tables with proper relationships
+   - **Automated status management functions**
+   - **Audit trail system** for tracking changes
+   - **Database triggers** for automatic logging
+
+3. **Set up environment variables**:
 
 ```env
 VITE_DATABASE_PROVIDER=supabase
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_ADMIN_PASSWORD=your-secure-admin-password
 ```
 
-### Instance-Specific Response Tables
+4. **Configure GitHub Secrets** (for automated status management):
+   - `SUPABASE_SERVICE_ROLE_KEY`: For automated survey status updates
+   - See [GITHUB_SECRETS_SETUP.md](./GITHUB_SECRETS_SETUP.md) for details
 
-For Supabase, you'll need to create response tables for each survey instance. These are created automatically when the first response is submitted, but you can also create them manually:
+### Automated Features
+
+With Supabase, you get these automated features:
+
+- **Scheduled Status Updates**: GitHub Actions runs every 6 hours to activate/deactivate surveys
+- **Audit Trail**: Every status change is logged with timestamp and reason
+- **Upcoming Changes**: System tracks surveys that will change status soon
+- **Manual Testing**: Use `scripts/test-status-automation.js` to verify setup
+
+### Automated Survey Status Management
+
+Supabase includes a sophisticated automation system:
 
 ```sql
--- Example for a survey instance with ID "customer-satisfaction-001"
-CREATE TABLE IF NOT EXISTS survey_responses_customer_satisfaction_001 (
-    id SERIAL PRIMARY KEY,
-    survey_instance_id VARCHAR(255) NOT NULL,
-    config_version VARCHAR(255) NOT NULL,
-    responses JSONB NOT NULL,
-    submitted_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    metadata JSONB NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- These functions are included in the setup script:
+
+-- 1. Main automation function (called by GitHub Actions)
+SELECT update_survey_instance_statuses();
+
+-- 2. Check upcoming changes (for notifications)
+SELECT get_upcoming_status_changes(24); -- next 24 hours
+
+-- 3. View audit trail
+SELECT * FROM survey_instance_status_changes 
+ORDER BY changed_at DESC;
 ```
 
-## PostgreSQL Setup
+#### How It Works
+1. **Real-time**: Users accessing surveys get immediate status checks
+2. **Scheduled**: GitHub Actions runs every 6 hours to update database flags
+3. **Logged**: All changes are recorded in the audit trail
+4. **Notification-ready**: System can alert about upcoming changes
 
-Use this option for a direct PostgreSQL connection (local or remote).
 
-1. Set up a PostgreSQL database
-2. Run the database migration from `database/migrations/001_initial_schema.sql`
-3. Set up your environment variables:
+## Core Features
+
+### Survey Management
+- **Visual Survey Builder**: Drag-and-drop interface for creating surveys
+- **Survey Instances**: Create multiple instances with different configurations
+- **Automated Scheduling**: Surveys activate/deactivate based on date ranges
+- **Slug URLs**: Human-readable survey links
+
+### Data & Analytics  
+- **Real-time Visualization**: Interactive charts and graphs
+- **Advanced Filtering**: Filter responses by date, section, or field
+- **Export Capabilities**: Excel export for external analysis
+- **SQL Access**: Direct database queries for custom reporting
+
+### System Administration
+- **Complete Audit Trail**: Track all system changes
+- **Import/Export**: Backup and restore entire configurations
+- **GitHub Actions**: Automated workflows for status management
+- **Admin Authentication**: Secure access controls
+
+## Environment Variables
+
+Set these environment variables in your `.env.local` file for development:
 
 ```env
-VITE_DATABASE_PROVIDER=postgres
-VITE_POSTGRES_HOST=localhost
-VITE_POSTGRES_PORT=5432
-VITE_POSTGRES_DATABASE=survey_db
-VITE_POSTGRES_USERNAME=survey_user
-VITE_POSTGRES_PASSWORD=your-password-here
-VITE_POSTGRES_SSL=false
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_ADMIN_PASSWORD=your-secure-admin-password
 ```
 
-### Local PostgreSQL Setup
+For production deployment, set these as GitHub Secrets:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY` 
+- `SUPABASE_SERVICE_ROLE_KEY` (for automation)
+- `VITE_ADMIN_PASSWORD`
 
-If you want to run PostgreSQL locally:
+## Testing Your Setup
 
-1. Install PostgreSQL
-2. Create a database and user:
+### Supabase Test Script
 
-```sql
-CREATE DATABASE survey_db;
-CREATE USER survey_user WITH PASSWORD 'your-password-here';
-GRANT ALL PRIVILEGES ON DATABASE survey_db TO survey_user;
-```
-
-3. Run the migration:
+Run the included test script to verify your Supabase setup:
 
 ```bash
-psql -h localhost -U survey_user -d survey_db -f database/migrations/001_initial_schema.sql
+# Install dependencies if needed
+npm install @supabase/supabase-js dotenv
+
+# Run the test script
+node scripts/test-status-automation.js
 ```
 
-## Migration from Firebase
+This will verify:
+- Database functions are working
+- Automation system is ready
+- Audit trail is accessible
+- Survey instances can be managed
 
-If you're migrating from Firebase to Supabase or PostgreSQL, you'll need to export your data from Firebase and import it into your new database. The data structures are designed to be compatible, but you may need to transform the data slightly due to different field naming conventions:
+### Manual Testing
 
-### Field Mappings
-
-- `isActive` (Firebase) → `is_active` (SQL databases)
-- `configId` (Firebase) → `config_id` (SQL databases)
-- `surveyInstanceId` (Firebase) → `survey_instance_id` (SQL databases)
-- `configVersion` (Firebase) → `config_version` (SQL databases)
-- `submittedAt` (Firebase) → `submitted_at` (SQL databases)
-- `activeDateRange` (Firebase) → `active_date_range` (SQL databases)
-- `maxSelections` (Firebase) → `max_selections` (SQL databases)
-- `minSelections` (Firebase) → `min_selections` (SQL databases)
-- `allowMultiple` (Firebase) → `allow_multiple` (SQL databases)
-
-## Provider Comparison
-
-| Feature | Firebase | Supabase | PostgreSQL |
-|---------|----------|----------|------------|
-| Setup Complexity | Low | Medium | High |
-| Real-time Updates | Yes | Yes | No |
-| Offline Support | Yes | Limited | No |
-| Cost | Pay-per-use | Fixed tiers | Infrastructure cost |
-| Scalability | Auto-scaling | Auto-scaling | Manual scaling |
-| SQL Queries | No | Yes | Yes |
-| Self-hosted | No | Yes | Yes |
+1. **Create a survey instance** with a date range in the admin panel
+2. **Check the audit trail** in your Supabase dashboard
+3. **Run manual status update**: Call the GitHub Actions workflow
+4. **Verify automation**: Status should update based on current time vs. date range
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"Database service not initialized"**: Make sure you've called `initializeDatabase()` before using any database operations
-2. **Connection timeouts**: Check your network configuration and database credentials
-3. **Migration errors**: Ensure your database user has the necessary permissions to create tables and indexes
+1. **"Database service not initialized"**
+   - Verify environment variables are set correctly
+   - Check that database provider is specified: `VITE_DATABASE_PROVIDER=supabase`
+
+2. **Automation not working**
+   - Verify `SUPABASE_SERVICE_ROLE_KEY` is set in GitHub Secrets
+   - Check GitHub Actions logs for errors
+   - Test manually with the test script
+
+3. **Missing functions error**
+   - Re-run the `scripts/setup-supabase.sql` script
+   - Check Supabase SQL Editor for any error messages
+
+4. **Connection timeouts**
+   - Check your network configuration and database credentials
+   - Verify Supabase project URL and keys
 
 ### Debug Information
 
 The application logs which database provider is being used during initialization. Check the browser console for messages like:
 
 ```
-Initializing database with provider: firebase
+Initializing database with provider: supabase
 Database service initialized successfully
+Survey instance automation system ready
 ```
 
-## Performance Considerations
+## Migration Between Providers
 
-- **Firebase**: Optimized for real-time applications, good for small to medium datasets
-- **Supabase**: Good balance of features and performance, built on PostgreSQL
-- **PostgreSQL**: Best for large datasets and complex queries, requires more setup
+### Data Import/Export
 
-## Backup and Recovery
+The application includes built-in import/export functionality:
 
-- **Firebase**: Built-in backup through Firebase console
-- **Supabase**: Built-in point-in-time recovery and manual backups
-- **PostgreSQL**: Standard PostgreSQL backup tools (pg_dump, etc.)
+1. **Export Data**: Use the admin panel to export surveys, configurations, and responses
+2. **Backup System**: Complete system backup including all settings and data
+3. **Migration Tools**: Import data from other survey systems or previous installations
+4. **Excel Export**: Export response data for analysis in spreadsheet applications
+
+## Performance & Scaling
+
+### Database Performance
+- **PostgreSQL Engine**: Battle-tested database with excellent performance
+- **Connection Pooling**: Built-in optimization for high-traffic applications
+- **Automatic Scaling**: Scales with your usage automatically
+- **Real-time Subscriptions**: Live data updates across all connected clients
+- **Efficient Indexing**: Optimized queries for fast data retrieval
+
+### Scaling Capabilities
+- **Horizontal Scaling**: Add read replicas for increased performance
+- **Vertical Scaling**: Increase compute and memory as needed
+- **Global Distribution**: Deploy globally for reduced latency
+- **Edge Functions**: Run code close to your users
+
+## Backup & Recovery
+
+### Built-in Protection
+- **Point-in-time Recovery**: Restore to any moment in time
+- **Automated Backups**: Daily backups on paid plans
+- **Manual Snapshots**: Create backups on-demand
+- **Cross-region Replication**: Disaster recovery across regions
+
+### Application-level Backups
+- **Admin Panel Export**: Full system backup through the UI
+- **SQL Dumps**: Direct database backups
+- **Configuration Export**: Save survey templates and settings
+- **Response Data Export**: Export survey responses to Excel/CSV
