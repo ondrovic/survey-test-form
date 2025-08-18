@@ -58,7 +58,7 @@ export const ChartModal: React.FC = () => {
         return <BarChart {...commonProps} />;
       }
       // Default to histogram chart
-      return <Histogram counts={selectedChart.series.counts} />;
+      return <Histogram {...commonProps} />;
     }
     if (chartType === 'vertical') {
       return <VerticalBarChart {...commonProps} />;

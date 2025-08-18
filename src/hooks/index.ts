@@ -7,8 +7,6 @@ export { useConnectionStatus } from "./use-connection-status";
 export { useForm } from "./use-form";
 export { useGenericImportExport } from "./use-generic-import-export";
 export { useLocalStorage } from "./use-local-storage";
-export { useModal } from "./use-modal";
-export { useModalState } from "./use-modal-state";
 export { usePagination } from "./use-pagination";
 export { useSurveyCount } from "./use-survey-count";
 export { useSurveyInstanceSettings } from "./use-survey-instance-settings";

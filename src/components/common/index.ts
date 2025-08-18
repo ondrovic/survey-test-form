@@ -18,3 +18,4 @@ export { PasswordInput } from "./password-input";
 export { ReCaptcha } from "./re-captcha";
 export { ScrollableContent } from "./scrollable-content";
 export { SortableList } from "./sortable-list";
+export { UnifiedModal } from "./unified-modal";

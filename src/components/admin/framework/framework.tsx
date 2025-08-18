@@ -5,7 +5,6 @@ import { getInstanceConfig, getInstanceCount } from '@/utils/admin-framework.uti
 import React from 'react';
 import {
   FrameworkHeader,
-  FrameworkModals,
   SurveyConfigSection,
   SurveyInstanceSection
 } from './components';
@@ -32,7 +31,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
   } = useSurveyData();
 
   // Modal management
-  const { modalStates, modalActions } = useAdminFrameworkModals();
+  const { modalActions, setHandlers } = useAdminFrameworkModals();
 
   // Operations object for handlers
   const operations = {
@@ -51,6 +50,22 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     modalHandlers,
     importExportActions
   } = useAdminFrameworkHandlers(operations, modalActions);
+
+  // Set handlers for the modal system
+  React.useEffect(() => {
+    setHandlers({
+      onConfirmDelete: modalHandlers.handleConfirmDelete,
+      onDeactivateInstance: (instanceId: string, instanceName: string) => {
+        onToggleInstanceActive(instanceId, false, instanceName);
+        modalActions.deleteModal.close();
+      },
+      onSaveInstanceSettings: modalHandlers.handleSaveInstanceSettings,
+      onConfirmCreateInstance: modalHandlers.handleConfirmCreateInstance,
+      onImportConfig: importExportActions.importConfig,
+      onImportInstance: importExportActions.importInstance,
+      surveyInstances
+    });
+  }, [setHandlers, modalHandlers, modalActions, onToggleInstanceActive, importExportActions, surveyInstances]);
 
   // Utility functions
   const handleGetInstanceConfig = (instance: SurveyInstance) => 
@@ -90,29 +105,6 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         onImportInstance={instanceHandlers.handleImportInstance}
       />
 
-      {/* All Modals */}
-      <FrameworkModals
-        deleteModal={modalStates.deleteModal}
-        settingsModal={modalStates.settingsModal}
-        createInstanceModal={modalStates.createInstanceModal}
-        importConfigModal={modalStates.importConfigModal}
-        importInstanceModal={modalStates.importInstanceModal}
-        onConfirmDelete={() => modalHandlers.handleConfirmDelete(modalStates.deleteModal.data)}
-        onCancelDelete={modalActions.deleteModal.close}
-        onDeactivateInstance={(instanceId: string, instanceName: string) => {
-          onToggleInstanceActive(instanceId, false, instanceName);
-          modalActions.deleteModal.close();
-        }}
-        onSaveInstanceSettings={async (updates) => await modalHandlers.handleSaveInstanceSettings(modalStates.settingsModal.data, updates)}
-        onCloseInstanceSettings={modalActions.settingsModal.close}
-        onConfirmCreateInstance={() => modalHandlers.handleConfirmCreateInstance(modalStates.createInstanceModal.data)}
-        onCloseCreateInstance={modalActions.createInstanceModal.close}
-        onCloseImportConfig={modalActions.importConfigModal.close}
-        onCloseImportInstance={modalActions.importInstanceModal.close}
-        onImportConfig={importExportActions.importConfig}
-        onImportInstance={importExportActions.importInstance}
-        surveyInstances={surveyInstances}
-      />
     </div>
   );
 };

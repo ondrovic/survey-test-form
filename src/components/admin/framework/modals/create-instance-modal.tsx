@@ -4,6 +4,7 @@ import { baseRoute } from '@/routes';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { generateUniqueSlug } from '@/utils/slug.utils';
 import React from 'react';
+import { UnifiedModal } from '@/components/common/unified-modal';
 
 interface CreateInstanceModalProps {
   config: SurveyConfig;
@@ -29,10 +30,23 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Create New Survey Instance</h3>
+    <UnifiedModal
+      isOpen={true}
+      onClose={onClose}
+      title="Create New Survey Instance"
+      size="md"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={onConfirm}>
+            Create Instance
+          </Button>
+        </div>
+      }
+    >
+      <div className="p-6">
 
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-2">
@@ -79,16 +93,7 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={onConfirm}>
-              Create Instance
-            </Button>
-          </div>
-        </div>
       </div>
-    </div>
+    </UnifiedModal>
   );
 };

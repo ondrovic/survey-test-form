@@ -1,6 +1,7 @@
 import { firestoreHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useCallback } from 'react';
+import toast from 'react-hot-toast';
 import {
   ExportableDataType,
   exportData,
@@ -23,10 +24,11 @@ export const useGenericImportExport = () => {
   ) => {
     try {
       exportData(item, dataType, customFilename);
+      toast.success(`Successfully exported ${getDataTypeDisplayName(dataType)}`);
       console.log(`Successfully exported ${getDataTypeDisplayName(dataType)}`);
     } catch (error) {
       console.error(`Failed to export ${getDataTypeDisplayName(dataType)}:`, error);
-      alert(`Failed to export ${getDataTypeDisplayName(dataType)}`);
+      toast.error(`Failed to export ${getDataTypeDisplayName(dataType)}`);
     }
   }, []);
 
@@ -43,7 +45,7 @@ export const useGenericImportExport = () => {
       const validation = validateImportData(data);
       if (!validation.isValid) {
         console.error('Import validation failed:', validation.errors);
-        alert(`Import failed:\n${validation.errors.join('\n')}`);
+        toast.error(`Import failed: ${validation.errors.join(', ')}`);
         return false;
       }
 
@@ -119,12 +121,13 @@ export const useGenericImportExport = () => {
       await refreshAll();
       console.log(`✅ Data refresh completed after ${finalDataType} import`);
       
+      toast.success(`Successfully imported ${getDataTypeDisplayName(finalDataType)}`);
       console.log(`Successfully imported ${getDataTypeDisplayName(finalDataType)}`);
       return true;
       
     } catch (error) {
       console.error('Import failed:', error);
-      alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return false;
     }
   }, [refreshAll]);

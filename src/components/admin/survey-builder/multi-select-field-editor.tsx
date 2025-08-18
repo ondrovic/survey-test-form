@@ -7,6 +7,7 @@ import { RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../
 import { updateMetadata } from '../../../utils/metadata.utils';
 import { Button, Input } from '../../common';
 import { RatingScaleManager } from '../rating-option-set-manager';
+import { UnifiedModal } from '../../common/unified-modal';
 
 interface MultiSelectFieldEditorProps {
     config: SurveyConfig;
@@ -380,19 +381,16 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b">
-                    <h2 className="text-xl font-semibold">
-                        Multi-Select Field Editor
-                    </h2>
-                    <Button variant="outline" onClick={onClose}>
-                        Close
-                    </Button>
-                </div>
+        <>
+            <UnifiedModal
+                isOpen={true}
+                onClose={onClose}
+                title="Multi-Select Field Editor"
+                size="xl"
+                className="h-full max-h-[90vh]"
+            >
+                <div className="flex-1 flex overflow-hidden h-full">
 
-                <div className="flex-1 flex overflow-hidden">
                     {/* Left Panel - Field Selection */}
                     <div className="w-1/2 border-r p-6 overflow-y-auto">
                         <div className="mb-6">
@@ -503,7 +501,7 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                         </div>
                     </div>
                 </div>
-            </div>
+            </UnifiedModal>
 
             {/* Rating Scale Manager Modal */}
             {showRatingScaleManager && (
@@ -514,6 +512,6 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
 
                 />
             )}
-        </div>
+        </>
     );
 };

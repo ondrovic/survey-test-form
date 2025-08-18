@@ -72,31 +72,31 @@ cd service-line-survey
 npm install
 ```
 
-### 3. Environment Setup (Local Development)
+### 3. Environment Setup
 
-For local development, copy the environment example file and configure your Firebase settings:
+Copy the environment example file and configure your Supabase settings:
 
 ```bash
 cp env.example .env.local
 ```
 
-Edit `.env.local` with your Firebase configuration:
+Edit `.env.local` with your Supabase configuration:
 
 ```env
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+VITE_DATABASE_PROVIDER=supabase
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
+VITE_ADMIN_PASSWORD=your-secure-admin-password
+VITE_USE_OPTIMIZED_PROVIDER=true
 ```
 
 **⚠️ Important:** The `.env.local` file is for local development only and should never be committed to the repository.
 
 ### 4. Database Setup
 
-Follow [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) to set up your Supabase database with:
+**Quick Setup (Recommended):** Follow [SUPABASE_SIMPLE_SETUP.md](./SUPABASE_SIMPLE_SETUP.md) for a simple setup without RLS.
+
+**Advanced Setup:** Follow [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) to set up your Supabase database with:
 - Full SQL database capabilities
 - Advanced data visualization
 - Automated status management
@@ -150,6 +150,34 @@ npm run test:ui      # Run tests with UI
 npm run test:coverage # Run tests with coverage
 ```
 
+## 📜 Available Scripts
+
+### Development
+- `yarn dev` - Start development server
+- `yarn build` - Build for production
+- `yarn preview` - Preview production build
+
+### Code Quality
+- `yarn lint` - Run ESLint
+- `yarn lint:fix` - Fix ESLint issues automatically
+- `yarn type-check` - Run TypeScript type checking
+
+### Testing
+- `yarn test` - Run tests with Vitest
+- `yarn test:ui` - Run tests with UI
+- `yarn test:coverage` - Run tests with coverage report
+
+### Database
+- `yarn db:setup` - Instructions for database setup
+- `yarn db:migrate` - Run database migrations
+
+### Supabase Edge Functions
+- `yarn supabase:login` - Login to Supabase CLI
+- `yarn supabase:link` - Link to your Supabase project
+- `yarn supabase:functions:deploy` - Deploy all Edge Functions
+- `yarn supabase:functions:deploy:analytics` - Deploy analytics function
+- `yarn supabase:functions:deploy:validation` - Deploy validation function
+
 ## 🏗️ Project Structure
 
 ```
@@ -163,11 +191,26 @@ service-line-survey/
 │   ├── contexts/           # React Context providers
 │   ├── hooks/              # Custom React hooks
 │   ├── types/              # TypeScript type definitions
+│   │   ├── database-rows.types.ts    # Database row types
+│   │   └── normalized-schema.types.ts # Normalized schema types
+│   ├── repositories/       # Repository pattern implementation
+│   ├── mappers/            # Data mapping between domain and database
+│   ├── services/           # Business logic services
+│   ├── providers/          # Database provider implementations
 │   ├── utils/              # Utility functions
 │   ├── config/             # Configuration files
 │   ├── styles/             # Global styles
+│   ├── tests/              # Test files
 │   ├── app.tsx             # Main app component
 │   └── main.tsx            # App entry point
+├── supabase/
+│   └── functions/          # Edge Functions
+│       ├── survey-analytics/    # Analytics function
+│       └── survey-validation/   # Validation function
+├── scripts/                # Database and utility scripts
+│   ├── reset-supabase-optimized.sql   # Database reset
+│   ├── setup-supabase-optimized.sql   # Optimized setup
+│   └── test-status-automation.js      # Test script
 ├── .github/workflows/      # GitHub Actions
 ├── public/                 # Static assets
 └── dist/                   # Build output

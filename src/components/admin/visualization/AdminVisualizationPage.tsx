@@ -1,37 +1,77 @@
-import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { Button, LoadingSpinner, ScrollableContent } from '@/components/common';
 import { baseRoute } from '@/routes';
+import React, { useCallback, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { VisualizationProvider, useVisualization } from './context';
-import { useVisualizationData, useFilters, useSectionData } from './hooks';
-import { 
-  StatsPanel, 
-  ChartModal, 
-  SectionRenderer,
-  QuickRangeFilter,
-  CustomDateRange,
-  ChartControls,
+import {
   AdvancedFilters,
-  FieldHideControls
+  ChartControls,
+  CustomDateRange,
+  FieldHideControls,
+  QuickRangeFilter,
+  SectionRenderer,
+  StatsPanel
 } from './components';
+import { VisualizationProvider, useVisualization } from './context';
+import { useFilters, useSectionData, useVisualizationData } from './hooks';
 
-const VisualizationContent: React.FC = () => {
+const VisualizationContent: React.FC = React.memo(() => {
   const { instanceId } = useParams<{ instanceId: string }>();
   const navigate = useNavigate();
   const { state, updateState, filters } = useVisualization();
 
   // Load data
   const { loading, error, config, responses, instance, computeAggregatedSeries } = useVisualizationData(instanceId);
-  
+
   // Filter data
   const { filteredResponses, submissionsByDay, todayCount, seriesMatchesSearch } = useFilters(responses);
-  
-  // Compute series
-  const series = computeAggregatedSeries(filteredResponses);
-  
-  // Section data
+
+  // Compute series - memoize to prevent recalculation on every render
+  const series = useMemo(() => {
+    return computeAggregatedSeries(filteredResponses);
+  }, [computeAggregatedSeries, filteredResponses]);
+
+  // Section data - memoize to prevent recalculation on every render
   const { orderedSections, fieldIdToSeries, sectionNames, subsectionsBySection, availableFields } = useSectionData(config, series);
+
+  // Memoize the filtered sections to prevent unnecessary re-renders
+  const filteredSections = useMemo(() => {
+    return orderedSections.filter((section) =>
+      filters.sectionFilter === 'all' || section.title === filters.sectionFilter
+    );
+  }, [orderedSections, filters.sectionFilter]);
+
+  // Memoize the chart grid content to prevent unnecessary re-renders
+  const chartGridContent = useMemo(() => {
+    if (series.length === 0) {
+      return <p className="text-gray-500">No aggregations available yet.</p>;
+    }
+
+    return (
+      <div className="space-y-10 pb-4">
+        {filteredSections.map((section) => (
+          <SectionRenderer
+            key={section.id}
+            section={section}
+            fieldIdToSeries={fieldIdToSeries}
+            seriesMatchesSearch={seriesMatchesSearch}
+          />
+        ))}
+      </div>
+    );
+  }, [series.length, filteredSections, fieldIdToSeries, seriesMatchesSearch]);
+
+  // Memoize the entire ScrollableContent children to prevent unnecessary re-renders
+  const scrollableChildren = useMemo(() => (
+    <div className="w-full">
+      {chartGridContent}
+    </div>
+  ), [chartGridContent]);
+
+  // Memoize the updateState callback to prevent unnecessary re-renders
+  const handleToggleAdvanced = useCallback(() => {
+    updateState({ showAdvanced: !state.showAdvanced });
+  }, [state.showAdvanced, updateState]);
 
   if (loading) return <LoadingSpinner fullScreen text="Loading data..." />;
 
@@ -49,7 +89,7 @@ const VisualizationContent: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col ${state.isChartModalOpen ? 'bg-black bg-opacity-20' : 'bg-amber-50/30'}`}>
+    <div className="min-h-screen flex flex-col bg-amber-50/30">
       <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -80,10 +120,10 @@ const VisualizationContent: React.FC = () => {
               <QuickRangeFilter />
               <CustomDateRange />
               <ChartControls />
-              <Button 
-                variant="outline" 
-                size="form" 
-                onClick={() => updateState({ showAdvanced: !state.showAdvanced })}
+              <Button
+                variant="outline"
+                size="form"
+                onClick={handleToggleAdvanced}
               >
                 {state.showAdvanced ? 'Hide filters' : 'More filters'}
               </Button>
@@ -101,35 +141,22 @@ const VisualizationContent: React.FC = () => {
 
           {/* Chart Grid */}
           <div>
-            <ScrollableContent showScrollIndicators={true} smoothScroll={true} mobileOptimized={false}>
-              <div className="w-full">
-                {series.length === 0 ? (
-                  <p className="text-gray-500">No aggregations available yet.</p>
-                ) : (
-                  <div className="space-y-10 pb-4">
-                    {orderedSections
-                      .filter((section) => filters.sectionFilter === 'all' || section.title === filters.sectionFilter)
-                      .map((section) => (
-                        <SectionRenderer
-                          key={section.id}
-                          section={section}
-                          fieldIdToSeries={fieldIdToSeries}
-                          seriesMatchesSearch={seriesMatchesSearch}
-                        />
-                      ))}
-                  </div>
-                )}
-              </div>
+            <ScrollableContent
+              key={`chart-grid-${filters.sectionFilter}-${filters.subsectionFilter}-${filters.search}`}
+              showScrollIndicators={true}
+              smoothScroll={true}
+              mobileOptimized={false}
+            >
+              {scrollableChildren}
             </ScrollableContent>
           </div>
         </div>
       </div>
-
-      {/* Chart Modal */}
-      <ChartModal />
     </div>
   );
-};
+});
+
+VisualizationContent.displayName = 'VisualizationContent';
 
 export const AdminVisualizationPage: React.FC = () => {
   return (

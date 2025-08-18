@@ -11,7 +11,8 @@ import { SurveyBuilder } from '@/components/admin/survey-builder';
 import { useAdminTab } from '@/contexts/admin-tab-context/index';
 import { useAuth } from '@/contexts/auth-context/index';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
-import { useAdminOperations, useModal } from '@/hooks';
+import { useAdminOperations } from '@/hooks';
+import { useModal } from '@/contexts/modal-context';
 import { RatingScale, SurveyConfig } from '@/types';
 import { clsx } from 'clsx';
 import React, { useEffect } from 'react';
@@ -22,13 +23,7 @@ export const AdminPage: React.FC<AdminPageProps> = () => {
     const { activeTab, setActiveTab } = useAdminTab();
     const { refreshAll } = useSurveyData();
     const adminOperations = useAdminOperations();
-
-    // Modal states
-    const surveyBuilderModal = useModal<SurveyConfig>();
-    const ratingScaleManagerModal = useModal<RatingScale>();
-    const radioOptionSetManagerModal = useModal<any>();
-    const multiSelectOptionSetManagerModal = useModal<any>();
-    const selectOptionSetManagerModal = useModal<any>();
+    const { openModal, closeModal } = useModal();
 
     // Check for existing authentication on component mount
     useEffect(() => {
@@ -46,45 +41,117 @@ export const AdminPage: React.FC<AdminPageProps> = () => {
     };
 
     const handleCreateNewSurvey = () => {
-        surveyBuilderModal.open();
+        openModal(
+            'survey-builder',
+            <SurveyBuilder
+                onClose={handleCloseSurveyBuilder}
+                editingConfig={undefined}
+            />
+        );
     };
 
     const handleCloseSurveyBuilder = () => {
-        surveyBuilderModal.close();
+        closeModal('survey-builder');
         refreshAll();
     };
 
     const handleEditSurveyConfig = (config: SurveyConfig) => {
-        surveyBuilderModal.open(config);
+        openModal(
+            'survey-builder',
+            <SurveyBuilder
+                onClose={handleCloseSurveyBuilder}
+                editingConfig={config}
+            />
+        );
     };
 
     const handleShowRatingScaleManager = () => {
-        ratingScaleManagerModal.open();
+        openModal(
+            'rating-scale-manager',
+            <RatingScaleManager
+                isVisible={true}
+                onClose={handleCloseRatingScaleManager}
+                editingScale={undefined}
+                isCreating={true}
+            />
+        );
     };
 
     const handleCloseRatingScaleManager = () => {
-        ratingScaleManagerModal.close();
+        closeModal('rating-scale-manager');
     };
 
     const handleEditRatingScale = (scale: RatingScale) => {
-        ratingScaleManagerModal.open(scale);
+        openModal(
+            'rating-scale-manager',
+            <RatingScaleManager
+                isVisible={true}
+                onClose={handleCloseRatingScaleManager}
+                editingScale={scale}
+                isCreating={false}
+            />
+        );
     };
 
     const handleShowRadioOptionSetManager = () => {
-        radioOptionSetManagerModal.open();
+        openModal(
+            'radio-option-set-manager',
+            <RadioOptionSetManager
+                isVisible={true}
+                onClose={handleCloseRadioOptionSetManager}
+                editingOptionSet={undefined}
+                isCreating={true}
+            />
+        );
+    };
+
+    const handleCloseRadioOptionSetManager = () => {
+        closeModal('radio-option-set-manager');
     };
 
     const handleShowMultiSelectOptionSetManager = () => {
-        multiSelectOptionSetManagerModal.open();
+        openModal(
+            'multi-select-option-set-manager',
+            <MultiSelectOptionSetManager
+                isVisible={true}
+                onClose={handleCloseMultiSelectOptionSetManager}
+                editingOptionSet={undefined}
+                isCreating={true}
+            />
+        );
+    };
+
+    const handleCloseMultiSelectOptionSetManager = () => {
+        closeModal('multi-select-option-set-manager');
     };
 
     const handleShowSelectOptionSetManager = () => {
-        selectOptionSetManagerModal.open();
+        openModal(
+            'select-option-set-manager',
+            <SelectOptionSetManager
+                isVisible={true}
+                onClose={handleCloseSelectOptionSetManager}
+                editingOptionSet={undefined}
+                isCreating={true}
+            />
+        );
+    };
+
+    const handleCloseSelectOptionSetManager = () => {
+        closeModal('select-option-set-manager');
     };
 
     // Radio Option Set handlers
     const handleEditRadioOptionSet = (optionSet: any) => {
-        radioOptionSetManagerModal.open(optionSet);
+        openModal(
+            'radio-option-set-manager',
+            <RadioOptionSetManager
+                isVisible={true}
+                onClose={handleCloseRadioOptionSetManager}
+                editingOptionSet={optionSet}
+                isCreating={false}
+            />
+        );
     };
 
     const handleDeleteRadioOptionSet = (optionSetId: string, optionSetName?: string) => {
@@ -93,7 +160,15 @@ export const AdminPage: React.FC<AdminPageProps> = () => {
 
     // Multi-Select Option Set handlers
     const handleEditMultiSelectOptionSet = (optionSet: any) => {
-        multiSelectOptionSetManagerModal.open(optionSet);
+        openModal(
+            'multi-select-option-set-manager',
+            <MultiSelectOptionSetManager
+                isVisible={true}
+                onClose={handleCloseMultiSelectOptionSetManager}
+                editingOptionSet={optionSet}
+                isCreating={false}
+            />
+        );
     };
 
     const handleDeleteMultiSelectOptionSet = (optionSetId: string, optionSetName?: string) => {
@@ -102,24 +177,19 @@ export const AdminPage: React.FC<AdminPageProps> = () => {
 
     // Select Option Set handlers
     const handleEditSelectOptionSet = (optionSet: any) => {
-        selectOptionSetManagerModal.open(optionSet);
+        openModal(
+            'select-option-set-manager',
+            <SelectOptionSetManager
+                isVisible={true}
+                onClose={handleCloseSelectOptionSetManager}
+                editingOptionSet={optionSet}
+                isCreating={false}
+            />
+        );
     };
 
     const handleDeleteSelectOptionSet = (optionSetId: string, optionSetName?: string) => {
         adminOperations.deleteSelectOptionSet(optionSetId, optionSetName);
-    };
-
-    // Close handler functions for option set managers
-    const handleCloseRadioOptionSetManager = () => {
-        radioOptionSetManagerModal.close();
-    };
-
-    const handleCloseMultiSelectOptionSetManager = () => {
-        multiSelectOptionSetManagerModal.close();
-    };
-
-    const handleCloseSelectOptionSetManager = () => {
-        selectOptionSetManagerModal.close();
     };
 
     const handleDownloadAllData = () => {
@@ -203,54 +273,6 @@ export const AdminPage: React.FC<AdminPageProps> = () => {
 
 
             </main>
-
-            {/* Survey Builder Modal */}
-            {surveyBuilderModal.isOpen && (
-                <SurveyBuilder
-                    onClose={handleCloseSurveyBuilder}
-                    editingConfig={surveyBuilderModal.data}
-                />
-            )}
-
-            {/* Rating Scale Manager Modal */}
-            {ratingScaleManagerModal.isOpen && (
-                <RatingScaleManager
-                    isVisible={ratingScaleManagerModal.isOpen}
-                    onClose={handleCloseRatingScaleManager}
-                    editingScale={ratingScaleManagerModal.data}
-                    isCreating={!ratingScaleManagerModal.data}
-                />
-            )}
-
-            {/* Radio Option Set Manager Modal */}
-            {radioOptionSetManagerModal.isOpen && (
-                <RadioOptionSetManager
-                    isVisible={radioOptionSetManagerModal.isOpen}
-                    onClose={handleCloseRadioOptionSetManager}
-                    editingOptionSet={radioOptionSetManagerModal.data}
-                    isCreating={!radioOptionSetManagerModal.data}
-                />
-            )}
-
-            {/* Multi-Select Option Set Manager Modal */}
-            {multiSelectOptionSetManagerModal.isOpen && (
-                <MultiSelectOptionSetManager
-                    isVisible={multiSelectOptionSetManagerModal.isOpen}
-                    onClose={handleCloseMultiSelectOptionSetManager}
-                    editingOptionSet={multiSelectOptionSetManagerModal.data}
-                    isCreating={!multiSelectOptionSetManagerModal.data}
-                />
-            )}
-
-            {/* Select Option Set Manager Modal */}
-            {selectOptionSetManagerModal.isOpen && (
-                <SelectOptionSetManager
-                    isVisible={selectOptionSetManagerModal.isOpen}
-                    onClose={handleCloseSelectOptionSetManager}
-                    editingOptionSet={selectOptionSetManagerModal.data}
-                    isCreating={!selectOptionSetManagerModal.data}
-                />
-            )}
         </div>
     );
 };

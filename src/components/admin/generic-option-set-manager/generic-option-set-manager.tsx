@@ -2,11 +2,12 @@ import { Check, Edit, Plus, Trash2, Upload, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
-import { useModal } from '../../../hooks';
 import { useGenericImportExport } from '../../../hooks';
-import { Button, DeleteConfirmationModal, GenericImportModal } from '../../common';
+import { Button, GenericImportModal } from '../../common';
 import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
 import { ExportableDataType } from '../../../utils/generic-import-export.utils';
+import { useConfirmation, useModal } from '../../../contexts/modal-context';
+import { Modal } from '../../common/modal';
 
 interface GenericOptionSetManagerProps<T extends BaseOptionSet> {
   isVisible: boolean;
@@ -33,8 +34,8 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const { loadItems, createItem, updateItem, deleteItem, isLoading } = useOptionSetCrud();
   const { refreshAll } = useSurveyData();
   const { exportItem, importItem } = useGenericImportExport();
-  const deleteModal = useModal<{ id: string; name: string }>();
-  const importModal = useModal();
+  const showConfirmation = useConfirmation();
+  const { openModal, closeModal } = useModal();
   const [items, setItems] = useState<T[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<T> | null>(null);
 
@@ -114,18 +115,18 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   };
 
   const handleDelete = (item: T) => {
-    deleteModal.open({ id: item.id, name: item.name || `Unnamed ${config.displayName}` });
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteModal.data) return;
-
-    const success = await deleteItem(config, deleteModal.data.id, deleteModal.data.name);
-    if (success) {
-      // Update local state
-      setItems(prev => prev.filter(item => item.id !== deleteModal.data!.id));
-    }
-    deleteModal.close();
+    showConfirmation({
+      title: 'Delete Item',
+      message: `Are you sure you want to delete '${item.name || `Unnamed ${config.displayName}`}'? This action cannot be undone.`,
+      variant: 'danger',
+      onConfirm: async () => {
+        const success = await deleteItem(config, item.id, item.name || `Unnamed ${config.displayName}`);
+        if (success) {
+          // Update local state
+          setItems(prev => prev.filter(prevItem => prevItem.id !== item.id));
+        }
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -195,7 +196,17 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   };
 
   const handleImport = () => {
-    importModal.open();
+    const dataType = getExportDataType();
+    openModal(
+      'import-modal',
+      <GenericImportModal
+        isOpen={true}
+        onClose={() => closeModal('import-modal')}
+        onImport={handleImportFile}
+        dataType={dataType}
+        title={`Import ${config.displayName}`}
+      />
+    );
   };
 
   const handleImportFile = async (file: File) => {
@@ -204,7 +215,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     if (success) {
       // Refresh local items
       await loadItemsData();
-      importModal.close();
+      closeModal('import-modal');
     }
     return success;
   };
@@ -217,20 +228,15 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <>
+      <Modal
+        isOpen={isVisible}
+        onClose={onClose}
+        title={`${config.displayName} Manager`}
+        size="lg"
+        className="max-h-[90vh]"
+      >
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {config.displayName} Manager
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
 
           {(!selectionMode) ? (
             <OptionSetForm
@@ -372,25 +378,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={deleteModal.isOpen}
-        itemName={deleteModal.data?.name || ''}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => deleteModal.close()}
-        message="Are you sure you want to delete '{itemName}'? This action cannot be undone."
-      />
-
-      {/* Import Modal */}
-      <GenericImportModal
-        isOpen={importModal.isOpen}
-        onClose={importModal.close}
-        onImport={handleImportFile}
-        dataType={getExportDataType()}
-        title={`Import ${config.displayName}`}
-      />
-    </div>
+      </Modal>
+    </>
   );
 };

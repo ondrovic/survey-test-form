@@ -1,6 +1,6 @@
 import { Button } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
-import { useModal } from '@/hooks';
+import { useConfirmation } from '@/contexts/modal-context';
 import { RatingScale } from '@/types';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import React from 'react';
@@ -19,7 +19,18 @@ export const AdminRatingOptionsSets: React.FC<AdminRatingOptionsSetsProps> = ({
     // onCleanupDuplicates
 }) => {
     const { state: { ratingScales } } = useSurveyData();
-    const deleteModal = useModal<{ id: string; name: string }>();
+    const showConfirmation = useConfirmation();
+
+    const handleDelete = (scale: RatingScale) => {
+        showConfirmation({
+            title: 'Delete Rating Scale',
+            message: `Are you sure you want to delete "${scale.name}"? This action cannot be undone.`,
+            variant: 'danger',
+            onConfirm: () => {
+                onDeleteRatingScale(scale.id);
+            }
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -72,7 +83,7 @@ export const AdminRatingOptionsSets: React.FC<AdminRatingOptionsSetsProps> = ({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() => deleteModal.open({ id: scale.id, name: scale.name })}
+                                                onClick={() => handleDelete(scale)}
                                             >
                                                 <Trash2 className="w-4 h-4 mr-1" />
                                                 Delete
@@ -85,38 +96,6 @@ export const AdminRatingOptionsSets: React.FC<AdminRatingOptionsSetsProps> = ({
                     )}
                 </div>
             </div>
-
-            {/* Delete Confirmation Modal */}
-            {deleteModal.isOpen && deleteModal.data && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete &quot;{deleteModal.data.name}&quot;?
-                            This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => {
-                                    onDeleteRatingScale(deleteModal.data!.id);
-                                    deleteModal.close();
-                                }}
-                                variant="secondary"
-                                className="flex-1 bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                            >
-                                Delete
-                            </Button>
-                            <Button
-                                onClick={() => deleteModal.close()}
-                                variant="outline"
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

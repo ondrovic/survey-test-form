@@ -15,7 +15,7 @@ export const FrameworkHeader: React.FC<FrameworkHeaderProps> = ({
   onCreateNewSurvey,
   onImportConfig
 }) => {
-  const { validationStatus, handleVerifyConfig, renderValidationModals } = useConfigValidation();
+  const { validationStatus, handleVerifyConfig } = useConfigValidation();
 
   return (
     <>
@@ -69,9 +69,6 @@ export const FrameworkHeader: React.FC<FrameworkHeaderProps> = ({
           </Button>
         </div>
       </div>
-      
-      {/* Validation Modals */}
-      {renderValidationModals()}
     </>
   );
 };

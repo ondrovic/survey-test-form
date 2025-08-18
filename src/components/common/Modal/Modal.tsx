@@ -1,7 +1,5 @@
-import { clsx } from 'clsx';
-import { X } from 'lucide-react';
 import React from 'react';
-import { Button } from '../button';
+import { UnifiedModal, ModalProps as UnifiedModalProps } from '../unified-modal';
 
 interface ModalProps {
     isOpen: boolean;
@@ -13,6 +11,7 @@ interface ModalProps {
     className?: string;
 }
 
+// Legacy wrapper for backward compatibility
 export const Modal: React.FC<ModalProps> = ({
     isOpen,
     onClose,
@@ -22,48 +21,18 @@ export const Modal: React.FC<ModalProps> = ({
     showCloseButton = true,
     className
 }) => {
-    if (!isOpen) return null;
-
-    const sizeClasses = {
-        sm: 'max-w-sm',
-        md: 'max-w-md',
-        lg: 'max-w-lg',
-        xl: 'max-w-xl',
-        full: 'max-w-[95vw] w-[95vw]'
-    };
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={clsx(
-                'bg-white rounded-lg shadow-xl w-full mx-4',
-                sizeClasses[size],
-                className
-            )}>
-                {/* Header */}
-                {(title || showCloseButton) && (
-                    <div className="flex items-center justify-between p-6 border-b">
-                        {title && (
-                            <h3 className="text-lg font-semibold text-gray-900">
-                                {title}
-                            </h3>
-                        )}
-                        {showCloseButton && (
-                            <Button
-                                variant="ghost"
-                                onClick={onClose}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="w-5 h-5" />
-                            </Button>
-                        )}
-                    </div>
-                )}
-
-                {/* Content */}
-                <div className="p-6">
-                    {children}
-                </div>
+        <UnifiedModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={title}
+            size={size}
+            closable={showCloseButton}
+            className={className}
+        >
+            <div className="p-6">
+                {children}
             </div>
-        </div>
+        </UnifiedModal>
     );
 };

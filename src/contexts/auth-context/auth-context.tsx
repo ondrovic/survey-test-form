@@ -25,6 +25,29 @@ interface AuthProviderProps {
     children: React.ReactNode;
 }
 
+// Global singleton state to prevent double initialization in StrictMode
+class AuthInitializationState {
+    private static instance: AuthInitializationState;
+    private _inProgress = false;
+    
+    static getInstance(): AuthInitializationState {
+        if (!AuthInitializationState.instance) {
+            AuthInitializationState.instance = new AuthInitializationState();
+        }
+        return AuthInitializationState.instance;
+    }
+    
+    get inProgress(): boolean {
+        return this._inProgress;
+    }
+    
+    set inProgress(value: boolean) {
+        this._inProgress = value;
+    }
+}
+
+const authState = AuthInitializationState.getInstance();
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +65,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         let isMounted = true; // Prevent state updates if component unmounts
         
         const initializeAuth = async () => {
+            // Prevent double initialization in React StrictMode
+            if (authState.inProgress) {
+                console.log("🚀 AuthContext - initializeAuth() already in progress, skipping");
+                return;
+            }
+            
+            authState.inProgress = true;
             console.log("🚀 AuthContext - initializeAuth() started");
             try {
                 setIsLoading(true);
@@ -97,6 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     console.log("🏁 AuthContext - Setting isLoading = false");
                     setIsLoading(false);
                 }
+                authState.inProgress = false;
             }
         };
 
@@ -105,6 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Cleanup function to prevent state updates if component unmounts
         return () => {
             isMounted = false;
+            authState.inProgress = false;
         };
     }, []);
 

@@ -1,6 +1,5 @@
-import { DeleteConfirmationModal } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
-import { useModal } from '@/hooks';
+import { useConfirmation } from '@/contexts/modal-context';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '@/types';
 import React from 'react';
 import { OptionSetSection } from './option-set-section';
@@ -47,42 +46,38 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
     onDeleteSelectOptionSet
 }) => {
     const { state: { ratingScales, radioOptionSets, multiSelectOptionSets, selectOptionSets } } = useSurveyData();
-    const deleteModal = useModal<DeleteModalData>();
+    const showConfirmation = useConfirmation();
 
-    const handleDeleteConfirm = () => {
-        if (!deleteModal.data) {
-            console.error('No delete modal data available');
-            return;
-        }
-
-        // Type-safe deletion based on the item type
-        switch (deleteModal.data.type) {
-            case 'rating':
-                onDeleteRatingScale(deleteModal.data.id, deleteModal.data.name);
-                break;
-            case 'radio':
-                onDeleteRadioOptionSet(deleteModal.data.id, deleteModal.data.name);
-                break;
-            case 'multi-select':
-                onDeleteMultiSelectOptionSet(deleteModal.data.id, deleteModal.data.name);
-                break;
-            case 'select':
-                onDeleteSelectOptionSet(deleteModal.data.id, deleteModal.data.name);
-                break;
-            default:
-                console.error('Unknown delete type:', deleteModal.data);
-                return;
-        }
-        deleteModal.close();
-    };
-
-    // Helper function to safely open delete modal with proper typing
-    const openDeleteModal = (item: { id: string; name: string }, type: DeleteModalData['type']) => {
+    // Helper function to create type-safe delete confirmations
+    const createDeleteHandler = (type: DeleteModalData['type']) => (item: { id: string; name: string }) => {
         if (!item || !item.id || !item.name) {
-            console.error('Invalid item data for delete modal:', item);
+            console.error('Invalid item data for delete confirmation:', item);
             return;
         }
-        deleteModal.open({ id: item.id, name: item.name, type });
+
+        showConfirmation({
+            title: `Delete ${type} Option Set`,
+            message: `Are you sure you want to delete '${item.name}'? This action cannot be undone.`,
+            variant: 'danger',
+            onConfirm: () => {
+                switch (type) {
+                    case 'rating':
+                        onDeleteRatingScale(item.id, item.name);
+                        break;
+                    case 'radio':
+                        onDeleteRadioOptionSet(item.id, item.name);
+                        break;
+                    case 'multi-select':
+                        onDeleteMultiSelectOptionSet(item.id, item.name);
+                        break;
+                    case 'select':
+                        onDeleteSelectOptionSet(item.id, item.name);
+                        break;
+                    default:
+                        console.error('Unknown delete type:', type);
+                }
+            }
+        });
     };
 
     return (
@@ -97,7 +92,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                 items={ratingScales || []}
                 onCreateNew={onShowRatingScaleManager}
                 onEdit={onEditRatingScale}
-                onDelete={(scale) => openDeleteModal(scale, 'rating')}
+                onDelete={createDeleteHandler('rating')}
                 createButtonLabel="Rating"
                 emptyMessage="No rating scales found. Create your first rating scale to get started."
                 dataType="rating-scale"
@@ -109,7 +104,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                 items={radioOptionSets || []}
                 onCreateNew={onShowRadioOptionSetManager}
                 onEdit={onEditRadioOptionSet}
-                onDelete={(optionSet) => openDeleteModal(optionSet, 'radio')}
+                onDelete={createDeleteHandler('radio')}
                 createButtonLabel="Radio"
                 emptyMessage="No radio option sets found. Create your first radio option set to get started."
                 dataType="radio-option-set"
@@ -121,7 +116,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                 items={multiSelectOptionSets || []}
                 onCreateNew={onShowMultiSelectOptionSetManager}
                 onEdit={onEditMultiSelectOptionSet}
-                onDelete={(optionSet) => openDeleteModal(optionSet, 'multi-select')}
+                onDelete={createDeleteHandler('multi-select')}
                 createButtonLabel="Multi-Select"
                 emptyMessage="No multi-select option sets found. Create your first multi-select option set to get started."
                 dataType="multi-select-option-set"
@@ -138,7 +133,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                 items={selectOptionSets || []}
                 onCreateNew={onShowSelectOptionSetManager}
                 onEdit={onEditSelectOptionSet}
-                onDelete={(optionSet) => openDeleteModal(optionSet, 'select')}
+                onDelete={createDeleteHandler('select')}
                 createButtonLabel="Select"
                 emptyMessage="No select option sets found. Create your first select option set to get started."
                 dataType="select-option-set"
@@ -149,15 +144,6 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                         <span>, single selection only</span>
                     )
                 }
-            />
-
-            {/* Delete Confirmation Modal */}
-            <DeleteConfirmationModal
-                isOpen={deleteModal.isOpen}
-                itemName={deleteModal.data?.name || ''}
-                onConfirm={handleDeleteConfirm}
-                onCancel={() => deleteModal.close()}
-                message="Are you sure you want to delete '{itemName}'? This action cannot be undone."
             />
         </div>
     );

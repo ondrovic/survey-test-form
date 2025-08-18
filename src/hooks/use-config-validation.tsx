@@ -4,7 +4,7 @@ import { SelectOptionSetManager } from '@/components/admin/select-option-set-man
 import { RatingScaleManager } from '@/components/admin/rating-option-set-manager/rating-option-set-manager';
 import { ValidationResultsModal } from '@/components/common/framework7/modal/validation-results-modal';
 import { useToast } from '@/contexts/toast-context/index';
-import { useModalState } from './use-modal-state';
+import { useModal } from '@/contexts/modal-context';
 import { useSurveyOperations } from './use-survey-operations';
 import { useState } from 'react';
 
@@ -17,6 +17,7 @@ interface ValidationStatus {
 export const useConfigValidation = () => {
   const { showError, showInfo } = useToast();
   const { verifyConfig } = useSurveyOperations();
+  const { openModal, closeModal } = useModal();
   
   // Validation status state
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
@@ -24,13 +25,6 @@ export const useConfigValidation = () => {
     errorCount: 0,
     lastChecked: null
   });
-
-  // Modal states
-  const validationResultsModal = useModalState<any>();
-  const radioOptionSetModal = useModalState<{id: string, fieldLabel?: string}>();
-  const multiSelectOptionSetModal = useModalState<{id: string, fieldLabel?: string}>();
-  const selectOptionSetModal = useModalState<{id: string, fieldLabel?: string}>();
-  const ratingScaleModal = useModalState<{id: string, fieldLabel?: string}>();
 
   // Update validation status helper
   const updateValidationStatus = (results: any) => {
@@ -46,7 +40,24 @@ export const useConfigValidation = () => {
     try {
       const results = await verifyConfig();
       updateValidationStatus(results);
-      validationResultsModal.open(results);
+      openModal(
+        'validation-results',
+        <ValidationResultsModal
+          isOpen={true}
+          onClose={() => closeModal('validation-results')}
+          validationResults={results || {
+            totalConfigs: 0,
+            validConfigs: 0,
+            invalidConfigs: 0,
+            totalInstances: 0,
+            deactivatedInstances: 0,
+            errors: [],
+            warnings: []
+          }}
+          onCreateMissingItem={handleCreateMissingItem}
+          onRefreshValidation={handleRefreshValidation}
+        />
+      );
     } catch (error) {
       showError('Failed to verify configurations. Please try again.');
       console.error('Failed to verify config:', error);
@@ -59,19 +70,111 @@ export const useConfigValidation = () => {
     
     showInfo(`Opening ${type.replace(/-/g, ' ')} creation form...`);
 
+    // Handle modal close with validation refresh
+    const handleModalCloseWithRefresh = (modalId: string) => {
+      return () => {
+        closeModal(modalId);
+        // Refresh validation after creating an item
+        verifyConfig().then(results => {
+          updateValidationStatus(results);
+          // Update validation results modal if it's open
+          handleRefreshValidation(results);
+        });
+      };
+    };
+
     // Open the appropriate creation modal based on the item type
     switch (type) {
       case 'rating-scale':
-        ratingScaleModal.open({ id, fieldLabel });
+        openModal(
+          'rating-scale-creation',
+          <RatingScaleManager
+            isVisible={true}
+            onClose={handleModalCloseWithRefresh('rating-scale-creation')}
+            isCreating={true}
+            editingScale={{
+              id,
+              name: fieldLabel || 'New Rating Scale',
+              description: `Rating scale for field "${fieldLabel}"`,
+              options: [],
+              isActive: true,
+              metadata: {
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: 'user'
+              }
+            }}
+          />
+        );
         break;
       case 'radio-option-set':
-        radioOptionSetModal.open({ id, fieldLabel });
+        openModal(
+          'radio-option-set-creation',
+          <RadioOptionSetManager
+            isVisible={true}
+            onClose={handleModalCloseWithRefresh('radio-option-set-creation')}
+            isCreating={true}
+            editingOptionSet={{
+              id,
+              name: fieldLabel || 'New Radio Option Set',
+              description: `Option set for field "${fieldLabel}"`,
+              options: [],
+              isActive: true,
+              metadata: {
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: 'user'
+              }
+            }}
+          />
+        );
         break;
       case 'multi-select-option-set':
-        multiSelectOptionSetModal.open({ id, fieldLabel });
+        openModal(
+          'multi-select-option-set-creation',
+          <MultiSelectOptionSetManager
+            isVisible={true}
+            onClose={handleModalCloseWithRefresh('multi-select-option-set-creation')}
+            isCreating={true}
+            editingOptionSet={{
+              id,
+              name: fieldLabel || 'New Multi-Select Option Set',
+              description: `Option set for field "${fieldLabel}"`,
+              options: [],
+              minSelections: 1,
+              maxSelections: undefined,
+              isActive: true,
+              metadata: {
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: 'user'
+              }
+            }}
+          />
+        );
         break;
       case 'select-option-set':
-        selectOptionSetModal.open({ id, fieldLabel });
+        openModal(
+          'select-option-set-creation',
+          <SelectOptionSetManager
+            isVisible={true}
+            onClose={handleModalCloseWithRefresh('select-option-set-creation')}
+            isCreating={true}
+            editingOptionSet={{
+              id,
+              name: fieldLabel || 'New Select Option Set',
+              description: `Option set for field "${fieldLabel}"`,
+              options: [],
+              allowMultiple: false,
+              isActive: true,
+              metadata: {
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: 'user'
+              }
+            }}
+          />
+        );
         break;
       default:
         showError(`Unknown item type: ${type}`);
@@ -79,43 +182,29 @@ export const useConfigValidation = () => {
     }
   };
 
-  // Handle modal close with validation refresh
-  const handleModalCloseWithRefresh = (modalClose: () => void) => {
-    return () => {
-      modalClose();
-      // Refresh validation after creating an item
-      verifyConfig().then(results => {
-        updateValidationStatus(results);
-        validationResultsModal.updateData(results);
-      });
-    };
-  };
-
-  // Handle validation refresh
-  const handleRefreshValidation = async () => {
+  // Handle validation refresh (can accept results parameter or fetch new ones)
+  const handleRefreshValidation = async (results?: any) => {
     console.log('🔄 Re-running validation after item creation...');
     
-    const results = await verifyConfig();
+    const validationResults = results || await verifyConfig();
     
     console.log('📊 New validation results:', {
-      totalConfigs: results.totalConfigs,
-      validConfigs: results.validConfigs,
-      invalidConfigs: results.invalidConfigs,
-      errorCount: results.errors.length
+      totalConfigs: validationResults.totalConfigs,
+      validConfigs: validationResults.validConfigs,
+      invalidConfigs: validationResults.invalidConfigs,
+      errorCount: validationResults.errors.length
     });
     
-    updateValidationStatus(results);
-    validationResultsModal.updateData(results);
-  };
-
-  // Render validation modals
-  const renderValidationModals = () => (
-    <>
-      {/* Validation Results Modal */}
+    updateValidationStatus(validationResults);
+    
+    // Update validation results modal if it's open by closing and reopening it
+    closeModal('validation-results');
+    openModal(
+      'validation-results',
       <ValidationResultsModal
-        isOpen={validationResultsModal.isOpen}
-        onClose={validationResultsModal.close}
-        validationResults={validationResultsModal.data || {
+        isOpen={true}
+        onClose={() => closeModal('validation-results')}
+        validationResults={validationResults || {
           totalConfigs: 0,
           validConfigs: 0,
           invalidConfigs: 0,
@@ -127,89 +216,12 @@ export const useConfigValidation = () => {
         onCreateMissingItem={handleCreateMissingItem}
         onRefreshValidation={handleRefreshValidation}
       />
-
-      {/* Option Set Creation Modals */}
-      <RadioOptionSetManager
-        isVisible={radioOptionSetModal.isOpen}
-        onClose={handleModalCloseWithRefresh(radioOptionSetModal.close)}
-        isCreating={true}
-        editingOptionSet={radioOptionSetModal.data ? {
-          id: radioOptionSetModal.data.id,
-          name: radioOptionSetModal.data.fieldLabel || 'New Radio Option Set',
-          description: `Option set for field "${radioOptionSetModal.data.fieldLabel}"`,
-          options: [],
-          isActive: true,
-          metadata: {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            createdBy: 'user'
-          }
-        } : null}
-      />
-
-      <MultiSelectOptionSetManager
-        isVisible={multiSelectOptionSetModal.isOpen}
-        onClose={handleModalCloseWithRefresh(multiSelectOptionSetModal.close)}
-        isCreating={true}
-        editingOptionSet={multiSelectOptionSetModal.data ? {
-          id: multiSelectOptionSetModal.data.id,
-          name: multiSelectOptionSetModal.data.fieldLabel || 'New Multi-Select Option Set',
-          description: `Option set for field "${multiSelectOptionSetModal.data.fieldLabel}"`,
-          options: [],
-          minSelections: 1,
-          maxSelections: undefined,
-          isActive: true,
-          metadata: {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            createdBy: 'user'
-          }
-        } : null}
-      />
-
-      <SelectOptionSetManager
-        isVisible={selectOptionSetModal.isOpen}
-        onClose={handleModalCloseWithRefresh(selectOptionSetModal.close)}
-        isCreating={true}
-        editingOptionSet={selectOptionSetModal.data ? {
-          id: selectOptionSetModal.data.id,
-          name: selectOptionSetModal.data.fieldLabel || 'New Select Option Set',
-          description: `Option set for field "${selectOptionSetModal.data.fieldLabel}"`,
-          options: [],
-          allowMultiple: false,
-          isActive: true,
-          metadata: {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            createdBy: 'user'
-          }
-        } : null}
-      />
-
-      <RatingScaleManager
-        isVisible={ratingScaleModal.isOpen}
-        onClose={handleModalCloseWithRefresh(ratingScaleModal.close)}
-        isCreating={true}
-        editingScale={ratingScaleModal.data ? {
-          id: ratingScaleModal.data.id,
-          name: ratingScaleModal.data.fieldLabel || 'New Rating Scale',
-          description: `Rating scale for field "${ratingScaleModal.data.fieldLabel}"`,
-          options: [],
-          isActive: true,
-          metadata: {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            createdBy: 'user'
-          }
-        } : null}
-      />
-    </>
-  );
+    );
+  };
 
   return {
     validationStatus,
     handleVerifyConfig,
-    handleCreateMissingItem,
-    renderValidationModals
+    handleCreateMissingItem
   };
 };

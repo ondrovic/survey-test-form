@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ChartType, VisualizationPreferences, FilterState, VisualizationState, ChartModalData } from '../types';
+import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { ChartModalData, ChartType, FilterState, VisualizationPreferences, VisualizationState } from '../types';
+import { ChartModal } from '../components/ChartModal';
 
 // Context for chart preferences (already existed in original)
 const VisualizationPreferencesContext = createContext<VisualizationPreferences | null>(null);
@@ -9,24 +10,24 @@ interface VisualizationContextType {
   // Filter state
   filters: FilterState;
   updateFilters: (updates: Partial<FilterState>) => void;
-  
-  // UI state
+
+  // UI state (including modal state)
   state: VisualizationState;
   updateState: (updates: Partial<VisualizationState>) => void;
-  
+
   // Chart preferences
   preferences: VisualizationPreferences;
-  
+
   // Modal actions
   openChartModal: (chartData: ChartModalData) => void;
   closeChartModal: () => void;
-  
+
   // Section management
   toggleSectionCollapsed: (sectionId: string) => void;
   toggleSubsectionCollapsed: (subsectionId: string) => void;
   expandAll: () => void;
   collapseAll: (sectionIds: string[], subsectionIds: string[]) => void;
-  
+
   // Field management
   showAllFields: () => void;
 }
@@ -49,7 +50,7 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     quickRange: 'all'
   });
 
-  // UI state
+  // UI state (including modal state)
   const [state, setState] = useState<VisualizationState>({
     collapsedSections: new Set(),
     collapsedSubsections: new Set(),
@@ -73,32 +74,29 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     }
   };
 
+
+
   // Actions
-  const updateFilters = (updates: Partial<FilterState>) => {
-    setFilters(prev => ({ ...prev, ...updates }));
-  };
+  const updateFilters = useCallback((updates: Partial<FilterState>) => {
+    setFilters(prev => {
+      const newFilters = { ...prev, ...updates };
+      return newFilters;
+    });
+  }, []);
 
-  const updateState = (updates: Partial<VisualizationState>) => {
+  const updateState = useCallback((updates: Partial<VisualizationState>) => {
     setState(prev => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const openChartModal = (chartData: ChartModalData) => {
-    setState(prev => ({
-      ...prev,
-      selectedChart: chartData,
-      isChartModalOpen: true
-    }));
-  };
+  const openChartModal = useCallback((chartData: ChartModalData) => {
+    setState(prev => ({ ...prev, selectedChart: chartData, isChartModalOpen: true }));
+  }, []);
 
-  const closeChartModal = () => {
-    setState(prev => ({
-      ...prev,
-      selectedChart: null,
-      isChartModalOpen: false
-    }));
-  };
+  const closeChartModal = useCallback(() => {
+    setState(prev => ({ ...prev, selectedChart: null, isChartModalOpen: false }));
+  }, []);
 
-  const toggleSectionCollapsed = (sectionId: string) => {
+  const toggleSectionCollapsed = useCallback((sectionId: string) => {
     setState(prev => {
       const next = new Set(prev.collapsedSections);
       if (next.has(sectionId)) {
@@ -108,9 +106,9 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
       }
       return { ...prev, collapsedSections: next };
     });
-  };
+  }, []);
 
-  const toggleSubsectionCollapsed = (subsectionId: string) => {
+  const toggleSubsectionCollapsed = useCallback((subsectionId: string) => {
     setState(prev => {
       const next = new Set(prev.collapsedSubsections);
       if (next.has(subsectionId)) {
@@ -120,27 +118,27 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
       }
       return { ...prev, collapsedSubsections: next };
     });
-  };
+  }, []);
 
-  const expandAll = () => {
+  const expandAll = useCallback(() => {
     setState(prev => ({
       ...prev,
       collapsedSections: new Set(),
       collapsedSubsections: new Set()
     }));
-  };
+  }, []);
 
-  const collapseAll = (sectionIds: string[], subsectionIds: string[]) => {
+  const collapseAll = useCallback((sectionIds: string[], subsectionIds: string[]) => {
     setState(prev => ({
       ...prev,
       collapsedSections: new Set(sectionIds),
       collapsedSubsections: new Set(subsectionIds)
     }));
-  };
+  }, []);
 
-  const showAllFields = () => {
+  const showAllFields = useCallback(() => {
     setState(prev => ({ ...prev, hiddenFields: new Set() }));
-  };
+  }, []);
 
   const contextValue: VisualizationContextType = {
     filters,
@@ -161,6 +159,7 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     <VisualizationContext.Provider value={contextValue}>
       <VisualizationPreferencesContext.Provider value={preferences}>
         {children}
+        <ChartModal />
       </VisualizationPreferencesContext.Provider>
     </VisualizationContext.Provider>
   );
@@ -178,7 +177,8 @@ export const useVisualization = (): VisualizationContextType => {
 export const useVisualizationPreferences = (): VisualizationPreferences => {
   const context = useContext(VisualizationPreferencesContext);
   if (!context) {
-    throw new Error('useVisualizationPreferences must be used within a VisualizationProvider');
+    throw new Error('useVisualizationPreferences must be used within a VisualizationPreferencesContext.Provider');
   }
   return context;
 };
+

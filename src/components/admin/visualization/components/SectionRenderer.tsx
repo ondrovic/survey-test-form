@@ -1,10 +1,10 @@
-import React from 'react';
 import { Button } from '@/components/common';
 import { getOrderedSectionContent } from '@/utils/section-content.utils';
-import { BarChart, DonutChart, VerticalBarChart, Histogram } from './charts';
-import { AggregatedSeries, ChartModalData } from '../types';
+import React from 'react';
 import { useVisualization } from '../context';
+import { AggregatedSeries, ChartModalData } from '../types';
 import { hashSaltFrom } from '../utils';
+import { BarChart, DonutChart, Histogram, VerticalBarChart } from './charts';
 
 interface SectionRendererProps {
   section: any;
@@ -12,7 +12,7 @@ interface SectionRendererProps {
   seriesMatchesSearch: (s: AggregatedSeries, context?: { section?: string; subsection?: string }) => boolean;
 }
 
-export const SectionRenderer: React.FC<SectionRendererProps> = ({
+export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
   section,
   fieldIdToSeries,
   seriesMatchesSearch
@@ -38,12 +38,12 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
         .filter((s: any) => !!s && !state.hiddenFields.has(s.fieldId) && !renderedFieldIds.has(s.fieldId) && seriesMatchesSearch(s, { section: section.title, subsection: subsection.title }));
       charts.forEach((s: AggregatedSeries) => {
         renderedFieldIds.add(s.fieldId);
-        allCharts.push({ 
-          type: 'subsection', 
-          data: subsection, 
-          series: s, 
-          sectionTitle: section.title, 
-          subsectionTitle: subsection.title 
+        allCharts.push({
+          type: 'subsection',
+          data: subsection,
+          series: s,
+          sectionTitle: section.title,
+          subsectionTitle: subsection.title
         });
       });
     } else if (ci.type === 'field') {
@@ -51,11 +51,11 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
       const s = fieldIdToSeries[field.id];
       if (!s || !seriesMatchesSearch(s, { section: section.title }) || state.hiddenFields.has(s.fieldId) || renderedFieldIds.has(s.fieldId)) return;
       renderedFieldIds.add(s.fieldId);
-      allCharts.push({ 
-        type: 'field', 
-        data: field, 
-        series: s, 
-        sectionTitle: section.title 
+      allCharts.push({
+        type: 'field',
+        data: field,
+        series: s,
+        sectionTitle: section.title
       });
     }
   });
@@ -86,7 +86,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
         return <BarChart {...commonProps} />;
       }
       // Default to histogram chart
-      return <Histogram counts={chartItem.series.counts} />;
+      return <Histogram {...commonProps} />;
     }
     if (chartType === 'vertical') {
       return <VerticalBarChart {...commonProps} />;
@@ -150,7 +150,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
           {state.collapsedSections.has(section.id) ? 'Expand' : 'Collapse'}
         </Button>
       </div>
-      
+
       {!state.collapsedSections.has(section.id) && (
         <div className="space-y-6">
           {/* Grid layout indicator */}
@@ -175,8 +175,8 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
 
           <div className={`grid gap-6 ${getGridClasses()}`}>
             {allCharts.map((chartItem) => {
-              const fullTitle = chartItem.subsectionTitle 
-                ? `${chartItem.subsectionTitle} • ${chartItem.series.label}` 
+              const fullTitle = chartItem.subsectionTitle
+                ? `${chartItem.subsectionTitle} • ${chartItem.series.label}`
                 : chartItem.series.label;
               const isLongTitle = fullTitle.length > 40;
 
@@ -227,4 +227,6 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
       )}
     </div>
   );
-};
+});
+
+SectionRenderer.displayName = 'SectionRenderer';

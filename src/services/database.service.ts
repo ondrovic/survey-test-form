@@ -36,6 +36,9 @@ class DatabaseService {
     if (!this.provider) {
       switch (config.provider) {
         case "supabase": {
+          console.log(
+            "Using optimized Supabase provider with repository pattern"
+          );
           const { SupabaseProvider } = await import(
             "../providers/supabase.provider"
           );

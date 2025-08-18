@@ -1,6 +1,8 @@
 import { Button } from '@/components/common';
 import { Upload, X, FileText, AlertCircle } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
+import toast from 'react-hot-toast';
+import { UnifiedModal } from '@/components/common/unified-modal';
 
 interface ImportConfigModalProps {
   isOpen: boolean;
@@ -21,7 +23,7 @@ export const ImportConfigModal: React.FC<ImportConfigModalProps> = ({
     if (file.type === 'application/json' || file.name.endsWith('.json')) {
       setSelectedFile(file);
     } else {
-      alert('Please select a JSON file');
+      toast.error('Please select a JSON file');
     }
   }, []);
 
@@ -77,20 +79,14 @@ export const ImportConfigModal: React.FC<ImportConfigModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Import Survey Config</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              disabled={isImporting}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+    <UnifiedModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Import Survey Configuration"
+      size="sm"
+      closable={!isImporting}
+    >
+      <div className="p-6">
 
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-3">
@@ -193,8 +189,7 @@ export const ImportConfigModal: React.FC<ImportConfigModalProps> = ({
               )}
             </Button>
           </div>
-        </div>
       </div>
-    </div>
+    </UnifiedModal>
   );
 };
