@@ -1,9 +1,9 @@
-import { Button } from '@/components/common';
-import { SurveyInstanceCard, SurveyList } from '@/components/common/framework7';
-import { useSurveyOperations, useSurveyUrls } from '@/hooks';
-import { SurveyConfig, SurveyInstance } from '@/types';
-import { Upload } from 'lucide-react';
-import React from 'react';
+import { Button } from "@/components/common";
+import { SurveyInstanceCard, SurveyList } from "@/components/common/framework";
+import { useSurveyOperations, useSurveyUrls } from "@/hooks";
+import { SurveyConfig, SurveyInstance } from "@/types";
+import { Upload } from "lucide-react";
+import React from "react";
 
 interface SurveyInstanceSectionProps {
   surveyInstances: SurveyInstance[];
@@ -24,21 +24,18 @@ export const SurveyInstanceSection: React.FC<SurveyInstanceSectionProps> = ({
   onDelete,
   onVisualize,
   onExport,
-  onImportInstance
+  onImportInstance,
 }) => {
   const { downloadSurveyData } = useSurveyOperations();
-  const { generateSurveyUrl, copySurveyUrl, openSurveyInNewTab } = useSurveyUrls();
+  const { generateSurveyUrl, copySurveyUrl, openSurveyInNewTab } =
+    useSurveyUrls();
 
   return (
     <SurveyList
       title="Survey Instances"
       emptyMessage="No survey instances found."
       headerActions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onImportInstance}
-        >
+        <Button variant="outline" size="sm" onClick={onImportInstance}>
           <Upload className="w-4 h-4 mr-2" />
           Import Instance
         </Button>

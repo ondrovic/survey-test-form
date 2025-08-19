@@ -1,6 +1,6 @@
-import { SurveyConfigCard, SurveyList } from '@/components/common/framework7';
-import { SurveyConfig } from '@/types';
-import React from 'react';
+import { SurveyConfigCard, SurveyList } from "@/components/common/framework";
+import { SurveyConfig } from "@/types";
+import React from "react";
 
 interface SurveyConfigSectionProps {
   surveyConfigs: SurveyConfig[];
@@ -17,7 +17,7 @@ export const SurveyConfigSection: React.FC<SurveyConfigSectionProps> = ({
   onEdit,
   onCreateInstance,
   onDelete,
-  onExport
+  onExport,
 }) => {
   return (
     <SurveyList

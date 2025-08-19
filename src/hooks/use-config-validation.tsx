@@ -1,12 +1,12 @@
-import { RadioOptionSetManager } from '@/components/admin/radio-option-set-manager/radio-option-set-manager';
-import { MultiSelectOptionSetManager } from '@/components/admin/multi-select-option-set-manager/multi-select-option-set-manager';
-import { SelectOptionSetManager } from '@/components/admin/select-option-set-manager/select-option-set-manager';
-import { RatingScaleManager } from '@/components/admin/rating-option-set-manager/rating-option-set-manager';
-import { ValidationResultsModal } from '@/components/common/framework7/modal/validation-results-modal';
-import { useToast } from '@/contexts/toast-context/index';
-import { useModal } from '@/contexts/modal-context';
-import { useSurveyOperations } from './use-survey-operations';
-import { useState } from 'react';
+import { RadioOptionSetManager } from "@/components/admin/radio-option-set-manager/radio-option-set-manager";
+import { MultiSelectOptionSetManager } from "@/components/admin/multi-select-option-set-manager/multi-select-option-set-manager";
+import { SelectOptionSetManager } from "@/components/admin/select-option-set-manager/select-option-set-manager";
+import { RatingScaleManager } from "@/components/admin/rating-option-set-manager/rating-option-set-manager";
+import { ValidationResultsModal } from "@/components/common/framework/modal/validation-results-modal";
+import { useToast } from "@/contexts/toast-context/index";
+import { useModal } from "@/contexts/modal-context";
+import { useSurveyOperations } from "./use-survey-operations";
+import { useState } from "react";
 
 interface ValidationStatus {
   hasErrors: boolean;
@@ -18,12 +18,12 @@ export const useConfigValidation = () => {
   const { showError, showInfo } = useToast();
   const { verifyConfig } = useSurveyOperations();
   const { openModal, closeModal } = useModal();
-  
+
   // Validation status state
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
     hasErrors: false,
     errorCount: 0,
-    lastChecked: null
+    lastChecked: null,
   });
 
   // Update validation status helper
@@ -31,7 +31,7 @@ export const useConfigValidation = () => {
     setValidationStatus({
       hasErrors: results.invalidConfigs > 0,
       errorCount: results.invalidConfigs,
-      lastChecked: new Date()
+      lastChecked: new Date(),
     });
   };
 
@@ -41,41 +41,53 @@ export const useConfigValidation = () => {
       const results = await verifyConfig();
       updateValidationStatus(results);
       openModal(
-        'validation-results',
+        "validation-results",
         <ValidationResultsModal
           isOpen={true}
-          onClose={() => closeModal('validation-results')}
-          validationResults={results || {
-            totalConfigs: 0,
-            validConfigs: 0,
-            invalidConfigs: 0,
-            totalInstances: 0,
-            deactivatedInstances: 0,
-            errors: [],
-            warnings: []
-          }}
+          onClose={() => closeModal("validation-results")}
+          validationResults={
+            results || {
+              totalConfigs: 0,
+              validConfigs: 0,
+              invalidConfigs: 0,
+              totalInstances: 0,
+              deactivatedInstances: 0,
+              errors: [],
+              warnings: [],
+            }
+          }
           onCreateMissingItem={handleCreateMissingItem}
           onRefreshValidation={handleRefreshValidation}
         />
       );
     } catch (error) {
-      showError('Failed to verify configurations. Please try again.');
-      console.error('Failed to verify config:', error);
+      showError("Failed to verify configurations. Please try again.");
+      console.error("Failed to verify config:", error);
     }
   };
 
   // Handle creating missing items
-  const handleCreateMissingItem = async (type: string, id: string, name?: string, fieldLabel?: string) => {
-    console.log('🔧 Opening creation modal for missing item:', { type, id, name, fieldLabel });
-    
-    showInfo(`Opening ${type.replace(/-/g, ' ')} creation form...`);
+  const handleCreateMissingItem = async (
+    type: string,
+    id: string,
+    name?: string,
+    fieldLabel?: string
+  ) => {
+    console.log("🔧 Opening creation modal for missing item:", {
+      type,
+      id,
+      name,
+      fieldLabel,
+    });
+
+    showInfo(`Opening ${type.replace(/-/g, " ")} creation form...`);
 
     // Handle modal close with validation refresh
     const handleModalCloseWithRefresh = (modalId: string) => {
       return () => {
         closeModal(modalId);
         // Refresh validation after creating an item
-        verifyConfig().then(results => {
+        verifyConfig().then((results) => {
           updateValidationStatus(results);
           // Update validation results modal if it's open
           handleRefreshValidation(results);
@@ -85,60 +97,62 @@ export const useConfigValidation = () => {
 
     // Open the appropriate creation modal based on the item type
     switch (type) {
-      case 'rating-scale':
+      case "rating-scale":
         openModal(
-          'rating-scale-creation',
+          "rating-scale-creation",
           <RatingScaleManager
             isVisible={true}
-            onClose={handleModalCloseWithRefresh('rating-scale-creation')}
+            onClose={handleModalCloseWithRefresh("rating-scale-creation")}
             isCreating={true}
             editingScale={{
               id,
-              name: fieldLabel || 'New Rating Scale',
+              name: fieldLabel || "New Rating Scale",
               description: `Rating scale for field "${fieldLabel}"`,
               options: [],
               isActive: true,
               metadata: {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                createdBy: 'user'
-              }
+                createdBy: "user",
+              },
             }}
           />
         );
         break;
-      case 'radio-option-set':
+      case "radio-option-set":
         openModal(
-          'radio-option-set-creation',
+          "radio-option-set-creation",
           <RadioOptionSetManager
             isVisible={true}
-            onClose={handleModalCloseWithRefresh('radio-option-set-creation')}
+            onClose={handleModalCloseWithRefresh("radio-option-set-creation")}
             isCreating={true}
             editingOptionSet={{
               id,
-              name: fieldLabel || 'New Radio Option Set',
+              name: fieldLabel || "New Radio Option Set",
               description: `Option set for field "${fieldLabel}"`,
               options: [],
               isActive: true,
               metadata: {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                createdBy: 'user'
-              }
+                createdBy: "user",
+              },
             }}
           />
         );
         break;
-      case 'multi-select-option-set':
+      case "multi-select-option-set":
         openModal(
-          'multi-select-option-set-creation',
+          "multi-select-option-set-creation",
           <MultiSelectOptionSetManager
             isVisible={true}
-            onClose={handleModalCloseWithRefresh('multi-select-option-set-creation')}
+            onClose={handleModalCloseWithRefresh(
+              "multi-select-option-set-creation"
+            )}
             isCreating={true}
             editingOptionSet={{
               id,
-              name: fieldLabel || 'New Multi-Select Option Set',
+              name: fieldLabel || "New Multi-Select Option Set",
               description: `Option set for field "${fieldLabel}"`,
               options: [],
               minSelections: 1,
@@ -147,22 +161,22 @@ export const useConfigValidation = () => {
               metadata: {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                createdBy: 'user'
-              }
+                createdBy: "user",
+              },
             }}
           />
         );
         break;
-      case 'select-option-set':
+      case "select-option-set":
         openModal(
-          'select-option-set-creation',
+          "select-option-set-creation",
           <SelectOptionSetManager
             isVisible={true}
-            onClose={handleModalCloseWithRefresh('select-option-set-creation')}
+            onClose={handleModalCloseWithRefresh("select-option-set-creation")}
             isCreating={true}
             editingOptionSet={{
               id,
-              name: fieldLabel || 'New Select Option Set',
+              name: fieldLabel || "New Select Option Set",
               description: `Option set for field "${fieldLabel}"`,
               options: [],
               allowMultiple: false,
@@ -170,8 +184,8 @@ export const useConfigValidation = () => {
               metadata: {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                createdBy: 'user'
-              }
+                createdBy: "user",
+              },
             }}
           />
         );
@@ -184,35 +198,37 @@ export const useConfigValidation = () => {
 
   // Handle validation refresh (can accept results parameter or fetch new ones)
   const handleRefreshValidation = async (results?: any) => {
-    console.log('🔄 Re-running validation after item creation...');
-    
-    const validationResults = results || await verifyConfig();
-    
-    console.log('📊 New validation results:', {
+    console.log("🔄 Re-running validation after item creation...");
+
+    const validationResults = results || (await verifyConfig());
+
+    console.log("📊 New validation results:", {
       totalConfigs: validationResults.totalConfigs,
       validConfigs: validationResults.validConfigs,
       invalidConfigs: validationResults.invalidConfigs,
-      errorCount: validationResults.errors.length
+      errorCount: validationResults.errors.length,
     });
-    
+
     updateValidationStatus(validationResults);
-    
+
     // Update validation results modal if it's open by closing and reopening it
-    closeModal('validation-results');
+    closeModal("validation-results");
     openModal(
-      'validation-results',
+      "validation-results",
       <ValidationResultsModal
         isOpen={true}
-        onClose={() => closeModal('validation-results')}
-        validationResults={validationResults || {
-          totalConfigs: 0,
-          validConfigs: 0,
-          invalidConfigs: 0,
-          totalInstances: 0,
-          deactivatedInstances: 0,
-          errors: [],
-          warnings: []
-        }}
+        onClose={() => closeModal("validation-results")}
+        validationResults={
+          validationResults || {
+            totalConfigs: 0,
+            validConfigs: 0,
+            invalidConfigs: 0,
+            totalInstances: 0,
+            deactivatedInstances: 0,
+            errors: [],
+            warnings: [],
+          }
+        }
         onCreateMissingItem={handleCreateMissingItem}
         onRefreshValidation={handleRefreshValidation}
       />
@@ -222,6 +238,6 @@ export const useConfigValidation = () => {
   return {
     validationStatus,
     handleVerifyConfig,
-    handleCreateMissingItem
+    handleCreateMissingItem,
   };
 };
