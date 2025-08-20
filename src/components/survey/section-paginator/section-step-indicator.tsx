@@ -1,5 +1,7 @@
 import { Check } from 'lucide-react';
 import React from 'react';
+import { clsx } from 'clsx';
+import { colors, transitions, typography, borderRadius } from '@/styles/design-tokens';
 import { SectionStepIndicatorProps } from './survey-section-paginator.types';
 
 export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
@@ -45,7 +47,11 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
       {/* Progress Text */}
       {showProgressText && (
         <div className="text-center mb-4">
-          <span className="text-sm font-medium text-gray-600">
+          <span className={clsx(
+            typography.text.sm,
+            typography.weight.medium,
+            `text-${colors.gray[600]}`
+          )}>
             Progress: {progressPercentage}% ({currentIndex + 1} of {totalSections})
           </span>
         </div>
@@ -53,9 +59,18 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
 
       {/* Progress Bar */}
       {showProgressBar && (
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+        <div className={clsx(
+          'w-full h-2 mb-6',
+          `bg-${colors.gray[200]}`,
+          borderRadius.full
+        )}>
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+            className={clsx(
+              'h-2',
+              `bg-${colors.primary[600]}`,
+              borderRadius.full,
+              transitions.slow
+            )}
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -68,12 +83,17 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
           ${totalSections <= 4 ? 'justify-between' : 'justify-start gap-4 overflow-x-auto pb-2'}
         `}>
           {/* Connecting Line */}
-          <div className={`
-            absolute top-4 h-0.5 bg-gray-200 -z-10
-            ${totalSections <= 4 ? 'left-0 w-full' : 'left-4 right-4'}
-          `}>
+          <div className={clsx(
+            'absolute top-4 h-0.5 -z-10',
+            `bg-${colors.gray[200]}`,
+            totalSections <= 4 ? 'left-0 w-full' : 'left-4 right-4'
+          )}>
             <div
-              className="h-full bg-blue-600 transition-all duration-300 ease-in-out"
+              className={clsx(
+                'h-full',
+                `bg-${colors.primary[600]}`,
+                transitions.slow
+              )}
               style={{
                 width: totalSections > 1 ? `${(currentIndex / (totalSections - 1)) * 100}%` : '0%'
               }}
@@ -97,20 +117,20 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
                 <button
                   onClick={() => clickable && onStepClick?.(index)}
                   disabled={!clickable}
-                  className={`
-                    w-8 h-8 rounded-full border-2 flex items-center justify-center
-                    text-sm font-medium transition-all duration-200
-                    ${status === 'completed'
-                      ? 'bg-blue-600 border-blue-600 text-white'
-                      : status === 'current'
-                        ? 'bg-white border-blue-600 text-blue-600 ring-4 ring-blue-100'
-                        : 'bg-white border-gray-300 text-gray-400'
+                  className={clsx(
+                    'w-8 h-8 border-2 flex items-center justify-center',
+                    borderRadius.full,
+                    typography.text.sm,
+                    typography.weight.medium,
+                    transitions.default,
+                    {
+                      [`bg-${colors.primary[600]} border-${colors.primary[600]} text-white`]: status === 'completed',
+                      [`bg-white border-${colors.primary[600]} text-${colors.primary[600]} ring-4 ring-${colors.primary[100]}`]: status === 'current',
+                      [`bg-white border-${colors.gray[300]} text-${colors.gray[400]}`]: status === 'upcoming',
+                      'cursor-pointer hover:scale-110': clickable,
+                      'cursor-default': !clickable,
                     }
-                    ${clickable
-                      ? 'cursor-pointer hover:scale-110'
-                      : 'cursor-default'
-                    }
-                  `}
+                  )}
                   aria-label={`${status === 'completed' ? 'Completed' : status === 'current' ? 'Current' : 'Upcoming'} section: ${section.title}`}
                 >
                   {status === 'completed' ? (
@@ -127,15 +147,17 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
                     ${totalSections <= 4 ? 'min-w-0 max-w-24' : 'w-16 min-w-16'}
                   `}>
                     <span
-                      className={`
-                        text-xs font-medium block leading-tight break-words hyphens-auto
-                        ${status === 'current'
-                          ? 'text-blue-600'
-                          : status === 'completed'
-                            ? 'text-gray-700'
-                            : 'text-gray-400'
+                      className={clsx(
+                        typography.text.xs,
+                        typography.weight.medium,
+                        typography.leading.tight,
+                        'block break-words hyphens-auto',
+                        {
+                          [`text-${colors.primary[600]}`]: status === 'current',
+                          [`text-${colors.gray[700]}`]: status === 'completed',
+                          [`text-${colors.gray[400]}`]: status === 'upcoming',
                         }
-                      `}
+                      )}
                       title={section.title}
                       style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                     >
@@ -152,9 +174,15 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
       {/* Mobile Alternative: Simple Progress */}
       {showStepIndicator && (
         <div className="md:hidden mt-4">
-          <div className="flex justify-between items-center text-sm text-gray-600">
+          <div className={clsx(
+            'flex justify-between items-center',
+            typography.text.sm,
+            `text-${colors.gray[600]}`
+          )}>
             <span>Step {currentIndex + 1}</span>
-            <span>{sections[currentIndex]?.title}</span>
+            <span className="truncate mx-2" title={sections[currentIndex]?.title}>
+              {sections[currentIndex]?.title}
+            </span>
             <span>{totalSections} steps</span>
           </div>
         </div>

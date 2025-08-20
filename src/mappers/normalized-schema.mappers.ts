@@ -200,17 +200,12 @@ export class SurveyFieldResponseMapper {
     value: any,
     responseMetadata?: Record<string, any>
   ): Omit<SurveyFieldResponse, 'id' | 'createdAt'> {
-    const base = {
+    const base: Omit<SurveyFieldResponse, 'id' | 'createdAt'> = {
       surveyResponseId,
       fieldId,
       fieldKey,
       fieldType,
-      responseMetadata,
-      textValue: undefined,
-      numericValue: undefined,
-      booleanValue: undefined,
-      dateValue: undefined,
-      arrayValue: undefined
+      responseMetadata
     };
 
     // Set the appropriate value based on type

@@ -165,6 +165,22 @@ export class SurveyInstanceRepository extends BaseRepository {
     }
   }
 
+  async clearValidationLocks(): Promise<{ success: boolean; cleared_locks: number; message: string }> {
+    try {
+      const { data, error } = await this.supabase.rpc('clear_validation_locks');
+
+      if (error) throw error;
+
+      return {
+        success: data?.success || false,
+        cleared_locks: data?.cleared_locks || 0,
+        message: data?.message || 'Validation locks cleared',
+      };
+    } catch (error) {
+      this.handleError(error, 'clearValidationLocks survey instances');
+    }
+  }
+
   async getUpcomingStatusChanges(hoursAhead = 24): Promise<{
     upcoming_activations: Array<{ id: string; title: string; slug?: string; active_date_range: any }>;
     upcoming_deactivations: Array<{ id: string; title: string; slug?: string; active_date_range: any }>;

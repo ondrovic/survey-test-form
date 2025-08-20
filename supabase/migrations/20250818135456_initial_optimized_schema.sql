@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS survey_instances (
     slug VARCHAR(255) UNIQUE,
     paginator_config JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
+    config_valid BOOLEAN DEFAULT true NOT NULL,
     active_date_range JSONB,
     metadata JSONB NOT NULL DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -297,6 +298,7 @@ CREATE TABLE IF NOT EXISTS migration_status (
 CREATE INDEX IF NOT EXISTS idx_survey_configs_is_active ON survey_configs(is_active);
 CREATE INDEX IF NOT EXISTS idx_survey_instances_config_id ON survey_instances(config_id);
 CREATE INDEX IF NOT EXISTS idx_survey_instances_is_active ON survey_instances(is_active);
+CREATE INDEX IF NOT EXISTS idx_survey_instances_config_valid ON survey_instances(config_valid);
 CREATE INDEX IF NOT EXISTS idx_survey_instances_slug ON survey_instances(slug);
 CREATE INDEX IF NOT EXISTS idx_survey_responses_survey_instance_id ON survey_responses(survey_instance_id);
 CREATE INDEX IF NOT EXISTS idx_survey_responses_submitted_at ON survey_responses(submitted_at);
@@ -369,6 +371,7 @@ BEGIN
             NEW.is_active,
             CASE 
                 WHEN TG_OP = 'INSERT' THEN 'created'
+                WHEN NEW.config_valid = false AND NEW.is_active = false THEN 'config_validation_deactivation'
                 WHEN NEW.is_active = true AND OLD.is_active = false THEN 'activation'
                 WHEN NEW.is_active = false AND OLD.is_active = true THEN 'deactivation'
                 ELSE 'status_change'
@@ -376,6 +379,7 @@ BEGIN
             'system', -- Will be overridden by application when manual
             jsonb_build_object(
                 'active_date_range', NEW.active_date_range,
+                'config_valid', NEW.config_valid,
                 'trigger_operation', TG_OP
             )
         );
@@ -393,12 +397,14 @@ DECLARE
     activation_record RECORD;
     deactivation_record RECORD;
 BEGIN
-    -- Update instances that should be activated (currently inactive but within date range)
+    -- Update instances that should be activated 
+    -- (currently inactive, within date range, AND config is valid)
     FOR activation_record IN
         SELECT id, title, active_date_range
         FROM survey_instances 
         WHERE 
             is_active = false 
+            AND config_valid = true  -- Only activate if config is valid
             AND active_date_range IS NOT NULL
             AND NOW() >= (active_date_range->>'startDate')::timestamp
             AND NOW() <= (active_date_range->>'endDate')::timestamp
@@ -449,6 +455,7 @@ BEGIN
         FROM survey_instances 
         WHERE 
             is_active = false
+            AND config_valid = true  -- Only consider valid configs for activation
             AND active_date_range IS NOT NULL
             AND (active_date_range->>'startDate')::timestamp 
                 BETWEEN NOW() AND NOW() + (hours_ahead || ' hours')::interval

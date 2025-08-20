@@ -229,7 +229,7 @@ export interface EntityAuditLogRow {
 // QUERY RESULT TYPES
 // ===================================
 
-export interface SurveyConfigWithSections extends SurveyConfig {
+export interface SurveyConfigWithSections extends Omit<SurveyConfig, 'sections'> {
   sections: SurveySection[];
 }
 

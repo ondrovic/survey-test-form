@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { firestoreHelpers } from '../config/database';
+import { databaseHelpers } from '../config/database';
 
 interface UseSurveyCountReturn {
     count: number | null;
@@ -18,7 +18,7 @@ export const useSurveyCount = (): UseSurveyCountReturn => {
         setError(null);
         
         try {
-            const surveys = await firestoreHelpers.getSurveys();
+            const surveys = await databaseHelpers.getSurveys();
             setCount(surveys.length);
         } catch (err) {
             console.error('Error fetching survey count:', err);

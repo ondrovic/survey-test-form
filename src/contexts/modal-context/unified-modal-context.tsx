@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UnifiedModal, ConfirmationModal, ModalProps } from '../../components/common/unified-modal/unified-modal';
+import { UnifiedModal, ConfirmationModal, ModalProps } from '../../components/common';
 
 interface ModalState {
   id: string;

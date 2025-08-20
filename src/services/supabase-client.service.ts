@@ -40,7 +40,7 @@ export class SupabaseClientService {
       await this.waitForInitialization();
     }
 
-    this.serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+    this.serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || null;
     const currentConfig: SupabaseConfig = {
       url: config.supabase.url,
       anonKey: config.supabase.anonKey,

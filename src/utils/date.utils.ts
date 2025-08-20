@@ -55,3 +55,80 @@ export const getTimeAgo = (date: Date | string): string => {
 
   return formatDateShort(dateObj);
 };
+
+// Utility functions for consistent date range handling
+export const createDateRangeISOStrings = (
+  startDate: string,
+  endDate: string
+) => {
+  return {
+    startDate: startDate + "T00:00:00.000Z", // Start at 12:00:00 AM UTC
+    endDate: endDate + "T23:59:59.999Z", // End at 11:59:59 PM UTC
+  };
+};
+
+export const parseDateFromISOString = (isoString: string): string => {
+  // Ensure the date string has a timezone indicator to prevent timezone shifts
+  const dateString = isoString.endsWith("Z") ? isoString : isoString + "Z";
+  return new Date(dateString).toISOString().slice(0, 10);
+};
+
+export const formatDateRangeForDisplay = (
+  startDate: string,
+  endDate: string
+): string => {
+  return `${startDate} to ${endDate}`;
+};
+
+// Function to normalize existing dates that may have timezone issues
+export const normalizeExistingDate = (isoString: string): string => {
+  try {
+    // Parse the date and extract just the date part (YYYY-MM-DD)
+    const date = new Date(isoString);
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid date string:", isoString);
+      return isoString; // Return original if invalid
+    }
+
+    // Extract the date part and create a new UTC date
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+
+    // Return the normalized date string
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error(
+      "Error normalizing date:",
+      error,
+      "Original string:",
+      isoString
+    );
+    return isoString; // Return original if error
+  }
+};
+
+// Function to get display date from potentially problematic ISO strings
+export const getDisplayDate = (isoString: string): string => {
+  try {
+    // First try to normalize the existing date
+    const normalizedDate = normalizeExistingDate(isoString);
+
+    // If the normalized date is different from the original, it had timezone issues
+    if (normalizedDate !== isoString) {
+      console.log(`Date normalized from ${isoString} to ${normalizedDate}`);
+    }
+
+    return normalizedDate;
+  } catch (error) {
+    console.error(
+      "Error getting display date:",
+      error,
+      "Original string:",
+      isoString
+    );
+    return isoString; // Return original if error
+  }
+};

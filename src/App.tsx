@@ -3,7 +3,7 @@ import { AdminVisualizationPage } from '@/components/admin/visualization/visuali
 import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
-import { firestoreHelpers, initializeDatabase, getDatabaseProviderInfo } from '@/config/database';
+import { databaseHelpers, initializeDatabase, getDatabaseProviderInfo } from '@/config/database';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -64,11 +64,11 @@ function AppContent() {
             }
 
             // Get all survey instances
-            const instances = await firestoreHelpers.getSurveyInstances();
+            const instances = await databaseHelpers.getSurveyInstances();
             setAllSurveyInstances(instances);
 
             // Debug: Check what survey configs exist
-            const configs = await firestoreHelpers.getSurveyConfigs();
+            const configs = await databaseHelpers.getSurveyConfigs();
 
             // Consolidated debug information
             console.log('Framework Initialization Debug Info:', {
@@ -204,7 +204,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             setLoading(true);
             setError(null);
 
-            const config = await firestoreHelpers.getSurveyConfig(instance.configId);
+            const config = await databaseHelpers.getSurveyConfig(instance.configId);
             if (config) {
                 setSurveyConfig(config);
             } else {
@@ -275,7 +275,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             };
 
             console.log('Submitting survey response to database...', surveyResponse);
-            await firestoreHelpers.addSurveyResponse(surveyResponse);
+            await databaseHelpers.addSurveyResponse(surveyResponse);
             console.log('Survey response submitted successfully!');
             showSuccess('Survey submitted!');
 

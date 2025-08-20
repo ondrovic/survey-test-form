@@ -1,4 +1,5 @@
 import { SurveyInstance } from '@/types';
+import { createDateRangeISOStrings, parseDateFromISOString } from '@/utils/date.utils';
 import { useState, useCallback } from 'react';
 
 export interface SurveyInstanceSettings {
@@ -9,10 +10,10 @@ export interface SurveyInstanceSettings {
 export const useSurveyInstanceSettings = (instance: SurveyInstance) => {
   const [isActive, setIsActive] = useState(instance.isActive);
   const [startDate, setStartDate] = useState(
-    instance.activeDateRange?.startDate ? new Date(instance.activeDateRange.startDate).toISOString().slice(0, 10) : ''
+    instance.activeDateRange?.startDate ? parseDateFromISOString(instance.activeDateRange.startDate) : ''
   );
   const [endDate, setEndDate] = useState(
-    instance.activeDateRange?.endDate ? new Date(instance.activeDateRange.endDate).toISOString().slice(0, 10) : ''
+    instance.activeDateRange?.endDate ? parseDateFromISOString(instance.activeDateRange.endDate) : ''
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -26,10 +27,7 @@ export const useSurveyInstanceSettings = (instance: SurveyInstance) => {
     let newDateRange: { startDate: string; endDate: string } | null = null;
     
     if (startDate && endDate) {
-      newDateRange = {
-        startDate: new Date(startDate + 'T00:00:00').toISOString(),
-        endDate: new Date(endDate + 'T23:59:59').toISOString()
-      };
+      newDateRange = createDateRangeISOStrings(startDate, endDate);
     }
 
     const normalizedCurrent = currentDateRange || null;
@@ -43,10 +41,7 @@ export const useSurveyInstanceSettings = (instance: SurveyInstance) => {
 
   const getSettingsUpdate = useCallback((): SurveyInstanceSettings => {
     const activeDateRange = startDate && endDate
-      ? { 
-          startDate: new Date(startDate + 'T00:00:00').toISOString(), 
-          endDate: new Date(endDate + 'T23:59:59').toISOString() 
-        }
+      ? createDateRangeISOStrings(startDate, endDate)
       : null;
 
     return { isActive, activeDateRange };

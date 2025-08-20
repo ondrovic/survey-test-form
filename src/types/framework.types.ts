@@ -1,5 +1,20 @@
 // Framework Types - Single Source of Truth
 
+// Base utility types
+export interface DateRange {
+  start?: string;
+  end?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface Metadata {
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  [key: string]: any;
+}
+
 // Field Types
 export type FieldType =
   | "text"
@@ -227,21 +242,15 @@ export interface SurveyInstance {
   id: string;
   configId: string;
   title: string;
+  slug?: string;
   description?: string;
-  slug?: string; // Human-readable URL slug
   isActive: boolean;
-  activeDateRange?: {
-    startDate: string; // ISO string
-    endDate: string; // ISO string
-  };
-  // Pagination configuration
-  paginatorConfig?: Partial<SurveyPaginatorConfig>;
-  metadata: {
-    createdBy: string;
-    createdAt: string;
-    updatedAt: string;
-    ip?: string;
-  };
+  activeDateRange?: DateRange;
+  config_valid?: boolean; // Tracks if configuration is valid for automated activation
+  validation_in_progress?: boolean; // Prevents date automation during validation
+  metadata?: Metadata;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SurveyResponse {

@@ -1,4 +1,4 @@
-import { firestoreHelpers } from '@/config/database';
+import { databaseHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context';
 import { useToast } from '@/contexts/toast-context';
 import { SurveyConfig } from '@/types';
@@ -47,7 +47,7 @@ export const useConfigImportExport = () => {
         metadata: await createMetadata()
       };
 
-      await firestoreHelpers.addSurveyConfig(configWithMetadata);
+      await databaseHelpers.addSurveyConfig(configWithMetadata);
       
       // Refresh the data
       await refreshAll();

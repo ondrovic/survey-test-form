@@ -4,7 +4,7 @@ import { baseRoute } from '@/routes';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { generateUniqueSlug } from '@/utils/slug.utils';
 import React from 'react';
-import { UnifiedModal } from '@/components/common/unified-modal';
+import { UnifiedModal } from '@/components/common';
 
 interface CreateInstanceModalProps {
   config: SurveyConfig;

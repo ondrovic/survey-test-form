@@ -16,8 +16,8 @@ import { SupabaseClientService } from "../supabase-client.service";
  */
 export class OptionSetsOperationsService {
   constructor(
-    private client: SupabaseClient,
-    private clientService: SupabaseClientService
+    private readonly _client: SupabaseClient,
+    private readonly _clientService: SupabaseClientService
   ) {}
 
   private getRepositories() {

@@ -1,13 +1,15 @@
 import { AdminAuth } from '@/components/admin/auth';
 import { AdminFramework } from '@/components/admin/framework';
 import { AdminHeader } from '@/components/admin/header';
-import { MultiSelectOptionSetManager } from '@/components/admin/multi-select-option-set-manager';
 import { AdminOptionSets } from '@/components/admin/option-sets';
 import { AdminOverview } from '@/components/admin/overview';
-import { RadioOptionSetManager } from '@/components/admin/radio-option-set-manager';
-import { RatingScaleManager } from '@/components/admin/rating-option-set-manager';
-import { SelectOptionSetManager } from '@/components/admin/select-option-set-manager';
 import { SurveyBuilder } from '@/components/admin/survey-builder';
+import { 
+  RatingScaleManager, 
+  RadioOptionSetManager, 
+  MultiSelectOptionSetManager, 
+  SelectOptionSetManager 
+} from '@/components/admin/option-set-manager';
 import { useAdminTab } from '@/contexts/admin-tab-context/index';
 import { useAuth } from '@/contexts/auth-context/index';
 import { useSurveyData } from '@/contexts/survey-data-context/index';

@@ -1,4 +1,4 @@
-import { firestoreHelpers } from "@/config/database";
+import { databaseHelpers } from "@/config/database";
 import { useSurveyData } from "@/contexts/survey-data-context/index";
 import { useToast } from "@/contexts/toast-context/index";
 import {
@@ -17,10 +17,9 @@ import { useCallback } from "react";
 export const useSurveyOperations = () => {
   const surveyDataContext = useSurveyData();
   const {
-    state: {
-      surveyInstances,
-    },
+    state: { surveyInstances },
     refreshAll,
+    updateSurveyInstance,
   } = surveyDataContext;
   const { showSuccess, showError } = useToast();
 
@@ -39,7 +38,7 @@ export const useSurveyOperations = () => {
           metadata: await createMetadata(),
         };
 
-        await firestoreHelpers.addSurveyInstance(instance);
+        await databaseHelpers.addSurveyInstance(instance);
         showSuccess(`Survey instance "${config.title}" created!`);
         await refreshAll();
       } catch (error) {
@@ -54,10 +53,10 @@ export const useSurveyOperations = () => {
       try {
         if (instanceId) {
           const responses =
-            await firestoreHelpers.getSurveyResponsesFromCollection(instanceId);
+            await databaseHelpers.getSurveyResponsesFromCollection(instanceId);
           const instance = surveyInstances.find((i) => i.id === instanceId);
           if (instance) {
-            const surveyConfig = await firestoreHelpers.getSurveyConfig(
+            const surveyConfig = await databaseHelpers.getSurveyConfig(
               instance.configId
             );
             const now = new Date();
@@ -82,12 +81,12 @@ export const useSurveyOperations = () => {
           }
         } else {
           const allResponses: SurveyResponse[] = [];
-          const configs = await firestoreHelpers.getSurveyConfigs();
+          const configs = await databaseHelpers.getSurveyConfigs();
 
           for (const instance of surveyInstances) {
             try {
               const responses =
-                await firestoreHelpers.getSurveyResponsesFromCollection(
+                await databaseHelpers.getSurveyResponsesFromCollection(
                   instance.id
                 );
               allResponses.push(...responses);
@@ -120,119 +119,94 @@ export const useSurveyOperations = () => {
     [surveyInstances, showSuccess, showError]
   );
 
-  const verifyConfig = useCallback(async () => {
-    try {
-      showSuccess("Verifying survey configurations...");
-      
-      // Get fresh data directly from database to bypass React state issues
-      console.log('🔄 Loading fresh data directly from database...');
-      const [
-        freshSurveyConfigs,
-        freshSurveyInstances,
-        freshRatingScales,
-        freshRadioOptionSets,
-        freshMultiSelectOptionSets,
-        freshSelectOptionSets
-      ] = await Promise.all([
-        firestoreHelpers.getSurveyConfigs(),
-        firestoreHelpers.getSurveyInstances(),
-        firestoreHelpers.getRatingScales(),
-        firestoreHelpers.getRadioOptionSets(),
-        firestoreHelpers.getMultiSelectOptionSets(),
-        firestoreHelpers.getSelectOptionSets()
-      ]);
-      
-      const currentData = {
-        surveyConfigs: freshSurveyConfigs,
-        surveyInstances: freshSurveyInstances,
-        ratingScales: freshRatingScales,
-        radioOptionSets: freshRadioOptionSets,
-        multiSelectOptionSets: freshMultiSelectOptionSets,
-        selectOptionSets: freshSelectOptionSets
-      };
-      
-      console.log('📊 Fresh database data for validation:', {
-        ratingScales: currentData.ratingScales.length,
-        radioOptionSets: currentData.radioOptionSets.length,
-        multiSelectOptionSets: currentData.multiSelectOptionSets.length,
-        selectOptionSets: currentData.selectOptionSets.length
-      });
-
-      const validationResults = {
-        totalConfigs: currentData.surveyConfigs.length,
-        validConfigs: 0,
-        invalidConfigs: 0,
-        totalInstances: currentData.surveyInstances.length,
-        deactivatedInstances: 0,
-        errors: [] as string[],
-        warnings: [] as string[],
-      };
-
-      // Create lookup maps for option sets using current data
-      const ratingScalesMap = new Map(
-        currentData.ratingScales.map((scale) => [scale.id, scale])
-      );
-      const radioOptionSetsMap = new Map(
-        currentData.radioOptionSets.map((set) => [set.id, set])
-      );
-      const multiSelectOptionSetsMap = new Map(
-        currentData.multiSelectOptionSets.map((set) => [set.id, set])
-      );
-      const selectOptionSetsMap = new Map(
-        currentData.selectOptionSets.map((set) => [set.id, set])
-      );
-
-      // Validate each survey configuration using current data
-      for (const config of currentData.surveyConfigs) {
-        let configValid = true;
-        const configErrors: string[] = [];
-
-        // Validate sections
-        if (!config.sections || config.sections.length === 0) {
-          configErrors.push(`Config "${config.title}": No sections defined`);
-          configValid = false;
+  const verifyConfig = useCallback(
+    async (silent: boolean = false) => {
+      try {
+        if (!silent) {
+          showSuccess("Verifying survey configurations...");
         }
 
-        // Validate each section and its fields
-        for (const section of config.sections || []) {
-          if (!section.fields || section.fields.length === 0) {
-            configErrors.push(
-              `Config "${config.title}" > Section "${section.title}": No fields defined`
-            );
+        // Get fresh data directly from database to bypass React state issues
+        console.log("🔄 Loading fresh data directly from database...");
+        const [
+          freshSurveyConfigs,
+          freshSurveyInstances,
+          freshRatingScales,
+          freshRadioOptionSets,
+          freshMultiSelectOptionSets,
+          freshSelectOptionSets,
+        ] = await Promise.all([
+          databaseHelpers.getSurveyConfigs(),
+          databaseHelpers.getSurveyInstances(),
+          databaseHelpers.getRatingScales(),
+          databaseHelpers.getRadioOptionSets(),
+          databaseHelpers.getMultiSelectOptionSets(),
+          databaseHelpers.getSelectOptionSets(),
+        ]);
+
+        const currentData = {
+          surveyConfigs: freshSurveyConfigs,
+          surveyInstances: freshSurveyInstances,
+          ratingScales: freshRatingScales,
+          radioOptionSets: freshRadioOptionSets,
+          multiSelectOptionSets: freshMultiSelectOptionSets,
+          selectOptionSets: freshSelectOptionSets,
+        };
+
+        console.log("📊 Fresh database data for validation:", {
+          ratingScales: currentData.ratingScales.length,
+          radioOptionSets: currentData.radioOptionSets.length,
+          multiSelectOptionSets: currentData.multiSelectOptionSets.length,
+          selectOptionSets: currentData.selectOptionSets.length,
+        });
+
+        const validationResults = {
+          totalConfigs: currentData.surveyConfigs.length,
+          validConfigs: 0,
+          invalidConfigs: 0,
+          totalInstances: currentData.surveyInstances.length,
+          deactivatedInstances: 0,
+          reactivatedInstances: 0,
+          errors: [] as string[],
+          warnings: [] as string[],
+        };
+
+        // Create lookup maps for option sets using current data
+        const ratingScalesMap = new Map(
+          currentData.ratingScales.map((scale) => [scale.id, scale])
+        );
+        const radioOptionSetsMap = new Map(
+          currentData.radioOptionSets.map((set) => [set.id, set])
+        );
+        const multiSelectOptionSetsMap = new Map(
+          currentData.multiSelectOptionSets.map((set) => [set.id, set])
+        );
+        const selectOptionSetsMap = new Map(
+          currentData.selectOptionSets.map((set) => [set.id, set])
+        );
+
+        // Validate each survey configuration using current data
+        for (const config of currentData.surveyConfigs) {
+          let configValid = true;
+          const configErrors: string[] = [];
+
+          // Validate sections
+          if (!config.sections || config.sections.length === 0) {
+            configErrors.push(`Config "${config.title}": No sections defined`);
             configValid = false;
           }
 
-          // Validate fields in main section
-          for (const field of section.fields || []) {
-            const fieldValidation = validateField(field, {
-              ratingScalesMap,
-              radioOptionSetsMap,
-              multiSelectOptionSetsMap,
-              selectOptionSetsMap,
-            });
-
-            if (!fieldValidation.isValid) {
+          // Validate each section and its fields
+          for (const section of config.sections || []) {
+            if (!section.fields || section.fields.length === 0) {
               configErrors.push(
-                `Config "${config.title}" > Section "${
-                  section.title
-                }" > Field "${
-                  field.label || field.id
-                }": ${fieldValidation.errors.join(", ")}`
-              );
-              configValid = false;
-            }
-          }
-
-          // Validate subsections
-          for (const subsection of section.subsections || []) {
-            if (!subsection.fields || subsection.fields.length === 0) {
-              configErrors.push(
-                `Config "${config.title}" > Section "${section.title}" > Subsection "${subsection.title}": No fields defined`
+                `Config "${config.title}" > Section "${section.title}": No fields defined`
               );
               configValid = false;
             }
 
-            for (const field of subsection.fields || []) {
+            // Validate fields in main section
+            for (const field of section.fields || []) {
               const fieldValidation = validateField(field, {
                 ratingScalesMap,
                 radioOptionSetsMap,
@@ -244,84 +218,285 @@ export const useSurveyOperations = () => {
                 configErrors.push(
                   `Config "${config.title}" > Section "${
                     section.title
-                  }" > Subsection "${subsection.title}" > Field "${
+                  }" > Field "${
                     field.label || field.id
                   }": ${fieldValidation.errors.join(", ")}`
                 );
                 configValid = false;
               }
             }
-          }
-        }
 
-        if (configValid) {
-          validationResults.validConfigs++;
-        } else {
-          validationResults.invalidConfigs++;
-          validationResults.errors.push(...configErrors);
-        }
-      }
+            // Validate subsections
+            for (const subsection of section.subsections || []) {
+              if (!subsection.fields || subsection.fields.length === 0) {
+                configErrors.push(
+                  `Config "${config.title}" > Section "${section.title}" > Subsection "${subsection.title}": No fields defined`
+                );
+                configValid = false;
+              }
 
-      // Handle invalid configurations by deactivating their instances
-      if (validationResults.invalidConfigs > 0) {
-        showError(
-          `Configuration validation failed! ${validationResults.invalidConfigs} config(s) have issues.`
-        );
+              for (const field of subsection.fields || []) {
+                const fieldValidation = validateField(field, {
+                  ratingScalesMap,
+                  radioOptionSetsMap,
+                  multiSelectOptionSetsMap,
+                  selectOptionSetsMap,
+                });
 
-        // Deactivate instances with invalid configurations
-        for (const config of currentData.surveyConfigs) {
-          const configErrors = validationResults.errors.filter((error) =>
-            error.includes(`Config "${config.title}"`)
-          );
-          if (configErrors.length > 0) {
-            // Find and deactivate all instances of this config
-            const configInstances = currentData.surveyInstances.filter(
-              (instance) => instance.configId === config.id
-            );
-            for (const instance of configInstances) {
-              if (instance.isActive) {
-                try {
-                  await firestoreHelpers.updateSurveyInstance(instance.id, {
-                    isActive: false,
-                  });
-                  validationResults.deactivatedInstances++;
-                  console.log(
-                    `Deactivated instance "${instance.title}" due to invalid configuration`
+                if (!fieldValidation.isValid) {
+                  configErrors.push(
+                    `Config "${config.title}" > Section "${
+                      section.title
+                    }" > Subsection "${subsection.title}" > Field "${
+                      field.label || field.id
+                    }": ${fieldValidation.errors.join(", ")}`
                   );
-                } catch (error) {
-                  console.error(
-                    `Failed to deactivate instance "${instance.title}":`,
-                    error
-                  );
-                  validationResults.warnings.push(
-                    `Failed to deactivate instance "${instance.title}"`
-                  );
+                  configValid = false;
                 }
               }
             }
           }
+
+          if (configValid) {
+            validationResults.validConfigs++;
+
+            // If config is now valid, check if instances should be immediately reactivated
+            const configInstances = currentData.surveyInstances.filter(
+              (instance) => instance.configId === config.id
+            );
+
+            for (const instance of configInstances) {
+              try {
+                // Check if instance should be immediately reactivated
+                let shouldActivate = false;
+                const now = new Date();
+
+                if (instance.active_date_range) {
+                  const startDate = new Date(
+                    instance.active_date_range.startDate
+                  );
+                  const endDate = new Date(instance.active_date_range.endDate);
+
+                  // Reactivate if currently within date range and not already active
+                  if (
+                    now >= startDate &&
+                    now <= endDate &&
+                    !instance.isActive
+                  ) {
+                    shouldActivate = true;
+                  }
+                } else {
+                  // If no date range is set, reactivate if the instance was previously inactive due to config issues
+                  // This handles imported instances that don't have date ranges configured
+                  if (!instance.isActive && instance.config_valid === false) {
+                    shouldActivate = true;
+                  }
+                }
+
+                if (shouldActivate) {
+                  // Immediately reactivate the instance
+                  await databaseHelpers.updateSurveyInstance(instance.id, {
+                    isActive: true,
+                    config_valid: true,
+                  });
+
+                  updateSurveyInstance({
+                    ...instance,
+                    isActive: true,
+                    config_valid: true,
+                    metadata: {
+                      ...instance.metadata,
+                      updatedAt: new Date().toISOString(),
+                    },
+                  });
+
+                  validationResults.reactivatedInstances++;
+                  console.log(
+                    `✅ Immediately reactivated instance "${
+                      instance.title
+                    }" - config fixed and ${
+                      instance.active_date_range
+                        ? "within date range"
+                        : "no date range restrictions"
+                    }`
+                  );
+                } else {
+                  // Just mark as config_valid=true for future activation
+                  await databaseHelpers.updateSurveyInstance(instance.id, {
+                    config_valid: true, // Allow automated date-range activation
+                  });
+
+                  updateSurveyInstance({
+                    ...instance,
+                    config_valid: true,
+                    metadata: {
+                      ...instance.metadata,
+                      updatedAt: new Date().toISOString(),
+                    },
+                  });
+
+                  console.log(
+                    `✅ Marked instance "${instance.title}" as config_valid=true - can now be activated by date range`
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  `❌ Failed to update instance "${instance.title}":`,
+                  error
+                );
+              }
+            }
+          } else {
+            validationResults.invalidConfigs++;
+            validationResults.errors.push(...configErrors);
+          }
         }
 
-        // Update context state with fresh data 
-        await refreshAll();
-      } else {
-        showSuccess(
-          `Configuration validation passed! All ${validationResults.totalConfigs} configurations are valid.`
-        );
-      }
+        // Handle invalid configurations by deactivating their instances
+        if (validationResults.invalidConfigs > 0) {
+          if (!silent) {
+            showError(
+              `Configuration validation failed! ${validationResults.invalidConfigs} config(s) have issues.`
+            );
+          }
 
-      console.log("Configuration validation results:", validationResults);
-      return validationResults;
-    } catch (error) {
-      showError("Failed to verify configurations");
-      console.error("Configuration verification error:", error);
-      throw error;
-    }
-  }, [
-    showSuccess,
-    showError,
-    refreshAll
-  ]);
+          // Track all instances affected by validation issues
+          let totalAffectedInstances = 0;
+
+          // Deactivate instances with invalid configurations
+          for (const config of currentData.surveyConfigs) {
+            const configErrors = validationResults.errors.filter((error) =>
+              error.includes(`Config "${config.title}"`)
+            );
+            if (configErrors.length > 0) {
+              // Find all instances of this config
+              const configInstances = currentData.surveyInstances.filter(
+                (instance) => instance.configId === config.id
+              );
+
+              for (const instance of configInstances) {
+                totalAffectedInstances++;
+
+                if (instance.isActive) {
+                  try {
+                    console.log(
+                      `🔄 Deactivating instance "${instance.title}" due to invalid configuration...`
+                    );
+
+                    // Update both isActive and config_valid to prevent automated reactivation
+                    // Also set validation_in_progress to prevent date automation from running
+                    const updateResult =
+                      await databaseHelpers.updateSurveyInstance(instance.id, {
+                        isActive: false,
+                        config_valid: false, // Prevents automated date-range reactivation
+                      });
+
+                    console.log(
+                      `✅ Database update successful for instance "${instance.title}"`
+                    );
+
+                    // Immediately update local context state to reflect the change
+                    updateSurveyInstance({
+                      ...instance,
+                      isActive: false,
+                      config_valid: false,
+                      metadata: {
+                        ...instance.metadata,
+                        updatedAt: new Date().toISOString(),
+                      },
+                    });
+
+                    console.log(
+                      `✅ Deactivated instance "${instance.title}" due to invalid configuration and marked config_valid=false to prevent automated reactivation`
+                    );
+                  } catch (error) {
+                    console.error(
+                      `❌ Failed to deactivate instance "${instance.title}":`,
+                      error
+                    );
+                    validationResults.warnings.push(
+                      `Failed to deactivate instance "${instance.title}": ${
+                        error instanceof Error ? error.message : "Unknown error"
+                      }`
+                    );
+                  }
+                } else {
+                  // Also mark inactive instances with invalid configs as config_valid=false
+                  try {
+                    console.log(
+                      `🔄 Marking inactive instance "${instance.title}" as config_valid=false...`
+                    );
+
+                    const updateResult =
+                      await databaseHelpers.updateSurveyInstance(instance.id, {
+                        config_valid: false, // Prevents future automated activation
+                        validation_in_progress: true, // Prevents date automation from running
+                      });
+
+                    console.log(
+                      `✅ Database update successful for inactive instance "${instance.title}"`
+                    );
+
+                    updateSurveyInstance({
+                      ...instance,
+                      config_valid: false,
+                      validation_in_progress: true,
+                      metadata: {
+                        ...instance.metadata,
+                        updatedAt: new Date().toISOString(),
+                      },
+                    });
+
+                    console.log(
+                      `✅ Marked instance "${instance.title}" as config_valid=false to prevent automated activation`
+                    );
+                  } catch (error) {
+                    console.error(
+                      `❌ Failed to mark instance "${instance.title}" as invalid:`,
+                      error
+                    );
+                  }
+                }
+              }
+            }
+          }
+
+          // Update the deactivated count to reflect all affected instances
+          validationResults.deactivatedInstances = totalAffectedInstances;
+
+          // Add a small delay to ensure database updates are committed
+          if (totalAffectedInstances > 0) {
+            console.log(`⏳ Waiting for database updates to commit...`);
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            console.log(`✅ Database update delay completed`);
+          }
+
+          // Update context state with fresh data
+          await refreshAll();
+        } else {
+          if (!silent) {
+            let successMessage = `Configuration validation passed! All ${validationResults.totalConfigs} configurations are valid.`;
+
+            if (validationResults.reactivatedInstances > 0) {
+              successMessage += ` ${validationResults.reactivatedInstances} instance(s) were automatically reactivated.`;
+            }
+
+            showSuccess(successMessage);
+          }
+        }
+
+        console.log("Configuration validation results:", validationResults);
+        return validationResults;
+      } catch (error) {
+        if (!silent) {
+          showError("Failed to verify configurations");
+        }
+        console.error("Configuration verification error:", error);
+        throw error;
+      }
+    },
+    [showSuccess, showError, refreshAll]
+  );
 
   // Helper function to validate individual fields
   const validateField = (
@@ -358,38 +533,47 @@ export const useSurveyOperations = () => {
         break;
 
       case "radio":
-        if (!field.radioOptionSetId) {
-          errors.push("Radio field must reference a radio option set");
-        } else if (!optionSets.radioOptionSetsMap.has(field.radioOptionSetId)) {
-          errors.push(
-            `Referenced radio option set "${field.radioOptionSetId}" not found`
-          );
+        // Radio fields can either reference an option set or have manual options
+        if (field.radioOptionSetId) {
+          // If referencing an option set, validate it exists
+          if (!optionSets.radioOptionSetsMap.has(field.radioOptionSetId)) {
+            errors.push(
+              `Referenced radio option set "${field.radioOptionSetId}" not found`
+            );
+          }
+        } else if (!field.options || !Array.isArray(field.options) || field.options.length === 0) {
+          // If not referencing an option set, must have manual options
+          errors.push("Radio field must either reference a radio option set or have manual options defined");
         }
         break;
 
       case "multi-select":
-        if (!field.multiSelectOptionSetId) {
-          errors.push(
-            "Multi-select field must reference a multi-select option set"
-          );
-        } else if (
-          !optionSets.multiSelectOptionSetsMap.has(field.multiSelectOptionSetId)
-        ) {
-          errors.push(
-            `Referenced multi-select option set "${field.multiSelectOptionSetId}" not found`
-          );
+        // Multi-select fields can either reference an option set or have manual options
+        if (field.multiSelectOptionSetId) {
+          // If referencing an option set, validate it exists
+          if (!optionSets.multiSelectOptionSetsMap.has(field.multiSelectOptionSetId)) {
+            errors.push(
+              `Referenced multi-select option set "${field.multiSelectOptionSetId}" not found`
+            );
+          }
+        } else if (!field.options || !Array.isArray(field.options) || field.options.length === 0) {
+          // If not referencing an option set, must have manual options
+          errors.push("Multi-select field must either reference a multi-select option set or have manual options defined");
         }
         break;
 
       case "select":
-        if (!field.selectOptionSetId) {
-          errors.push("Select field must reference a select option set");
-        } else if (
-          !optionSets.selectOptionSetsMap.has(field.selectOptionSetId)
-        ) {
-          errors.push(
-            `Referenced select option set "${field.selectOptionSetId}" not found`
-          );
+        // Select fields can either reference an option set or have manual options
+        if (field.selectOptionSetId) {
+          // If referencing an option set, validate it exists
+          if (!optionSets.selectOptionSetsMap.has(field.selectOptionSetId)) {
+            errors.push(
+              `Referenced select option set "${field.selectOptionSetId}" not found`
+            );
+          }
+        } else if (!field.options || !Array.isArray(field.options) || field.options.length === 0) {
+          // If not referencing an option set, must have manual options
+          errors.push("Select field must either reference a select option set or have manual options defined");
         }
         break;
     }

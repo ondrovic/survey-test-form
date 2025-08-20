@@ -1,30 +1,83 @@
 import { ReactNode } from "react";
 
-export interface InputProps<T = string> {
+/**
+ * Common props shared across all form components
+ */
+export interface BaseFormProps {
+  /** Component name for form handling */
   name: string;
-  value?: T;
-  onChange?: (value: T) => void;
-  onBlur?: (value: T) => void;
-  register?: any; // react-hook-form register function
-  type?: "text" | "email" | "number" | "password";
+  /** Field label */
   label?: string;
-  placeholder?: string;
+  /** Required field indicator */
   required?: boolean;
+  /** Error message to display */
   error?: string;
+  /** Disabled state */
   disabled?: boolean;
+  /** Test identifier for testing */
   "data-testid"?: string;
-  maxLength?: number;
-  autocomplete?: string;
+  /** Additional CSS classes */
+  className?: string;
 }
 
-export interface BaseButtonProps {
-  children: ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg" | "form" | "fixed";
-  disabled?: boolean;
-  loading?: boolean;
-  icon?: ReactNode;
+/**
+ * Enhanced input props with better generics and standardized interface
+ */
+export interface InputProps<T = string> extends BaseFormProps {
+  /** Current value */
+  value?: T;
+  /** Change handler for controlled inputs */
+  onChange?: (value: T) => void;
+  /** Blur handler */
+  onBlur?: (value: T) => void;
+  /** React Hook Form register function */
+  register?: any;
+  /** Input type */
+  type?: "text" | "email" | "number" | "password" | "tel" | "url" | "search";
+  /** Placeholder text */
+  placeholder?: string;
+  /** Maximum character length */
+  maxLength?: number;
+  /** Autocomplete attribute */
+  autocomplete?: string;
+  /** Minimum value (for number inputs) */
+  min?: number;
+  /** Maximum value (for number inputs) */
+  max?: number;
+  /** Step value (for number inputs) */
+  step?: number;
+  /** Pattern for validation */
+  pattern?: string;
+}
+
+/**
+ * Common props shared across all UI components  
+ */
+export interface BaseUIProps {
+  /** Additional CSS classes */
+  className?: string;
+  /** Test identifier for testing */
   "data-testid"?: string;
+}
+
+/**
+ * Enhanced button props with standardized interface
+ */
+export interface BaseButtonProps extends BaseUIProps {
+  /** Button content */
+  children: ReactNode;
+  /** Visual variant */
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  /** Size variant */
+  size?: "sm" | "md" | "lg" | "form" | "fixed";
+  /** Disabled state */
+  disabled?: boolean;
+  /** Loading state with spinner */
+  loading?: boolean;
+  /** Icon to display */
+  icon?: ReactNode;
+  /** Full width button */
+  fullWidth?: boolean;
 }
 
 export type ButtonProps<T extends React.ElementType = "button"> = {
@@ -75,13 +128,22 @@ export interface RadioGroupProps<T extends string | number = string> {
   "data-testid"?: string;
 }
 
-export interface AlertProps {
+/**
+ * Enhanced alert props with standardized interface
+ */
+export interface AlertProps extends BaseUIProps {
+  /** Alert type/variant */
   type: "success" | "error" | "warning" | "info";
+  /** Optional title */
   title?: string;
+  /** Alert message content */
   message: string;
+  /** Dismiss handler */
   onDismiss?: () => void;
+  /** Action handler */
   action?: () => void;
-  "data-testid"?: string;
+  /** Auto dismiss after timeout (in ms) */
+  autoClose?: number;
 }
 
 export type AlertVariant =

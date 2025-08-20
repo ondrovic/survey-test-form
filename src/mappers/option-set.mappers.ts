@@ -112,7 +112,7 @@ export class SelectOptionSetMapper {
       name: domain.name,
       description: domain.description,
       options: domain.options,
-      allow_multiple: domain.allowMultiple,
+      allow_multiple: domain.allowMultiple ?? false,
       is_active: domain.isActive,
       metadata: domain.metadata
     };

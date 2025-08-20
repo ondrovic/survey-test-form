@@ -24,7 +24,7 @@ export type CrudOperation = 'create' | 'update' | 'delete';
 export interface OptionSetConfig<T extends BaseOptionSet> {
   type: 'rating-scale' | 'radio' | 'multi-select' | 'select';
   displayName: string;
-  firestoreHelpers: {
+  databaseHelpers: {
     get: () => Promise<T[]>;
     create: (data: Omit<T, 'id'>) => Promise<T>;
     update: (id: string, data: Partial<T>) => Promise<void>;
@@ -66,7 +66,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     setIsLoading(true);
     setError(null);
     try {
-      const items = await config.firestoreHelpers.get();
+      const items = await config.databaseHelpers.get();
       
       // If no rating scales exist, create a default one for testing
       if (config.type === 'rating-scale' && items.length === 0) {
@@ -89,7 +89,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
             }
           };
           
-          const created = await config.firestoreHelpers.create(defaultRatingScale as any);
+          const created = await config.databaseHelpers.create(defaultRatingScale as any);
           if (created) {
             console.log('✅ Created default rating scale:', created.id);
             return [created];
@@ -142,7 +142,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     // Only set loading to true when we're actually making the API call
     setIsLoading(true);
     try {
-      const newItem = await config.firestoreHelpers.create(data);
+      const newItem = await config.databaseHelpers.create(data);
       showSuccess(`${config.displayName} "${data.name}" created!`);
       return newItem;
     } catch (err) {
@@ -192,7 +192,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     // Only set loading to true when we're actually making the API call
     setIsLoading(true);
     try {
-      await config.firestoreHelpers.update(id, data);
+      await config.databaseHelpers.update(id, data);
       showSuccess(`${config.displayName} "${data.name || 'item'}" updated!`);
       return true;
     } catch (err) {
@@ -214,7 +214,7 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
     setError(null);
     
     try {
-      await config.firestoreHelpers.delete(id);
+      await config.databaseHelpers.delete(id);
       showSuccess(`${config.displayName} "${name}" deleted!`);
       return true;
     } catch (err) {

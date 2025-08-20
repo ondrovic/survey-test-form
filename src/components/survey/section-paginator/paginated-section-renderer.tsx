@@ -1,6 +1,8 @@
 import React from 'react';
-import { OptionSetPreview } from '../../admin/survey-builder/option-set-preview';
+import { clsx } from 'clsx';
+import { OptionSetPreview } from '../../admin/survey-builder/shared';
 import { getBadgeLayoutClasses } from '../../../utils/layout.utils';
+import { colors, typography, borderRadius, shadows, spacing } from '@/styles/design-tokens';
 import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 
@@ -12,15 +14,31 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
   className = ''
 }) => {
   const renderField = (field: any) => (
-    <div key={field.id} className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
-      <label className="block text-sm font-medium text-gray-700 mb-3">
+    <div key={field.id} className={clsx(
+      'bg-white p-6',
+      `border border-${colors.gray[200]}`,
+      borderRadius.lg,
+      shadows.sm
+    )}>
+      <label className={clsx(
+        'block mb-3',
+        typography.text.sm,
+        typography.weight.medium,
+        `text-${colors.gray[700]}`
+      )}>
         {field.label}
-        {field.required && <span className="text-red-500 ml-1">*</span>}
+        {field.required && <span className={`text-${colors.error[500]} ml-1`}>*</span>}
       </label>
 
       {/* Field Type Preview */}
       <div className="mb-2">
-        <span className="inline-block text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+        <span className={clsx(
+          'inline-block px-2 py-1',
+          typography.text.xs,
+          `text-${colors.gray[500]}`,
+          `bg-${colors.gray[100]}`,
+          borderRadius.sm
+        )}>
           {field.type}
         </span>
       </div>
@@ -31,7 +49,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           type="text"
           placeholder={field.placeholder || "Text input"}
           disabled
-          className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm bg-gray-50 focus:outline-none"
+          className={clsx(
+            'w-full px-4 py-3',
+            `border border-${colors.gray[300]}`,
+            borderRadius.md,
+            typography.text.sm,
+            `bg-${colors.gray[50]}`,
+            'focus:outline-none'
+          )}
         />
       )}
 
@@ -40,7 +65,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           placeholder={field.placeholder || "Text area"}
           disabled
           rows={4}
-          className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm bg-gray-50 focus:outline-none resize-none"
+          className={clsx(
+            'w-full px-4 py-3 resize-none',
+            `border border-${colors.gray[300]}`,
+            borderRadius.md,
+            typography.text.sm,
+            `bg-${colors.gray[50]}`,
+            'focus:outline-none'
+          )}
         />
       )}
 
@@ -49,7 +81,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           type="email"
           placeholder={field.placeholder || "Enter your email address"}
           disabled
-          className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm bg-gray-50 focus:outline-none"
+          className={clsx(
+            'w-full px-4 py-3',
+            `border border-${colors.gray[300]}`,
+            borderRadius.md,
+            typography.text.sm,
+            `bg-${colors.gray[50]}`,
+            'focus:outline-none'
+          )}
         />
       )}
 
@@ -58,7 +97,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           type="number"
           placeholder={field.placeholder || "Enter a number"}
           disabled
-          className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm bg-gray-50 focus:outline-none"
+          className={clsx(
+            'w-full px-4 py-3',
+            `border border-${colors.gray[300]}`,
+            borderRadius.md,
+            typography.text.sm,
+            `bg-${colors.gray[50]}`,
+            'focus:outline-none'
+          )}
         />
       )}
 
@@ -73,7 +119,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
       {field.type === 'select' && !field.selectOptionSetId && field.options && field.options.length > 0 && (
         <select
           disabled
-          className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm bg-gray-50 focus:outline-none"
+          className={clsx(
+            'w-full px-4 py-3',
+            `border border-${colors.gray[300]}`,
+            borderRadius.md,
+            typography.text.sm,
+            `bg-${colors.gray[50]}`,
+            'focus:outline-none'
+          )}
         >
           <option value="">{field.placeholder || 'Select an option...'}</option>
           {field.options.map((option: any, index: number) => (
@@ -107,9 +160,19 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
               <input
                 type="checkbox"
                 disabled
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className={clsx(
+                  'h-4 w-4',
+                  `text-${colors.primary[600]}`,
+                  `focus:ring-${colors.primary[500]}`,
+                  `border-${colors.gray[300]}`,
+                  borderRadius.sm
+                )}
               />
-              <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+              <span className={clsx(
+                'ml-3',
+                typography.text.sm,
+                `text-${colors.gray[700]}`
+              )}>{option.label}</span>
             </div>
           ))}
         </div>
@@ -131,9 +194,18 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                 type="radio"
                 name={`preview-${field.id}`}
                 disabled
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                className={clsx(
+                  'h-4 w-4',
+                  `text-${colors.primary[600]}`,
+                  `focus:ring-${colors.primary[500]}`,
+                  `border-${colors.gray[300]}`
+                )}
               />
-              <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+              <span className={clsx(
+                'ml-3',
+                typography.text.sm,
+                `text-${colors.gray[700]}`
+              )}>{option.label}</span>
             </div>
           ))}
         </div>
@@ -146,9 +218,19 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
               <input
                 type="checkbox"
                 disabled
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className={clsx(
+                  'h-4 w-4',
+                  `text-${colors.primary[600]}`,
+                  `focus:ring-${colors.primary[500]}`,
+                  `border-${colors.gray[300]}`,
+                  borderRadius.sm
+                )}
               />
-              <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+              <span className={clsx(
+                'ml-3',
+                typography.text.sm,
+                `text-${colors.gray[700]}`
+              )}>{option.label}</span>
             </div>
           ))}
         </div>
@@ -167,7 +249,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           {field.options.map((option: any, index: number) => (
             <span
               key={index}
-              className="px-3 py-2 text-sm rounded-md border bg-gray-100 text-gray-700 border-gray-200"
+              className={clsx(
+                'px-3 py-2 border',
+                typography.text.sm,
+                borderRadius.md,
+                `bg-${colors.gray[100]}`,
+                `text-${colors.gray[700]}`,
+                `border-${colors.gray[200]}`
+              )}
             >
               {option.label}
             </span>
@@ -182,26 +271,47 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         !field.multiSelectOptionSetId && 
         !field.radioOptionSetId && 
         !field.ratingScaleId) && (
-        <div className="text-sm text-gray-500 italic bg-gray-50 p-3 rounded">
+        <div className={clsx(
+          'p-3 italic',
+          typography.text.sm,
+          `text-${colors.gray[500]}`,
+          `bg-${colors.gray[50]}`,
+          borderRadius.md
+        )}>
           No options configured for this field
         </div>
       )}
     </div>
   );
   return (
-    <div className={`max-w-2xl mx-auto ${className}`}>
+    <div className={clsx('max-w-2xl mx-auto', className)}>
       {/* Section Header */}
       <div className="mb-8">
         {showSectionPagination && (
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+            <span className={clsx(
+              'px-2 py-1',
+              typography.text.sm,
+              typography.weight.medium,
+              `text-${colors.primary[600]}`,
+              `bg-${colors.primary[50]}`,
+              borderRadius.sm
+            )}>
               Section {sectionIndex + 1} of {totalSections}
             </span>
           </div>
         )}
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{section.title}</h2>
+        <h2 className={clsx(
+          typography.text['2xl'],
+          typography.weight.bold,
+          `text-${colors.gray[900]}`,
+          'mb-2'
+        )}>{section.title}</h2>
         {section.description && (
-          <p className="text-gray-600 text-lg">{section.description}</p>
+          <p className={clsx(
+            typography.text.lg,
+            `text-${colors.gray[600]}`
+          )}>{section.description}</p>
         )}
       </div>
 
@@ -212,12 +322,24 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           if (contentItem.type === 'subsection') {
             const subsection = contentItem.data as any;
             return (
-              <div key={subsection.id} className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div key={subsection.id} className={clsx(
+                'p-6',
+                `bg-${colors.gray[50]}`,
+                `border border-${colors.gray[200]}`,
+                borderRadius.lg
+              )}>
                 {/* Subsection Header */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{subsection.title}</h3>
+                  <h3 className={clsx(
+                    typography.text.xl,
+                    typography.weight.semibold,
+                    `text-${colors.gray[800]}`,
+                    'mb-2'
+                  )}>{subsection.title}</h3>
                   {subsection.description && (
-                    <p className="text-gray-600">{subsection.description}</p>
+                    <p className={clsx(
+                      `text-${colors.gray[600]}`
+                    )}>{subsection.description}</p>
                   )}
                 </div>
 
@@ -227,8 +349,11 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
 
                   {/* Subsection empty state */}
                   {subsection.fields.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <p className="text-sm">No fields in this subsection</p>
+                    <div className={clsx(
+                      'text-center py-8',
+                      `text-${colors.gray[500]}`
+                    )}>
+                      <p className={typography.text.sm}>No fields in this subsection</p>
                     </div>
                   )}
                 </div>
@@ -243,9 +368,12 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
 
         {/* Empty state */}
         {getOrderedSectionContent(section).length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">No content in this section</p>
-            <p className="text-sm">Add fields or subsections to this section in the survey builder</p>
+          <div className={clsx(
+            'text-center py-12',
+            `text-${colors.gray[500]}`
+          )}>
+            <p className={typography.text.lg}>No content in this section</p>
+            <p className={typography.text.sm}>Add fields or subsections to this section in the survey builder</p>
           </div>
         )}
       </div>

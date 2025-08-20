@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/auth-context';
-import { firestoreHelpers, getDatabaseProviderInfo } from '@/config/database';
+import { databaseHelpers, getDatabaseProviderInfo } from '@/config/database';
 import { useEffect, useState } from 'react';
 
 interface ConnectionStatus {
@@ -42,7 +42,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
       
       // Try a simple database operation to test connection
       // This works with any provider (Firebase, Supabase, PostgreSQL)
-      await firestoreHelpers.getSurveyConfigs();
+      await databaseHelpers.getSurveyConfigs();
       
       setConnected(true);
       setError(null);

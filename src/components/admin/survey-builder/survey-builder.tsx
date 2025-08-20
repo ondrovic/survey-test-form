@@ -1,25 +1,30 @@
-import React, { useCallback } from 'react';
-import { firestoreHelpers } from '../../../config/database';
+import React, { memo, useCallback, useMemo } from 'react';
+import { databaseHelpers } from '../../../config/database';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
 import { useToast } from '../../../contexts/toast-context/index';
-import { ValidationProvider, useValidation } from '../../../contexts/validation-context';
+import { ValidationProvider, useValidation } from '../../../contexts/validation-context/index';
+import { useSurveyOperations } from '../../../hooks/use-survey-operations';
 import { FieldType, SurveyField, SurveySection, SurveySubsection } from '../../../types/framework.types';
 import { generateFieldId, generateSectionId, updateSectionId } from '../../../utils/id.utils';
 import { updateMetadata } from '../../../utils/metadata.utils';
-import { MultiSelectOptionSetManager } from '../multi-select-option-set-manager';
-import { RadioOptionSetManager } from '../radio-option-set-manager';
-import { RatingScaleManager } from '../rating-option-set-manager';
-import { SelectOptionSetManager } from '../select-option-set-manager';
-import { FieldContainer, FieldDragContext } from './field-drag-context';
-import { FieldEditorModal } from './field-editor-modal';
-import { MultiSelectFieldEditor } from './multi-select-field-editor';
-import { SectionEditor } from './section-editor';
-import { SectionList } from './section-list';
+import {
+    MultiSelectOptionSetManager,
+    RadioOptionSetManager,
+    RatingScaleManager,
+    SelectOptionSetManager
+} from '../option-set-manager';
+// Organized imports from new structure
+import {
+    FieldEditorModal,
+    MultiSelectFieldEditor,
+    SectionEditor
+} from './components/editors';
+import { SurveyHeader } from './components/header';
+import { SurveyPreview } from './components/preview';
+import { SectionList, SurveyDetails } from './components/sidebar';
+import { FieldContainer, FieldDragContext } from './drag-and-drop';
 import { SurveyBuilderProps } from './survey-builder.types';
-import { SurveyDetails } from './survey-details';
-import { SurveyHeader } from './survey-header';
-import { SurveyPreview } from './survey-preview';
 
 // Wrapper component that provides the context
 export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
@@ -33,10 +38,11 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
 };
 
 // Main component that uses the context
-const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
+const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, editingConfig }) => {
     const { showSuccess, showError } = useToast();
     const { refreshAll } = useSurveyData();
     const { validateSurvey } = useValidation();
+    const { verifyConfig } = useSurveyOperations();
     const {
         state,
         updateConfig,
@@ -92,7 +98,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         };
         addSection(newSection);
         selectSection(newSection.id);
-        
+
         // Focus on the new section after a short delay to ensure DOM is ready
         setTimeout(() => {
             const sectionElement = document.querySelector(`[data-section-id="${newSection.id}"]`);
@@ -126,7 +132,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
     const handleAddSubsection = (sectionId: string, subsection: SurveySubsection) => {
         addSubsection(sectionId, subsection);
         selectSubsection(subsection.id);
-        
+
         // Focus on the new subsection after a short delay to ensure DOM is ready
         setTimeout(() => {
             const subsectionElement = document.querySelector(`[data-subsection-id="${subsection.id}"]`);
@@ -327,13 +333,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         deleteFieldOption(sectionId, fieldId, optionIndex, subsectionId);
     };
 
-    const handleMoveField = (fieldId: string, fromContainer: FieldContainer, toContainer: FieldContainer, newIndex: number) => {
-        console.log('🚀 HANDLE MOVE FIELD called:', {
-            fieldId,
-            fromContainer,
-            toContainer,
-            newIndex
-        });
+    const handleMoveField = useCallback((fieldId: string, fromContainer: FieldContainer, toContainer: FieldContainer, newIndex: number) => {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('🚀 HANDLE MOVE FIELD called:', {
+                fieldId,
+                fromContainer,
+                toContainer,
+                newIndex,
+                timestamp: new Date().toISOString()
+            });
+        }
 
         // Check if this is a same-container reorder
         const isSameContainer =
@@ -438,7 +447,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             sections: finalSections,
             metadata: updateMetadata(currentConfig.metadata)
         });
-    };
+    }, [state.config, updateConfig]);
 
     const handleOpenFieldEditor = (fieldId: string) => {
         console.log('📝 Opening field editor for:', fieldId);
@@ -457,8 +466,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         }, 100);
     };
 
-    // Get all fields for the drag context
-    const getAllFields = () => {
+    // Get all fields for the drag context - memoized to prevent unnecessary re-renders
+    const getAllFields = useMemo(() => {
         const allFields: SurveyField[] = [];
         state.config.sections.forEach(section => {
             allFields.push(...section.fields);
@@ -467,15 +476,24 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             });
         });
 
-        return allFields;
-    };
+        if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 GET ALL FIELDS:', {
+                sectionsCount: state.config.sections.length,
+                totalFields: allFields.length,
+                fieldIds: allFields.map(f => f.id),
+                sections: state.config.sections.map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    fieldsCount: s.fields.length,
+                    subsectionsCount: s.subsections?.length || 0
+                }))
+            });
+        }
 
-    const renderFieldPreview = (field: SurveyField) => (
-        <div className="p-3 border rounded bg-white shadow-lg">
-            <span className="font-medium text-sm">{field.label}</span>
-            <span className="text-xs text-gray-500 ml-2">({field.type})</span>
-        </div>
-    );
+        return allFields;
+    }, [state.config.sections]);
+
+    const renderFieldPreview = () => null; // Preview is now handled directly in DragOverlay
 
     const handleSave = async () => {
         try {
@@ -495,17 +513,23 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             }
 
             if (editingConfig) {
-                await firestoreHelpers.updateSurveyConfig(editingConfig.id, updatedConfig);
+                await databaseHelpers.updateSurveyConfig(editingConfig.id, updatedConfig);
                 showSuccess(`Survey configuration "${updatedConfig.title}" updated!`);
             } else {
                 // Remove the empty ID when creating new config
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { id: _unusedId, ...configWithoutId } = updatedConfig;
-                await firestoreHelpers.addSurveyConfig(configWithoutId);
+                await databaseHelpers.addSurveyConfig(configWithoutId);
                 showSuccess(`Survey configuration "${updatedConfig.title}" created!`);
             }
 
             await refreshAll();
+
+            // Trigger validation to check if the saved configuration is valid
+            // This will update validation status and handle any instances that need deactivation/reactivation
+            console.log('🔍 Triggering validation after survey config save...');
+            await verifyConfig();
+
             onClose();
         } catch (error) {
             const configTitle = state.config.title || 'Survey configuration';
@@ -561,7 +585,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         if (selectedField) {
             try {
                 // Fetch the actual option set to get its name
-                const optionSet = await firestoreHelpers.getRadioOptionSet(optionSetId);
+                const optionSet = await databaseHelpers.getRadioOptionSet(optionSetId);
                 handleUpdateField(selectedSection!.id, selectedField.id, {
                     radioOptionSetId: optionSetId,
                     radioOptionSetName: optionSet?.name || `Radio Option Set ${optionSetId}`,
@@ -586,7 +610,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         if (selectedField) {
             try {
                 // Fetch the actual option set to get its name
-                const optionSet = await firestoreHelpers.getMultiSelectOptionSet(optionSetId);
+                const optionSet = await databaseHelpers.getMultiSelectOptionSet(optionSetId);
                 handleUpdateField(selectedSection!.id, selectedField.id, {
                     multiSelectOptionSetId: optionSetId,
                     multiSelectOptionSetName: optionSet?.name || `Multi-Select Option Set ${optionSetId}`,
@@ -610,7 +634,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
         if (selectedField) {
             try {
                 // Fetch the actual option set to get its name
-                const optionSet = await firestoreHelpers.getSelectOptionSet(optionSetId);
+                const optionSet = await databaseHelpers.getSelectOptionSet(optionSetId);
                 handleUpdateField(selectedSection!.id, selectedField.id, {
                     selectOptionSetId: optionSetId,
                     selectOptionSetName: optionSet?.name || `Select Option Set ${optionSetId}`,
@@ -654,7 +678,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
                 <FieldDragContext
                     onFieldMove={handleMoveField}
                     renderFieldPreview={renderFieldPreview}
-                    fields={getAllFields()}
+                    fields={getAllFields}
                 >
                     <div className="flex-1 flex overflow-hidden">
                         {/* Sidebar */}
@@ -799,4 +823,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = ({ onClose, editingCo
             </div>
         </div>
     );
-};
+});
+
+SurveyBuilderContent.displayName = 'SurveyBuilderContent';
+

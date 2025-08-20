@@ -1,5 +1,5 @@
 import { Button } from "@/components/common";
-import { SurveyInstanceCard, SurveyList } from "@/components/common/framework";
+import { SurveyInstanceCard, SurveyList } from "@/components/common";
 import { useSurveyOperations, useSurveyUrls } from "@/hooks";
 import { SurveyConfig, SurveyInstance } from "@/types";
 import { Upload } from "lucide-react";
@@ -10,10 +10,11 @@ interface SurveyInstanceSectionProps {
   getInstanceConfig: (instance: SurveyInstance) => SurveyConfig | undefined;
   onToggleActive: (instance: SurveyInstance) => void;
   onSettings: (instance: SurveyInstance) => void;
-  onDelete: (instance: SurveyInstance) => void;
+  onDelete: (instance: SurveyInstance, validationResetCallback?: () => void) => void;
   onVisualize: (instance: SurveyInstance) => void;
   onExport: (instance: SurveyInstance) => void;
   onImportInstance: () => void;
+  validationResetCallback?: () => void;
 }
 
 export const SurveyInstanceSection: React.FC<SurveyInstanceSectionProps> = ({
@@ -25,6 +26,7 @@ export const SurveyInstanceSection: React.FC<SurveyInstanceSectionProps> = ({
   onVisualize,
   onExport,
   onImportInstance,
+  validationResetCallback,
 }) => {
   const { downloadSurveyData } = useSurveyOperations();
   const { generateSurveyUrl, copySurveyUrl, openSurveyInNewTab } =
@@ -51,7 +53,7 @@ export const SurveyInstanceSection: React.FC<SurveyInstanceSectionProps> = ({
           onSettings={onSettings}
           onDownload={downloadSurveyData}
           onVisualize={() => onVisualize(instance)}
-          onDelete={onDelete}
+          onDelete={(instance) => onDelete(instance, validationResetCallback)}
           onCopyUrl={copySurveyUrl}
           onOpenUrl={openSurveyInNewTab}
           onExport={onExport}

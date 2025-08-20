@@ -1,4 +1,4 @@
-import { firestoreHelpers } from "@/config/database";
+import { databaseHelpers } from "@/config/database";
 import { useSurveyData } from "@/contexts/survey-data-context/index";
 import { SurveyConfig, SurveyResponse } from "@/types";
 import { useEffect, useMemo, useState } from "react";
@@ -69,7 +69,7 @@ export const useVisualizationData = (instanceId?: string) => {
         setError(null);
 
         // First get all instances to find the actual instance
-        const instances = await firestoreHelpers.getSurveyInstances();
+        const instances = await databaseHelpers.getSurveyInstances();
 
         // Find instance by either ID or slug
         const instanceData = instances.find(
@@ -81,11 +81,11 @@ export const useVisualizationData = (instanceId?: string) => {
         }
 
         // Get responses using the actual instance ID
-        const responses = await firestoreHelpers
+        const responses = await databaseHelpers
           .getSurveyResponsesFromCollection(instanceData.id)
           .catch(() => []);
         const cfg = instanceData
-          ? await firestoreHelpers.getSurveyConfig(instanceData.configId)
+          ? await databaseHelpers.getSurveyConfig(instanceData.configId)
           : undefined;
 
         if (!isMounted) return;

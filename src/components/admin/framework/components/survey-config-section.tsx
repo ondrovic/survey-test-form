@@ -1,4 +1,4 @@
-import { SurveyConfigCard, SurveyList } from "@/components/common/framework";
+import { SurveyConfigCard, SurveyList } from "@/components/common";
 import { SurveyConfig } from "@/types";
 import React from "react";
 
@@ -7,8 +7,10 @@ interface SurveyConfigSectionProps {
   getInstanceCount: (configId: string) => number;
   onEdit: (config: SurveyConfig) => void;
   onCreateInstance: (config: SurveyConfig) => void;
-  onDelete: (config: SurveyConfig) => void;
+  onDelete: (config: SurveyConfig, validationResetCallback?: () => void) => void;
   onExport: (config: SurveyConfig) => void;
+  validationStatus?: { hasErrors: boolean; errorCount: number };
+  validationResetCallback?: () => void;
 }
 
 export const SurveyConfigSection: React.FC<SurveyConfigSectionProps> = ({
@@ -18,6 +20,8 @@ export const SurveyConfigSection: React.FC<SurveyConfigSectionProps> = ({
   onCreateInstance,
   onDelete,
   onExport,
+  validationStatus,
+  validationResetCallback,
 }) => {
   return (
     <SurveyList
@@ -31,8 +35,9 @@ export const SurveyConfigSection: React.FC<SurveyConfigSectionProps> = ({
           instanceCount={getInstanceCount(config.id)}
           onEdit={onEdit}
           onCreateInstance={onCreateInstance}
-          onDelete={onDelete}
+          onDelete={(config) => onDelete(config, validationResetCallback)}
           onExport={onExport}
+          validationStatus={validationStatus}
         />
       ))}
     </SurveyList>

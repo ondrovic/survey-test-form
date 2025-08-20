@@ -19,8 +19,6 @@ export const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
         }
     };
 
-
-
     return (
         <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">

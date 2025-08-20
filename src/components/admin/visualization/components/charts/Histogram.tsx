@@ -4,8 +4,7 @@ import { BaseChartProps } from '../../types';
 export const Histogram: React.FC<BaseChartProps> = ({ 
   counts, 
   total, 
-  showPercent, 
-  size: chartSize = 'normal' 
+  showPercent
 }) => {
   const entries = Object.entries(counts);
   const max = Math.max(1, ...entries.map(([, v]) => v));

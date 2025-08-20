@@ -1,21 +1,38 @@
-import { useNavigate } from 'react-router-dom';
-import { baseRoute } from '@/routes';
-import { SurveyConfig, SurveyInstance } from '@/types';
-import { useSurveyOperations, useGenericImportExport } from '@/hooks';
+import { useGenericImportExport, useSurveyOperations } from "@/hooks";
+import { baseRoute } from "@/routes";
+import { SurveyConfig, SurveyInstance } from "@/types";
+import { useNavigate } from "react-router-dom";
 
 export interface AdminFrameworkOperations {
   onCreateNewSurvey: () => void;
   onEditSurveyConfig: (config: SurveyConfig) => void;
-  onDeleteSurveyConfig: (configId: string, configName?: string) => void;
-  onDeleteSurveyInstance: (instanceId: string, instanceName?: string) => void;
-  onToggleInstanceActive: (instanceId: string, isActive: boolean, instanceName?: string) => void;
-  onUpdateInstanceDateRange: (instanceId: string, dateRange: { startDate: string; endDate: string } | null, instanceName?: string) => void;
+  onDeleteSurveyConfig: (
+    configId: string,
+    configName?: string,
+    validationResetCallback?: () => void
+  ) => void;
+  onDeleteSurveyInstance: (
+    instanceId: string,
+    instanceName?: string,
+    validationResetCallback?: () => void
+  ) => void;
+  onToggleInstanceActive: (
+    instanceId: string,
+    isActive: boolean,
+    instanceName?: string
+  ) => void;
+  onUpdateInstanceDateRange: (
+    instanceId: string,
+    dateRange: { startDate: string; endDate: string } | null,
+    instanceName?: string
+  ) => void;
 }
 
 export interface DeleteModalData {
-  type: 'config' | 'instance';
+  type: "config" | "instance";
   id: string;
   name: string;
+  validationResetCallback?: () => void; // For config deletions to reset validation status
 }
 
 export interface ModalActions {
@@ -47,18 +64,23 @@ export const useAdminFrameworkHandlers = (
 ) => {
   const navigate = useNavigate();
   const { createSurveyInstance } = useSurveyOperations();
-  const { exportConfig, exportInstance, importConfig, importInstance } = useGenericImportExport();
+  const { exportConfig, exportInstance, importConfig, importInstance } =
+    useGenericImportExport();
 
   // Config handlers
   const handleEditConfig = (config: SurveyConfig) => {
     operations.onEditSurveyConfig(config);
   };
 
-  const handleDeleteConfig = (config: SurveyConfig) => {
+  const handleDeleteConfig = (
+    config: SurveyConfig,
+    validationResetCallback?: () => void
+  ) => {
     modalActions.deleteModal.open({
-      type: 'config',
+      type: "config",
       id: config.id,
-      name: config.title
+      name: config.title,
+      validationResetCallback,
     });
   };
 
@@ -76,18 +98,26 @@ export const useAdminFrameworkHandlers = (
 
   // Instance handlers
   const handleToggleInstanceActive = (instance: SurveyInstance) => {
-    operations.onToggleInstanceActive(instance.id, !instance.isActive, instance.title);
+    operations.onToggleInstanceActive(
+      instance.id,
+      !instance.isActive,
+      instance.title
+    );
   };
 
   const handleInstanceSettings = (instance: SurveyInstance) => {
     modalActions.settingsModal.open(instance);
   };
 
-  const handleDeleteInstance = (instance: SurveyInstance) => {
+  const handleDeleteInstance = (
+    instance: SurveyInstance,
+    validationResetCallback?: () => void
+  ) => {
     modalActions.deleteModal.open({
-      type: 'instance',
+      type: "instance",
       id: instance.id,
-      name: instance.title
+      name: instance.title,
+      validationResetCallback,
     });
   };
 
@@ -108,9 +138,9 @@ export const useAdminFrameworkHandlers = (
   const handleConfirmDelete = (deleteModalData: DeleteModalData | null) => {
     if (!deleteModalData) return;
 
-    const { type, id, name } = deleteModalData;
-    if (type === 'config') {
-      operations.onDeleteSurveyConfig(id, name);
+    const { type, id, name, validationResetCallback } = deleteModalData;
+    if (type === "config") {
+      operations.onDeleteSurveyConfig(id, name, validationResetCallback);
     } else {
       operations.onDeleteSurveyInstance(id, name);
     }
@@ -120,7 +150,10 @@ export const useAdminFrameworkHandlers = (
   // Instance settings save handler
   const handleSaveInstanceSettings = async (
     settingsModalData: SurveyInstance | null,
-    updates: { isActive: boolean; activeDateRange: { startDate: string; endDate: string } | null }
+    updates: {
+      isActive: boolean;
+      activeDateRange: { startDate: string; endDate: string } | null;
+    }
   ) => {
     if (!settingsModalData) return;
 
@@ -128,7 +161,11 @@ export const useAdminFrameworkHandlers = (
       const instance = settingsModalData;
 
       if (updates.isActive !== instance.isActive) {
-        await operations.onToggleInstanceActive(instance.id, updates.isActive, instance.title);
+        await operations.onToggleInstanceActive(
+          instance.id,
+          updates.isActive,
+          instance.title
+        );
       }
 
       const currentDateRange = instance.activeDateRange;
@@ -138,7 +175,11 @@ export const useAdminFrameworkHandlers = (
       const normalizedNew = newDateRange || null;
 
       if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew)) {
-        await operations.onUpdateInstanceDateRange(instance.id, newDateRange, instance.title);
+        await operations.onUpdateInstanceDateRange(
+          instance.id,
+          newDateRange,
+          instance.title
+        );
       }
 
       modalActions.settingsModal.close();
@@ -160,7 +201,7 @@ export const useAdminFrameworkHandlers = (
       handleDeleteConfig,
       handleCreateInstance,
       handleExportConfig,
-      handleImportConfig
+      handleImportConfig,
     },
     instanceHandlers: {
       handleToggleInstanceActive,
@@ -168,16 +209,16 @@ export const useAdminFrameworkHandlers = (
       handleDeleteInstance,
       handleVisualize,
       handleExportInstance,
-      handleImportInstance
+      handleImportInstance,
     },
     modalHandlers: {
       handleConfirmDelete,
       handleSaveInstanceSettings,
-      handleConfirmCreateInstance
+      handleConfirmCreateInstance,
     },
     importExportActions: {
       importConfig,
-      importInstance
-    }
+      importInstance,
+    },
   };
 };

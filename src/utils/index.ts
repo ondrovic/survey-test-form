@@ -20,7 +20,9 @@ export const isSurveyInstanceActive = (instance: {
 
   const now = new Date();
   const startDate = new Date(instance.activeDateRange.startDate);
+  // Set endDate to end of day (23:59:59.999) to ensure survey is active through the entire end date
   const endDate = new Date(instance.activeDateRange.endDate);
+  endDate.setHours(23, 59, 59, 999);
 
   return now >= startDate && now <= endDate;
 };

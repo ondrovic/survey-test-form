@@ -83,7 +83,7 @@ export const useAdminFrameworkModals = () => {
     settingsModal: {
       open: (data: SurveyInstance) => {
         currentSettingsData.current = data;
-        import("@/components/common/framework").then(
+        import("@/components/common").then(
           ({ InstanceSettingsModal }) => {
             openModal(
               "instance-settings",

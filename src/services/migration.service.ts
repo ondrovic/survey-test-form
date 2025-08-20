@@ -130,7 +130,7 @@ export class MigrationService {
     return this.executeMigrationWithTracking('schema_migration', async () => {
       // The schema migration should be run manually via SQL scripts
       // This function just checks if the new tables exist
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('survey_sections')
         .select('id')
         .limit(1);

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { UsePaginationReturn } from "../components/common/pagination/pagination.types";
+import { UsePaginationReturn } from "../components/common/layout/pagination/pagination.types";
 
 interface UsePaginationOptions {
   totalItems: number;

@@ -1,14 +1,14 @@
 import {
+  MultiSelectOptionSet,
+  RadioOptionSet,
+  RatingScale,
+  SelectOptionSet,
   SurveyConfig,
   SurveyInstance,
   SurveyResponse,
-  RatingScale,
-  RadioOptionSet,
-  MultiSelectOptionSet,
-  SelectOptionSet
-} from './framework.types';
+} from "./framework.types";
 
-export type DatabaseProvider = 'supabase';
+export type DatabaseProvider = "supabase";
 
 export interface DatabaseConfig {
   provider: DatabaseProvider;
@@ -34,68 +34,122 @@ export interface DatabaseHelpers {
   // Survey Configs
   getSurveyConfigs(): Promise<SurveyConfig[]>;
   getSurveyConfig(id: string): Promise<SurveyConfig | null>;
-  addSurveyConfig(config: Omit<SurveyConfig, 'id'>): Promise<SurveyConfig>;
+  addSurveyConfig(config: Omit<SurveyConfig, "id">): Promise<SurveyConfig>;
   updateSurveyConfig(id: string, data: Partial<SurveyConfig>): Promise<void>;
-  deleteSurveyConfig(id: string): Promise<void>;
+  deleteSurveyConfig(
+    id: string,
+    validationResetCallback?: () => void
+  ): Promise<void>;
 
   // Survey Instances
   getSurveyInstances(): Promise<SurveyInstance[]>;
   getSurveyInstancesByConfig(configId: string): Promise<SurveyInstance[]>;
-  addSurveyInstance(instance: Omit<SurveyInstance, 'id'>): Promise<SurveyInstance>;
-  updateSurveyInstance(id: string, data: Partial<SurveyInstance>): Promise<void>;
-  deleteSurveyInstance(id: string): Promise<void>;
+  addSurveyInstance(
+    instance: Omit<SurveyInstance, "id">
+  ): Promise<SurveyInstance>;
+  updateSurveyInstance(
+    id: string,
+    data: Partial<SurveyInstance>
+  ): Promise<void>;
+  deleteSurveyInstance(
+    id: string,
+    validationResetCallback?: () => void
+  ): Promise<void>;
 
   // Survey Responses
-  addSurveyResponse(response: Omit<SurveyResponse, 'id'>): Promise<SurveyResponse>;
+  addSurveyResponse(
+    response: Omit<SurveyResponse, "id">
+  ): Promise<SurveyResponse>;
   getSurveyResponses(instanceId?: string): Promise<SurveyResponse[]>;
-  getSurveyResponsesFromCollection(instanceId: string): Promise<SurveyResponse[]>;
+  getSurveyResponsesFromCollection(
+    instanceId: string
+  ): Promise<SurveyResponse[]>;
 
   // Rating Scales
   getRatingScales(): Promise<RatingScale[]>;
   getRatingScale(id: string): Promise<RatingScale | null>;
-  addRatingScale(scale: RatingScale | Omit<RatingScale, 'id'>): Promise<RatingScale>;
+  addRatingScale(
+    scale: RatingScale | Omit<RatingScale, "id">
+  ): Promise<RatingScale>;
   updateRatingScale(id: string, data: Partial<RatingScale>): Promise<void>;
   deleteRatingScale(id: string): Promise<void>;
 
   // Radio Option Sets
   getRadioOptionSets(): Promise<RadioOptionSet[]>;
   getRadioOptionSet(id: string): Promise<RadioOptionSet | null>;
-  addRadioOptionSet(optionSet: RadioOptionSet | Omit<RadioOptionSet, 'id'>): Promise<RadioOptionSet>;
-  updateRadioOptionSet(id: string, data: Partial<RadioOptionSet>): Promise<void>;
+  addRadioOptionSet(
+    optionSet: RadioOptionSet | Omit<RadioOptionSet, "id">
+  ): Promise<RadioOptionSet>;
+  updateRadioOptionSet(
+    id: string,
+    data: Partial<RadioOptionSet>
+  ): Promise<void>;
   deleteRadioOptionSet(id: string): Promise<void>;
 
   // Multi-Select Option Sets
   getMultiSelectOptionSets(): Promise<MultiSelectOptionSet[]>;
   getMultiSelectOptionSet(id: string): Promise<MultiSelectOptionSet | null>;
-  addMultiSelectOptionSet(optionSet: MultiSelectOptionSet | Omit<MultiSelectOptionSet, 'id'>): Promise<MultiSelectOptionSet>;
-  updateMultiSelectOptionSet(id: string, data: Partial<MultiSelectOptionSet>): Promise<void>;
+  addMultiSelectOptionSet(
+    optionSet: MultiSelectOptionSet | Omit<MultiSelectOptionSet, "id">
+  ): Promise<MultiSelectOptionSet>;
+  updateMultiSelectOptionSet(
+    id: string,
+    data: Partial<MultiSelectOptionSet>
+  ): Promise<void>;
   deleteMultiSelectOptionSet(id: string): Promise<void>;
 
   // Select Option Sets
   getSelectOptionSets(): Promise<SelectOptionSet[]>;
   getSelectOptionSet(id: string): Promise<SelectOptionSet | null>;
-  addSelectOptionSet(optionSet: SelectOptionSet | Omit<SelectOptionSet, 'id'>): Promise<SelectOptionSet>;
-  updateSelectOptionSet(id: string, data: Partial<SelectOptionSet>): Promise<void>;
+  addSelectOptionSet(
+    optionSet: SelectOptionSet | Omit<SelectOptionSet, "id">
+  ): Promise<SelectOptionSet>;
+  updateSelectOptionSet(
+    id: string,
+    data: Partial<SelectOptionSet>
+  ): Promise<void>;
   deleteSelectOptionSet(id: string): Promise<void>;
 
   // Survey Instance Status Management
-  updateSurveyInstanceStatuses(): Promise<{ success: boolean; activated: number; deactivated: number; message: string }>;
+  updateSurveyInstanceStatuses(): Promise<{
+    success: boolean;
+    activated: number;
+    deactivated: number;
+    message: string;
+  }>;
+  clearValidationLocks(): Promise<{
+    success: boolean;
+    cleared_locks: number;
+    message: string;
+  }>;
   getUpcomingStatusChanges(hoursAhead?: number): Promise<{
-    upcoming_activations: Array<{ id: string; title: string; slug?: string; active_date_range: any }>;
-    upcoming_deactivations: Array<{ id: string; title: string; slug?: string; active_date_range: any }>;
+    upcoming_activations: Array<{
+      id: string;
+      title: string;
+      slug?: string;
+      active_date_range: any;
+    }>;
+    upcoming_deactivations: Array<{
+      id: string;
+      title: string;
+      slug?: string;
+      active_date_range: any;
+    }>;
     check_time: string;
     hours_ahead: number;
   }>;
-  getSurveyInstanceStatusChanges(instanceId?: string): Promise<Array<{
-    id: string;
-    instance_id: string;
-    old_status: boolean | null;
-    new_status: boolean;
-    reason: string;
-    changed_at: string;
-    changed_by: string;
-    details: any;
-  }>>;
+  getSurveyInstanceStatusChanges(instanceId?: string): Promise<
+    Array<{
+      id: string;
+      instance_id: string;
+      old_status: boolean | null;
+      new_status: boolean;
+      reason: string;
+      changed_at: string;
+      changed_by: string;
+      details: any;
+    }>
+  >;
 }
 
 export interface DatabaseProvider_Interface {

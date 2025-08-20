@@ -203,6 +203,24 @@ export class SurveyOperationsService {
     return repositories.surveyInstances.updateStatuses();
   }
 
+  async clearValidationLocks() {
+    try {
+      console.log('🔓 Clearing validation locks...');
+      const { data, error } = await this.getRepositories().surveyInstances.clearValidationLocks();
+      
+      if (error) {
+        console.error('❌ Error clearing validation locks:', error);
+        return false;
+      }
+      
+      console.log('✅ Validation locks cleared:', data);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to clear validation locks:', error);
+      return false;
+    }
+  }
+
   async getUpcomingStatusChanges(hoursAhead = 24) {
     const repositories = this.getRepositories();
     return repositories.surveyInstances.getUpcomingStatusChanges(hoursAhead);

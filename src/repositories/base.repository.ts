@@ -19,7 +19,7 @@ export abstract class BaseRepository {
   }
 
   protected async handleQuery<T>(
-    queryPromise: Promise<{ data: T | null; error: any }>,
+    queryPromise: any,
     operation: string
   ): Promise<T> {
     try {
@@ -32,7 +32,7 @@ export abstract class BaseRepository {
   }
 
   protected async handleQueryArray<T>(
-    queryPromise: Promise<{ data: T[] | null; error: any }>,
+    queryPromise: any,
     operation: string
   ): Promise<T[]> {
     try {
@@ -45,7 +45,7 @@ export abstract class BaseRepository {
   }
 
   protected async handleMutation(
-    mutationPromise: Promise<{ error: any }>,
+    mutationPromise: any,
     operation: string
   ): Promise<void> {
     try {

@@ -1,0 +1,151 @@
+import { Button } from '@/components/common';
+import { SurveyConfig, SurveyInstance } from '@/types';
+import { isSurveyInstanceActive } from '@/utils';
+import { getDisplayDate } from '@/utils/date.utils';
+import { BarChart3, Copy, Download, ExternalLink, Settings, Trash2, Upload } from 'lucide-react';
+import React from 'react';
+
+interface SurveyInstanceCardProps {
+  instance: SurveyInstance;
+  config?: SurveyConfig;
+  surveyUrl: string;
+  onToggleActive: (instance: SurveyInstance) => void;
+  onSettings: (instance: SurveyInstance) => void;
+  onDownload: (instanceId: string) => void;
+  onVisualize: () => void;
+  onDelete: (instance: SurveyInstance) => void;
+  onCopyUrl: (url: string) => void;
+  onOpenUrl: (url: string) => void;
+  onExport?: (instance: SurveyInstance) => void;
+}
+
+export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
+  instance,
+  config,
+  surveyUrl,
+  onToggleActive,
+  onSettings,
+  onDownload,
+  onVisualize,
+  onDelete,
+  onCopyUrl,
+  onOpenUrl,
+  onExport
+}) => {
+  const isActive = isSurveyInstanceActive(instance);
+
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-semibold">
+              {instance.title}
+              <span className="ml-2 text-sm font-normal text-blue-600">
+                (ID: {instance.id})
+              </span>
+            </h4>
+            <p className="text-sm text-gray-600">{instance.description}</p>
+            <p className="text-xs text-gray-500">
+              Config: {config?.title || instance.configId}
+            </p>
+            <div className="flex items-center gap-4 mt-2">
+              <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                }`}>
+                {isActive ? 'Active' : 'Inactive'}
+              </span>
+              <span className="text-xs text-gray-500">
+                Created: {new Date(instance.metadata.createdAt).toLocaleDateString()}
+              </span>
+              {instance.activeDateRange && (
+                <span className="text-xs text-blue-600">
+                  Active: {getDisplayDate(instance.activeDateRange.startDate)} - {getDisplayDate(instance.activeDateRange.endDate)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onToggleActive(instance)}
+            >
+              {instance.isActive ? 'Deactivate' : 'Activate'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onSettings(instance)}
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              Settings
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDownload(instance.id)}
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Download
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onVisualize}
+            >
+              <BarChart3 className="w-4 h-4 mr-1" />
+              Visualize
+            </Button>
+            {onExport && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onExport(instance)}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                Export
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDelete(instance)}
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete
+            </Button>
+          </div>
+        </div>
+
+        <div className="w-full">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">URL:</span>
+            <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 min-w-0 break-all">
+              {surveyUrl}
+            </code>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onCopyUrl(surveyUrl)}
+              className={`text-gray-500 hover:text-gray-700 flex-shrink-0 ${!isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={isActive ? "Copy URL" : "Survey is inactive - URL disabled"}
+              disabled={!isActive}
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onOpenUrl(surveyUrl)}
+              className={`text-gray-500 hover:text-gray-700 flex-shrink-0 ${!isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={isActive ? "Open survey in new tab" : "Survey is inactive - URL disabled"}
+              disabled={!isActive}
+            >
+              <ExternalLink className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

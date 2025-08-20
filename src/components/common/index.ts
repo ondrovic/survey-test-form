@@ -1,21 +1,6 @@
-export { Alert } from "./alert";
-export { Button } from "./button";
-export { Collapsible } from "./collapsible";
-export { CollapsibleSection } from "./collapsible-section/collapsible-section";
-export { ColorSelector } from "./color-selector";
-export { DeleteConfirmationModal } from "./delete-confirmation-modal/delete-confirmation-modal";
-export { ErrorBoundary } from "./error-boundary";
-export { SurveyFooter } from "./footer";
-export { GenericImportModal } from "./generic-import-modal";
-export { ImportConfigModal } from "./import-config-modal";
-export { Input } from "./input";
-export { LoadingSpinner } from "./loading-spinner";
-export { Modal } from "./modal";
-export { MultiSelect } from "./multi-select";
-export { PaginatedList } from "./paginated-list/paginated-list";
-export { Pagination } from "./pagination/pagination";
-export { PasswordInput } from "./password-input";
-export { ReCaptcha } from "./re-captcha";
-export { ScrollableContent } from "./scrollable-content";
-export { SortableList } from "./sortable-list";
-export { UnifiedModal } from "./unified-modal";
+// Re-export all components from organized structure
+export * from "./ui";
+export * from "./form";
+export * from "./layout";
+export * from "./business";
+export * from "./utilities";

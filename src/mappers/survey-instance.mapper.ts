@@ -7,31 +7,36 @@ export class SurveyInstanceMapper {
       id: row.id,
       configId: row.config_id,
       title: row.title,
-      description: row.description,
       slug: row.slug,
-      paginatorConfig: row.paginator_config || {},
+      description: row.description,
       isActive: row.is_active,
       activeDateRange: row.active_date_range,
-      metadata: row.metadata || {
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        createdBy: 'system'
-      }
+      config_valid: row.config_valid ?? true, // Default to true for backwards compatibility
+      validation_in_progress: row.validation_in_progress ?? false, // Default to false for backwards compatibility
+      metadata: row.metadata,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
     };
   }
 
-  static toDatabase(domain: SurveyInstance): Omit<SurveyInstanceRow, 'created_at' | 'updated_at'> {
-    return {
+  static toDatabase(domain: SurveyInstance): SurveyInstanceRow {
+    const result: SurveyInstanceRow = {
       id: domain.id,
       config_id: domain.configId,
       title: domain.title,
-      description: domain.description,
       slug: domain.slug,
-      paginator_config: domain.paginatorConfig,
+      description: domain.description,
       is_active: domain.isActive,
       active_date_range: domain.activeDateRange,
-      metadata: domain.metadata
+      metadata: domain.metadata,
+      created_at: domain.createdAt,
+      updated_at: domain.updatedAt,
     };
+
+    if (domain.config_valid !== undefined) result.config_valid = domain.config_valid;
+    if (domain.validation_in_progress !== undefined) result.validation_in_progress = domain.validation_in_progress;
+
+    return result;
   }
 
   static toPartialDatabase(domain: Partial<SurveyInstance>): Partial<Omit<SurveyInstanceRow, 'created_at' | 'updated_at'>> {
@@ -44,6 +49,7 @@ export class SurveyInstanceMapper {
     if (domain.slug !== undefined) result.slug = domain.slug;
     if (domain.paginatorConfig !== undefined) result.paginator_config = domain.paginatorConfig;
     if (domain.isActive !== undefined) result.is_active = domain.isActive;
+    if (domain.config_valid !== undefined) result.config_valid = domain.config_valid;
     if (domain.activeDateRange !== undefined) result.active_date_range = domain.activeDateRange;
     if (domain.metadata !== undefined) result.metadata = domain.metadata;
     

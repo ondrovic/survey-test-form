@@ -1,8 +1,6 @@
 // Test suite for SurveyConfigRepository
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
 import { SurveyConfigRepository } from '../../repositories/survey-config.repository';
-import { SurveyConfig } from '../../types/framework.types';
 
 // Mock Supabase client
 const mockSupabase = {
@@ -44,7 +42,7 @@ const mockSupabase = {
 
 describe('SurveyConfigRepository', () => {
   let repository: SurveyConfigRepository;
-  let mockConfig: SurveyConfig;
+  let mockConfig: any;
 
   beforeEach(() => {
     repository = new SurveyConfigRepository(mockSupabase as any);

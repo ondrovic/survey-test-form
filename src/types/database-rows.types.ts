@@ -19,12 +19,13 @@ export interface SurveyInstanceRow {
   id: string;
   config_id: string;
   title: string;
-  description?: string;
   slug?: string;
-  paginator_config: any; // JSONB
+  description?: string;
   is_active: boolean;
-  active_date_range?: any; // JSONB
-  metadata: any; // JSONB
+  active_date_range?: any;
+  config_valid?: boolean; // Tracks if configuration is valid
+  validation_in_progress?: boolean; // Prevents date automation during validation
+  metadata?: any;
   created_at: string;
   updated_at: string;
 }

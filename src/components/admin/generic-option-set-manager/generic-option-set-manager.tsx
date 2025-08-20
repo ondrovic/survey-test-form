@@ -1,4 +1,4 @@
-import { Check, Edit, Plus, Trash2, Upload, X } from 'lucide-react';
+import { Check, Edit, Plus, Trash2, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
@@ -7,7 +7,7 @@ import { Button, GenericImportModal } from '../../common';
 import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
 import { ExportableDataType } from '../../../utils/generic-import-export.utils';
 import { useConfirmation, useModal } from '../../../contexts/modal-context';
-import { Modal } from '../../common/modal';
+import { LegacyModal as Modal } from '../../common/ui/modal/Modal';
 
 interface GenericOptionSetManagerProps<T extends BaseOptionSet> {
   isVisible: boolean;

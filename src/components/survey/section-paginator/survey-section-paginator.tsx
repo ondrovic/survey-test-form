@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
+import { clsx } from 'clsx';
+import { colors, transitions, shadows, typography } from '@/styles/design-tokens';
 import { PaginatedSectionRenderer } from './paginated-section-renderer';
 import { SectionNavigationControls } from './section-navigation-controls';
 import { SectionStepIndicator } from './section-step-indicator';
@@ -100,8 +102,13 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
   // Don't render if no sections
   if (sections.length === 0) {
     return (
-      <div className={`text-center py-12 ${className}`}>
-        <p className="text-gray-500 text-lg">No sections to display</p>
+      <div className={clsx('text-center py-12', className)}>
+        <p className={clsx(
+          typography.text.lg,
+          `text-${colors.gray[500]}`
+        )}>
+          No sections to display
+        </p>
       </div>
     );
   }
@@ -109,7 +116,7 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
   const currentSection = sections[state.currentSectionIndex];
 
   return (
-    <div className={`survey-section-paginator ${className}`}>
+    <div className={clsx('survey-section-paginator', className)}>
       {/* Progress and Step Indicator */}
       {(mergedConfig.showProgressBar || mergedConfig.showStepIndicator) && (
         <div className="mb-8 px-4">
@@ -127,15 +134,12 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
       )}
 
       {/* Section Content */}
-      <div 
-        className={`
-          section-content mb-8
-          ${mergedConfig.animateTransitions 
-            ? 'transition-all duration-300 ease-in-out' 
-            : ''
-          }
-        `}
-      >
+      <div className={clsx(
+        'section-content mb-8',
+        {
+          [transitions.slow]: mergedConfig.animateTransitions
+        }
+      )}>
         <PaginatedSectionRenderer
           section={currentSection}
           sectionIndex={state.currentSectionIndex}
@@ -145,7 +149,12 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
       </div>
 
       {/* Navigation Controls */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 mt-8">
+      <div className={clsx(
+        'sticky bottom-0 p-4 mt-8',
+        'bg-white',
+        `border-t border-${colors.gray[200]}`,
+        shadows.sm
+      )}>
         <SectionNavigationControls
           isFirstSection={state.isFirstSection}
           isLastSection={state.isLastSection}

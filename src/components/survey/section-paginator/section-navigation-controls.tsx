@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React from 'react';
-import { Button } from '../../common';
+import { clsx } from 'clsx';
+import { Button } from '@/components/common/ui/button';
+import { colors, typography } from '@/styles/design-tokens';
 import { SectionNavigationControlsProps } from './survey-section-paginator.types';
 
 export const SectionNavigationControls: React.FC<SectionNavigationControlsProps> = ({
@@ -30,7 +32,7 @@ export const SectionNavigationControls: React.FC<SectionNavigationControlsProps>
 
   return (
     <nav 
-      className={`flex items-center justify-between w-full ${className}`}
+      className={clsx('flex items-center justify-between w-full', className)}
       aria-label="Section navigation"
     >
       {/* Previous Button */}
@@ -38,22 +40,27 @@ export const SectionNavigationControls: React.FC<SectionNavigationControlsProps>
         {!isFirstSection ? (
           <Button
             variant="outline"
+            size="md"
             onClick={onPrevious}
             disabled={disabled || loading}
-            className="flex items-center gap-2"
+            icon={<ChevronLeft className="w-4 h-4" />}
             aria-label="Go to previous section"
+            className="gap-2"
           >
-            <ChevronLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Previous</span>
           </Button>
         ) : (
-          <div className="w-20" /> // Spacer to maintain layout
+          <div className="w-20" />
         )}
       </div>
 
       {/* Section Counter (optional middle content) */}
       <div className="flex-1 text-center">
-        <div className="text-sm text-gray-500 hidden sm:block">
+        <div className={clsx(
+          'hidden sm:block',
+          typography.text.sm,
+          `text-${colors.gray[500]}`
+        )}>
           Use arrow keys to navigate
         </div>
       </div>
@@ -63,24 +70,28 @@ export const SectionNavigationControls: React.FC<SectionNavigationControlsProps>
         {isLastSection ? (
           onSubmit && (
             <Button
+              variant="primary"
+              size="md"
               onClick={onSubmit}
               disabled={disabled}
               loading={loading}
-              className="flex items-center gap-2"
               aria-label="Submit survey"
+              className="gap-2"
             >
               <span>Submit Survey</span>
             </Button>
           )
         ) : (
           <Button
+            variant="primary"
+            size="md"
             onClick={onNext}
             disabled={disabled || loading}
-            className="flex items-center gap-2"
+            icon={<ChevronRight className="w-4 h-4" />}
             aria-label="Go to next section"
+            className="gap-2"
           >
             <span className="hidden sm:inline">Next</span>
-            <ChevronRight className="w-4 h-4" />
           </Button>
         )}
       </div>

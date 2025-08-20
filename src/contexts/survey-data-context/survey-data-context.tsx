@@ -1,6 +1,5 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer, useRef } from 'react';
-import { firestoreHelpers, getDatabaseProviderInfo } from '../../config/database';
-import { SurveyData } from '../../types/survey.types';
+import { databaseHelpers, getDatabaseProviderInfo } from '../../config/database';
 import {
     MultiSelectOptionSet,
     RadioOptionSet,
@@ -9,11 +8,12 @@ import {
     SurveyConfig,
     SurveyInstance
 } from '../../types/framework.types';
+import { SurveyData } from '../../types/survey.types';
 
 /**
  * Check and update survey instance statuses based on their date ranges
  */
-async function updateSurveyInstanceStatuses(instances: SurveyInstance[]): Promise<SurveyInstance[]> {
+async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[]): Promise<SurveyInstance[]> {
     const now = new Date();
     const updatedInstances: SurveyInstance[] = [];
     let updateCount = 0;
@@ -28,12 +28,28 @@ async function updateSurveyInstanceStatuses(instances: SurveyInstance[]): Promis
         }
 
         const startDate = new Date(instance.activeDateRange.startDate);
+        // Set endDate to end of day (23:59:59.999) to ensure survey is active through the entire end date
         const endDate = new Date(instance.activeDateRange.endDate);
-        
+        endDate.setHours(23, 59, 59, 999);
+
         console.log(`📅 Survey "${instance.title}": ${startDate.toISOString()} to ${endDate.toISOString()} (now: ${now.toISOString()})`);
-        
+
         // Determine what isActive should be based on current time
         const shouldBeActive = now >= startDate && now <= endDate;
+
+        // Only allow activation if config is valid
+        if (shouldBeActive && !instance.configValid) {
+            console.log(`⏭️ Survey "${instance.title}": Skipping activation - config is invalid (config_valid = false)`);
+            updatedInstances.push(instance);
+            continue;
+        }
+
+        // Only allow deactivation if config is valid (prevents interference with manual deactivation)
+        if (!shouldBeActive && !instance.configValid) {
+            console.log(`⏭️ Survey "${instance.title}": Skipping deactivation - config is invalid (config_valid = false), likely manually deactivated`);
+            updatedInstances.push(instance);
+            continue;
+        }
 
         // Update if status has changed
         if (shouldBeActive !== instance.isActive) {
@@ -48,7 +64,7 @@ async function updateSurveyInstanceStatuses(instances: SurveyInstance[]): Promis
                 };
 
                 // Update in Firestore
-                await firestoreHelpers.updateSurveyInstance(instance.id, updatedInstance);
+                await databaseHelpers.updateSurveyInstance(instance.id, updatedInstance);
                 updatedInstances.push(updatedInstance);
                 updateCount++;
 
@@ -287,6 +303,7 @@ interface SurveyDataContextType {
     loadMultiSelectOptionSets: () => Promise<void>;
     loadSelectOptionSets: () => Promise<void>;
     refreshAll: () => Promise<void>;
+    validateSurveyInstanceStatuses: () => Promise<void>;
     addSurveyConfig: (config: SurveyConfig) => void;
     updateSurveyConfig: (config: SurveyConfig) => void;
     deleteSurveyConfig: (id: string) => void;
@@ -344,15 +361,15 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             setError(null);
 
             const [configs, instances] = await Promise.all([
-                firestoreHelpers.getSurveyConfigs(),
-                firestoreHelpers.getSurveyInstances(),
+                databaseHelpers.getSurveyConfigs(),
+                databaseHelpers.getSurveyInstances(),
             ]);
 
-            // Check and update survey instance statuses based on date ranges
-            const updatedInstances = await updateSurveyInstanceStatuses(instances);
+            // Don't automatically check statuses during data load - only during explicit validation
+            // This prevents interference with validation deactivation
 
             dispatch({ type: 'SET_SURVEY_CONFIGS', payload: configs });
-            dispatch({ type: 'SET_SURVEY_INSTANCES', payload: updatedInstances });
+            dispatch({ type: 'SET_SURVEY_INSTANCES', payload: instances });
             setLastUpdated();
         } catch (error) {
             console.error("Error loading framework data:", error);
@@ -374,7 +391,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             setLoading(true);
             setError(null);
 
-            const legacySurveys = await firestoreHelpers.getSurveys();
+            const legacySurveys = await databaseHelpers.getSurveys();
             dispatch({ type: 'SET_SURVEYS', payload: legacySurveys });
             setLastUpdated();
         } catch (error) {
@@ -392,7 +409,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
                 console.warn('⚠️ Database not initialized yet, skipping rating scales loading');
                 return;
             }
-            const scales = await firestoreHelpers.getRatingScales();
+            const scales = await databaseHelpers.getRatingScales();
             dispatch({ type: 'SET_RATING_SCALES', payload: scales });
         } catch (error) {
             console.error("Error loading rating scales:", error);
@@ -407,7 +424,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
                 return;
             }
             console.log('🔍 Loading radio option sets...');
-            const optionSets = await firestoreHelpers.getRadioOptionSets();
+            const optionSets = await databaseHelpers.getRadioOptionSets();
             console.log('✅ Radio option sets loaded:', {
                 count: optionSets.length,
                 optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
@@ -426,7 +443,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
                 return;
             }
             console.log('🔍 Loading multi-select option sets...');
-            const optionSets = await firestoreHelpers.getMultiSelectOptionSets();
+            const optionSets = await databaseHelpers.getMultiSelectOptionSets();
             console.log('✅ Multi-select option sets loaded:', {
                 count: optionSets.length,
                 optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
@@ -445,7 +462,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
                 return;
             }
             console.log('🔍 Loading select option sets...');
-            const optionSets = await firestoreHelpers.getSelectOptionSets();
+            const optionSets = await databaseHelpers.getSelectOptionSets();
             console.log('✅ Select option sets loaded:', {
                 count: optionSets.length,
                 optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
@@ -458,14 +475,14 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const refreshAll = useCallback(async () => {
         console.log("refreshAll called - starting data reload...");
-        
+
         // Check if database is initialized before proceeding
         const dbInfo = getDatabaseProviderInfo();
         if (!dbInfo.isInitialized) {
             console.log('⏳ refreshAll - Database not ready yet, skipping data reload...');
             return;
         }
-        
+
         await Promise.all([
             loadFrameworkData(),
             loadLegacyData(),
@@ -476,6 +493,37 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         ]);
         console.log("refreshAll completed - all data reloaded");
     }, [loadFrameworkData, loadLegacyData, loadRatingScales, loadRadioOptionSets, loadMultiSelectOptionSets, loadSelectOptionSets]);
+
+    // Manual validation of survey instance statuses based on date ranges
+    const validateSurveyInstanceStatuses = useCallback(async () => {
+        console.log("🔄 Manual validation of survey instance statuses requested...");
+
+        try {
+            // Check if database is initialized
+            const dbInfo = getDatabaseProviderInfo();
+            if (!dbInfo.isInitialized) {
+                console.log('⏳ Validation - Database not ready yet, skipping...');
+                return;
+            }
+
+            // Get current instances from state
+            const instances = state.surveyInstances;
+            if (instances.length === 0) {
+                console.log('📊 No survey instances to validate');
+                return;
+            }
+
+            // Update statuses based on date ranges
+            const updatedInstances = await checkAndUpdateSurveyInstanceStatuses(instances);
+
+            // Update state with any changes
+            dispatch({ type: 'SET_SURVEY_INSTANCES', payload: updatedInstances });
+
+            console.log("✅ Manual survey instance status validation completed");
+        } catch (error) {
+            console.error("❌ Error during manual survey instance status validation:", error);
+        }
+    }, [state.surveyInstances]);
 
     // CRUD operations
     const addSurveyConfig = useCallback((config: SurveyConfig) => {
@@ -504,7 +552,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const addRatingScale = useCallback(async (scale: RatingScale) => {
         try {
-            await firestoreHelpers.addRatingScale(scale);
+            await databaseHelpers.addRatingScale(scale);
             dispatch({ type: 'ADD_RATING_SCALE', payload: scale });
         } catch (error) {
             console.error('Failed to add rating scale:', error);
@@ -522,7 +570,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const addRadioOptionSet = useCallback(async (optionSet: RadioOptionSet) => {
         try {
-            await firestoreHelpers.addRadioOptionSet(optionSet);
+            await databaseHelpers.addRadioOptionSet(optionSet);
             dispatch({ type: 'ADD_RADIO_OPTION_SET', payload: optionSet });
         } catch (error) {
             console.error('Failed to add radio option set:', error);
@@ -540,7 +588,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const addMultiSelectOptionSet = useCallback(async (optionSet: MultiSelectOptionSet) => {
         try {
-            await firestoreHelpers.addMultiSelectOptionSet(optionSet);
+            await databaseHelpers.addMultiSelectOptionSet(optionSet);
             dispatch({ type: 'ADD_MULTI_SELECT_OPTION_SET', payload: optionSet });
         } catch (error) {
             console.error('Failed to add multi-select option set:', error);
@@ -558,7 +606,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
     const addSelectOptionSet = useCallback(async (optionSet: SelectOptionSet) => {
         try {
-            await firestoreHelpers.addSelectOptionSet(optionSet);
+            await databaseHelpers.addSelectOptionSet(optionSet);
             dispatch({ type: 'ADD_SELECT_OPTION_SET', payload: optionSet });
         } catch (error) {
             console.error('Failed to add select option set:', error);
@@ -600,6 +648,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         loadMultiSelectOptionSets,
         loadSelectOptionSets,
         refreshAll,
+        validateSurveyInstanceStatuses,
         addSurveyConfig,
         updateSurveyConfig,
         deleteSurveyConfig,
