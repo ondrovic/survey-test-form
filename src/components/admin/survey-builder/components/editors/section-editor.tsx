@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
@@ -33,7 +33,6 @@ interface SectionEditorProps {
     onReorderSectionContent?: (sectionId: string, fromIndex: number, toIndex: number) => void;
     onSelectSubsection: (subsectionId: string) => void;
     onAddField: (sectionId: string, fieldType: FieldType, subsectionId?: string) => void;
-    onSelectField: (fieldId: string) => void;
     onOpenFieldEditor: (fieldId: string) => void;
     onDeleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
     onReorderFields: (sectionId: string, oldIndex: number, newIndex: number, subsectionId?: string) => void;
@@ -51,7 +50,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
     onReorderSectionContent,
     onSelectSubsection,
     onAddField,
-    onSelectField,
     onOpenFieldEditor,
     onDeleteField
 }) => {
@@ -516,26 +514,20 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                                     <Button
                                                                                         size="sm"
                                                                                         variant="ghost"
-                                                                                        onClick={() => onSelectField(field.id)}
-                                                                                        className="text-gray-600 hover:text-gray-700"
-                                                                                    >
-                                                                                        Select
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        size="sm"
-                                                                                        variant="ghost"
                                                                                         onClick={() => onOpenFieldEditor(field.id)}
-                                                                                        className="text-blue-600 hover:text-blue-700"
+                                                                                        className="text-blue-600 hover:text-blue-700 p-1"
+                                                                                        title="Edit field"
                                                                                     >
-                                                                                        Edit
+                                                                                        <Pencil className="w-4 h-4" />
                                                                                     </Button>
                                                                                     <Button
                                                                                         size="sm"
                                                                                         variant="ghost"
                                                                                         onClick={() => onDeleteField(section.id, field.id, subsection.id)}
-                                                                                        className="text-red-600 hover:text-red-700"
+                                                                                        className="text-red-600 hover:text-red-700 p-1"
+                                                                                        title="Delete field"
                                                                                     >
-                                                                                        Delete
+                                                                                        <Trash2 className="w-4 h-4" />
                                                                                     </Button>
                                                                                 </div>
                                                                             </div>
@@ -589,26 +581,20 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                 <Button
                                                     size="sm"
                                                     variant="ghost"
-                                                    onClick={() => onSelectField(field.id)}
-                                                    className="text-gray-600 hover:text-gray-700"
-                                                >
-                                                    Select
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
                                                     onClick={() => onOpenFieldEditor(field.id)}
-                                                    className="text-blue-600 hover:text-blue-700"
+                                                    className="text-blue-600 hover:text-blue-700 p-1"
+                                                    title="Edit field"
                                                 >
-                                                    Edit
+                                                    <Pencil className="w-4 h-4" />
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => onDeleteField(section.id, field.id)}
-                                                    className="text-red-600 hover:text-red-700"
+                                                    className="text-red-600 hover:text-red-700 p-1"
+                                                    title="Delete field"
                                                 >
-                                                    Delete
+                                                    <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>
                                         </div>
