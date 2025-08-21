@@ -1,7 +1,7 @@
 import React, { forwardRef, useCallback, useId, useState } from 'react';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
-import { collapsible as collapsibleTokens, transitions } from '@/styles/design-tokens';
+import { collapsible as collapsibleTokens } from '@/styles/design-tokens';
 
 /**
  * Collapsible Types
@@ -173,6 +173,8 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
         <div className="flex items-center gap-2">
           {headerAction && (
             <div
+              role="button"
+              tabIndex={0}
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {

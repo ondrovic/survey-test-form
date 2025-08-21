@@ -19,10 +19,13 @@ export const getFieldRenderer = (
     case 'multi-select':
       return MultiSelectFields;
       
-    case 'select':
+    case 'select': {
       // Pass filterMultiple prop to SelectFields if available
       const filterMultiple = 'filterMultiple' in props ? props.filterMultiple : undefined;
-      return (fieldProps) => <SelectFields {...fieldProps} filterMultiple={filterMultiple} />;
+      const SelectFieldsComponent = (fieldProps: { data: any; setField: (field: string, value: any) => void }) => <SelectFields {...fieldProps} filterMultiple={filterMultiple} />;
+      SelectFieldsComponent.displayName = 'SelectFieldsComponent';
+      return SelectFieldsComponent;
+    }
       
     default:
       return undefined;

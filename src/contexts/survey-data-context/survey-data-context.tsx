@@ -38,14 +38,14 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
         const shouldBeActive = now >= startDate && now <= endDate;
 
         // Only allow activation if config is valid
-        if (shouldBeActive && !instance.configValid) {
+        if (shouldBeActive && !instance.config_valid) {
             console.log(`⏭️ Survey "${instance.title}": Skipping activation - config is invalid (config_valid = false)`);
             updatedInstances.push(instance);
             continue;
         }
 
         // Only allow deactivation if config is valid (prevents interference with manual deactivation)
-        if (!shouldBeActive && !instance.configValid) {
+        if (!shouldBeActive && !instance.config_valid) {
             console.log(`⏭️ Survey "${instance.title}": Skipping deactivation - config is invalid (config_valid = false), likely manually deactivated`);
             updatedInstances.push(instance);
             continue;
@@ -59,7 +59,9 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
                     isActive: shouldBeActive,
                     metadata: {
                         ...instance.metadata,
-                        updatedAt: new Date().toISOString()
+                        createdAt: instance.metadata?.createdAt || instance.createdAt,
+                        updatedAt: new Date().toISOString(),
+                        createdBy: instance.metadata?.createdBy || 'system'
                     }
                 };
 

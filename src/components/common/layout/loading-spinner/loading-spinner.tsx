@@ -1,6 +1,6 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-import { loadingSpinner as spinnerTokens, typography, transitions } from '@/styles/design-tokens';
+import { loadingSpinner as spinnerTokens, typography } from '@/styles/design-tokens';
 
 /**
  * Loading Spinner Types

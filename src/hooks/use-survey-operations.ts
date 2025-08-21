@@ -36,6 +36,8 @@ export const useSurveyOperations = () => {
           slug: slug, // Store the slug in the slug field
           isActive: true,
           metadata: await createMetadata(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         await databaseHelpers.addSurveyInstance(instance);
@@ -271,11 +273,11 @@ export const useSurveyOperations = () => {
                 let shouldActivate = false;
                 const now = new Date();
 
-                if (instance.active_date_range) {
+                if (instance.activeDateRange && instance.activeDateRange.startDate && instance.activeDateRange.endDate) {
                   const startDate = new Date(
-                    instance.active_date_range.startDate
+                    instance.activeDateRange.startDate
                   );
-                  const endDate = new Date(instance.active_date_range.endDate);
+                  const endDate = new Date(instance.activeDateRange.endDate);
 
                   // Reactivate if currently within date range and not already active
                   if (
@@ -306,7 +308,9 @@ export const useSurveyOperations = () => {
                     config_valid: true,
                     metadata: {
                       ...instance.metadata,
+                      createdAt: instance.metadata?.createdAt || instance.createdAt,
                       updatedAt: new Date().toISOString(),
+                      createdBy: instance.metadata?.createdBy || 'system'
                     },
                   });
 
@@ -315,7 +319,7 @@ export const useSurveyOperations = () => {
                     `✅ Immediately reactivated instance "${
                       instance.title
                     }" - config fixed and ${
-                      instance.active_date_range
+                      instance.activeDateRange
                         ? "within date range"
                         : "no date range restrictions"
                     }`
@@ -331,7 +335,9 @@ export const useSurveyOperations = () => {
                     config_valid: true,
                     metadata: {
                       ...instance.metadata,
+                      createdAt: instance.metadata?.createdAt || instance.createdAt,
                       updatedAt: new Date().toISOString(),
+                      createdBy: instance.metadata?.createdBy || 'system'
                     },
                   });
 
@@ -385,8 +391,7 @@ export const useSurveyOperations = () => {
 
                     // Update both isActive and config_valid to prevent automated reactivation
                     // Also set validation_in_progress to prevent date automation from running
-                    const updateResult =
-                      await databaseHelpers.updateSurveyInstance(instance.id, {
+                    await databaseHelpers.updateSurveyInstance(instance.id, {
                         isActive: false,
                         config_valid: false, // Prevents automated date-range reactivation
                       });
@@ -401,6 +406,8 @@ export const useSurveyOperations = () => {
                       isActive: false,
                       config_valid: false,
                       metadata: {
+                        createdAt: instance.metadata?.createdAt || new Date().toISOString(),
+                        createdBy: instance.metadata?.createdBy || 'system',
                         ...instance.metadata,
                         updatedAt: new Date().toISOString(),
                       },
@@ -427,8 +434,7 @@ export const useSurveyOperations = () => {
                       `🔄 Marking inactive instance "${instance.title}" as config_valid=false...`
                     );
 
-                    const updateResult =
-                      await databaseHelpers.updateSurveyInstance(instance.id, {
+                    await databaseHelpers.updateSurveyInstance(instance.id, {
                         config_valid: false, // Prevents future automated activation
                         validation_in_progress: true, // Prevents date automation from running
                       });
@@ -442,6 +448,8 @@ export const useSurveyOperations = () => {
                       config_valid: false,
                       validation_in_progress: true,
                       metadata: {
+                        createdAt: instance.metadata?.createdAt || new Date().toISOString(),
+                        createdBy: instance.metadata?.createdBy || 'system',
                         ...instance.metadata,
                         updatedAt: new Date().toISOString(),
                       },

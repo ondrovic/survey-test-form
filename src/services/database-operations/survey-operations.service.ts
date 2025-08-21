@@ -206,18 +206,13 @@ export class SurveyOperationsService {
   async clearValidationLocks() {
     try {
       console.log('🔓 Clearing validation locks...');
-      const { data, error } = await this.getRepositories().surveyInstances.clearValidationLocks();
+      const result = await this.getRepositories().surveyInstances.clearValidationLocks();
       
-      if (error) {
-        console.error('❌ Error clearing validation locks:', error);
-        return false;
-      }
-      
-      console.log('✅ Validation locks cleared:', data);
-      return true;
+      console.log('✅ Validation locks cleared:', result);
+      return result;
     } catch (error) {
       console.error('❌ Failed to clear validation locks:', error);
-      return false;
+      return { success: false, cleared_locks: 0, message: 'Failed to clear validation locks' };
     }
   }
 

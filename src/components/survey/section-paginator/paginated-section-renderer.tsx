@@ -2,7 +2,7 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { OptionSetPreview } from '../../admin/survey-builder/shared';
 import { getBadgeLayoutClasses } from '../../../utils/layout.utils';
-import { colors, typography, borderRadius, shadows, spacing } from '@/styles/design-tokens';
+import { colors, typography, borderRadius, shadows } from '@/styles/design-tokens';
 import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 

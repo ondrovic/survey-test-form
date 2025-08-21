@@ -11,10 +11,8 @@ import { FieldDropZone, DraggableField } from '../../drag-and-drop';
 interface SubsectionEditorProps {
     subsection: SurveySubsection;
     sectionId: string;
-    selectedFieldId: string | null;
     onUpdateSubsection: (sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => void;
     onAddField: (sectionId: string, fieldType: FieldType, subsectionId: string) => void;
-    onSelectField: (fieldId: string) => void;
     onOpenFieldEditor: (fieldId: string) => void;
     onDeleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
     onReorderFields: (sectionId: string, oldIndex: number, newIndex: number, subsectionId: string) => void;
@@ -23,10 +21,8 @@ interface SubsectionEditorProps {
 export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
     subsection,
     sectionId,
-    selectedFieldId,
     onUpdateSubsection,
     onAddField,
-    onSelectField,
     onOpenFieldEditor,
     onDeleteField
 }) => {
@@ -219,21 +215,8 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                                                 Required
                                             </span>
                                         )}
-                                        {selectedFieldId === field.id && (
-                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                                Selected
-                                            </span>
-                                        )}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => onSelectField(field.id)}
-                                            className="text-gray-600 hover:text-gray-700"
-                                        >
-                                            Select
-                                        </Button>
                                         <Button
                                             size="sm"
                                             variant="ghost"

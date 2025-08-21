@@ -116,12 +116,26 @@ export const getDisplayDate = (isoString: string): string => {
     // First try to normalize the existing date
     const normalizedDate = normalizeExistingDate(isoString);
 
-    // If the normalized date is different from the original, it had timezone issues
-    if (normalizedDate !== isoString) {
-      console.log(`Date normalized from ${isoString} to ${normalizedDate}`);
+    // Split manually if it's in yyyy-mm-dd format
+    const parts = normalizedDate.split("-");
+    if (parts.length === 3) {
+      const [year, month, day] = parts.map(Number);
+
+      // Construct the display format mm/dd/yyyy without timezone shifting
+      return `${String(month).padStart(2, "0")}/${String(day).padStart(
+        2,
+        "0"
+      )}/${year}`;
     }
 
-    return normalizedDate;
+    // Otherwise, fallback to Date parsing (for full ISO timestamps)
+    const date = new Date(normalizedDate);
+
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${month}/${day}/${year}`;
   } catch (error) {
     console.error(
       "Error getting display date:",
@@ -132,3 +146,4 @@ export const getDisplayDate = (isoString: string): string => {
     return isoString; // Return original if error
   }
 };
+

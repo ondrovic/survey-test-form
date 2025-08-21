@@ -206,7 +206,7 @@ class DatabaseHelperProxy {
           const value = helperObject[prop as keyof T];
 
           if (typeof value === 'function') {
-            return (value as Function).apply(helperObject, args);
+            return (value as (...args: any[]) => any).apply(helperObject, args);
           } else if (value !== undefined) {
             return value;
           } else {

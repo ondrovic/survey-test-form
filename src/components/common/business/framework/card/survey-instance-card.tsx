@@ -55,11 +55,11 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
                 {isActive ? 'Active' : 'Inactive'}
               </span>
               <span className="text-xs text-gray-500">
-                Created: {new Date(instance.metadata.createdAt).toLocaleDateString()}
+                Created: {new Date(instance.metadata?.createdAt || instance.createdAt).toLocaleDateString()}
               </span>
-              {instance.activeDateRange && (
-                <span className="text-xs text-blue-600">
-                  Active: {getDisplayDate(instance.activeDateRange.startDate)} - {getDisplayDate(instance.activeDateRange.endDate)}
+              {instance.activeDateRange && instance.activeDateRange.startDate && instance.activeDateRange.endDate && (
+                <span className="text-xs text-gray-500">
+                  Active: <span className="text-xs text-green-600">{getDisplayDate(instance.activeDateRange.startDate)} - {getDisplayDate(instance.activeDateRange.endDate)}</span>
                 </span>
               )}
             </div>

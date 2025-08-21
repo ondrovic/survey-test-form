@@ -139,7 +139,6 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     onCancel,
     confirmText,
     cancelText,
-    variant = 'danger',
     showAlternative,
     alternativeText,
     onAlternative
@@ -163,16 +162,15 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       id,
       <ConfirmationModal
         isOpen={true}
-        onClose={handleCancel}
+        onCancel={handleCancel}
         onConfirm={handleConfirm}
         title={title}
         message={message}
         confirmText={confirmText}
         cancelText={cancelText}
-        variant={variant}
-        showAlternative={showAlternative}
-        alternativeText={alternativeText}
-        onAlternative={showAlternative ? handleAlternative : undefined}
+        showDeactivate={showAlternative}
+        deactivateText={alternativeText}
+        onDeactivate={showAlternative ? handleAlternative : undefined}
       />
     );
   };

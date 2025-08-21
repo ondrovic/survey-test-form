@@ -1,4 +1,3 @@
-import { SupabaseClient } from "@supabase/supabase-js";
 import {
   MultiSelectOptionSet,
   RadioOptionSet,
@@ -9,16 +8,12 @@ import {
   getRepositoryService,
   isRepositoryServiceInitialized,
 } from "../repository.service";
-import { SupabaseClientService } from "../supabase-client.service";
 
 /**
  * Service for option sets database operations
  */
 export class OptionSetsOperationsService {
-  constructor(
-    private readonly _client: SupabaseClient,
-    private readonly _clientService: SupabaseClientService
-  ) {}
+  constructor() {}
 
   private getRepositories() {
     if (!isRepositoryServiceInitialized()) {

@@ -8,7 +8,7 @@ import { useCallback } from 'react';
  * 
  * @returns Object with handlers for number input functionality
  */
-export const useNumberInput = <T extends string | number = string>() => {
+export const useNumberInput = () => {
   /**
    * Validates if a string is a valid numeric input
    */

@@ -2,7 +2,7 @@ import React, { createContext, forwardRef, useContext, useEffect, useRef } from 
 import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
-import { modal as modalTokens, transitions, focusRing } from '@/styles/design-tokens';
+import { modal as modalTokens } from '@/styles/design-tokens';
 
 /**
  * Modal Context for compound component pattern
@@ -216,6 +216,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
       }
+      return undefined;
     }, [isOpen]);
 
     if (!isOpen) return null;
@@ -226,6 +227,11 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           className={modalTokens.base}
           role="presentation"
           onClick={handleBackdropClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              onClose();
+            }
+          }}
           ref={backdropRef}
         >
           <div className={clsx(modalTokens.backdrop, modalTokens.container)}>
@@ -241,7 +247,6 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               aria-modal="true"
               aria-labelledby={titleId}
               aria-describedby={bodyId}
-              onClick={(e) => e.stopPropagation()}
             >
               {children}
             </div>
@@ -414,7 +419,14 @@ export interface ModalCompoundComponent extends React.ForwardRefExoticComponent<
   Footer: typeof ModalFooter;
 }
 
-export default Modal as ModalCompoundComponent;
+// Attach compound components to Modal
+const ModalWithCompounds = Modal as ModalCompoundComponent;
+ModalWithCompounds.Header = ModalHeader;
+ModalWithCompounds.Title = ModalTitle;
+ModalWithCompounds.Body = ModalBody;
+ModalWithCompounds.Footer = ModalFooter;
+
+export default ModalWithCompounds;
 
 // Specialized modal variants for common use cases
 
@@ -461,10 +473,10 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       size="sm"
       variant="confirmation"
     >
-      <Modal.Header>
-        <Modal.Title>{title}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
+      <ModalHeader>
+        <ModalTitle>{title}</ModalTitle>
+      </ModalHeader>
+      <ModalBody>
         <div className="text-gray-700 space-y-2">
           {message.split('\n').map((line, index) => (
             line.trim() ? (
@@ -474,8 +486,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             )
           ))}
         </div>
-      </Modal.Body>
-      <Modal.Footer justify={showAlternative ? 'between' : 'end'}>
+      </ModalBody>
+      <ModalFooter justify={showAlternative ? 'between' : 'end'}>
         {showAlternative && onAlternative ? (
           <>
             <button
@@ -515,7 +527,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             </button>
           </>
         )}
-      </Modal.Footer>
+      </ModalFooter>
     </Modal>
   );
 };
@@ -541,13 +553,13 @@ export const LegacyModal: React.FC<{
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={size} className={className}>
       {(title || showCloseButton) && (
-        <Modal.Header showCloseButton={showCloseButton}>
-          {title && <Modal.Title>{title}</Modal.Title>}
-        </Modal.Header>
+        <ModalHeader showCloseButton={showCloseButton}>
+          {title && <ModalTitle>{title}</ModalTitle>}
+        </ModalHeader>
       )}
-      <Modal.Body>
+      <ModalBody>
         {children}
-      </Modal.Body>
+      </ModalBody>
     </Modal>
   );
 };

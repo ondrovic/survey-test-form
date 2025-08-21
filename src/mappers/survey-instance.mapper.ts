@@ -47,7 +47,6 @@ export class SurveyInstanceMapper {
     if (domain.title !== undefined) result.title = domain.title;
     if (domain.description !== undefined) result.description = domain.description;
     if (domain.slug !== undefined) result.slug = domain.slug;
-    if (domain.paginatorConfig !== undefined) result.paginator_config = domain.paginatorConfig;
     if (domain.isActive !== undefined) result.is_active = domain.isActive;
     if (domain.config_valid !== undefined) result.config_valid = domain.config_valid;
     if (domain.activeDateRange !== undefined) result.active_date_range = domain.activeDateRange;

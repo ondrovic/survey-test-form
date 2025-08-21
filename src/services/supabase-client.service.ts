@@ -44,7 +44,7 @@ export class SupabaseClientService {
     const currentConfig: SupabaseConfig = {
       url: config.supabase.url,
       anonKey: config.supabase.anonKey,
-      serviceRoleKey: this.serviceRoleKey,
+      serviceRoleKey: this.serviceRoleKey || undefined,
     };
 
     // Reuse existing client if configuration matches

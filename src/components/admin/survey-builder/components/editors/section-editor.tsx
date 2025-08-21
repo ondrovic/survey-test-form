@@ -504,11 +504,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                                             Required
                                                                                         </span>
                                                                                     )}
-                                                                                    {selectedFieldId === field.id && (
-                                                                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                                                                            Selected
-                                                                                        </span>
-                                                                                    )}
                                                                                 </div>
                                                                                 <div className="flex items-center gap-1">
                                                                                     <Button
@@ -569,11 +564,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                 {field.required && (
                                                     <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
                                                         Required
-                                                    </span>
-                                                )}
-                                                {selectedFieldId === field.id && (
-                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                                        Selected
                                                     </span>
                                                 )}
                                             </div>

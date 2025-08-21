@@ -26,18 +26,21 @@ import { ButtonProps } from './button.types';
  * </Button>
  * ```
  */
-export const Button = forwardRef<HTMLElement, ButtonProps>(({
-    as = 'button',
-    children,
-    variant = 'primary',
-    size = 'md',
-    disabled = false,
-    loading = false,
-    icon,
-    className,
-    'aria-label': ariaLabel,
-    ...props
-}, ref) => {
+export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
+    {
+        as = 'button',
+        children,
+        variant = 'primary',
+        size = 'md',
+        disabled = false,
+        loading = false,
+        icon,
+        className,
+        'aria-label': ariaLabel,
+        ...props
+    }: ButtonProps,
+    ref: React.Ref<HTMLElement>
+) {
     const Component = as as React.ElementType;
 
     const classes = clsx(
@@ -73,8 +76,6 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(({
         </Component>
     );
 });
-
-(Button as any).displayName = 'Button';
 
 /**
  * Icon container with proper spacing logic

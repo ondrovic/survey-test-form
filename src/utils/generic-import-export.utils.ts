@@ -369,7 +369,8 @@ const processInstanceData = (
     slug: undefined, // Will be generated
     isActive: false, // Import as inactive by default
     activeDateRange: data.activeDateRange,
-    paginatorConfig: data.paginatorConfig,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 };
 

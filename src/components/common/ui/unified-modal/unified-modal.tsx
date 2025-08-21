@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, ModalProps, ModalSize, ModalVariant, ConfirmationModal, ConfirmationModalProps, LegacyModal } from '../modal/Modal';
+import Modal, { ModalSize, ModalVariant } from '../modal/Modal';
 
 /**
  * Legacy ModalSize interface for backward compatibility
@@ -46,7 +46,7 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
   children,
   footer,
   className,
-  zIndex, // This prop is ignored as new Modal uses portal
+  zIndex: _zIndex, // This prop is ignored as new Modal uses portal
 }) => {
   // Convert legacy size format to new format if needed
   const modalSize = typeof size === 'string' ? size : 'md';

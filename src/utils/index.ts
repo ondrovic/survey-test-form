@@ -11,12 +11,15 @@ export * from "./validation.utils";
 // Survey instance utility functions
 export const isSurveyInstanceActive = (instance: {
   isActive: boolean;
-  activeDateRange?: { startDate: string; endDate: string };
+  activeDateRange?: { startDate?: string; endDate?: string };
 }) => {
   if (!instance.isActive) return false;
 
   // If no date range is specified, the instance is always active
   if (!instance.activeDateRange) return true;
+
+  // If either startDate or endDate is missing, consider the instance inactive
+  if (!instance.activeDateRange.startDate || !instance.activeDateRange.endDate) return false;
 
   const now = new Date();
   const startDate = new Date(instance.activeDateRange.startDate);

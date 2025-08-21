@@ -65,9 +65,6 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(({
   maxVisiblePages = 5,
   disabled = false,
 }, ref) => {
-  // Don't render if there's only one page or no pages
-  if (totalPages <= 1) return null;
-
   const getPageNumbers = useCallback(() => {
     const pages: (number | string)[] = [];
     
@@ -124,6 +121,9 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(({
       }
     }
   }, [handlePageChange]);
+
+  // Don't render if there's only one page or no pages
+  if (totalPages <= 1) return null;
 
   // Calculate info for display
   const getInfoText = () => {

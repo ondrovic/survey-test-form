@@ -128,11 +128,11 @@ export const useAdminOperations = () => {
         // to prevent automatic reactivation by date-based triggers
         if (!isActive && instance?.activeDateRange) {
           const now = new Date();
-          const startDate = new Date(instance.activeDateRange.startDate);
-          const endDate = new Date(instance.activeDateRange.endDate);
+          const startDate = instance.activeDateRange.startDate ? new Date(instance.activeDateRange.startDate) : null;
+          const endDate = instance.activeDateRange.endDate ? new Date(instance.activeDateRange.endDate) : null;
 
           // Check if the instance is currently within its active date range
-          if (now >= startDate && now <= endDate) {
+          if (startDate && endDate && now >= startDate && now <= endDate) {
             updateData.config_valid = false;
             console.log(
               `🔄 Deactivating instance "${

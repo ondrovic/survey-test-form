@@ -23,10 +23,7 @@ class SupabaseProviderImpl extends BaseDatabaseProvider {
       migrationService,
       this.clientService
     );
-    this.optionSetsOperations = new OptionSetsOperationsService(
-      client,
-      this.clientService
-    );
+    this.optionSetsOperations = new OptionSetsOperationsService();
   }
 
   get authHelpers(): AuthHelpers {
@@ -76,8 +73,8 @@ class SupabaseProviderImpl extends BaseDatabaseProvider {
       addSurveyConfig: (config: any) => surveyOps.addSurveyConfig(config),
       updateSurveyConfig: (id: string, data: any) =>
         surveyOps.updateSurveyConfig(id, data),
-      deleteSurveyConfig: (id: string, validationResetCallback?: () => void) =>
-        surveyOps.deleteSurveyConfig(id, validationResetCallback),
+      deleteSurveyConfig: (id: string) =>
+        surveyOps.deleteSurveyConfig(id),
 
       // Survey instance operations
       getSurveyInstances: () => surveyOps.getSurveyInstances(),
@@ -87,10 +84,7 @@ class SupabaseProviderImpl extends BaseDatabaseProvider {
         surveyOps.addSurveyInstance(instance),
       updateSurveyInstance: (id: string, data: any) =>
         surveyOps.updateSurveyInstance(id, data),
-      deleteSurveyInstance: (
-        id: string,
-        validationResetCallback?: () => void
-      ) => surveyOps.deleteSurveyInstance(id, validationResetCallback),
+      deleteSurveyInstance: (id: string) => surveyOps.deleteSurveyInstance(id),
 
       // Survey response operations
       addSurveyResponse: (response: any) =>

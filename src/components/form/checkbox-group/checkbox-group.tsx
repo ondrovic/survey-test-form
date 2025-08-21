@@ -1,8 +1,8 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 import { clsx } from 'clsx';
 import { colors, focusRing, transitions, typography } from '@/styles/design-tokens';
 import { getSmartLayoutClasses } from '@/utils/layout.utils';
-import { FormField, useFormField } from '@/components/common/ui';
+import { FormField } from '@/components/common/ui';
 import { CheckboxGroupProps as BaseCheckboxGroupProps } from './checkbox-group.types';
 
 // Re-export types for external use
