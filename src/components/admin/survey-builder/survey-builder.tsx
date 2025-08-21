@@ -698,7 +698,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                         onReorderSectionContent={reorderSectionContent}
                                         onSelectSubsection={selectSubsection}
                                         onAddField={handleAddField}
-                                        onSelectField={selectField}
                                         onOpenFieldEditor={handleOpenFieldEditor}
                                         onDeleteField={handleDeleteField}
                                         onReorderFields={handleReorderFields}
