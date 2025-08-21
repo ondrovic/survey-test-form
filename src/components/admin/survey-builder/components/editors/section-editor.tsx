@@ -381,8 +381,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                 } border rounded-lg transition-all duration-200`}
                                         >
                                             {/* Subsection Header - Always Visible */}
-                                            <div className="p-4">
-                                                <div className="flex items-center justify-between mb-3">
+                                            <div className={`${isExpanded ? 'p-4' : 'p-3'}`}>
+                                                <div className={`flex items-center justify-between ${isExpanded ? 'mb-3' : 'mb-0'}`}>
                                                     <div className="flex items-center gap-2 flex-1">
                                                         <button
                                                             onClick={() => toggleSubsection(subsection.id)}
