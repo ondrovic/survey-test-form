@@ -330,9 +330,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                         <div className="p-3 bg-green-50 border-green-200">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="content-drag-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-green-500 transition-colors">
-                                                        ⋮⋮
-                                                    </div>
                                                     <span className="font-medium text-green-700 text-sm">📁 {subsectionData.title}</span>
                                                 </div>
                                                 <span className="text-xs text-gray-500">({subsectionData.fields.length} fields)</span>
@@ -344,9 +341,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                     return (
                                         <div className="p-3 bg-blue-50 border-blue-200">
                                             <div className="flex items-center gap-2">
-                                                <div className="content-drag-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-blue-500 transition-colors">
-                                                    ⋮⋮
-                                                </div>
                                                 <span className="font-medium text-blue-700 text-sm">🔷 {field.label}</span>
                                             </div>
                                         </div>
