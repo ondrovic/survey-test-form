@@ -1,16 +1,13 @@
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySection, SurveySubsection } from '../../../../../types/framework.types';
 import { getOrderedSectionContent } from '../../../../../utils/section-content.utils';
 import { Button, Input, SortableList } from '../../../../common';
 // import { FIELD_TYPES } from './survey-builder.types';
-import { SubsectionEditor } from './subsection-editor';
 // import { DraggableField } from './draggable-field';
-import { DroppableFieldContainer } from '../../drag-and-drop/droppable-field-container';
-import { FieldContainer } from '../../drag-and-drop/field-drag-context';
-import { MemoizedFieldItem } from '../../drag-and-drop/memoized-field-item';
+import { FieldDropZone, DraggableField } from '../../drag-and-drop';
 
 // Utility function to generate kebab-case identifier from title
 const generateSectionType = (title: string): string => {
@@ -40,7 +37,6 @@ interface SectionEditorProps {
     onOpenFieldEditor: (fieldId: string) => void;
     onDeleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
     onReorderFields: (sectionId: string, oldIndex: number, newIndex: number, subsectionId?: string) => void;
-    onMoveField: (fieldId: string, fromContainer: FieldContainer, toContainer: FieldContainer, newIndex: number) => void;
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = memo(({
@@ -57,8 +53,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
     onAddField,
     onSelectField,
     onOpenFieldEditor,
-    onDeleteField,
-    onReorderFields
+    onDeleteField
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
 
@@ -67,43 +62,38 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
 
     // Auto-expand subsections that are selected or have selected fields
     useEffect(() => {
-        const newExpanded = new Set<string>();
+        const newExpanded = new Set(expandedSubsections);
 
-        // Always expand the selected subsection (mutually exclusive)
+        // Always expand the selected subsection
         if (selectedSubsectionId) {
             newExpanded.add(selectedSubsectionId);
         }
-        // If no subsection is selected but a field is selected in a subsection, expand that subsection
-        else if (selectedFieldId && section.subsections) {
+
+        // Expand subsections that contain the selected field
+        if (selectedFieldId && section.subsections) {
             for (const subsection of section.subsections) {
                 if (subsection.fields.some(field => field.id === selectedFieldId)) {
                     newExpanded.add(subsection.id);
-                    break; // Only expand one subsection (mutually exclusive)
                 }
             }
         }
 
         setExpandedSubsections(newExpanded);
-    }, [selectedSubsectionId, selectedFieldId, section.id]);
+    }, [selectedSubsectionId, selectedFieldId, section.subsections]);
 
-    // Toggle subsection expansion (mutually exclusive)
+    // Toggle subsection expansion (allow multiple expanded)
     const toggleSubsection = (subsectionId: string) => {
         setExpandedSubsections(prev => {
-            const newSet = new Set<string>();
-            // If the clicked subsection is already expanded, collapse it (empty set)
-            // Otherwise, expand only the clicked subsection (mutually exclusive)
-            if (!prev.has(subsectionId)) {
+            const newSet = new Set(prev);
+            if (newSet.has(subsectionId)) {
+                newSet.delete(subsectionId);
+            } else {
                 newSet.add(subsectionId);
             }
             return newSet;
         });
     };
 
-    // Memoize the container object to prevent unnecessary re-renders
-    const sectionContainer = useMemo((): FieldContainer => ({
-        type: 'section',
-        sectionId: section.id
-    }), [section.id]);
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
     const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
     const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
@@ -235,8 +225,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
         };
         onAddSubsection(section.id, newSubsection);
 
-        // Auto-expand the new subsection (mutually exclusive)
-        setExpandedSubsections(new Set([newSubsection.id]));
+        // Auto-expand the new subsection
+        setExpandedSubsections(prev => new Set([...prev, newSubsection.id]));
     };
 
     return (
@@ -384,16 +374,12 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                     const subsection = item as unknown as SurveySubsection;
                                     const isExpanded = expandedSubsections.has(subsection.id);
                                     const isSelected = selectedSubsectionId === subsection.id;
+                                    const hasSelectedField = selectedFieldId && subsection.fields.some(f => f.id === selectedFieldId);
                                     
-                                    // Create container for this specific subsection
-                                    const subsectionContainer = useMemo((): FieldContainer => ({
-                                        type: 'subsection',
-                                        sectionId: section.id,
-                                        subsectionId: subsection.id
-                                    }), [section.id, subsection.id]);
 
                                     return (
                                         <div
+                                            key={subsection.id}
                                             data-subsection-id={subsection.id}
                                             className={`${isSelected
                                                 ? "border-green-500 bg-green-50 ring-2 ring-green-200"
@@ -429,6 +415,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                         >
                                                             <span className="font-medium text-green-700">📁 {subsection.title}</span>
                                                             <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
+                                                            {(isSelected || hasSelectedField) && (
+                                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                                    Active
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <Button
@@ -444,47 +435,122 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                     </Button>
                                                 </div>
 
-                                                {/* Always-visible compact drop zone for collapsed subsections */}
-                                                {!isExpanded && (
-                                                    <div className="mt-2">
-                                                        <DroppableFieldContainer
-                                                            container={subsectionContainer}
-                                                            className="min-h-[40px] p-2 border border-dashed border-green-300 rounded bg-green-25 hover:border-green-400 hover:bg-green-50 transition-colors"
-                                                            emptyMessage={`📁 Drop fields into ${subsection.title} subsection`}
-                                                        >
-                                                            {/* Show a condensed view of fields when collapsed */}
-                                                            {subsection.fields.length > 0 && (
-                                                                <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                                    <span>{subsection.fields.length} fields</span>
-                                                                    <div className="flex gap-1">
-                                                                        {subsection.fields.slice(0, 3).map((field) => (
-                                                                            <span key={field.id} className="px-1.5 py-0.5 bg-gray-200 rounded text-xs">
-                                                                                {field.label.substring(0, 8)}{field.label.length > 8 ? '...' : ''}
-                                                                            </span>
-                                                                        ))}
-                                                                        {subsection.fields.length > 3 && (
-                                                                            <span className="text-gray-500">+{subsection.fields.length - 3}</span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </DroppableFieldContainer>
-                                                    </div>
-                                                )}
-
                                                 {/* Subsection Content - Collapsible */}
                                                 {isExpanded && (
-                                                    <SubsectionEditor
-                                                        subsection={subsection}
-                                                        sectionId={section.id}
-                                                        selectedFieldId={selectedFieldId}
-                                                        onUpdateSubsection={onUpdateSubsection}
-                                                        onAddField={onAddField}
-                                                        onSelectField={onSelectField}
-                                                        onOpenFieldEditor={onOpenFieldEditor}
-                                                        onDeleteField={onDeleteField}
-                                                        onReorderFields={onReorderFields}
-                                                    />
+                                                    <div className="bg-gray-50 border rounded-lg p-4 ml-4">
+                                                        <div className="mb-4">
+                                                            <h4 className="text-md font-semibold mb-3 text-gray-800">Subsection: {subsection.title}</h4>
+                                                            <div className="grid grid-cols-1 gap-3">
+                                                                <div>
+                                                                    <Input
+                                                                        name="subsectionTitle"
+                                                                        label="Subsection Title *"
+                                                                        value={subsection.title}
+                                                                        onChange={(newTitle) => {
+                                                                            onUpdateSubsection(section.id, subsection.id, { title: newTitle });
+                                                                        }}
+                                                                        placeholder="e.g., Personal Details, Preferences"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label htmlFor="subsection-description" className="block text-sm font-medium text-gray-700 mb-1">
+                                                                        Description (optional)
+                                                                    </label>
+                                                                    <textarea
+                                                                        id="subsection-description"
+                                                                        name="subsectionDescription"
+                                                                        value={subsection.description || ''}
+                                                                        onChange={(e) => {
+                                                                            onUpdateSubsection(section.id, subsection.id, { description: e.target.value });
+                                                                        }}
+                                                                        placeholder="Enter subsection description (optional, max 300 characters)"
+                                                                        rows={2}
+                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="mb-4">
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <div>
+                                                                    <h5 className="font-medium text-sm">Fields</h5>
+                                                                    <p className="text-xs text-gray-500 mt-1">Click on a field to select it, then use the edit button to modify</p>
+                                                                </div>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        console.log('🟨 ADD SUBSECTION FIELD CLICKED:', section.id, subsection.id);
+                                                                        onAddField(section.id, 'text', subsection.id);
+                                                                    }}
+                                                                    disabled={!subsection.title}
+                                                                    title={!subsection.title ? 'Please enter a valid subsection title first' : ''}
+                                                                >
+                                                                    <Plus className="w-4 h-4 mr-2" />
+                                                                    Add Field
+                                                                </Button>
+                                                            </div>
+                                                            <FieldDropZone
+                                                                containerId={`subsection-${subsection.id}`}
+                                                                className="space-y-2 min-h-[80px] p-3"
+                                                                emptyMessage="Drop fields here or add new fields"
+                                                            >
+                                                                {(subsection.fields || []).map((field, index) => (
+                                                                    <DraggableField
+                                                                        key={field.id}
+                                                                        fieldId={field.id}
+                                                                        index={index}
+                                                                    >
+                                                                        <div className="p-3 border rounded-lg bg-white hover:shadow-sm transition-shadow">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className="font-medium text-gray-800">{field.label}</span>
+                                                                                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{field.type}</span>
+                                                                                    <span className="text-xs text-gray-400">{getOptionCount(field)}</span>
+                                                                                    {field.required && (
+                                                                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                                                                            Required
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {selectedFieldId === field.id && (
+                                                                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                                                            Selected
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="ghost"
+                                                                                        onClick={() => onSelectField(field.id)}
+                                                                                        className="text-gray-600 hover:text-gray-700"
+                                                                                    >
+                                                                                        Select
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="ghost"
+                                                                                        onClick={() => onOpenFieldEditor(field.id)}
+                                                                                        className="text-blue-600 hover:text-blue-700"
+                                                                                    >
+                                                                                        Edit
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="ghost"
+                                                                                        onClick={() => onDeleteField(section.id, field.id, subsection.id)}
+                                                                                        className="text-red-600 hover:text-red-700"
+                                                                                    >
+                                                                                        Delete
+                                                                                    </Button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </DraggableField>
+                                                                ))}
+                                                            </FieldDropZone>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -497,25 +563,65 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                     {/* Section Fields */}
                     <div>
                         <h5 className="font-medium text-sm text-gray-700 mb-3">Section Fields</h5>
-                        <DroppableFieldContainer
-                            container={sectionContainer}
-                            className="space-y-4 min-h-[120px] p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-25"
-                            emptyMessage="📄 Drop fields here or add new section-level fields"
+                        <FieldDropZone
+                            containerId={`section-${section.id}`}
+                            className="space-y-4 min-h-[120px] p-4"
+                            emptyMessage="Drop fields here or add new fields"
                         >
-                            {section.fields.map((field) => (
-                                <MemoizedFieldItem
+                            {section.fields.map((field, index) => (
+                                <DraggableField
                                     key={field.id}
-                                    field={field}
-                                    container={sectionContainer}
-                                    isSelected={selectedFieldId === field.id}
-                                    onSelectField={onSelectField}
-                                    onOpenFieldEditor={onOpenFieldEditor}
-                                    onDeleteField={onDeleteField}
-                                    sectionId={section.id}
-                                    getOptionCount={getOptionCount}
-                                />
+                                    fieldId={field.id}
+                                    index={index}
+                                >
+                                    <div className="p-4 border rounded-lg bg-white hover:shadow-sm transition-shadow">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-gray-800">{field.label}</span>
+                                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{field.type}</span>
+                                                <span className="text-xs text-gray-400">{getOptionCount(field)}</span>
+                                                {field.required && (
+                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                                        Required
+                                                    </span>
+                                                )}
+                                                {selectedFieldId === field.id && (
+                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                        Selected
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onSelectField(field.id)}
+                                                    className="text-gray-600 hover:text-gray-700"
+                                                >
+                                                    Select
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onOpenFieldEditor(field.id)}
+                                                    className="text-blue-600 hover:text-blue-700"
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onDeleteField(section.id, field.id)}
+                                                    className="text-red-600 hover:text-red-700"
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </DraggableField>
                             ))}
-                        </DroppableFieldContainer>
+                        </FieldDropZone>
                     </div>
                 </div>
 

@@ -1,14 +1,12 @@
 import { Plus } from 'lucide-react';
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySubsection } from '../../../../../types/framework.types';
 import { Button, Input } from '../../../../common';
 // import { FIELD_TYPES } from './survey-builder.types';
 // import { DraggableField } from './draggable-field';
-import { DroppableFieldContainer } from '../../drag-and-drop/droppable-field-container';
-import { FieldContainer } from '../../drag-and-drop/field-drag-context';
-import { MemoizedFieldItem } from '../../drag-and-drop/memoized-field-item';
+import { FieldDropZone, DraggableField } from '../../drag-and-drop';
 
 interface SubsectionEditorProps {
     subsection: SurveySubsection;
@@ -34,12 +32,6 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
 
-    // Memoize the container object to prevent unnecessary re-renders
-    const subsectionContainer = useMemo((): FieldContainer => ({
-        type: 'subsection',
-        sectionId,
-        subsectionId: subsection.id
-    }), [sectionId, subsection.id]);
 
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
     const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
@@ -205,27 +197,65 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                         Add Field
                     </Button>
                 </div>
-                <DroppableFieldContainer
-                    container={subsectionContainer}
-                    className="space-y-2 min-h-[80px] p-3 border-2 border-dashed border-green-300 rounded-lg bg-green-25"
+                <FieldDropZone
+                    containerId={`subsection-${subsection.id}`}
+                    className="space-y-2 min-h-[80px] p-3"
                     emptyMessage="📁 Drop fields here or add new subsection fields"
                 >
-                    {(subsection.fields || []).map((field) => (
-                        <MemoizedFieldItem
+                    {(subsection.fields || []).map((field, index) => (
+                        <DraggableField
                             key={field.id}
-                            field={field}
-                            container={subsectionContainer}
-                            isSelected={selectedFieldId === field.id}
-                            onSelectField={onSelectField}
-                            onOpenFieldEditor={onOpenFieldEditor}
-                            onDeleteField={onDeleteField}
-                            sectionId={sectionId}
-                            subsectionId={subsection.id}
-                            getOptionCount={getOptionCount}
-                            isSubsection={true}
-                        />
+                            fieldId={field.id}
+                            index={index}
+                        >
+                            <div className="p-3 border rounded-lg bg-white hover:shadow-sm transition-shadow">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-800">{field.label}</span>
+                                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{field.type}</span>
+                                        <span className="text-xs text-gray-400">{getOptionCount(field)}</span>
+                                        {field.required && (
+                                            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                                Required
+                                            </span>
+                                        )}
+                                        {selectedFieldId === field.id && (
+                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                Selected
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => onSelectField(field.id)}
+                                            className="text-gray-600 hover:text-gray-700"
+                                        >
+                                            Select
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => onOpenFieldEditor(field.id)}
+                                            className="text-blue-600 hover:text-blue-700"
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => onDeleteField(sectionId, field.id, subsection.id)}
+                                            className="text-red-600 hover:text-red-700"
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </DraggableField>
                     ))}
-                </DroppableFieldContainer>
+                </FieldDropZone>
             </div>
         </div>
     );

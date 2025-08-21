@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { databaseHelpers } from '../../../config/database';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
@@ -7,7 +7,6 @@ import { ValidationProvider, useValidation } from '../../../contexts/validation-
 import { useSurveyOperations } from '../../../hooks/use-survey-operations';
 import { FieldType, SurveyField, SurveySection, SurveySubsection } from '../../../types/framework.types';
 import { generateFieldId, generateSectionId, updateSectionId } from '../../../utils/id.utils';
-import { updateMetadata } from '../../../utils/metadata.utils';
 import {
     MultiSelectOptionSetManager,
     RadioOptionSetManager,
@@ -23,7 +22,7 @@ import {
 import { SurveyHeader } from './components/header';
 import { SurveyPreview } from './components/preview';
 import { SectionList, SurveyDetails } from './components/sidebar';
-import { FieldContainer, FieldDragContext } from './drag-and-drop';
+import { FieldDragProvider, FieldMoveData } from './drag-and-drop';
 import { SurveyBuilderProps } from './survey-builder.types';
 
 // Wrapper component that provides the context
@@ -333,121 +332,129 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         deleteFieldOption(sectionId, fieldId, optionIndex, subsectionId);
     };
 
-    const handleMoveField = useCallback((fieldId: string, fromContainer: FieldContainer, toContainer: FieldContainer, newIndex: number) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log('🚀 HANDLE MOVE FIELD called:', {
-                fieldId,
-                fromContainer,
-                toContainer,
-                newIndex,
-                timestamp: new Date().toISOString()
-            });
-        }
+    const handleMoveField = useCallback((moveData: FieldMoveData) => {
+        console.log('🎯 New drag system - Field moved:', moveData);
 
-        // Check if this is a same-container reorder
-        const isSameContainer =
-            fromContainer.type === toContainer.type &&
-            fromContainer.sectionId === toContainer.sectionId &&
-            fromContainer.subsectionId === toContainer.subsectionId;
+        const { sourceContainerId, destinationContainerId, sourceIndex, destinationIndex } = moveData;
 
-        if (isSameContainer) {
-            // Handle same-container reordering using the existing reorderFields function
-            console.log('🔄 Same container reordering detected');
-
-            // Find the current index of the field
-            const sourceSection = state.config.sections.find(s => s.id === fromContainer.sectionId);
-            let currentIndex = -1;
-
-            if (fromContainer.type === 'section') {
-                currentIndex = sourceSection?.fields.findIndex(f => f.id === fieldId) ?? -1;
-            } else if (fromContainer.subsectionId) {
-                const subsection = sourceSection?.subsections?.find(sub => sub.id === fromContainer.subsectionId);
-                currentIndex = subsection?.fields.findIndex(f => f.id === fieldId) ?? -1;
+        // Parse container IDs to get section/subsection info
+        const parseContainerId = (containerId: string, sections = state.config.sections) => {
+            console.log('🔍 Parsing container ID:', containerId);
+            // Format: "section-{sectionId}" or "subsection-{subsectionId}"
+            if (containerId.startsWith('section-')) {
+                const result = { type: 'section' as const, sectionId: containerId.replace('section-', ''), subsectionId: undefined };
+                console.log('📦 Parsed as section:', result);
+                return result;
+            } else if (containerId.startsWith('subsection-')) {
+                const subsectionId = containerId.replace('subsection-', '');
+                // Find which section contains this subsection
+                const section = sections.find(section => 
+                    section.subsections?.some(subsection => subsection.id === subsectionId)
+                );
+                if (section) {
+                    const result = { type: 'subsection' as const, sectionId: section.id, subsectionId: subsectionId };
+                    console.log('📁 Parsed as subsection:', result);
+                    return result;
+                }
+                console.error('❌ Subsection not found:', subsectionId);
             }
+            return null;
+        };
 
-            if (currentIndex !== -1 && currentIndex !== newIndex) {
-                reorderFields(fromContainer.sectionId, currentIndex, newIndex, fromContainer.subsectionId);
-            }
+        const sourceContainer = parseContainerId(sourceContainerId);
+        const destinationContainer = parseContainerId(destinationContainerId);
+
+        if (!sourceContainer || !destinationContainer) {
+            console.error('Invalid container IDs:', { sourceContainerId, destinationContainerId });
             return;
         }
 
-        // Handle cross-container moves
-        console.log('🔀 Cross-container move detected');
+        // Same container reordering
+        if (sourceContainerId === destinationContainerId) {
+            console.log('🔄 Same container reordering:', {
+                sectionId: sourceContainer.sectionId,
+                subsectionId: sourceContainer.subsectionId,
+                from: sourceIndex,
+                to: destinationIndex
+            });
+            reorderFields(
+                sourceContainer.sectionId,
+                sourceIndex,
+                destinationIndex,
+                sourceContainer.subsectionId
+            );
+            return;
+        }
 
-        // Create a single config update that moves the field atomically
-        const currentConfig = state.config;
-        const newSections = currentConfig.sections.map(section => {
-            const newSection = { ...section };
-
-            // Initialize subsections if they don't exist
-            if (!newSection.subsections) {
-                newSection.subsections = [];
-            }
-
-            // Remove field from source
-            if (section.id === fromContainer.sectionId) {
-                if (fromContainer.type === 'section') {
-                    newSection.fields = section.fields.filter(f => f.id !== fieldId);
-                } else if (fromContainer.subsectionId) {
-                    newSection.subsections = (section.subsections || []).map(sub =>
-                        sub.id === fromContainer.subsectionId
-                            ? { ...sub, fields: sub.fields.filter(f => f.id !== fieldId) }
-                            : sub
-                    );
-                }
-            }
-
-            return newSection;
+        // Cross-container move
+        console.log('🔀 Cross-container move:', {
+            from: `${sourceContainer.type}-${sourceContainer.sectionId}${sourceContainer.subsectionId ? '-' + sourceContainer.subsectionId : ''}`,
+            to: `${destinationContainer.type}-${destinationContainer.sectionId}${destinationContainer.subsectionId ? '-' + destinationContainer.subsectionId : ''}`
         });
 
         // Find the field to move
-        const sourceSection = currentConfig.sections.find(s => s.id === fromContainer.sectionId);
-        let field: SurveyField | undefined;
-
-        if (fromContainer.type === 'section') {
-            field = sourceSection?.fields.find(f => f.id === fieldId);
-        } else if (fromContainer.subsectionId) {
-            const subsection = sourceSection?.subsections?.find(sub => sub.id === fromContainer.subsectionId);
-            field = subsection?.fields.find(f => f.id === fieldId);
-        }
-
-        if (!field) {
+        const currentSections = state.config.sections; // Get current state
+        let fieldToMove: SurveyField | undefined;
+        const sourceSection = currentSections.find(section => section.id === sourceContainer.sectionId);
+        
+        if (!sourceSection) {
+            console.error('Source section not found:', sourceContainer.sectionId);
             return;
         }
 
-        // Add field to target at specific index
-        const finalSections = newSections.map(section => {
-            if (section.id === toContainer.sectionId) {
-                const newSection = { ...section };
-                if (toContainer.type === 'section') {
-                    const targetFields = [...section.fields];
-                    targetFields.splice(newIndex, 0, { ...field });
-                    newSection.fields = targetFields;
-                } else if (toContainer.subsectionId) {
-                    newSection.subsections = (section.subsections || []).map(sub =>
-                        sub.id === toContainer.subsectionId
-                            ? {
-                                ...sub,
-                                fields: (() => {
-                                    const targetFields = [...sub.fields];
-                                    targetFields.splice(newIndex, 0, { ...field });
-                                    return targetFields;
-                                })()
-                            }
-                            : sub
-                    );
-                }
-                return newSection;
+        // Get the field from the source container
+        if (sourceContainer.type === 'section') {
+            fieldToMove = sourceSection.fields[sourceIndex];
+        } else if (sourceContainer.type === 'subsection' && sourceContainer.subsectionId) {
+            const sourceSubsection = sourceSection.subsections?.find(sub => sub.id === sourceContainer.subsectionId);
+            if (sourceSubsection) {
+                fieldToMove = sourceSubsection.fields[sourceIndex];
             }
-            return section;
-        });
+        }
 
-        // Update the entire config at once
-        updateConfig({
-            sections: finalSections,
-            metadata: updateMetadata(currentConfig.metadata)
-        });
-    }, [state.config, updateConfig]);
+        if (!fieldToMove) {
+            console.error('Field to move not found at index:', sourceIndex);
+            return;
+        }
+
+        console.log('🎯 Moving field:', fieldToMove.label, 'ID:', fieldToMove.id);
+
+        // Remove from source
+        deleteField(sourceContainer.sectionId, fieldToMove.id, sourceContainer.subsectionId);
+
+        // Add to destination at the correct index
+        // We need to handle the fact that addField doesn't support specifying an index
+        // So we'll add it and then reorder it to the correct position
+        addField(destinationContainer.sectionId, fieldToMove, destinationContainer.subsectionId);
+
+        // If destination index is not at the end, we need to reorder
+        const destinationSection = currentSections.find(section => section.id === destinationContainer.sectionId);
+        if (destinationSection) {
+            let destinationFields: SurveyField[];
+            if (destinationContainer.type === 'section') {
+                destinationFields = destinationSection.fields;
+            } else if (destinationContainer.type === 'subsection' && destinationContainer.subsectionId) {
+                const destinationSubsection = destinationSection.subsections?.find(sub => sub.id === destinationContainer.subsectionId);
+                destinationFields = destinationSubsection?.fields || [];
+            } else {
+                return;
+            }
+
+            // The field was added at the end, so if we need to move it to a different position
+            const currentFieldIndex = destinationFields.length - 1; // Field was just added at the end
+            if (destinationIndex !== currentFieldIndex) {
+                // Use a timeout to ensure the add operation has completed
+                setTimeout(() => {
+                    reorderFields(
+                        destinationContainer.sectionId,
+                        currentFieldIndex,
+                        destinationIndex,
+                        destinationContainer.subsectionId
+                    );
+                }, 0);
+            }
+        }
+    }, [reorderFields, deleteField, addField]);
 
     const handleOpenFieldEditor = (fieldId: string) => {
         console.log('📝 Opening field editor for:', fieldId);
@@ -467,33 +474,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     };
 
     // Get all fields for the drag context - memoized to prevent unnecessary re-renders
-    const getAllFields = useMemo(() => {
-        const allFields: SurveyField[] = [];
-        state.config.sections.forEach(section => {
-            allFields.push(...section.fields);
-            section.subsections?.forEach(subsection => {
-                allFields.push(...subsection.fields);
-            });
-        });
 
-        if (process.env.NODE_ENV === 'development') {
-            console.log('🔍 GET ALL FIELDS:', {
-                sectionsCount: state.config.sections.length,
-                totalFields: allFields.length,
-                fieldIds: allFields.map(f => f.id),
-                sections: state.config.sections.map(s => ({
-                    id: s.id,
-                    title: s.title,
-                    fieldsCount: s.fields.length,
-                    subsectionsCount: s.subsections?.length || 0
-                }))
-            });
-        }
-
-        return allFields;
-    }, [state.config.sections]);
-
-    const renderFieldPreview = () => null; // Preview is now handled directly in DragOverlay
 
     const handleSave = async () => {
         try {
@@ -675,11 +656,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     onClose={onClose}
                 />
 
-                <FieldDragContext
-                    onFieldMove={handleMoveField}
-                    renderFieldPreview={renderFieldPreview}
-                    fields={getAllFields}
-                >
+                <FieldDragProvider onFieldMove={handleMoveField}>
                     <div className="flex-1 flex overflow-hidden">
                         {/* Sidebar */}
                         <div className="w-80 border-r bg-gray-50 p-4 overflow-y-auto">
@@ -725,7 +702,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                         onOpenFieldEditor={handleOpenFieldEditor}
                                         onDeleteField={handleDeleteField}
                                         onReorderFields={handleReorderFields}
-                                        onMoveField={handleMoveField}
                                     />
                                 </div>
                             ) : (
@@ -735,7 +711,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                             )}
                         </div>
                     </div>
-                </FieldDragContext>
+                </FieldDragProvider>
 
                 {/* Rating Scale Manager Modal */}
                 {state.showRatingScaleManager && (

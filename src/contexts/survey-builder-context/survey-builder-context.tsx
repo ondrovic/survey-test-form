@@ -418,6 +418,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
             };
 
         case 'REORDER_FIELDS':
+            console.log('📝 REORDER_FIELDS reducer called:', action.payload);
             return {
                 ...state,
                 config: {
@@ -427,7 +428,7 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                             ? action.payload.subsectionId
                                 ? {
                                     ...section,
-                                    subsections: section.subsections.map(subsection =>
+                                    subsections: (section.subsections || []).map(subsection =>
                                         subsection.id === action.payload.subsectionId
                                             ? {
                                                 ...subsection,
@@ -445,8 +446,19 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                                     ...section,
                                     fields: (() => {
                                         const newFields = [...section.fields];
+                                        console.log('🔧 BEFORE reorder:', {
+                                            sectionId: section.id,
+                                            fromIndex: action.payload.fromIndex,
+                                            toIndex: action.payload.toIndex,
+                                            fields: newFields.map(f => ({ id: f.id, label: f.label }))
+                                        });
                                         const [movedField] = newFields.splice(action.payload.fromIndex, 1);
                                         newFields.splice(action.payload.toIndex, 0, movedField);
+                                        console.log('🔧 AFTER reorder:', {
+                                            sectionId: section.id,
+                                            fields: newFields.map(f => ({ id: f.id, label: f.label })),
+                                            movedField: { id: movedField?.id, label: movedField?.label }
+                                        });
                                         return newFields;
                                     })()
                                 }
