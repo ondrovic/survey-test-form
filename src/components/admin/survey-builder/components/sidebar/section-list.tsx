@@ -40,6 +40,7 @@ export const SectionList: React.FC<SectionListProps> = ({
                 className="space-y-2"
                 itemClassName="border rounded-lg cursor-pointer transition-colors"
                 disabled={false}
+                droppableId="sections-list"
                 renderItem={(section, _isDragging) => {
                     const validation = validateSection(section as SurveySection);
                     return (

@@ -10,4 +10,5 @@ export interface SortableListProps {
     className?: string;
     itemClassName?: string;
     disabled?: boolean;
+    droppableId?: string;
 }

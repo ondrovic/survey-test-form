@@ -321,6 +321,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                             className="space-y-2"
                             itemClassName="border rounded-md"
                             disabled={false}
+                            droppableId={`section-content-${section.id}`}
                             renderItem={(contentItem, _isDragging) => {
                                 if (contentItem.type === 'subsection') {
                                     const subsectionData = contentItem.data as SurveySubsection;
@@ -362,6 +363,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                 className="space-y-4"
                                 itemClassName=""
                                 disabled={false}
+                                droppableId={`subsections-${section.id}`}
                                 renderItem={(item) => {
                                     const subsection = item as unknown as SurveySubsection;
                                     const isExpanded = expandedSubsections.has(subsection.id);

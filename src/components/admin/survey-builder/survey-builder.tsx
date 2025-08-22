@@ -22,7 +22,7 @@ import {
 import { SurveyHeader } from './components/header';
 import { SurveyPreview } from './components/preview';
 import { SectionList, SurveyDetails } from './components/sidebar';
-import { FieldDragProvider, FieldMoveData } from './drag-and-drop';
+import { FieldDragProvider, FieldMoveData, SortableListMoveData } from './drag-and-drop';
 import { SurveyBuilderProps } from './survey-builder.types';
 
 // Wrapper component that provides the context
@@ -456,6 +456,25 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }
     }, [reorderFields, deleteField, addField]);
 
+    const handleSortableListMove = useCallback((moveData: SortableListMoveData) => {
+        console.log('📋 Sortable list move:', moveData);
+        
+        const { droppableId, oldIndex, newIndex } = moveData;
+        
+        // Route to the appropriate reorder function based on droppableId
+        if (droppableId === 'sections-list') {
+            reorderSections(oldIndex, newIndex);
+        } else if (droppableId.startsWith('subsections-')) {
+            // Extract section ID from droppableId format: "subsections-{sectionId}"
+            const sectionId = droppableId.replace('subsections-', '');
+            reorderSubsections(sectionId, oldIndex, newIndex);
+        } else if (droppableId.startsWith('section-content-')) {
+            // Extract section ID from droppableId format: "section-content-{sectionId}"
+            const sectionId = droppableId.replace('section-content-', '');
+            reorderSectionContent(sectionId, oldIndex, newIndex);
+        }
+    }, [reorderSections, reorderSubsections, reorderSectionContent]);
+
     const handleOpenFieldEditor = (fieldId: string) => {
         console.log('📝 Opening field editor for:', fieldId);
         selectField(fieldId);
@@ -656,7 +675,10 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     onClose={onClose}
                 />
 
-                <FieldDragProvider onFieldMove={handleMoveField}>
+                <FieldDragProvider 
+                    onFieldMove={handleMoveField}
+                    onSortableListMove={handleSortableListMove}
+                >
                     <div className="flex-1 flex overflow-hidden">
                         {/* Sidebar */}
                         <div className="w-80 border-r bg-gray-50 p-4 overflow-y-auto">
