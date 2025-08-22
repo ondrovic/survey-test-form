@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkline } from './charts';
+import { AdaptiveSparkline as Sparkline } from '../charts';
 
 interface StatsPanelProps {
   instanceId?: string;

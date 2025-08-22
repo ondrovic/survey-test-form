@@ -2,7 +2,7 @@ import { Button } from '@/components/common';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { isSurveyInstanceActive } from '@/utils';
 import { getDisplayDate } from '@/utils/date.utils';
-import { BarChart3, Copy, Download, ExternalLink, Settings, Trash2, Upload } from 'lucide-react';
+import { BarChart3, Copy, Download, ExternalLink, Settings, Trash2, TrendingUp, Upload } from 'lucide-react';
 import React from 'react';
 
 interface SurveyInstanceCardProps {
@@ -13,6 +13,7 @@ interface SurveyInstanceCardProps {
   onSettings: (instance: SurveyInstance) => void;
   onDownload: (instanceId: string) => void;
   onVisualize: () => void;
+  onAnalytics: () => void;
   onDelete: (instance: SurveyInstance) => void;
   onCopyUrl: (url: string) => void;
   onOpenUrl: (url: string) => void;
@@ -27,6 +28,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
   onSettings,
   onDownload,
   onVisualize,
+  onAnalytics,
   onDelete,
   onCopyUrl,
   onOpenUrl,
@@ -95,6 +97,14 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
             >
               <BarChart3 className="w-4 h-4 mr-1" />
               Visualize
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onAnalytics}
+            >
+              <TrendingUp className="w-4 h-4 mr-1" />
+              Analytics
             </Button>
             {onExport && (
               <Button

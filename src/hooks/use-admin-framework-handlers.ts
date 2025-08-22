@@ -126,6 +126,11 @@ export const useAdminFrameworkHandlers = (
     navigate(`${baseRoute}/admin/visualize/${urlParam}`);
   };
 
+  const handleAnalytics = (instance: SurveyInstance) => {
+    const urlParam = instance.slug || instance.id;
+    navigate(`${baseRoute}/admin/analytics/${urlParam}`);
+  };
+
   const handleExportInstance = (instance: SurveyInstance) => {
     exportInstance(instance);
   };
@@ -208,6 +213,7 @@ export const useAdminFrameworkHandlers = (
       handleInstanceSettings,
       handleDeleteInstance,
       handleVisualize,
+      handleAnalytics,
       handleExportInstance,
       handleImportInstance,
     },

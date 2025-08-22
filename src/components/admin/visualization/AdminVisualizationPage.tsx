@@ -7,7 +7,6 @@ import {
   AdvancedFilters,
   ChartControls,
   CustomDateRange,
-  FieldHideControls,
   QuickRangeFilter,
   SectionRenderer,
   StatsPanel
@@ -119,7 +118,7 @@ const VisualizationContent: React.FC = React.memo(() => {
             <div className="flex flex-wrap items-end gap-2">
               <QuickRangeFilter />
               <CustomDateRange />
-              <ChartControls />
+              <ChartControls availableFields={availableFields} />
               <Button
                 variant="outline"
                 size="form"
@@ -136,8 +135,6 @@ const VisualizationContent: React.FC = React.memo(() => {
             />
           </div>
 
-          {/* Field Hide Controls */}
-          <FieldHideControls availableFields={availableFields} />
 
           {/* Chart Grid */}
           <div>

@@ -29,6 +29,9 @@ interface VisualizationContextType {
   collapseAll: (sectionIds: string[], subsectionIds: string[]) => void;
 
   // Field management
+  hideField: (fieldId: string) => void;
+  showField: (fieldId: string) => void;
+  toggleFieldVisibility: (fieldId: string) => void;
   showAllFields: () => void;
 }
 
@@ -136,6 +139,34 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     }));
   }, []);
 
+  const hideField = useCallback((fieldId: string) => {
+    setState(prev => ({
+      ...prev,
+      hiddenFields: new Set(prev.hiddenFields).add(fieldId)
+    }));
+  }, []);
+
+  const showField = useCallback((fieldId: string) => {
+    setState(prev => {
+      const newHiddenFields = new Set(prev.hiddenFields);
+      newHiddenFields.delete(fieldId);
+      return { ...prev, hiddenFields: newHiddenFields };
+    });
+  }, []);
+
+  const toggleFieldVisibility = useCallback((fieldId: string) => {
+    setState(prev => {
+      const newHiddenFields = new Set(prev.hiddenFields);
+      const wasHidden = newHiddenFields.has(fieldId);
+      if (wasHidden) {
+        newHiddenFields.delete(fieldId);
+      } else {
+        newHiddenFields.add(fieldId);
+      }
+      return { ...prev, hiddenFields: newHiddenFields };
+    });
+  }, []);
+
   const showAllFields = useCallback(() => {
     setState(prev => ({ ...prev, hiddenFields: new Set() }));
   }, []);
@@ -152,6 +183,9 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     toggleSubsectionCollapsed,
     expandAll,
     collapseAll,
+    hideField,
+    showField,
+    toggleFieldVisibility,
     showAllFields
   };
 

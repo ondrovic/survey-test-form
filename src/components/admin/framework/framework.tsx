@@ -129,6 +129,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         onSettings={instanceHandlers.handleInstanceSettings}
         onDelete={instanceHandlers.handleDeleteInstance}
         onVisualize={instanceHandlers.handleVisualize}
+        onAnalytics={instanceHandlers.handleAnalytics}
         onExport={instanceHandlers.handleExportInstance}
         onImportInstance={instanceHandlers.handleImportInstance}
         validationResetCallback={() => {

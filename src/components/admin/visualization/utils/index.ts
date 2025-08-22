@@ -10,3 +10,4 @@ export {
   isSemanticLabel
 } from './colors';
 export * from './constants';
+export { saveChartAsImage, generateChartFilename } from './chart-export';

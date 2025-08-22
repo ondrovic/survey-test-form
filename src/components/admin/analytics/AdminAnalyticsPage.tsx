@@ -1,0 +1,52 @@
+import { Button } from '@/components/common';
+import { baseRoute } from '@/routes';
+import React from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Analytics } from './analytics';
+
+export const AdminAnalyticsPage: React.FC = () => {
+    const { instanceId } = useParams<{ instanceId: string }>();
+    const navigate = useNavigate();
+
+    console.log('🔍 AdminAnalyticsPage received instanceId:', instanceId);
+
+    if (!instanceId) {
+        return (
+            <div className="min-h-screen flex flex-col bg-amber-50/30">
+                <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
+                    <div className="text-center text-red-600">
+                        <h1 className="text-2xl font-bold mb-4">Error</h1>
+                        <p>No survey instance ID provided</p>
+                        <Button
+                            variant="outline"
+                            size="form"
+                            onClick={() => navigate(`${baseRoute}/admin`)}
+                            className="mt-4"
+                        >
+                            Back to Admin
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen flex flex-col bg-amber-50/30">
+            <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="form" onClick={() => navigate(`${baseRoute}/admin`)}>
+                            Back to Admin
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
+                    <Analytics instanceId={instanceId} />
+                </div>
+            </div>
+        </div>
+    );
+};

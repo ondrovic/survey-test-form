@@ -87,5 +87,6 @@ export const QuickActionsOverviewCard: React.FC<QuickActionsOverviewCardProps> =
                 Download All Data
             </Button>
         </div>
+
     </div>
 );

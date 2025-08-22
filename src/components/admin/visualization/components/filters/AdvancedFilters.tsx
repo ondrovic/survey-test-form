@@ -89,13 +89,6 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       
       <div className="md:col-span-2">
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="form" 
-            onClick={() => updateState({ showHideFieldsUI: true })}
-          >
-            Choose fields to hide
-          </Button>
           <Button variant="outline" size="form" onClick={expandAll}>
             Expand all
           </Button>

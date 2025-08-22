@@ -1,26 +1,27 @@
+
 import { AdminAuth } from '@/components/admin/auth';
 import { AdminFramework } from '@/components/admin/framework';
 import { AdminHeader } from '@/components/admin/header';
+import {
+    MultiSelectOptionSetManager,
+    RadioOptionSetManager,
+    RatingScaleManager,
+    SelectOptionSetManager
+} from '@/components/admin/option-set-manager';
 import { AdminOptionSets } from '@/components/admin/option-sets';
 import { AdminOverview } from '@/components/admin/overview';
 import { SurveyBuilder } from '@/components/admin/survey-builder';
-import { 
-  RatingScaleManager, 
-  RadioOptionSetManager, 
-  MultiSelectOptionSetManager, 
-  SelectOptionSetManager 
-} from '@/components/admin/option-set-manager';
 import { useAdminTab } from '@/contexts/admin-tab-context/index';
 import { useAuth } from '@/contexts/auth-context/index';
+import { useModal } from '@/contexts/modal-context';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useAdminOperations } from '@/hooks';
-import { useModal } from '@/contexts/modal-context';
 import { RatingScale, SurveyConfig } from '@/types';
 import { clsx } from 'clsx';
 import React, { useEffect } from 'react';
 import { AdminPageProps } from './page.types';
 
-export const AdminPage: React.FC<AdminPageProps> = () => {
+export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
     const { isAuthenticated, logout } = useAuth();
     const { activeTab, setActiveTab } = useAdminTab();
     const { refreshAll } = useSurveyData();
@@ -272,6 +273,7 @@ export const AdminPage: React.FC<AdminPageProps> = () => {
                         onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
                     />
                 )}
+
 
 
             </main>

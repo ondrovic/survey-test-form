@@ -1,3 +1,4 @@
+export { Analytics as AdminAnalytics } from "./analytics/";
 export { AdminAuth } from "./auth/";
 export { AdminFramework } from "./framework/";
 export { AdminHeader } from "./header/";
@@ -9,9 +10,9 @@ export { SurveyBuilder } from "./survey-builder/";
 
 // Consolidated Option Set Managers (NEW)
 export {
-  OptionSetManager,
-  RatingScaleManager,
-  RadioOptionSetManager,
   MultiSelectOptionSetManager,
+  OptionSetManager,
+  RadioOptionSetManager,
+  RatingScaleManager,
   SelectOptionSetManager,
 } from "./option-set-manager/";

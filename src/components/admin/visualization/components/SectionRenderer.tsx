@@ -1,10 +1,17 @@
 import { Button } from '@/components/common';
 import { getOrderedSectionContent } from '@/utils/section-content.utils';
-import React from 'react';
+import React, { useRef } from 'react';
+import type ReactECharts from 'echarts-for-react';
 import { useVisualization } from '../context';
 import { AggregatedSeries, ChartModalData } from '../types';
 import { hashSaltFrom } from '../utils';
-import { BarChart, DonutChart, Histogram, VerticalBarChart } from './charts';
+import { saveChartAsImage, generateChartFilename } from '../utils/chart-export';
+import { 
+  AdaptiveBarChart as BarChart,
+  AdaptiveDonutChart as DonutChart, 
+  AdaptiveHistogram as Histogram,
+  AdaptiveVerticalBarChart as VerticalBarChart 
+} from '../charts';
 
 interface SectionRendererProps {
   section: any;
@@ -17,7 +24,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
   fieldIdToSeries,
   seriesMatchesSearch
 }) => {
-  const { filters, state, preferences, toggleSectionCollapsed, openChartModal } = useVisualization();
+  const { filters, state, preferences, toggleSectionCollapsed, openChartModal, hideField } = useVisualization();
 
   const contentItems = getOrderedSectionContent(section);
   const renderedFieldIds = new Set<string>();
@@ -62,7 +69,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
 
   if (allCharts.length === 0) return null;
 
-  const renderChart = (chartItem: ChartModalData) => {
+  const renderChart = (chartItem: ChartModalData, chartRef: React.RefObject<ReactECharts>) => {
     const chartType = preferences.perFieldChartType[chartItem.series.fieldId] || preferences.defaultChartType;
     const commonProps = {
       counts: chartItem.series.counts,
@@ -71,7 +78,9 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
       colors: chartItem.series.colors,
       showPercent: filters.showPercent,
       neutralMode: chartItem.series.neutralMode,
-      colorSalt: hashSaltFrom(chartItem.series.fieldId)
+      colorSalt: hashSaltFrom(chartItem.series.fieldId),
+      fieldName: chartItem.series.label, // Pass the field name for ECharts
+      ref: chartRef
     };
 
     if (chartItem.series.type === 'histogram') {
@@ -179,21 +188,22 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                 ? `${chartItem.subsectionTitle} • ${chartItem.series.label}`
                 : chartItem.series.label;
               const isLongTitle = fullTitle.length > 40;
+              const chartRef = useRef<ReactECharts>(null);
+
+              const handleSaveImage = (e: React.MouseEvent) => {
+                e.stopPropagation();
+                const filename = generateChartFilename(
+                  chartItem.sectionTitle,
+                  chartItem.subsectionTitle,
+                  chartItem.series.label
+                );
+                saveChartAsImage(chartRef, filename, 'png', 2, '#ffffff');
+              };
 
               return (
                 <div
                   key={chartItem.series.fieldId}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-0 transition-all duration-200 hover:shadow-md hover:border-gray-300 cursor-pointer group"
-                  onClick={() => openChartModal(chartItem)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      openChartModal(chartItem);
-                    }
-                  }}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`Open ${chartItem.subsectionTitle ? chartItem.subsectionTitle + ' • ' : ''}${chartItem.series.label} chart in full view`}
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-0 transition-all duration-200 hover:shadow-md hover:border-gray-300 group"
                 >
                   <div className="flex items-start justify-between mb-4 gap-3">
                     <div className="flex-1 min-w-0">
@@ -204,20 +214,63 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                         {fullTitle}
                       </h4>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        onClick={handleSaveImage}
+                        className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded transition-colors duration-150"
+                        title="Save chart as image"
+                        aria-label={`Save ${fullTitle} chart as image`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          hideField(chartItem.series.fieldId);
+                        }}
+                        className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors duration-150"
+                        title="Hide this chart"
+                        aria-label={`Hide ${fullTitle} chart`}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => openChartModal(chartItem)}
+                        className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors duration-150"
+                        title="Open chart in full view"
+                        aria-label={`Open ${fullTitle} chart in full view`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div className={`flex items-center justify-center ${(() => {
-                    const chartType = preferences.perFieldChartType[chartItem.series.fieldId] || preferences.defaultChartType;
-                    if (chartItem.series.type === 'histogram') return 'min-h-[160px]';
-                    if (chartType === 'donut') return 'min-h-[200px]';
-                    if (chartType === 'vertical') return 'min-h-[220px]';
-                    return 'min-h-[280px]';
-                  })()}`}>
-                    {renderChart(chartItem)}
+                  <div 
+                    className={`flex items-center justify-center cursor-pointer ${(() => {
+                      const chartType = preferences.perFieldChartType[chartItem.series.fieldId] || preferences.defaultChartType;
+                      if (chartItem.series.type === 'histogram') return 'min-h-[160px]';
+                      if (chartType === 'donut') return 'min-h-[200px]';
+                      if (chartType === 'vertical') return 'min-h-[220px]';
+                      return 'min-h-[280px]';
+                    })()}`}
+                    onClick={() => openChartModal(chartItem)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openChartModal(chartItem);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open ${chartItem.subsectionTitle ? chartItem.subsectionTitle + ' • ' : ''}${chartItem.series.label} chart in full view`}
+                  >
+                    {renderChart(chartItem, chartRef)}
                   </div>
                 </div>
               );

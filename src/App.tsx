@@ -1,9 +1,10 @@
 import { AdminPage } from '@/components/admin';
+import { AdminAnalyticsPage } from '@/components/admin/analytics/AdminAnalyticsPage';
 import { AdminVisualizationPage } from '@/components/admin/visualization/visualization';
 import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
-import { databaseHelpers, initializeDatabase, getDatabaseProviderInfo } from '@/config/database';
+import { databaseHelpers, getDatabaseProviderInfo, initializeDatabase } from '@/config/database';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -15,11 +16,11 @@ import { isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 
+import { baseRoute } from '@/routes';
 import { isReCaptchaConfigured, verifyReCaptchaTokenClientSide } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Route, Routes, useNavigate } from 'react-router-dom';
-import { baseRoute } from '@/routes';
 
 // Remove hardcoded copyright - now handled by SurveyFooter component
 
@@ -57,7 +58,7 @@ function AppContent() {
                 console.warn('Database not fully initialized yet, retrying...');
                 const retryDelay = parseInt(import.meta.env.VITE_DATABASE_RETRY_DELAY) || 60000;
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
-                
+
                 if (!getDatabaseProviderInfo().isInitialized) {
                     throw new Error('Database initialization timeout');
                 }
@@ -137,6 +138,7 @@ function AppContent() {
             <Routes>
                 <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
                 <Route path={`${baseRoute}/admin/visualize/:instanceId`} element={<AdminVisualizationPage />} />
+                <Route path={`${baseRoute}/admin/analytics/:instanceId`} element={<AdminAnalyticsPage />} />
                 <Route path={`${baseRoute}/admin`} element={<AdminPage onBack={() => navigate('/')} />} />
                 <Route path={`/survey-confirmation/:slug`} element={
                     (() => {
