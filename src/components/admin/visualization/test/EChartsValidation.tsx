@@ -31,15 +31,6 @@ const testData: BaseChartProps = {
   size: 'normal'
 };
 
-const enhancedTestSeries = {
-  fieldId: 'satisfaction',
-  label: 'Overall Satisfaction',
-  section: 'Feedback',
-  counts: testData.counts,
-  total: testData.total,
-  orderedValues: testData.orderedValues,
-  colors: testData.colors
-};
 
 /**
  * Validation component to test ECharts integration

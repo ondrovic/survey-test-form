@@ -31,10 +31,11 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    
+    return undefined;
   }, [isDropdownOpen]);
 
   const visibleCount = availableFields.length - state.hiddenFields.size;
-  const hasHiddenFields = state.hiddenFields.size > 0;
 
   return (
     <div className="ml-auto flex items-end gap-2">
@@ -93,7 +94,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
                         if (state.hiddenFields.size === 0) {
                           // If none are hidden, hide all
                           availableFields.forEach(field => {
-                            const fieldId = field.fieldId || field.id;
+                            const fieldId = field.fieldId;
                             toggleFieldVisibility(fieldId);
                           });
                         } else if (state.hiddenFields.size === availableFields.length) {
@@ -102,7 +103,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
                         } else {
                           // Mixed state - hide all
                           availableFields.forEach(field => {
-                            const fieldId = field.fieldId || field.id;
+                            const fieldId = field.fieldId;
                             if (!state.hiddenFields.has(fieldId)) {
                               toggleFieldVisibility(fieldId);
                             }
@@ -118,7 +119,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
               </div>
               <div className="py-2">
                 {availableFields.map((field) => {
-                  const fieldId = field.fieldId || field.id;
+                  const fieldId = field.fieldId;
                   const isVisible = !state.hiddenFields.has(fieldId);
                   const fullTitle = field.subsectionTitle 
                     ? `${field.subsectionTitle} • ${field.label}`
@@ -126,27 +127,29 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
                   
                   return (
                     <div
-                      key={field.fieldId || field.id || `field-${Math.random()}`}
+                      key={field.fieldId}
                       className="flex items-start gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer group"
                     >
                       <label className="flex items-start gap-3 cursor-pointer flex-1">
-                      <input
-                        type="checkbox"
-                        checked={isVisible}
-                        onChange={() => {
-                          const fieldId = field.fieldId || field.id;
-                          toggleFieldVisibility(fieldId);
-                        }}
-                        className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className={`text-sm ${isVisible ? 'text-gray-900' : 'text-gray-400'}`}>
-                          {fullTitle}
+                        <input
+                          type="checkbox"
+                          checked={isVisible}
+                          onChange={() => {
+                            const fieldId = field.fieldId;
+                            toggleFieldVisibility(fieldId);
+                          }}
+                          aria-label={`Toggle visibility for ${fullTitle}`}
+                          className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-sm ${isVisible ? 'text-gray-900' : 'text-gray-400'}`}>
+                            {fullTitle}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {field.sectionTitle}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {field.sectionTitle}
-                        </div>
-                      </div>
+                      </label>
                       <div className={`text-xs px-2 py-0.5 rounded-full ${
                         isVisible 
                           ? 'bg-green-100 text-green-700' 
@@ -154,7 +157,6 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
                       }`}>
                         {isVisible ? 'Visible' : 'Hidden'}
                       </div>
-                      </label>
                     </div>
                   );
                 })}

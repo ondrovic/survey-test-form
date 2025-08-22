@@ -1,4 +1,4 @@
-import React, { useMemo, forwardRef } from 'react';
+import { useMemo, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { BaseChartProps } from '../../types';
 

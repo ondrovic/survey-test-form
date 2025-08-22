@@ -11,7 +11,7 @@ import type ReactECharts from 'echarts-for-react';
 export const saveChartAsImage = (
   chartRef: React.RefObject<ReactECharts>,
   filename: string = 'chart',
-  format: 'png' | 'jpg' | 'svg' = 'png',
+  format: 'png' | 'jpeg' | 'svg' = 'png',
   pixelRatio: number = 2,
   backgroundColor: string = '#ffffff'
 ) => {

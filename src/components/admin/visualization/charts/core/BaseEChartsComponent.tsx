@@ -262,7 +262,7 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
 export const withAnalytics = <P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) => {
-  return React.forwardRef<any, P & { enableAnalytics?: boolean }>((props, ref) => {
+  const AnalyticsComponent = React.forwardRef<any, P & { enableAnalytics?: boolean }>((props, ref) => {
     const { enableAnalytics = true, ...otherProps } = props;
     
     if (!enableAnalytics) {
@@ -282,6 +282,10 @@ export const withAnalytics = <P extends object>(
 
     return <WrappedComponent ref={ref} {...enhancedProps} />;
   });
+  
+  AnalyticsComponent.displayName = `withAnalytics(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+  
+  return AnalyticsComponent;
 };
 
 export default BaseEChartsComponent;

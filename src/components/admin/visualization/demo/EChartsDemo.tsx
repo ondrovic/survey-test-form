@@ -181,7 +181,7 @@ export const EChartsDemo: React.FC = () => {
             🎯 Try This: Hover Over the ECharts Donut!
           </h3>
           <p className="text-blue-700 text-sm">
-            Hover over any segment in the ECharts donut chart above and watch the <strong>field name</strong> (like "Strongly Agree", "Neutral", etc.) 
+            Hover over any segment in the ECharts donut chart above and watch the <strong>field name</strong> (like &ldquo;Strongly Agree&rdquo;, &ldquo;Neutral&rdquo;, etc.) 
             appear dynamically in the center with the count/percentage. This creates a clean, uncluttered look while showing detailed info on demand.
           </p>
         </div>
@@ -199,7 +199,7 @@ export const EChartsDemo: React.FC = () => {
               <li>🎯 <strong>Hover Center Labels:</strong> Field names appear in center on hover</li>
             </ul>
             <ul className="text-sm text-purple-700 space-y-2">
-              <li>📝 <strong>Dynamic Labels:</strong> Shows actual response values (e.g., "Strongly Agree")</li>
+              <li>📝 <strong>Dynamic Labels:</strong> Shows actual response values (e.g., &ldquo;Strongly Agree&rdquo;)</li>
               <li>🎨 <strong>Clean Legend:</strong> Names displayed at top, not cluttering chart</li>
               <li>📱 <strong>Responsive:</strong> Adapts to different screen sizes</li>
               <li>💾 <strong>Exportable:</strong> Right-click to save</li>

@@ -208,6 +208,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             fieldType: string;
             responseCount: number;
             valueDistribution: Record<string, number>;
+            label: string;
+            section: string;
         }> = [];
 
         // Build field metadata like visualization does

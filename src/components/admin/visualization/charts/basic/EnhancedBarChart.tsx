@@ -228,7 +228,7 @@ export const EnhancedBarChart: React.FC<EnhancedChartProps> = ({
       export={{ enabled: true }}
       performance={{
         virtualization: { enabled: chartData.length > 100, threshold: 100 },
-        animation: animation
+        animation: typeof animation === 'boolean' ? animation : true
       }}
     />
   );

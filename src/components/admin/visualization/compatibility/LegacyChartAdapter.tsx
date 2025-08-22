@@ -85,7 +85,7 @@ AdaptiveDonutChart.displayName = 'AdaptiveDonutChart';
 /**
  * Adaptive Histogram component (placeholder for future implementation)
  */
-export const AdaptiveHistogram = forwardRef<ReactECharts, BaseChartProps & { fieldName?: string }>((props, ref) => {
+export const AdaptiveHistogram = forwardRef<ReactECharts, BaseChartProps & { fieldName?: string }>((props, _ref) => {
   // Always use legacy for now until ECharts histogram is implemented
   // Note: Legacy components don't support refs, so we ignore the ref for now
   return <LegacyHistogram {...props} />;

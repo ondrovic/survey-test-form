@@ -18,7 +18,7 @@ export class EChartsDataAdapter implements DataAdapter {
     if (!data.length) return {};
 
     const series = data.map(seriesData => {
-      const { counts, orderedValues, colors, type, label, neutralMode } = seriesData;
+      const { counts, orderedValues, colors, type, label } = seriesData;
       
       // Prepare data in ECharts format
       const chartData = orderedValues 
@@ -34,14 +34,14 @@ export class EChartsDataAdapter implements DataAdapter {
           }));
 
       // Determine chart type
-      const chartType = type === 'histogram' ? 'bar' : 'bar';
+      const chartType = (type === 'histogram' ? 'bar' : 'bar') as 'bar';
 
       return {
         name: label,
         type: chartType,
         data: chartData,
         emphasis: {
-          focus: 'series'
+          focus: 'series' as const
         },
         label: {
           show: chartData.length <= 10, // Show labels only for smaller datasets
@@ -62,7 +62,7 @@ export class EChartsDataAdapter implements DataAdapter {
         top: 20,
         bottom: 20
       },
-      series
+      series: series as any
     };
   };
 
@@ -124,7 +124,7 @@ export class EChartsDataAdapter implements DataAdapter {
         name: series.label,
         value: series.total,
         children: Object.entries(series.counts)
-          .filter(([_, count]): count is number => typeof count === 'number')
+          .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
           .map(([option, count]) => ({
             name: option,
             value: count,
@@ -183,7 +183,7 @@ export class EChartsDataAdapter implements DataAdapter {
     
     data.forEach((series, index) => {
       Object.entries(series.counts)
-        .filter(([_, count]): count is number => typeof count === 'number')
+        .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
         .forEach(([value, count]) => {
           // Convert categorical values to numeric for scatter plot
           const numericValue = this.categoricalToNumeric(value);
@@ -253,7 +253,7 @@ export class EnhancedEChartsAdapter extends EChartsDataAdapter {
    */
   toEnhancedFormat = (
     data: AggregatedSeries[], 
-    chartType: AnalyticsChartType = 'bar'
+    chartType: AnalyticsChartType = 'horizontal'
   ): EnhancedAggregatedSeries[] => {
     return data.map(series => ({
       ...series,
@@ -315,7 +315,7 @@ export class EnhancedEChartsAdapter extends EChartsDataAdapter {
     return [{
       name: series.label,
       children: Object.entries(series.counts)
-        .filter(([_, count]): count is number => typeof count === 'number')
+        .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
         .map(([option, count]) => ({
           name: option,
           value: count,
@@ -331,7 +331,7 @@ export class EnhancedEChartsAdapter extends EChartsDataAdapter {
    */
   private seriesToScatter(series: AggregatedSeries): Array<[number, number, number?]> {
     return Object.entries(series.counts)
-      .filter(([_, count]): count is number => typeof count === 'number')
+      .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
       .map(([value, count], index) => [
         index,
         this.categoricalToNumeric(value),
@@ -401,7 +401,7 @@ export class EnhancedEChartsAdapter extends EChartsDataAdapter {
     const upperBound = q3 + 1.5 * iqr;
 
     return Object.entries(series.counts)
-      .filter(([_, count]): count is number => typeof count === 'number' && (count < lowerBound || count > upperBound))
+      .filter((entry): entry is [string, number] => typeof entry[1] === 'number' && (entry[1] < lowerBound || entry[1] > upperBound))
       .map(([value, count]) => ({
         value,
         score: Math.abs(count - q1) / iqr,

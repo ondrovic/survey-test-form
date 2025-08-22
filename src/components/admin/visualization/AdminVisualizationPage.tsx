@@ -76,12 +76,23 @@ const VisualizationContent: React.FC = React.memo(() => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-gray-700">{error}</p>
-          <Button onClick={() => navigate(`${baseRoute}/admin`)} variant="primary">
-            Back to Admin
-          </Button>
+      <div className="min-h-screen flex flex-col bg-amber-50/30">
+        <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="form" onClick={() => navigate(`${baseRoute}/admin`)}>
+                Back to Admin
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-bold text-gray-900">Survey Data Visualization</h2>
+              <p className="text-gray-700">{error}</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -92,15 +103,22 @@ const VisualizationContent: React.FC = React.memo(() => {
       <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Survey Data Visualization</h1>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="form" onClick={() => navigate(`${baseRoute}/admin`)}>
-              Back
+              Back to Admin
             </Button>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Survey Data Visualization</h2>
+              <p className="text-gray-600">Interactive charts and insights from your survey data</p>
+            </div>
+          </div>
+
           {/* Stats Panel */}
           <StatsPanel
             instanceId={instanceId}

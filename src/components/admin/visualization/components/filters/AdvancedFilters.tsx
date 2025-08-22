@@ -13,7 +13,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   subsectionsBySection,
   orderedSections
 }) => {
-  const { filters, updateFilters, state, updateState, expandAll, collapseAll } = useVisualization();
+  const { filters, updateFilters, expandAll, collapseAll, state } = useVisualization();
 
   const handleCollapseAll = () => {
     const allSectionIds = orderedSections.map((s) => s.id);

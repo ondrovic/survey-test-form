@@ -30,7 +30,7 @@ export const useSectionData = (config: SurveyConfig | undefined, series: Aggrega
 
   // Available fields for filtering/hiding
   const availableFields = useMemo(() => {
-    const items: Array<{ id: string; label: string }> = [];
+    const items: Array<{ fieldId: string; label: string; sectionTitle: string; subsectionTitle?: string }> = [];
 
     orderedSections.forEach((section) => {
       const contentItems = getOrderedSectionContent(section);
@@ -40,16 +40,23 @@ export const useSectionData = (config: SurveyConfig | undefined, series: Aggrega
           const field: any = ci.data;
           const s = fieldIdToSeries[field.id];
           if (s) {
-            const label = `${section.title} • ${s.label}`;
-            items.push({ id: s.fieldId, label });
+            items.push({ 
+              fieldId: s.fieldId, 
+              label: s.label,
+              sectionTitle: section.title 
+            });
           }
         } else {
           const subsection: any = ci.data;
           (subsection.fields || []).forEach((f: any) => {
             const s = fieldIdToSeries[f.id];
             if (s) {
-              const label = `${section.title} • ${subsection.title} • ${s.label}`;
-              items.push({ id: s.fieldId, label });
+              items.push({ 
+                fieldId: s.fieldId, 
+                label: s.label,
+                sectionTitle: section.title,
+                subsectionTitle: subsection.title 
+              });
             }
           });
         }

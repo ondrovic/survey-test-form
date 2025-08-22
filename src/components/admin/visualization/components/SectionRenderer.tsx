@@ -1,6 +1,6 @@
 import { Button } from '@/components/common';
 import { getOrderedSectionContent } from '@/utils/section-content.utils';
-import React, { useRef } from 'react';
+import React, { useMemo } from 'react';
 import type ReactECharts from 'echarts-for-react';
 import { useVisualization } from '../context';
 import { AggregatedSeries, ChartModalData } from '../types';
@@ -66,6 +66,15 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
       });
     }
   });
+
+  // Create refs for all charts
+  const chartRefs = useMemo(() => {
+    if (allCharts.length === 0) return {};
+    return allCharts.reduce((acc, chart) => {
+      acc[chart.series.fieldId] = React.createRef<ReactECharts>();
+      return acc;
+    }, {} as Record<string, React.RefObject<ReactECharts>>);
+  }, [allCharts]);
 
   if (allCharts.length === 0) return null;
 
@@ -188,7 +197,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                 ? `${chartItem.subsectionTitle} • ${chartItem.series.label}`
                 : chartItem.series.label;
               const isLongTitle = fullTitle.length > 40;
-              const chartRef = useRef<ReactECharts>(null);
+              const chartRef = chartRefs[chartItem.series.fieldId];
 
               const handleSaveImage = (e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -216,17 +225,6 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
-                        onClick={handleSaveImage}
-                        className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded transition-colors duration-150"
-                        title="Save chart as image"
-                        aria-label={`Save ${fullTitle} chart as image`}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </button>
-                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           hideField(chartItem.series.fieldId);
@@ -237,6 +235,17 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={handleSaveImage}
+                        className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded transition-colors duration-150"
+                        title="Save chart as image"
+                        aria-label={`Save ${fullTitle} chart as image`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                       </button>
                       <button

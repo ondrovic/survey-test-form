@@ -178,7 +178,7 @@ export const registerAnalyticsThemes = () => {
 // Performance configuration based on data size
 export const getOptimalRendererConfig = (dataSize: number) => {
   return {
-    renderer: dataSize > 5000 ? 'canvas' : 'svg',
+    renderer: (dataSize > 5000 ? 'canvas' : 'svg') as 'canvas' | 'svg',
     useDirtyRect: dataSize > 1000,
     useCoarsePointer: dataSize > 10000,
     pointerSize: dataSize > 10000 ? 20 : 10
@@ -263,18 +263,12 @@ export const createExportableChart = (chartInstance: echarts.ECharts, config: {
 }) => {
   const {
     format,
-    quality = 1,
-    width,
-    height,
     backgroundColor = '#ffffff',
     pixelRatio = 2
   } = config;
 
   return chartInstance.getDataURL({
     type: format,
-    quality,
-    width,
-    height,
     backgroundColor,
     pixelRatio,
     excludeComponents: ['toolbox']
@@ -284,10 +278,6 @@ export const createExportableChart = (chartInstance: echarts.ECharts, config: {
 // Initialize ECharts core with analytics themes
 export const initializeEChartsCore = () => {
   registerAnalyticsThemes();
-  
-  // Set global configuration
-  echarts.config.notMerge = false;
-  echarts.config.lazyUpdate = true;
   
   return echarts;
 };
