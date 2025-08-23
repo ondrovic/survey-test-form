@@ -1,6 +1,7 @@
 import { Plus, Save, Trash2, X } from 'lucide-react';
 import React from 'react';
 import { Button, ColorSelector, Input, SortableList } from '../../common';
+import { MultiSelectPreview, RadioSelectPreview, RatingScalePreview, SelectPreview } from './previews';
 
 export type OptionLike = {
     value: string;
@@ -29,6 +30,7 @@ interface OptionSetFormProps<TOption extends OptionLike> {
     onCancel: () => void;
     showDefaultToggle?: boolean;
     showColor?: boolean;
+    optionSetType?: 'rating-scale' | 'radio' | 'multi-select' | 'select';
     // Render additional fields (e.g., min/max selections, allowMultiple)
     renderAdditionalFields?: (args: {
         data: OptionSetFormData<TOption>;
@@ -47,6 +49,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
         onCancel,
         showDefaultToggle = false,
         showColor = true,
+        optionSetType,
         renderAdditionalFields,
     } = props;
 
@@ -91,7 +94,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
         const updated = [...data.options] as TOption[];
         const [removed] = updated.splice(oldIndex, 1);
         updated.splice(newIndex, 0, removed);
-        
+
         // Update order property for all items
         for (let i = 0; i < updated.length; i++) {
             (updated[i] as any).order = i;
@@ -161,7 +164,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                     renderItem={(item, isDragging) => {
                         const option = item as TOption & { id: string };
                         const index = data.options.findIndex((_, i) => i === parseInt(option.id.split('-')[1]));
-                        
+
                         return (
                             <div className={`p-3 border border-gray-200 rounded-lg bg-white ${isDragging ? 'shadow-lg' : ''}`}>
                                 <div className="flex items-center justify-between">
@@ -221,6 +224,69 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                     }}
                     className="space-y-3"
                 />
+            </div>
+
+            {/* Preview Section */}
+            <div className="border-t pt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium text-gray-900">Preview</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                        Live Preview
+                    </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    {data.options.length === 0 ? (
+                        <div className="text-center text-gray-500 py-8">
+                            <p className="text-sm">No options to preview</p>
+                            <p className="text-xs mt-1">Add some options above to see how they&apos;ll appear</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Rating Scale Preview */}
+                            {optionSetType === 'rating-scale' && (
+                                <RatingScalePreview data={data} />
+                            )}
+
+                            {/* Radio Preview */}
+                            {optionSetType === 'radio' && (
+                                <RadioSelectPreview
+                                    data={data}
+                                    type="radio"
+                                />
+                            )}
+
+                            {/* Select Preview */}
+                            {optionSetType === 'select' && (
+                                <SelectPreview
+                                    data={data}
+                                    allowMultiple={(data as any).allowMultiple}
+                                />
+                            )}
+
+                            {/* Generic Radio/Select Preview (fallback) */}
+                            {(!optionSetType && (showDefaultToggle || !showColor)) && (
+                                <RadioSelectPreview
+                                    data={data}
+                                    type="radio"
+                                />
+                            )}
+
+                            {/* Multi-select Preview */}
+                            {optionSetType === 'multi-select' && (
+                                <MultiSelectPreview data={data} minSelections={(data as any).minSelections} maxSelections={(data as any).maxSelections} />
+                            )}
+
+                            {/* Summary */}
+                            <div className="pt-3 border-t border-gray-200">
+                                <div className="flex items-center justify-between text-sm text-gray-600">
+                                    <span>Total options: {data.options.length}</span>
+                                    <span>Default options: {data.options.filter(opt => opt.isDefault).length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

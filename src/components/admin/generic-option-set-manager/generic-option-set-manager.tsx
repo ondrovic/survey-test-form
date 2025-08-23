@@ -1,13 +1,14 @@
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { Check, Edit, Plus, Trash2, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useConfirmation, useModal } from '../../../contexts/modal-context';
 import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
 import { useGenericImportExport } from '../../../hooks';
-import { Button, GenericImportModal } from '../../common';
-import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
 import { ExportableDataType } from '../../../utils/generic-import-export.utils';
-import { useConfirmation, useModal } from '../../../contexts/modal-context';
+import { Button, GenericImportModal } from '../../common';
 import { LegacyModal as Modal } from '../../common/ui/modal/Modal';
+import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
 
 interface GenericOptionSetManagerProps<T extends BaseOptionSet> {
   isVisible: boolean;
@@ -220,6 +221,12 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     return success;
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    // This is a no-op handler for the DragDropContext
+    // The actual reordering is handled by the SortableList component
+    console.log('Drag ended:', result);
+  };
+
   // Prepare current editing data for form
   const currentEditingData = editingItem || (propEditingOptionSet ? {
     ...propEditingOptionSet,
@@ -228,7 +235,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   if (!isVisible) return null;
 
   return (
-    <>
+    <DragDropContext onDragEnd={handleDragEnd}>
       <Modal
         isOpen={isVisible}
         onClose={onClose}
@@ -249,6 +256,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
               onCancel={handleCancel}
               showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio' || config.type === 'select' || config.type === 'multi-select'}
               showColor={true}
+              optionSetType={config.type}
               renderAdditionalFields={renderAdditionalFields}
             />
           ) : (editingItem || currentEditingData) ? (
@@ -262,12 +270,13 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
               onCancel={handleCancel}
               showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio' || config.type === 'select' || config.type === 'multi-select'}
               showColor={true}
+              optionSetType={config.type}
               renderAdditionalFields={renderAdditionalFields}
             />
           ) : (
             // Items List
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-900">{config.displayName}s</h3>
                 <div className="flex items-center gap-2">
                   <Button
@@ -297,7 +306,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                   No {config.displayName.toLowerCase()}s found. Create your first one!
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="pt-6 space-y-3">
                   {items.map((item) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -379,6 +388,6 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
           )}
         </div>
       </Modal>
-    </>
+    </DragDropContext>
   );
 };
