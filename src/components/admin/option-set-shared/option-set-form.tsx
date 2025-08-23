@@ -186,7 +186,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                                             required
                                         />
                                         {showColor && (
-                                            <div className="space-y-1">
+                                            <div className="space-y-1 space-x-1">
                                                 <span className="block text-sm font-semibold text-gray-800 mb-2">Color</span>
                                                 <ColorSelector
                                                     value={option.color || 'transparent'}

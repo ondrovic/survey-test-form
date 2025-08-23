@@ -17,7 +17,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     onSubmit,
     loading = false,
     className,
-    resetTrigger
+    resetTrigger,
+    onActivityUpdate
 }) => {
     // Use context providers
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
@@ -321,11 +322,16 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
 
+        // Track activity when user interacts with form
+        if (onActivityUpdate) {
+            onActivityUpdate();
+        }
+
         // Only validate if form has been submitted and there was already an error for this field
         if (hasSubmitted && formState.errors[fieldId]) {
             setTimeout(() => validateField(fieldId, value), 300);
         }
-    }, [setFieldValue, validateField, formState.errors, hasSubmitted]);
+    }, [setFieldValue, validateField, formState.errors, hasSubmitted, onActivityUpdate]);
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();

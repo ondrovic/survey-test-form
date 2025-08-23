@@ -46,9 +46,148 @@ A new analytics dashboard has been added to the admin interface, providing compr
 The analytics dashboard pulls data from:
 
 - Survey responses stored in your database
-- Survey configurations and field definitions
+- Survey configurations and field definitions  
 - Survey instance metadata
 - Response timestamps and metadata
+- **Survey sessions for tracking user engagement and abandonment**
+
+## Survey Session Tracking & Abandonment
+
+### Overview
+
+The analytics system includes sophisticated session tracking that monitors user engagement from the moment they start a survey until completion or abandonment. This provides accurate completion rates and identifies where users drop off.
+
+### Session States
+
+| Status | Meaning | How It Gets There |
+|--------|---------|------------------|
+| `started` | User opened survey, hasn't progressed | Initial session creation when user visits survey |
+| `in_progress` | User is actively working on survey | User moved to section 2+ or filled out fields |
+| `completed` | Survey submitted successfully | User clicked final submit button |
+| `abandoned` | No activity for 24+ hours | Automatic background job marks inactive sessions |
+| `expired` | Session manually expired | Optional: immediate cleanup for special cases |
+
+### User Flow & Abandonment Detection
+
+#### Step 1: User Starts Survey
+```
+1. User clicks survey link
+2. System creates survey_session record:
+   - status: 'started'
+   - started_at: current timestamp
+   - session_token: unique identifier
+   - current_section: 0
+```
+
+#### Step 2: User Progresses
+```
+1. User fills fields and navigates
+2. System updates survey_session:
+   - status: 'in_progress' 
+   - current_section: incremented
+   - last_activity_at: updated on every interaction
+```
+
+#### Step 3A: Successful Completion
+```
+1. User submits final survey
+2. System creates survey_response:
+   - started_at: from session.started_at
+   - completed_at: current timestamp
+   - completion_status: 'completed'
+   - completion_time_seconds: auto-calculated
+3. System updates session status to 'completed'
+```
+
+#### Step 3B: Abandonment Detection
+```
+Automatic abandonment (background job):
+- Runs periodically (daily/hourly)
+- Marks sessions as 'abandoned' if:
+  - Status is 'started' or 'in_progress' 
+  - No activity (last_activity_at) for 24+ hours
+```
+
+### Edge Cases & Scenarios
+
+#### Page Refresh
+- **What happens:** User refreshes browser during survey
+- **Behavior:** Frontend checks localStorage for session token, resumes existing session
+- **Result:** Session continues, activity updated, NOT abandoned
+
+#### User Returns Next Day
+- **What happens:** User closes browser, returns within 24 hours
+- **Behavior:** Session remains valid, user can continue where they left off
+- **Result:** Session continues, eventually completed successfully
+
+#### True Abandonment
+- **What happens:** User starts survey, never returns
+- **Behavior:** After 24 hours, background job marks session as 'abandoned'
+- **Result:** Session counted in abandonment rate, affects completion statistics
+
+#### Extended Break (30+ Hours)
+- **What happens:** User starts survey, gets distracted for over 24 hours
+- **Behavior:** Session marked abandoned, user shown "session expired" message on return
+- **Result:** Original session = abandoned, new session created if user continues
+
+### Activity Tracking Implementation
+
+The system tracks user activity to determine when sessions should be considered abandoned:
+
+```typescript
+// Activities that update last_activity_at:
+- Page navigation between sections
+- Form field inputs (debounced every 30 seconds)
+- Button clicks and form interactions
+- Any user interaction with the survey
+
+// Example implementation:
+const updateActivity = async () => {
+  await updateSurveySession(sessionToken, {
+    last_activity_at: new Date().toISOString()
+  });
+};
+```
+
+### Analytics Insights
+
+This session tracking enables accurate analytics:
+
+- **True Completion Rate:** (completed responses ÷ total sessions started) × 100
+- **Abandonment Rate:** (abandoned sessions ÷ total sessions started) × 100  
+- **Average Completion Time:** Actual time from session start to survey submission
+- **Drop-off Analysis:** Identify which sections users abandon most frequently
+- **Engagement Metrics:** Track how long users spend on surveys before abandoning
+
+### Database Schema
+
+#### survey_sessions table
+```sql
+- id: UUID primary key
+- survey_instance_id: References survey instance
+- session_token: Unique identifier for frontend tracking
+- started_at: When session was created
+- last_activity_at: Last user interaction timestamp
+- current_section: Progress tracking
+- status: Current session state
+```
+
+#### Enhanced survey_responses table
+```sql
+- session_id: Links response to originating session
+- started_at: Copied from session when survey completed
+- completed_at: Submission timestamp
+- completion_time_seconds: Auto-calculated duration
+- completion_status: 'completed', 'partial', or 'abandoned'
+```
+
+### Best Practices
+
+1. **Session Resume:** Always check for existing sessions before creating new ones
+2. **Activity Updates:** Update last_activity_at on meaningful user interactions
+3. **Graceful Expiry:** Show clear messages when sessions expire
+4. **Data Cleanup:** Periodically clean up very old abandoned sessions
+5. **Performance:** Use debounced activity updates to avoid excessive database writes
 
 ## Technical Implementation
 
@@ -107,10 +246,15 @@ The dashboard uses Apache ECharts with a flexible chart system that includes:
 Potential improvements for future versions:
 
 - ✅ Export functionality for reports (PNG/SVG chart export implemented)
-- Real-time data updates
-- Advanced filtering options
-- Custom dashboard layouts
-- Integration with external analytics tools
+- ✅ Session tracking and abandonment analytics (implemented)
+- ✅ Real completion rate and timing tracking (implemented)
+- Real-time data updates via WebSocket connections
+- Advanced filtering options (by user segments, device types)
+- Custom dashboard layouts and widget arrangement
+- Integration with external analytics tools (Google Analytics, Mixpanel)
+- A/B testing capabilities for survey variations
+- Heat maps showing field-level engagement
+- Automated abandonment recovery emails
 
 ## Troubleshooting
 

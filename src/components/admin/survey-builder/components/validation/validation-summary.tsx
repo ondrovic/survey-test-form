@@ -28,7 +28,7 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({ config, cl
                 <AlertTriangle className="w-4 h-4" />
                 <span>Validation Issues ({validation.errors.length})</span>
             </div>
-            <div className="max-h-32 overflow-y-auto space-y-1">
+            <div className="max-h-32 overflow-y-auto space-y-1 space-x-1">
                 {validation.errors.slice(0, 5).map((error, index) => (
                     <div key={index} className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">
                         {error}

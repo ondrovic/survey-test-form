@@ -82,6 +82,25 @@ export const useGenericImportExport = () => {
         // Save to database based on data type
         switch (finalDataType) {
           case "config": {
+            // Check if ID already exists for conflict detection
+            const originalId = data.metadata?.originalId;
+            if (originalId) {
+              const existing = await databaseHelpers.getSurveyConfig(originalId);
+              if (existing) {
+                const shouldCreateNew = confirm(
+                  `A survey config with ID "${originalId}" already exists. Would you like to create a new one with a different ID?\n\nYes: Create new with different ID\nNo: Cancel import`
+                );
+                if (!shouldCreateNew) {
+                  showError("Import cancelled - survey config already exists");
+                  return false;
+                }
+                // Continue with new ID (let database generate new one)
+              } else {
+                // Use original ID since it doesn't exist
+                (processedData as any).id = originalId;
+              }
+            }
+
             const configWithMetadata = {
               ...processedData,
               metadata: await createMetadata(),
@@ -108,6 +127,25 @@ export const useGenericImportExport = () => {
           }
 
           case "rating-scale": {
+            // Check if ID already exists for conflict detection
+            const originalId = data.metadata?.originalId;
+            if (originalId) {
+              const existing = await databaseHelpers.getRatingScale(originalId);
+              if (existing) {
+                const shouldCreateNew = confirm(
+                  `A rating scale with ID "${originalId}" already exists. Would you like to create a new one with a different ID?\n\nYes: Create new with different ID\nNo: Cancel import`
+                );
+                if (!shouldCreateNew) {
+                  showError("Import cancelled - rating scale already exists");
+                  return false;
+                }
+                // Continue with new ID (let database generate new one)
+              } else {
+                // Use original ID since it doesn't exist
+                (processedData as any).id = originalId;
+              }
+            }
+
             const ratingScaleWithMetadata = {
               ...processedData,
               metadata: await createMetadata(),
@@ -117,6 +155,25 @@ export const useGenericImportExport = () => {
           }
 
           case "radio-option-set": {
+            // Check if ID already exists for conflict detection
+            const originalId = data.metadata?.originalId;
+            if (originalId) {
+              const existing = await databaseHelpers.getRadioOptionSet(originalId);
+              if (existing) {
+                const shouldCreateNew = confirm(
+                  `A radio option set with ID "${originalId}" already exists. Would you like to create a new one with a different ID?\n\nYes: Create new with different ID\nNo: Cancel import`
+                );
+                if (!shouldCreateNew) {
+                  showError("Import cancelled - radio option set already exists");
+                  return false;
+                }
+                // Continue with new ID (let database generate new one)
+              } else {
+                // Use original ID since it doesn't exist
+                (processedData as any).id = originalId;
+              }
+            }
+
             const radioOptionSetWithMetadata = {
               ...processedData,
               metadata: await createMetadata(),
@@ -126,6 +183,25 @@ export const useGenericImportExport = () => {
           }
 
           case "multi-select-option-set": {
+            // Check if ID already exists for conflict detection
+            const originalId = data.metadata?.originalId;
+            if (originalId) {
+              const existing = await databaseHelpers.getMultiSelectOptionSet(originalId);
+              if (existing) {
+                const shouldCreateNew = confirm(
+                  `A multi-select option set with ID "${originalId}" already exists. Would you like to create a new one with a different ID?\n\nYes: Create new with different ID\nNo: Cancel import`
+                );
+                if (!shouldCreateNew) {
+                  showError("Import cancelled - multi-select option set already exists");
+                  return false;
+                }
+                // Continue with new ID (let database generate new one)
+              } else {
+                // Use original ID since it doesn't exist
+                (processedData as any).id = originalId;
+              }
+            }
+
             const multiSelectOptionSetWithMetadata = {
               ...processedData,
               metadata: await createMetadata(),
@@ -137,6 +213,25 @@ export const useGenericImportExport = () => {
           }
 
           case "select-option-set": {
+            // Check if ID already exists for conflict detection
+            const originalId = data.metadata?.originalId;
+            if (originalId) {
+              const existing = await databaseHelpers.getSelectOptionSet(originalId);
+              if (existing) {
+                const shouldCreateNew = confirm(
+                  `A select option set with ID "${originalId}" already exists. Would you like to create a new one with a different ID?\n\nYes: Create new with different ID\nNo: Cancel import`
+                );
+                if (!shouldCreateNew) {
+                  showError("Import cancelled - select option set already exists");
+                  return false;
+                }
+                // Continue with new ID (let database generate new one)
+              } else {
+                // Use original ID since it doesn't exist
+                (processedData as any).id = originalId;
+              }
+            }
+
             const selectOptionSetWithMetadata = {
               ...processedData,
               metadata: await createMetadata(),

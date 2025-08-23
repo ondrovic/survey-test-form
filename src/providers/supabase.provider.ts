@@ -141,6 +141,15 @@ class SupabaseProviderImpl extends BaseDatabaseProvider {
         optionSetsOps.updateSelectOptionSet(id, data),
       deleteSelectOptionSet: (id: string) =>
         optionSetsOps.deleteSelectOptionSet(id),
+
+      // Survey session management
+      addSurveySession: (sessionData: any) => surveyOps.addSurveySession(sessionData),
+      updateSurveySession: (sessionId: string, data: any) => 
+        surveyOps.updateSurveySession(sessionId, data),
+      getSurveySessionByToken: (sessionToken: string) => 
+        surveyOps.getSurveySessionByToken(sessionToken),
+      getSurveySession: (sessionId: string) => surveyOps.getSurveySession(sessionId),
+      getSurveySessions: (instanceId?: string) => surveyOps.getSurveySessions(instanceId),
     };
   }
 }

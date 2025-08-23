@@ -113,7 +113,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
     // If register is provided, use react-hook-form pattern
     if (register) {
         return (
-            <div className="space-y-1">
+            <div className="space-y-1 space-x-1">
                 {label && (
                     <label
                         htmlFor={inputId}
@@ -158,7 +158,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
 
     // Controlled pattern
     return (
-        <div className="space-y-1">
+        <div className="space-y-1 space-x-1">
             {label && (
                 <label
                     htmlFor={inputId}

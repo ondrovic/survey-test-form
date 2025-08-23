@@ -28,6 +28,12 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
             if (!optionSetId) return;
 
             setIsLoading(true);
+            // Clear previous state to prevent showing old data while loading new data
+            setRatingScale(null);
+            setRadioOptionSet(null);
+            setMultiSelectOptionSet(null);
+            setSelectOptionSet(null);
+
             try {
                 switch (type) {
                     case 'rating': {

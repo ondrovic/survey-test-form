@@ -246,7 +246,8 @@ class DatabaseHelperProxy {
           'getRadioOptionSets', 'getRadioOptionSet', 'addRadioOptionSet', 'updateRadioOptionSet', 'deleteRadioOptionSet',
           'getMultiSelectOptionSets', 'getMultiSelectOptionSet', 'addMultiSelectOptionSet', 'updateMultiSelectOptionSet', 'deleteMultiSelectOptionSet',
           'getSelectOptionSets', 'getSelectOptionSet', 'addSelectOptionSet', 'updateSelectOptionSet', 'deleteSelectOptionSet',
-          'updateSurveyInstanceStatuses', 'clearValidationLocks', 'getUpcomingStatusChanges', 'getSurveyInstanceStatusChanges'
+          'updateSurveyInstanceStatuses', 'clearValidationLocks', 'getUpcomingStatusChanges', 'getSurveyInstanceStatusChanges',
+          'addSurveySession', 'updateSurveySession', 'getSurveySessionByToken', 'getSurveySession', 'getSurveySessions'
         ];
         
         return Array.from(new Set([...basicKeys, ...customKeys]));

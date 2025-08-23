@@ -256,12 +256,37 @@ export interface SurveyInstance {
 export interface SurveyResponse {
   id: string;
   surveyInstanceId: string;
+  sessionId?: string;
   configVersion: string;
   responses: Record<string, any>;
-  submittedAt: string;
+  
+  // Timing tracking
+  startedAt?: string;
+  completedAt?: string;
+  submittedAt: string; // Legacy field for backward compatibility
+  completion_time_seconds?: number;
+  
+  // Status tracking
+  completion_status?: 'partial' | 'completed' | 'abandoned';
+  completion_percentage?: number;
+  
   metadata: {
     userAgent: string;
     ipAddress?: string;
     sessionId?: string;
   };
+}
+
+export interface SurveySession {
+  id: string;
+  surveyInstanceId: string;
+  sessionToken: string;
+  startedAt: string;
+  lastActivityAt: string;
+  currentSection: number;
+  totalSections?: number;
+  status: 'started' | 'in_progress' | 'completed' | 'abandoned' | 'expired';
+  userAgent?: string;
+  ipAddress?: string;
+  metadata: Record<string, any>;
 }

@@ -5,6 +5,7 @@ import { ErrorBoundary, LoadingSpinner } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { databaseHelpers, getDatabaseProviderInfo, initializeDatabase } from '@/config/database';
+import { useSurveySession } from '@/hooks/use-survey-session';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -198,6 +199,23 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     const navigate = useNavigate();
     const { showSuccess, showError } = useToast();
     const { refreshAll } = useSurveyData();
+    
+    // Initialize survey session tracking
+    const surveySession = useSurveySession({
+        surveyInstanceId: instance?.id || '',
+        totalSections: surveyConfig?.sections?.length || 1,
+        activityTimeoutMs: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
+    // Debug: Log session state
+    console.log('🔍 SurveyPage - Session Debug:', {
+        instanceId: instance?.id,
+        sessionId: surveySession.session.sessionId,
+        sessionStatus: surveySession.session.status,
+        startedAt: surveySession.session.startedAt,
+        isCreating: surveySession.isCreatingSession,
+        isSessionActive: surveySession.isSessionActive()
+    });
 
     const loadSurveyConfig = useCallback(async () => {
         if (!instance) return;
@@ -264,20 +282,54 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             // Get client IP address
             const ipAddress = await getClientIPAddressWithTimeout(3000); // 3 second timeout
 
+            // Calculate completion time if session is available
+            const completionTimeSeconds = surveySession.session.sessionId ? 
+                surveySession.getSessionDuration() : null;
+
+            console.log('🔍 Session data before creating response:', {
+                hasSessionId: !!surveySession.session.sessionId,
+                sessionId: surveySession.session.sessionId,
+                startedAt: surveySession.session.startedAt,
+                completionTimeSeconds,
+                sessionStatus: surveySession.session.status
+            });
+
+            const completedAt = getCurrentTimestamp();
             const surveyResponse: SurveyResponse = {
                 id: crypto.randomUUID(),
                 surveyInstanceId: instance.id,
+                sessionId: surveySession.session.sessionId || undefined,
                 configVersion: surveyConfig.version || 'unknown',
                 responses,
-                submittedAt: getCurrentTimestamp(),
+                startedAt: surveySession.session.startedAt?.toISOString(),
+                completedAt: completedAt,
+                submittedAt: completedAt, // Keep for backward compatibility
+                completion_time_seconds: completionTimeSeconds || undefined,
+                completion_status: 'completed',
                 metadata: {
                     userAgent: navigator.userAgent,
                     ipAddress: ipAddress || undefined,
                 }
             };
 
+            console.log('🔍 Survey response being submitted:', {
+                id: surveyResponse.id,
+                sessionId: surveyResponse.sessionId,
+                startedAt: surveyResponse.startedAt,
+                completion_time_seconds: surveyResponse.completion_time_seconds,
+                completion_status: surveyResponse.completion_status,
+                hasResponses: Object.keys(responses).length > 0
+            });
+            
             console.log('Submitting survey response to database...', surveyResponse);
             await databaseHelpers.addSurveyResponse(surveyResponse);
+            
+            // Mark session as completed
+            if (surveySession.session.sessionId) {
+                await surveySession.completeSession();
+                console.log('Survey session marked as completed');
+            }
+            
             console.log('Survey response submitted successfully!');
             showSuccess('Survey submitted!');
 
@@ -291,7 +343,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [instance?.id, surveyConfig?.id, showSuccess, showError, navigate]);
+    }, [instance?.id, surveyConfig?.id, showSuccess, showError, navigate, surveySession]);
 
     // Check if instance is valid
     if (!instance) {
@@ -330,6 +382,9 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 loading={isSubmitting}
                 showSectionPagination={surveyConfig.paginatorConfig?.showSectionPagination !== false}
                 resetTrigger={resetFormTrigger}
+                onSectionChange={(sectionIndex: number) => {
+                    surveySession.updateActivity(sectionIndex);
+                }}
             />
         );
     }
@@ -340,6 +395,9 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             onSubmit={handleSubmit}
             loading={isSubmitting}
             resetTrigger={resetFormTrigger}
+            onActivityUpdate={() => {
+                surveySession.updateActivity();
+            }}
         />
     );
 }

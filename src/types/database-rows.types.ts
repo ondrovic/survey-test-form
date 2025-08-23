@@ -33,9 +33,20 @@ export interface SurveyInstanceRow {
 export interface SurveyResponseRow {
   id: string;
   survey_instance_id: string;
+  session_id?: string;
   config_version: string;
   responses: any; // JSONB
-  submitted_at: string;
+  
+  // Timing tracking
+  started_at?: string;
+  completed_at?: string;
+  submitted_at: string; // Legacy field for backward compatibility
+  completion_time_seconds?: number;
+  
+  // Status tracking
+  completion_status?: 'partial' | 'completed' | 'abandoned';
+  completion_percentage?: number;
+  
   metadata: any; // JSONB
   created_at: string;
 }

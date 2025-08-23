@@ -153,7 +153,7 @@ export const ImportConfigModal: React.FC<ImportConfigModalProps> = ({
             <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Import Notes:</p>
-              <ul className="text-xs space-y-1">
+              <ul className="text-xs space-y-1 space-x-1">
                 <li>• The imported config will be renamed with &quot;(Imported)&quot; suffix</li>
                 <li>• New unique IDs will be generated for all sections and fields</li>
                 <li>• The config will be created as active by default</li>

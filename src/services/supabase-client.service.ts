@@ -175,6 +175,38 @@ export class SupabaseClientService {
     }
   }
 
+  /**
+   * Create a temporary anonymous client for public survey operations
+   * This bypasses authentication but respects RLS policies for anonymous users
+   */
+  async withAnonymousAccess<T>(
+    operation: (client: SupabaseClient) => Promise<T>
+  ): Promise<T> {
+    if (!this.globalConfig) {
+      throw new Error("Client not properly initialized");
+    }
+
+    // Create temporary anonymous client for this operation only
+    const anonClient = createClient(
+      this.globalConfig.url,
+      this.globalConfig.anonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+          storage: undefined,
+        },
+      }
+    );
+
+    try {
+      return await operation(anonClient);
+    } finally {
+      // Anonymous client will be garbage collected after this scope
+      // No explicit cleanup needed
+    }
+  }
+
   private canReuseClient(config: SupabaseConfig): boolean {
     return !!(
       this.globalClient &&

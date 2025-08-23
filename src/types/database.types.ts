@@ -150,6 +150,13 @@ export interface DatabaseHelpers {
       details: any;
     }>
   >;
+
+  // Survey Session Management
+  addSurveySession(sessionData: any): Promise<any>;
+  updateSurveySession(sessionId: string, data: any): Promise<void>;
+  getSurveySessionByToken(sessionToken: string): Promise<any | null>;
+  getSurveySession(sessionId: string): Promise<any>;
+  getSurveySessions(instanceId?: string): Promise<any[]>;
 }
 
 export interface DatabaseProvider_Interface {

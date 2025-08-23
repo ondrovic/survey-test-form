@@ -7,4 +7,5 @@ export interface PaginatedSurveyFormProps {
     showSectionPagination?: boolean;
     className?: string;
     resetTrigger?: number;
+    onSectionChange?: (sectionIndex: number) => void;
 }

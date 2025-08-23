@@ -6,4 +6,5 @@ export interface DynamicFormProps {
   loading?: boolean;
   className?: string;
   resetTrigger?: number; // Add reset trigger prop
+  onActivityUpdate?: () => void;
 }

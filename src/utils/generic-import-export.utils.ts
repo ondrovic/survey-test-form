@@ -128,8 +128,8 @@ export const exportData = <T>(
 const cleanDataForExport = <T>(data: T, type: ExportableDataType): T => {
   const cleaned = { ...data };
 
-  // Remove common database fields
-  delete (cleaned as any).id;
+  // Remove common database fields (but keep id for import preservation)
+  // delete (cleaned as any).id; // Keep ID for import preservation
   delete (cleaned as any).metadata;
   delete (cleaned as any).created_at;
   delete (cleaned as any).updated_at;
@@ -282,27 +282,24 @@ export const processImportedData = <
 >(
   importData: any,
   dataType: ExportableDataType
-): Omit<T, "id" | "metadata"> => {
+): Omit<T, "metadata"> => {
   // Extract actual data
   const data = importData.data || importData;
 
   // Process based on type
   switch (dataType) {
     case "config":
-      return processConfigData(data) as Omit<T, "id" | "metadata">;
+      return processConfigData(data) as Omit<T, "metadata">;
     case "instance":
-      return processInstanceData(data) as Omit<T, "id" | "metadata">;
+      return processInstanceData(data) as Omit<T, "metadata">;
     case "rating-scale":
-      return processRatingScaleData(data) as Omit<T, "id" | "metadata">;
+      return processRatingScaleData(data) as Omit<T, "metadata">;
     case "radio-option-set":
-      return processRadioOptionSetData(data) as Omit<T, "id" | "metadata">;
+      return processRadioOptionSetData(data) as Omit<T, "metadata">;
     case "multi-select-option-set":
-      return processMultiSelectOptionSetData(data) as Omit<
-        T,
-        "id" | "metadata"
-      >;
+      return processMultiSelectOptionSetData(data) as Omit<T, "metadata">;
     case "select-option-set":
-      return processSelectOptionSetData(data) as Omit<T, "id" | "metadata">;
+      return processSelectOptionSetData(data) as Omit<T, "metadata">;
     default:
       throw new Error(`Unsupported data type: ${dataType}`);
   }
@@ -311,7 +308,7 @@ export const processImportedData = <
 // Type-specific processors
 const processConfigData = (
   data: any
-): Omit<SurveyConfig, "id" | "metadata"> => {
+): Omit<SurveyConfig, "metadata"> => {
   const processedSections = data.sections.map((section: any) => {
     const processedFields = section.fields.map((field: any) => ({
       ...field,
@@ -340,7 +337,8 @@ const processConfigData = (
   });
 
   return {
-    title: data.title + " (Imported)",
+    ...(data.id && { id: data.id }), // Include ID if present
+    title: data.title, // Don't add "(Imported)" since we're preserving IDs
     description: data.description || "",
     sections: processedSections,
     version: data.version || "1.0.0",
@@ -352,7 +350,7 @@ const processConfigData = (
 
 const processInstanceData = (
   data: any
-): Omit<SurveyInstance, "id" | "metadata"> => {
+): Omit<SurveyInstance, "metadata"> => {
   // Note: configId from imported data may not exist in current database
   // This should be handled by requiring user to select a config during import
   // For now, we'll throw an error if configId is missing or invalid
@@ -363,8 +361,9 @@ const processInstanceData = (
   }
 
   return {
+    ...(data.id && { id: data.id }), // Include ID if present
     configId: data.configId,
-    title: data.title + " (Imported)",
+    title: data.title, // Don't add "(Imported)" since we're preserving IDs
     description: data.description || "",
     slug: undefined, // Will be generated
     isActive: false, // Import as inactive by default
@@ -376,9 +375,10 @@ const processInstanceData = (
 
 const processRatingScaleData = (
   data: any
-): Omit<RatingScale, "id" | "metadata"> => {
+): Omit<RatingScale, "metadata"> => {
   return {
-    name: data.name + " (Imported)",
+    ...(data.id && { id: data.id }), // Include ID if present
+    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
     description: data.description || "",
     options: data.options || [],
     isActive: true,
@@ -387,9 +387,10 @@ const processRatingScaleData = (
 
 const processRadioOptionSetData = (
   data: any
-): Omit<RadioOptionSet, "id" | "metadata"> => {
+): Omit<RadioOptionSet, "metadata"> => {
   return {
-    name: data.name + " (Imported)",
+    ...(data.id && { id: data.id }), // Include ID if present
+    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
     description: data.description || "",
     options: data.options || [],
     isActive: true,
@@ -398,9 +399,10 @@ const processRadioOptionSetData = (
 
 const processMultiSelectOptionSetData = (
   data: any
-): Omit<MultiSelectOptionSet, "id" | "metadata"> => {
+): Omit<MultiSelectOptionSet, "metadata"> => {
   return {
-    name: data.name + " (Imported)",
+    ...(data.id && { id: data.id }), // Include ID if present
+    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
     description: data.description || "",
     options: data.options || [],
     minSelections: data.minSelections,
@@ -411,9 +413,10 @@ const processMultiSelectOptionSetData = (
 
 const processSelectOptionSetData = (
   data: any
-): Omit<SelectOptionSet, "id" | "metadata"> => {
+): Omit<SelectOptionSet, "metadata"> => {
   return {
-    name: data.name + " (Imported)",
+    ...(data.id && { id: data.id }), // Include ID if present
+    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
     description: data.description || "",
     options: data.options || [],
     allowMultiple: data.allowMultiple || false,

@@ -156,7 +156,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                             />
                                         )}
                                         {field.type === 'radio' && !field.radioOptionSetId && field.options && field.options.length > 0 && (
-                                            <div className="space-y-1">
+                                            <div className="space-y-1 space-x-1">
                                                 {field.options.map((option, index) => (
                                                     <div key={index} className="flex items-center">
                                                         <input
@@ -172,7 +172,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                         )}
 
                                         {field.type === 'checkbox' && field.options && field.options.length > 0 && (
-                                            <div className="space-y-1">
+                                            <div className="space-y-1 space-x-1">
                                                 {field.options.map((option, index) => (
                                                     <div key={index} className="flex items-center">
                                                         <input
@@ -324,7 +324,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                     />
                                 )}
                                 {field.type === 'radio' && !field.radioOptionSetId && field.options && field.options.length > 0 && (
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 space-x-1">
                                         {field.options.map((option, index) => (
                                             <div key={index} className="flex items-center">
                                                 <input
@@ -340,7 +340,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                 )}
 
                                 {field.type === 'checkbox' && field.options && field.options.length > 0 && (
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 space-x-1">
                                         {field.options.map((option, index) => (
                                             <div key={index} className="flex items-center">
                                                 <input

@@ -2,7 +2,7 @@ import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2
 import React, { useCallback, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../../config/database';
 import { useValidation } from '../../../../../../contexts/validation-context';
-import { FieldType, MultiSelectOptionSet, RadioOptionSet, SelectOptionSet, SurveyField } from '../../../../../../types/framework.types';
+import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '../../../../../../types/framework.types';
 import { Button, Input } from '../../../../../common';
 import { LegacyModal as Modal } from '../../../../../common/ui/modal/Modal';
 import { OptionSetPreview } from '../../../shared';
@@ -44,6 +44,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     subsectionId
 }) => {
     const { validateFieldLabel, validateFieldPlaceholder, validateFieldOptions } = useValidation();
+    const [loadedRatingScale, setLoadedRatingScale] = useState<RatingScale | null>(null);
     const [loadedRadioOptionSet, setLoadedRadioOptionSet] = useState<RadioOptionSet | null>(null);
     const [loadedMultiSelectOptionSet, setLoadedMultiSelectOptionSet] = useState<MultiSelectOptionSet | null>(null);
     const [loadedSelectOptionSet, setLoadedSelectOptionSet] = useState<SelectOptionSet | null>(null);
@@ -151,6 +152,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             if (!field) return;
 
             setIsLoadingOptionSets(true);
+            setLoadedRatingScale(null);
             setLoadedRadioOptionSet(null);
             setLoadedMultiSelectOptionSet(null);
             setLoadedSelectOptionSet(null);
@@ -163,6 +165,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             setPlaceholderError(placeholderValidation.isValid ? '' : placeholderValidation.error || '');
 
             try {
+                if (field.ratingScaleId) {
+                    const ratingScale = await databaseHelpers.getRatingScale(field.ratingScaleId);
+                    setLoadedRatingScale(ratingScale);
+                }
+
                 if (field.radioOptionSetId) {
                     const radioOptionSet = await databaseHelpers.getRadioOptionSet(field.radioOptionSetId);
                     setLoadedRadioOptionSet(radioOptionSet);
@@ -187,7 +194,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         };
 
         loadOptionSets();
-    }, [field?.radioOptionSetId, field?.multiSelectOptionSetId, field?.selectOptionSetId, field?.label, field?.placeholder, validateFieldLabel, validateFieldPlaceholder, field, validateOptions]);
+    }, [field?.ratingScaleId, field?.radioOptionSetId, field?.multiSelectOptionSetId, field?.selectOptionSetId, field?.label, field?.placeholder, validateFieldLabel, validateFieldPlaceholder, field, validateOptions]);
 
     // Validate options when they change
     useEffect(() => {
@@ -458,12 +465,14 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
 
                         <div className="space-y-4">
                             {field.ratingScaleId ? (
-                                // Show rating scale options as buttons
+                                // Show rating scale options dynamically
                                 <div className="p-4 border rounded-md bg-gray-50">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <h6 className="font-medium text-gray-900">{field.ratingScaleName}</h6>
-                                            <p className="text-xs text-gray-500">High, Medium, Low, Not Important Scale</p>
+                                            <h6 className="font-medium text-gray-900">Rating Option Set {field.ratingScaleId}</h6>
+                                            <p className="text-xs text-gray-500">
+                                                {isLoadingOptionSets ? 'Loading...' : loadedRatingScale ? loadedRatingScale.description || loadedRatingScale.name : 'Loading rating scale...'}
+                                            </p>
                                         </div>
                                         <Button
                                             size="sm"
@@ -479,18 +488,28 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         </Button>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
-                                        <span className="px-3 py-1 text-sm rounded border bg-yellow-100 text-yellow-700 border-yellow-200">
-                                            High (Default)
-                                        </span>
-                                        <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
-                                            Medium
-                                        </span>
-                                        <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
-                                            Low
-                                        </span>
-                                        <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
-                                            Not Important
-                                        </span>
+                                        {isLoadingOptionSets ? (
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                                Loading options...
+                                            </span>
+                                        ) : loadedRatingScale ? (
+                                            loadedRatingScale.options.map((option, index) => (
+                                                <span
+                                                    key={index}
+                                                    className={`px-3 py-1 text-sm rounded border ${option.isDefault
+                                                        ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                        }`}
+                                                >
+                                                    {option.label}
+                                                    {option.isDefault && ' (Default)'}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="px-3 py-1 text-sm rounded border bg-red-100 text-red-700 border-red-200">
+                                                Failed to load rating scale
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             ) : field.radioOptionSetId ? (

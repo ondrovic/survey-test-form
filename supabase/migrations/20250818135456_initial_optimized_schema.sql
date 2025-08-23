@@ -43,13 +43,43 @@ CREATE TABLE IF NOT EXISTS survey_instances (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Create survey_responses table (legacy structure)
+-- Create survey_sessions table for tracking survey starts and progress
+CREATE TABLE IF NOT EXISTS survey_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    survey_instance_id UUID NOT NULL REFERENCES survey_instances(id) ON DELETE CASCADE,
+    session_token VARCHAR(255) UNIQUE NOT NULL, -- Unique token for tracking user session
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    current_section INTEGER DEFAULT 0,
+    total_sections INTEGER,
+    status VARCHAR(20) DEFAULT 'started' CHECK (status IN ('started', 'in_progress', 'completed', 'abandoned', 'expired')),
+    user_agent TEXT,
+    ip_address INET,
+    metadata JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create survey_responses table (enhanced with timing and status tracking)
 CREATE TABLE IF NOT EXISTS survey_responses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     survey_instance_id UUID NOT NULL REFERENCES survey_instances(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES survey_sessions(id) ON DELETE SET NULL,
     config_version VARCHAR(50) DEFAULT '1.0.0',
     responses JSONB NOT NULL DEFAULT '{}',
-    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    
+    -- Timing tracking
+    started_at TIMESTAMP WITH TIME ZONE, -- When survey was first started (may be null for legacy data)
+    completed_at TIMESTAMP WITH TIME ZONE DEFAULT now(), -- When survey was completed
+    completion_time_seconds INTEGER, -- Calculated completion time in seconds
+    
+    -- Status tracking
+    completion_status VARCHAR(20) DEFAULT 'completed' CHECK (completion_status IN ('partial', 'completed', 'abandoned')),
+    completion_percentage DECIMAL(5,2) DEFAULT 100.00, -- Percentage of fields completed
+    
+    -- Legacy field (renamed for clarity)
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT now(), -- Alias for completed_at for backward compatibility
+    
     metadata JSONB NOT NULL DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -233,15 +263,32 @@ CREATE TABLE IF NOT EXISTS survey_templates (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Survey response summaries (for better performance on large datasets)
+-- Survey response summaries (enhanced for better performance on large datasets)
 CREATE TABLE IF NOT EXISTS survey_response_summaries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     survey_instance_id UUID NOT NULL REFERENCES survey_instances(id) ON DELETE CASCADE,
     date_bucket DATE NOT NULL, -- For daily/weekly/monthly aggregations
-    response_count INTEGER DEFAULT 0,
-    completion_rate DECIMAL(5,2), -- Percentage
-    average_completion_time INTEGER, -- In seconds
+    
+    -- Session and response metrics
+    total_sessions INTEGER DEFAULT 0, -- Total sessions started
+    total_completed_responses INTEGER DEFAULT 0, -- Completed responses only
+    total_partial_responses INTEGER DEFAULT 0, -- Partial responses
+    total_abandoned_sessions INTEGER DEFAULT 0, -- Abandoned sessions
+    
+    -- Calculated rates
+    completion_rate DECIMAL(5,2), -- (completed_responses / total_sessions) * 100
+    abandonment_rate DECIMAL(5,2), -- (abandoned_sessions / total_sessions) * 100
+    
+    -- Timing metrics
+    average_completion_time_seconds INTEGER, -- Average completion time for completed surveys
+    median_completion_time_seconds INTEGER, -- Median completion time
+    min_completion_time_seconds INTEGER, -- Fastest completion
+    max_completion_time_seconds INTEGER, -- Slowest completion
+    
+    -- Additional analytics
+    average_completion_percentage DECIMAL(5,2), -- Average percentage completion across all responses
     field_statistics JSONB, -- Aggregated field-level stats
+    
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     
@@ -300,8 +347,21 @@ CREATE INDEX IF NOT EXISTS idx_survey_instances_config_id ON survey_instances(co
 CREATE INDEX IF NOT EXISTS idx_survey_instances_is_active ON survey_instances(is_active);
 CREATE INDEX IF NOT EXISTS idx_survey_instances_config_valid ON survey_instances(config_valid);
 CREATE INDEX IF NOT EXISTS idx_survey_instances_slug ON survey_instances(slug);
+-- Survey Sessions indexes
+CREATE INDEX IF NOT EXISTS idx_survey_sessions_survey_instance_id ON survey_sessions(survey_instance_id);
+CREATE INDEX IF NOT EXISTS idx_survey_sessions_status ON survey_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_survey_sessions_started_at ON survey_sessions(started_at);
+CREATE INDEX IF NOT EXISTS idx_survey_sessions_last_activity_at ON survey_sessions(last_activity_at);
+CREATE INDEX IF NOT EXISTS idx_survey_sessions_session_token ON survey_sessions(session_token);
+
+-- Survey Responses indexes (enhanced)
 CREATE INDEX IF NOT EXISTS idx_survey_responses_survey_instance_id ON survey_responses(survey_instance_id);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_session_id ON survey_responses(session_id);
 CREATE INDEX IF NOT EXISTS idx_survey_responses_submitted_at ON survey_responses(submitted_at);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_started_at ON survey_responses(started_at);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_completed_at ON survey_responses(completed_at);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_completion_status ON survey_responses(completion_status);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_completion_time ON survey_responses(completion_time_seconds) WHERE completion_time_seconds IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_rating_scales_is_active ON rating_scales(is_active);
 CREATE INDEX IF NOT EXISTS idx_radio_option_sets_is_active ON radio_option_sets(is_active);
 CREATE INDEX IF NOT EXISTS idx_multi_select_option_sets_is_active ON multi_select_option_sets(is_active);
@@ -640,6 +700,159 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+-- Function to calculate completion time on survey response insert/update
+CREATE OR REPLACE FUNCTION calculate_survey_completion_time()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Calculate completion time if both started_at and completed_at are present
+    IF NEW.started_at IS NOT NULL AND NEW.completed_at IS NOT NULL THEN
+        NEW.completion_time_seconds = EXTRACT(EPOCH FROM (NEW.completed_at - NEW.started_at))::INTEGER;
+    END IF;
+    
+    -- Update session status if session_id is present
+    IF NEW.session_id IS NOT NULL THEN
+        UPDATE survey_sessions 
+        SET 
+            status = CASE 
+                WHEN NEW.completion_status = 'completed' THEN 'completed'
+                WHEN NEW.completion_status = 'partial' THEN 'in_progress'
+                ELSE status
+            END,
+            last_activity_at = now(),
+            updated_at = now()
+        WHERE id = NEW.session_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Function to automatically mark abandoned sessions
+CREATE OR REPLACE FUNCTION mark_abandoned_sessions()
+RETURNS json AS $$
+DECLARE
+    abandoned_count INTEGER := 0;
+    session_record RECORD;
+BEGIN
+    -- Mark sessions as abandoned if no activity for more than 24 hours
+    -- and they're not already completed
+    FOR session_record IN
+        SELECT id, survey_instance_id, started_at
+        FROM survey_sessions 
+        WHERE 
+            status IN ('started', 'in_progress')
+            AND last_activity_at < (NOW() - INTERVAL '24 hours')
+    LOOP
+        UPDATE survey_sessions 
+        SET 
+            status = 'abandoned',
+            updated_at = now()
+        WHERE id = session_record.id;
+        
+        abandoned_count := abandoned_count + 1;
+    END LOOP;
+    
+    RETURN json_build_object(
+        'success', true,
+        'abandoned_sessions', abandoned_count,
+        'timestamp', NOW()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Function to generate daily analytics summaries
+CREATE OR REPLACE FUNCTION generate_daily_analytics_summary(target_date DATE DEFAULT CURRENT_DATE)
+RETURNS json AS $$
+DECLARE
+    instance_record RECORD;
+    summary_record RECORD;
+    updated_summaries INTEGER := 0;
+BEGIN
+    -- Loop through each survey instance
+    FOR instance_record IN
+        SELECT DISTINCT survey_instance_id
+        FROM survey_sessions
+        WHERE DATE(started_at) = target_date
+    LOOP
+        -- Calculate metrics for this instance and date
+        SELECT 
+            COUNT(*) as total_sessions,
+            COUNT(CASE WHEN ss.status = 'completed' THEN 1 END) as completed_sessions,
+            COUNT(CASE WHEN ss.status = 'abandoned' THEN 1 END) as abandoned_sessions,
+            COUNT(CASE WHEN sr.completion_status = 'completed' THEN 1 END) as completed_responses,
+            COUNT(CASE WHEN sr.completion_status = 'partial' THEN 1 END) as partial_responses,
+            ROUND(AVG(CASE WHEN sr.completion_time_seconds IS NOT NULL THEN sr.completion_time_seconds END)) as avg_completion_time,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sr.completion_time_seconds) as median_completion_time,
+            MIN(sr.completion_time_seconds) as min_completion_time,
+            MAX(sr.completion_time_seconds) as max_completion_time,
+            ROUND(AVG(sr.completion_percentage), 2) as avg_completion_percentage
+        INTO summary_record
+        FROM survey_sessions ss
+        LEFT JOIN survey_responses sr ON ss.id = sr.session_id
+        WHERE 
+            ss.survey_instance_id = instance_record.survey_instance_id
+            AND DATE(ss.started_at) = target_date;
+        
+        -- Insert or update the summary
+        INSERT INTO survey_response_summaries (
+            survey_instance_id,
+            date_bucket,
+            total_sessions,
+            total_completed_responses,
+            total_partial_responses,
+            total_abandoned_sessions,
+            completion_rate,
+            abandonment_rate,
+            average_completion_time_seconds,
+            median_completion_time_seconds,
+            min_completion_time_seconds,
+            max_completion_time_seconds,
+            average_completion_percentage
+        ) VALUES (
+            instance_record.survey_instance_id,
+            target_date,
+            summary_record.total_sessions,
+            summary_record.completed_responses,
+            summary_record.partial_responses,
+            summary_record.abandoned_sessions,
+            CASE WHEN summary_record.total_sessions > 0 
+                 THEN ROUND((summary_record.completed_responses::DECIMAL / summary_record.total_sessions) * 100, 2)
+                 ELSE 0 END,
+            CASE WHEN summary_record.total_sessions > 0 
+                 THEN ROUND((summary_record.abandoned_sessions::DECIMAL / summary_record.total_sessions) * 100, 2)
+                 ELSE 0 END,
+            summary_record.avg_completion_time,
+            summary_record.median_completion_time,
+            summary_record.min_completion_time,
+            summary_record.max_completion_time,
+            summary_record.avg_completion_percentage
+        ) ON CONFLICT (survey_instance_id, date_bucket) 
+        DO UPDATE SET
+            total_sessions = EXCLUDED.total_sessions,
+            total_completed_responses = EXCLUDED.total_completed_responses,
+            total_partial_responses = EXCLUDED.total_partial_responses,
+            total_abandoned_sessions = EXCLUDED.total_abandoned_sessions,
+            completion_rate = EXCLUDED.completion_rate,
+            abandonment_rate = EXCLUDED.abandonment_rate,
+            average_completion_time_seconds = EXCLUDED.average_completion_time_seconds,
+            median_completion_time_seconds = EXCLUDED.median_completion_time_seconds,
+            min_completion_time_seconds = EXCLUDED.min_completion_time_seconds,
+            max_completion_time_seconds = EXCLUDED.max_completion_time_seconds,
+            average_completion_percentage = EXCLUDED.average_completion_percentage,
+            updated_at = now();
+        
+        updated_summaries := updated_summaries + 1;
+    END LOOP;
+    
+    RETURN json_build_object(
+        'success', true,
+        'date', target_date,
+        'updated_summaries', updated_summaries,
+        'timestamp', NOW()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 -- Helper functions for RLS with security fixes
 CREATE OR REPLACE FUNCTION is_admin()
 RETURNS boolean AS $$
@@ -677,11 +890,19 @@ BEGIN
     AND (
       active_date_range IS NULL 
       OR (
-        NOW() >= (active_date_range->>'startDate')::timestamp
-        AND NOW() <= (active_date_range->>'endDate')::timestamp
+        NOW() >= (active_date_range->>'startDate')::timestamptz
+        AND NOW() <= (active_date_range->>'endDate')::timestamptz
       )
     )
   );
+EXCEPTION
+  WHEN OTHERS THEN
+    -- If there's any error parsing dates, assume survey is public if it's active
+    RETURN EXISTS (
+      SELECT 1 FROM survey_instances 
+      WHERE id = instance_id 
+      AND is_active = true
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -740,6 +961,18 @@ DROP TRIGGER IF EXISTS update_response_summaries_updated_at ON survey_response_s
 CREATE TRIGGER update_response_summaries_updated_at 
     BEFORE UPDATE ON survey_response_summaries 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Add updated_at trigger for survey_sessions
+DROP TRIGGER IF EXISTS update_survey_sessions_updated_at ON survey_sessions;
+CREATE TRIGGER update_survey_sessions_updated_at 
+    BEFORE UPDATE ON survey_sessions 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Survey response completion time calculation trigger
+DROP TRIGGER IF EXISTS calculate_completion_time_trigger ON survey_responses;
+CREATE TRIGGER calculate_completion_time_trigger
+    BEFORE INSERT OR UPDATE ON survey_responses
+    FOR EACH ROW EXECUTE FUNCTION calculate_survey_completion_time();
 
 -- Status change audit trigger
 DROP TRIGGER IF EXISTS survey_instance_status_change_audit ON survey_instances;
@@ -805,6 +1038,7 @@ INSERT INTO multi_select_option_sets (name, description, options, min_selections
 -- Enable RLS on all tables
 ALTER TABLE survey_configs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE survey_instances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE survey_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE survey_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE survey_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE survey_fields ENABLE ROW LEVEL SECURITY;
@@ -848,6 +1082,21 @@ CREATE POLICY "survey_instances_anonymous_read" ON survey_instances
       )
     )
   );
+
+-- Survey Sessions - Admin read/update, Anonymous insert/update for public surveys
+CREATE POLICY "survey_sessions_admin_all" ON survey_sessions
+  FOR ALL TO authenticated
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+CREATE POLICY "survey_sessions_anonymous_insert" ON survey_sessions
+  FOR INSERT TO anon
+  WITH CHECK (is_survey_public(survey_instance_id));
+
+CREATE POLICY "survey_sessions_anonymous_update" ON survey_sessions
+  FOR UPDATE TO anon
+  USING (is_survey_public(survey_instance_id))
+  WITH CHECK (is_survey_public(survey_instance_id));
 
 -- Survey Responses - Admin read/update, Anonymous insert for public surveys
 CREATE POLICY "survey_responses_admin_read_update" ON survey_responses
@@ -1000,6 +1249,7 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
 -- Anonymous user permissions
 GRANT SELECT ON survey_configs TO anon;
 GRANT SELECT ON survey_instances TO anon;
+GRANT INSERT, UPDATE ON survey_sessions TO anon;
 GRANT INSERT ON survey_responses TO anon;
 GRANT SELECT ON survey_sections TO anon;
 GRANT SELECT ON survey_fields TO anon;
@@ -1019,5 +1269,6 @@ GRANT EXECUTE ON FUNCTION is_survey_public(UUID) TO anon;
 -- Enable realtime for tables that need live updates
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_configs;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_instances;
+ALTER PUBLICATION supabase_realtime ADD TABLE survey_sessions;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_responses;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_instance_status_changes;

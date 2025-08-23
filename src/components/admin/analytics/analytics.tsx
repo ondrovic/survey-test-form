@@ -47,6 +47,20 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
     console.log('🔍 Survey data context:', surveyData);
     console.log('🔍 Survey instances from context:', surveyInstances);
 
+    // Helper function to format completion time
+    const formatCompletionTime = (seconds: number): string => {
+        if (seconds < 60) {
+            return `${seconds}s`;
+        } else if (seconds < 3600) {
+            const minutes = Math.round(seconds / 60);
+            return `${minutes}m`;
+        } else {
+            const hours = Math.floor(seconds / 3600);
+            const remainingMinutes = Math.round((seconds % 3600) / 60);
+            return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+        }
+    };
+
     // Ensure data is loaded
     useEffect(() => {
         if (surveyInstances.length === 0) {
@@ -145,11 +159,19 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         // Calculate total responses
         const totalResponses = filteredResponses.length;
 
-        // Calculate completion rate (simplified - assumes all responses are complete)
-        const completionRate = totalResponses > 0 ? 100 : 0;
+        // Calculate real completion rate based on completion_status field
+        const completedResponses = filteredResponses.filter(r => 
+            r.completion_status === 'completed' || r.completion_status === undefined // treat undefined as completed for legacy data
+        ).length;
+        const completionRate = totalResponses > 0 ? Math.round((completedResponses / totalResponses) * 100) : 0;
 
-        // Calculate average completion time (simplified)
-        const averageCompletionTime = 0; // Would need to track start/end times
+        // Calculate average completion time from completion_time_seconds field
+        const responsesWithTime = filteredResponses.filter(r => 
+            r.completion_time_seconds && r.completion_time_seconds > 0
+        );
+        const averageCompletionTime = responsesWithTime.length > 0 
+            ? Math.round(responsesWithTime.reduce((sum, r) => sum + (r.completion_time_seconds || 0), 0) / responsesWithTime.length)
+            : 0;
 
         // Group responses by period
         const responsesByPeriod = groupResponsesByPeriod(filteredResponses, groupBy);
@@ -420,7 +442,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                             <p className="text-sm font-medium text-gray-600">Avg. Completion Time</p>
                             <p className="text-2xl font-bold text-gray-900">
                                 {analyticsData.averageCompletionTime > 0
-                                    ? `${analyticsData.averageCompletionTime}s`
+                                    ? formatCompletionTime(analyticsData.averageCompletionTime)
                                     : 'N/A'}
                             </p>
                         </div>

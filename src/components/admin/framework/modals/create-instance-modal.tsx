@@ -64,7 +64,7 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
               <h4 className="text-sm font-medium text-blue-900 mb-2">
                 Existing Instances ({existingInstances.length}):
               </h4>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
+              <div className="space-y-1 space-x-1 max-h-32 overflow-y-auto">
                 {existingInstances.map((instance) => (
                   <div key={instance.id} className="text-xs text-blue-800 flex items-center justify-between">
                     <span>{instance.id}</span>

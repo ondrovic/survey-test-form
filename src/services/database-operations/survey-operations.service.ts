@@ -31,6 +31,7 @@ export class SurveyOperationsService {
     return this.clientService.withElevatedPrivileges(operation);
   }
 
+
   private getRepositories() {
     if (!isRepositoryServiceInitialized()) {
       throw new Error(
@@ -250,6 +251,136 @@ export class SurveyOperationsService {
       );
     } catch (error) {
       console.error("Error getting survey instance status changes:", error);
+      throw error;
+    }
+  }
+
+  // Survey Session Management
+  async addSurveySession(sessionData: any) {
+    try {
+      // Map camelCase to snake_case for database
+      const dbData = {
+        survey_instance_id: sessionData.surveyInstanceId,
+        session_token: sessionData.sessionToken,
+        started_at: sessionData.startedAt,
+        last_activity_at: sessionData.lastActivityAt,
+        current_section: sessionData.currentSection || 0,
+        total_sections: sessionData.totalSections || 1,
+        status: sessionData.status || 'started',
+        user_agent: sessionData.userAgent,
+        metadata: sessionData.metadata || {},
+        created_at: new Date().toISOString(),
+      };
+
+      // Use admin privileges for survey sessions due to RLS policy complexity
+      // TODO: Fix RLS policies to allow proper anonymous access in the future
+      return await this.withAdminPrivileges(async (client) => {
+        const { data, error } = await client
+          .from("survey_sessions")
+          .insert(dbData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      });
+    } catch (error) {
+      console.error("Error adding survey session:", error);
+      throw error;
+    }
+  }
+
+  async updateSurveySession(sessionId: string, data: any) {
+    try {
+      // Map camelCase to snake_case for database
+      const dbData: any = {
+        updated_at: new Date().toISOString(),
+      };
+      
+      if (data.lastActivityAt) dbData.last_activity_at = data.lastActivityAt;
+      if (data.currentSection !== undefined) dbData.current_section = data.currentSection;
+      if (data.status) dbData.status = data.status;
+      if (data.metadata) dbData.metadata = data.metadata;
+
+      // Use admin privileges for survey sessions due to RLS policy complexity
+      await this.withAdminPrivileges(async (client) => {
+        const { error } = await client
+          .from("survey_sessions")
+          .update(dbData)
+          .eq("id", sessionId);
+
+        if (error) throw error;
+      });
+    } catch (error) {
+      console.error("Error updating survey session:", error);
+      throw error;
+    }
+  }
+
+  async getSurveySessionByToken(sessionToken: string) {
+    try {
+      // Use admin privileges for survey sessions due to RLS policy complexity
+      return await this.withAdminPrivileges(async (client) => {
+        const { data, error } = await client
+          .from("survey_sessions")
+          .select("*")
+          .eq("session_token", sessionToken) // Use snake_case column name
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            return null; // No session found
+          }
+          throw error;
+        }
+        
+        return data;
+      });
+    } catch (error) {
+      console.error("Error getting survey session by token:", error);
+      throw error;
+    }
+  }
+
+  async getSurveySession(sessionId: string) {
+    try {
+      // Use admin privileges for reading individual session data
+      return await this.withAdminPrivileges(async (client) => {
+        const { data, error } = await client
+          .from("survey_sessions")
+          .select("*")
+          .eq("id", sessionId)
+          .single();
+
+        if (error) throw error;
+        return data;
+      });
+    } catch (error) {
+      console.error("Error getting survey session:", error);
+      throw error;
+    }
+  }
+
+  async getSurveySessions(instanceId?: string) {
+    try {
+      // Use admin privileges for reading session collections
+      return await this.withAdminPrivileges(async (client) => {
+        let query = client
+          .from("survey_sessions")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (instanceId) {
+          query = query.eq("survey_instance_id", instanceId); // Use snake_case column name
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        return data || [];
+      });
+    } catch (error) {
+      console.error("Error getting survey sessions:", error);
       throw error;
     }
   }

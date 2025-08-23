@@ -20,7 +20,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     loading = false,
     showSectionPagination = true,
     className,
-    resetTrigger
+    resetTrigger,
+    onSectionChange
 }) => {
     // Use context providers - reuse ALL logic from DynamicForm
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
@@ -100,6 +101,13 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         }
         return record;
     }, [selectOptionSets]);
+
+    // Track section changes for session activity
+    useEffect(() => {
+        if (onSectionChange && typeof paginationState.currentSectionIndex === 'number') {
+            onSectionChange(paginationState.currentSectionIndex);
+        }
+    }, [paginationState.currentSectionIndex, onSectionChange]);
 
     // Helper function to process all fields in a section (including subsections)
     const processAllFields = useCallback((section: SurveySection, callback: (field: SurveyField) => void) => {
