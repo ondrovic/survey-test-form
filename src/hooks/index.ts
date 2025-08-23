@@ -11,7 +11,6 @@ export { useLocalStorage } from "./use-local-storage";
 export { useNumberInput } from "./use-number-input";
 export { usePagination } from "./use-pagination";
 export { useSurveyCount } from "./use-survey-count";
-export { useSurveyInstanceSettings } from "./use-survey-instance-settings";
 export { useSurveyOperations } from "./use-survey-operations";
 export { useSurveyUrls } from "./use-survey-urls";
 export { useSurveyStatusValidation } from "./use-survey-status-validation";

@@ -1,5 +1,5 @@
 import { useModal } from "@/contexts/modal-context";
-import { SurveyConfig, SurveyInstance } from "@/types";
+import { DateRange, SurveyConfig, SurveyInstance } from "@/types";
 import { DeleteModalData } from "./use-admin-framework-handlers";
 import React, { useRef } from "react";
 
@@ -19,7 +19,7 @@ export const useAdminFrameworkModals = () => {
       data: SurveyInstance,
       updates: any
     ) => Promise<void>;
-    onConfirmCreateInstance?: (config: SurveyConfig) => void;
+    onConfirmCreateInstance?: (config: SurveyConfig, activeDateRange?: DateRange | null) => void;
     onImportConfig?: (file: File) => Promise<boolean>;
     onImportInstance?: (file: File) => Promise<boolean>;
     surveyInstances?: SurveyInstance[];
@@ -119,7 +119,7 @@ export const useAdminFrameworkModals = () => {
     createInstanceModal: {
       open: (data: SurveyConfig) => {
         currentCreateData.current = data;
-        import("@/components/admin/framework/modals").then(
+        import("@/components/admin/framework/modals/create-instance-modal").then(
           ({ CreateInstanceModal }) => {
             openModal(
               "create-instance",
@@ -133,13 +133,14 @@ export const useAdminFrameworkModals = () => {
                   currentCreateData.current = null;
                   closeModal("create-instance");
                 },
-                onConfirm: () => {
+                onConfirm: (activeDateRange) => {
                   if (
                     currentCreateData.current &&
                     handlersRef.current.onConfirmCreateInstance
                   ) {
                     handlersRef.current.onConfirmCreateInstance(
-                      currentCreateData.current
+                      currentCreateData.current,
+                      activeDateRange
                     );
                     currentCreateData.current = null;
                   }

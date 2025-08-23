@@ -23,9 +23,6 @@ export {
   AdaptiveSparkline
 } from './charts';
 
-// Demo and testing components
-export { EChartsDemo } from './demo/EChartsDemo';
-export { EChartsValidation } from './test/EChartsValidation';
 
 // Utils
 export * from './utils';

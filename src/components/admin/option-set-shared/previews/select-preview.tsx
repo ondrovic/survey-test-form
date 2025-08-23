@@ -30,7 +30,7 @@ export const SelectPreview: React.FC<SelectPreviewProps> = ({ data, allowMultipl
     return (
         <div className="space-y-3">
             <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-700">{data.name || 'Select'}</div>
+                {/* <div className="text-sm font-medium text-gray-700">{data.name || 'Select'}</div> */}
                 <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
                     <span className="text-sm text-gray-700">{displayText}</span>
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

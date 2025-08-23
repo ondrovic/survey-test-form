@@ -1,16 +1,15 @@
-import { Button } from '@/components/common';
+import { Button, DateRangeSelector, UnifiedModal } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { baseRoute } from '@/routes';
-import { SurveyConfig, SurveyInstance } from '@/types';
+import { DateRange, SurveyConfig, SurveyInstance } from '@/types';
 import { generateUniqueSlug } from '@/utils/slug.utils';
-import React from 'react';
-import { UnifiedModal } from '@/components/common';
+import React, { useState } from 'react';
 
 interface CreateInstanceModalProps {
   config: SurveyConfig;
   existingInstances: SurveyInstance[];
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (activeDateRange?: DateRange | null) => void;
 }
 
 export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
@@ -20,6 +19,7 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
   onConfirm
 }) => {
   const { state: { surveyInstances } } = useSurveyData();
+  const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(null);
 
   const generateInstanceId = () => {
     return generateUniqueSlug(config.title, surveyInstances);
@@ -27,6 +27,10 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
 
   const generateInstanceUrl = () => {
     return `${window.location.origin}${baseRoute}/${generateInstanceId()}`;
+  };
+
+  const handleConfirm = () => {
+    onConfirm(activeDateRange);
   };
 
   return (
@@ -40,7 +44,7 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onConfirm}>
+          <Button onClick={handleConfirm}>
             Create Instance
           </Button>
         </div>
@@ -91,6 +95,14 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
                 </code>
               </p>
             </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
+            <DateRangeSelector
+              idPrefix="create"
+              onChange={setActiveDateRange}
+            />
           </div>
 
       </div>

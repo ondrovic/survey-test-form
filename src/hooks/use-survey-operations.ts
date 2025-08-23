@@ -2,6 +2,7 @@ import { databaseHelpers } from "@/config/database";
 import { useSurveyData } from "@/contexts/survey-data-context/index";
 import { useToast } from "@/contexts/toast-context/index";
 import {
+  DateRange,
   MultiSelectOptionSet,
   RadioOptionSet,
   RatingScale,
@@ -24,7 +25,7 @@ export const useSurveyOperations = () => {
   const { showSuccess, showError } = useToast();
 
   const createSurveyInstance = useCallback(
-    async (config: SurveyConfig) => {
+    async (config: SurveyConfig, activeDateRange?: DateRange | null) => {
       try {
         // Generate a unique slug using the shared utility
         const slug = generateUniqueSlug(config.title, surveyInstances);
@@ -35,6 +36,7 @@ export const useSurveyOperations = () => {
           description: config.description,
           slug: slug, // Store the slug in the slug field
           isActive: true,
+          activeDateRange: activeDateRange || undefined,
           metadata: await createMetadata(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

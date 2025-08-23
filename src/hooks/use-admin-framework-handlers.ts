@@ -1,6 +1,6 @@
 import { useGenericImportExport, useSurveyOperations } from "@/hooks";
 import { baseRoute } from "@/routes";
-import { SurveyConfig, SurveyInstance } from "@/types";
+import { DateRange, SurveyConfig, SurveyInstance } from "@/types";
 import { useNavigate } from "react-router-dom";
 
 export interface AdminFrameworkOperations {
@@ -194,9 +194,9 @@ export const useAdminFrameworkHandlers = (
   };
 
   // Create instance confirmation handler
-  const handleConfirmCreateInstance = (config: SurveyConfig | null) => {
+  const handleConfirmCreateInstance = (config: SurveyConfig | null, activeDateRange?: DateRange | null) => {
     if (!config) return;
-    createSurveyInstance(config);
+    createSurveyInstance(config, activeDateRange || null);
     modalActions.createInstanceModal.close();
   };
 

@@ -1,13 +1,12 @@
-import { Button } from '@/components/common';
-import { SurveyInstance } from '@/types';
-import { createDateRangeISOStrings, parseDateFromISOString, formatDateRangeForDisplay } from '@/utils/date.utils';
+import { Button, DateRangeSelector } from '@/components/common';
+import { DateRange, SurveyInstance } from '@/types';
 import React, { useState } from 'react';
 
 interface InstanceSettingsModalProps {
   instance: SurveyInstance;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updates: { isActive: boolean; activeDateRange: { startDate: string; endDate: string } | null }) => Promise<void>;
+  onSave: (updates: { isActive: boolean; activeDateRange: DateRange | null }) => Promise<void>;
 }
 
 export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({ 
@@ -17,44 +16,24 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
   onSave 
 }) => {
   const [isActive, setIsActive] = useState(instance.isActive);
-  const [startDate, setStartDate] = useState(
-    instance.activeDateRange?.startDate ? parseDateFromISOString(instance.activeDateRange.startDate) : ''
-  );
-  const [endDate, setEndDate] = useState(
-    instance.activeDateRange?.endDate ? parseDateFromISOString(instance.activeDateRange.endDate) : ''
-  );
+  const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(instance.activeDateRange || null);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const activeDateRange = startDate && endDate
-        ? createDateRangeISOStrings(startDate, endDate)
-        : null;
-
       await onSave({ isActive, activeDateRange });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const clearDateRange = () => {
-    setStartDate('');
-    setEndDate('');
-  };
-
   const hasChanges = () => {
-    const currentDateRange = instance.activeDateRange;
-    let newDateRange: { startDate: string; endDate: string } | null = null;
-    if (startDate && endDate) {
-      newDateRange = createDateRangeISOStrings(startDate, endDate);
-    }
-
-    const normalizedCurrent = currentDateRange || null;
-    const normalizedNew = newDateRange || null;
+    const normalizedOriginal = instance.activeDateRange || null;
+    const normalizedNew = activeDateRange || null;
 
     const activeChanged = isActive !== instance.isActive;
-    const dateRangeChanged = JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedNew);
+    const dateRangeChanged = JSON.stringify(normalizedOriginal) !== JSON.stringify(normalizedNew);
 
     return activeChanged || dateRangeChanged;
   };
@@ -104,66 +83,11 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
 
           <div className="border-t pt-4">
             <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
-            <p className="text-sm text-gray-600 mb-3">
-              Leave empty to keep survey active indefinitely. Both dates must be set to enable date restrictions.
-              Start date begins at 12:00:00 AM, end date ends at 11:59:59 PM.
-            </p>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
-                </label>
-                <input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
-                </label>
-                <input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="mt-2">
-              {startDate && endDate ? (
-                <div className="text-sm text-green-600">
-                  ✓ Date range will be active from {formatDateRangeForDisplay(startDate, endDate)}
-                </div>
-              ) : startDate || endDate ? (
-                <div className="text-sm text-orange-600">
-                  ⚠ Both start and end dates must be set for date range to be active
-                </div>
-              ) : (
-                <div className="text-sm text-gray-600">
-                  Survey will be active indefinitely (no date restrictions)
-                </div>
-              )}
-            </div>
-
-            {(startDate || endDate) && (
-              <div className="mt-3">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={clearDateRange}
-                >
-                  Clear Date Range
-                </Button>
-              </div>
-            )}
+            <DateRangeSelector
+              idPrefix="settings"
+              initialDateRange={instance.activeDateRange}
+              onChange={setActiveDateRange}
+            />
           </div>
         </div>
 
