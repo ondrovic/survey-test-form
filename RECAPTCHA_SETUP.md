@@ -1,11 +1,11 @@
 # reCAPTCHA Setup Guide
 
-This guide explains how to set up and use reCAPTCHA with your Firebase project.
+This guide explains how to set up and use reCAPTCHA with your Survey Application (using Supabase backend).
 
 ## Prerequisites
 
 1. Google reCAPTCHA account: https://www.google.com/recaptcha/admin
-2. Firebase project with Cloud Functions enabled
+2. Supabase project with Edge Functions (for backend verification)
 3. Your survey application
 
 ## Step 1: Configure reCAPTCHA
@@ -30,14 +30,16 @@ VITE_RECAPTCHA_SITE_KEY=your-recaptcha-site-key-here
 
 **Important**: Never expose the secret key in the frontend. It should only be used in backend/server code.
 
-## Step 3: Firebase Cloud Function (Backend Verification)
+## Step 3: Supabase Edge Function (Backend Verification)
 
-Create a Firebase Cloud Function to verify reCAPTCHA tokens on the server side:
+Create a Supabase Edge Function to verify reCAPTCHA tokens on the server side:
 
-### Install Firebase CLI (if not already installed)
+### Install Supabase CLI (if not already installed)
 
 ```bash
-npm install -g firebase-tools
+npm install -g @supabase/supabase-js
+# or use npx for project-specific usage
+npx supabase
 ```
 
 ### Initialize Firebase Functions

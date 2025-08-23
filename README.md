@@ -21,8 +21,9 @@ A comprehensive survey framework application built on Supabase with advanced sur
 - **Slug-based URLs**: Human-readable survey URLs for easy sharing
 
 ### Data & Analytics
-- **Advanced Data Visualization**: Interactive charts and graphs for survey responses
+- **Advanced Data Visualization**: Interactive ECharts-powered charts and graphs for survey responses
 - **Real-time Filtering**: Filter and analyze data by date ranges, sections, and fields
+- **Multiple Chart Types**: Bar charts, pie charts, histograms, and sparklines using Apache ECharts
 - **Excel Export**: Export survey data and configurations for external analysis
 - **Audit Trail**: Complete logging of all survey instance status changes
 
@@ -40,10 +41,10 @@ A comprehensive survey framework application built on Supabase with advanced sur
 - **Icons**: Lucide React
 - **State Management**: React Context + Custom hooks
 - **Form Handling**: React Hook Form
-- **Drag & Drop**: @dnd-kit/core for survey builder
+- **Drag & Drop**: @hello-pangea/dnd for survey builder
 - **Data Storage**: Supabase PostgreSQL database
-- **Database**: PostgreSQL (via Supabase), Firestore (Firebase)
-- **Charts**: Custom chart components with visualization utilities
+- **Database**: PostgreSQL (via Supabase)
+- **Charts**: Apache ECharts with echarts-for-react for advanced data visualization
 - **Excel Export**: xlsx library for admin downloads
 - **reCAPTCHA**: Google reCAPTCHA v2 integration
 - **Deployment**: GitHub Pages → Netlify (planned)
@@ -248,7 +249,7 @@ service-line-survey/
 2. **Set up GitHub Secrets** (Required):
 
    - Follow the GitHub Secrets Setup section above
-   - Ensure all Firebase configuration secrets are added to your repository
+   - Ensure all Supabase configuration secrets are added to your repository
 
 3. **Push to Main Branch**:
 
@@ -278,7 +279,7 @@ npm run build
 | **Local Development**     | `.env.local` file    | Development on your local machine    |
 | **Production Deployment** | GitHub Secrets       | Secure deployment via GitHub Actions |
 
-**Both use the same Firebase configuration values, but in different secure environments.**
+**Both use the same Supabase configuration values, but in different secure environments.**
 
 ### Key System Features
 
@@ -342,7 +343,7 @@ npm run test:coverage
 ## 🔒 Security
 
 - Environment variables for sensitive data
-- Firebase security rules for data access control
+- Supabase Row Level Security (RLS) for data access control
 - Client-side validation
 - Secure data transmission
 
@@ -350,11 +351,11 @@ npm run test:coverage
 
 ### Common Issues
 
-1. **Firebase Connection Failed**
+1. **Supabase Connection Failed**
 
    - **Local Development**: Verify your `.env.local` file is properly configured
    - **Production**: Verify your GitHub secrets are correctly set
-   - Check that Firestore database is set up and accessible
+   - Check that Supabase database is set up and accessible
    - Ensure environment variables are correctly set for your environment
 
 2. **Build Errors**
@@ -374,7 +375,7 @@ npm run test:coverage
    - Check GitHub Actions logs for build errors
    - Verify repository settings and permissions
    - Ensure the main branch is properly configured
-   - **GitHub Secrets Missing**: Ensure all Firebase configuration secrets are set in repository settings
+   - **GitHub Secrets Missing**: Ensure all Supabase configuration secrets are set in repository settings
    - **Build Failures**: Check that all required environment variables are properly configured as GitHub secrets
 
 ### Getting Help
@@ -408,13 +409,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Improved State Management**: Implemented robust state synchronization between local component state and form state
 - **Enhanced User Experience**: Better handling of complex form interactions with proper race condition prevention
 - **Code Quality**: Cleaned up debug code and improved overall code maintainability
-- **Security Improvements**: Updated deployment workflow to use GitHub secrets instead of environment files for secure Firebase configuration
+- **Security Improvements**: Updated deployment workflow to use GitHub secrets instead of environment files for secure Supabase configuration
 - **Documentation**: Added comprehensive GitHub secrets setup guide for secure deployment
+- **Visualization Upgrade**: Migrated from CSS-based charts to Apache ECharts for enhanced data visualization capabilities
 
 ### Previous Versions
 
 - Initial release with basic survey functionality
-- Added Firebase integration
+- Added Supabase integration
 - Implemented responsive design
 - Added form validation and accessibility features
 

@@ -6,7 +6,7 @@ This application uses **Supabase** as its database provider. Supabase provides a
 
 ✅ **Full SQL Database**: PostgreSQL with advanced query capabilities  
 ✅ **Automated Status Management**: Time-based survey activation/deactivation  
-✅ **Advanced Data Visualization**: Rich charts and analytics  
+✅ **Advanced Data Visualization**: ECharts-powered interactive charts and analytics  
 ✅ **Complete Audit Trail**: Track all survey changes and user actions  
 ✅ **Real-time Updates**: Live data synchronization  
 ✅ **GitHub Actions Integration**: Scheduled automation workflows  
@@ -18,7 +18,7 @@ This application uses **Supabase** as its database provider. Supabase provides a
 Set your database provider in your `.env` file:
 
 ```env
-VITE_DATABASE_PROVIDER=firebase  # or 'supabase' or 'postgres'
+VITE_DATABASE_PROVIDER=supabase
 ```
 
 ## Quick Start
@@ -39,7 +39,7 @@ Supabase provides a PostgreSQL database with advanced features including automat
 
 ### Why Choose Supabase?
 - ✅ **Automated Status Management**: Surveys automatically activate/deactivate based on date ranges
-- ✅ **Advanced Data Visualization**: Rich charts and analytics
+- ✅ **Advanced Data Visualization**: ECharts-powered interactive charts and analytics
 - ✅ **Audit Trail**: Complete logging of all survey changes
 - ✅ **SQL Capabilities**: Complex queries and data analysis
 - ✅ **GitHub Actions Integration**: Scheduled automation
@@ -115,9 +115,11 @@ ORDER BY changed_at DESC;
 - **Slug URLs**: Human-readable survey links
 
 ### Data & Analytics  
-- **Real-time Visualization**: Interactive charts and graphs
+- **Real-time Visualization**: Interactive ECharts-powered charts and graphs
+- **Multiple Chart Types**: Bar charts, pie charts, histograms, and sparklines
 - **Advanced Filtering**: Filter responses by date, section, or field
-- **Export Capabilities**: Excel export for external analysis
+- **Chart Export**: Download charts as PNG/SVG formats
+- **Excel Export**: Export survey data for external analysis
 - **SQL Access**: Direct database queries for custom reporting
 
 ### System Administration

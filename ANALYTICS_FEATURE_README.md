@@ -2,7 +2,7 @@
 
 ## Overview
 
-A new analytics dashboard has been added to the admin interface, providing comprehensive insights into survey performance and response data. This feature is inspired by modern analytics dashboards and provides real-time data visualization.
+A new analytics dashboard has been added to the admin interface, providing comprehensive insights into survey performance and response data. This feature leverages Apache ECharts for professional-grade data visualization with interactive charts and real-time filtering.
 
 ## Features
 
@@ -13,11 +13,13 @@ A new analytics dashboard has been added to the admin interface, providing compr
 - **Average Completion Time**: Time taken to complete surveys (when tracking is available)
 - **Active Surveys**: Number of currently active survey instances
 
-### 📈 Data Visualization
+### 📈 Data Visualization (ECharts Integration)
 
-- **Response Trends**: Bar chart showing response patterns over time
-- **Field Analysis**: Breakdown of responses by survey field
-- **Value Distribution**: Top response values for each field
+- **Response Trends**: Interactive ECharts bar charts showing response patterns over time
+- **Field Analysis**: Dynamic pie charts and histograms for response distribution
+- **Value Distribution**: ECharts-powered bar charts and donut charts for top response values
+- **Sparklines**: Compact trend indicators for quick metric overviews
+- **Export Capability**: Download charts as PNG or SVG formats
 
 ### 🔍 Filtering & Grouping
 
@@ -52,15 +54,20 @@ The analytics dashboard pulls data from:
 
 ### Components
 
-- `Analytics`: Main analytics component with charts and metrics
-- `AdminAnalytics`: Wrapper component for admin integration
-- Integration with existing survey data context
+- `AdminAnalyticsPage`: Main analytics page component
+- `AdminVisualizationPage`: Advanced visualization dashboard
+- `BaseEChartsComponent`: Core ECharts wrapper for consistent chart behavior
+- `EnhancedBarChart`, `SimpleEChartsPie`: Specialized chart components
+- `ChartModal`: Full-screen chart viewing with export options
+- Integration with existing survey data context and ECharts core
 
 ### Data Processing
 
 - Real-time calculation of metrics from survey responses
 - Dynamic field analysis based on survey configurations
-- Responsive chart rendering with Tailwind CSS
+- Professional chart rendering with Apache ECharts
+- Responsive chart sizing and mobile-optimized layouts
+- Interactive tooltips and data point highlighting
 
 ### Performance Features
 
@@ -74,17 +81,20 @@ The analytics dashboard pulls data from:
 
 To add new analytics metrics:
 
-1. Extend the `AnalyticsData` interface in `src/components/admin/analytics/analytics.tsx`
-2. Add calculation logic in the `calculateAnalytics` function
-3. Update the UI to display the new metric
+1. Extend data interfaces in `src/components/admin/visualization/types.ts`
+2. Add calculation logic in the respective data processing utilities
+3. Create new ECharts component or extend existing ones in `src/components/admin/visualization/components/charts/`
+4. Update the visualization dashboard to display the new metric
 
-### Custom Charts
+### Custom Charts (ECharts-Based)
 
-The dashboard uses a flexible chart system that can be extended with:
+The dashboard uses Apache ECharts with a flexible chart system that includes:
 
-- New chart types
-- Custom color schemes
-- Interactive features
+- **Chart Types**: Bar, pie, histogram, sparkline, and donut charts
+- **Interactive Features**: Zoom, pan, brush selection, and data point highlighting
+- **Custom Themes**: Professional color schemes optimized for data clarity
+- **Animation Effects**: Smooth transitions and loading animations
+- **Export Options**: PNG, SVG, and data export capabilities
 
 ## Browser Compatibility
 
@@ -96,7 +106,7 @@ The dashboard uses a flexible chart system that can be extended with:
 
 Potential improvements for future versions:
 
-- Export functionality for reports
+- ✅ Export functionality for reports (PNG/SVG chart export implemented)
 - Real-time data updates
 - Advanced filtering options
 - Custom dashboard layouts

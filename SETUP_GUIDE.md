@@ -8,7 +8,7 @@ The Survey Framework is a comprehensive application that provides:
 - **Supabase Database**: PostgreSQL-powered database with advanced features
 - **Advanced Survey Building**: Visual drag-and-drop interface
 - **Automated Status Management**: Time-based survey activation/deactivation
-- **Data Visualization**: Interactive charts and analytics
+- **Data Visualization**: Interactive ECharts-powered charts and analytics
 - **Import/Export**: Full system backup and restore capabilities
 
 ## Prerequisites
@@ -151,7 +151,7 @@ node scripts/test-status-automation.js
 ## Key Features
 
 ✅ **Automated Status Management**: Surveys activate/deactivate based on date ranges  
-✅ **Advanced Data Visualization**: Interactive charts with filtering and export  
+✅ **Advanced Data Visualization**: Interactive ECharts-based charts with filtering and export  
 ✅ **Complete Audit Trail**: Track all system changes and user actions  
 ✅ **Real-time Updates**: Live data synchronization across all clients  
 ✅ **Full Import/Export**: Complete system backup and restore capabilities  
