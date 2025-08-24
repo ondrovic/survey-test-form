@@ -72,8 +72,8 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
     };
     const renderItem = (item: T) => (
         <div key={item.id} className="border rounded-lg p-4">
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1">
                     <h4 className="font-semibold">{item.name}</h4>
                     <p className="text-sm text-gray-600">{item.description || 'No description'}</p>
                     <p className="text-xs text-gray-500">
@@ -82,11 +82,12 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                         {renderItemDetails && renderItemDetails(item)}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
                     <Button
                         size="sm"
                         variant="outline"
                         onClick={() => onEdit(item)}
+                        className="w-full sm:w-auto justify-start"
                     >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
@@ -95,6 +96,7 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                         size="sm"
                         variant="outline"
                         onClick={() => handleExport(item)}
+                        className="w-full sm:w-auto justify-start"
                     >
                         <Upload className="w-4 h-4 mr-1" />
                         Export
@@ -103,6 +105,7 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                         size="sm"
                         variant="outline"
                         onClick={() => onDelete(item)}
+                        className="w-full sm:w-auto justify-start"
                     >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete
@@ -113,12 +116,12 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
     );
 
     const headerActions = (
-        <div className="flex items-center gap-2">
-            <Button onClick={handleImport} size="sm" variant="outline">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Button onClick={handleImport} size="sm" variant="outline" className="w-full sm:w-auto">
                 <Upload className="w-4 h-4 mr-2" />
                 Import
             </Button>
-            <Button onClick={onCreateNew} size="sm" className="w-32">
+            <Button onClick={onCreateNew} size="sm" className="w-full sm:w-32">
                 <Plus className="w-4 h-4 mr-2" />
                 {createButtonLabel}
             </Button>

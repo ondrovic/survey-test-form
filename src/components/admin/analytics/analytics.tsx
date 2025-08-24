@@ -448,7 +448,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow">
                     <div className="flex items-center">
                         <div className="p-2 bg-blue-100 rounded-lg">

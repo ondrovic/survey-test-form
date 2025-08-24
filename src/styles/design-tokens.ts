@@ -216,9 +216,9 @@ export const modal = {
   
   sizes: {
     sm: 'w-full max-w-md mx-2 sm:mx-0',
-    md: 'w-full max-w-2xl mx-2 sm:mx-0',
-    lg: 'w-full max-w-4xl mx-2 sm:mx-0',
-    xl: 'w-full max-w-6xl mx-2 sm:mx-0',
+    md: 'w-full max-w-xl mx-2 md:max-w-2xl lg:mx-0',
+    lg: 'w-full max-w-2xl mx-2 lg:max-w-4xl lg:mx-0',
+    xl: 'w-full max-w-4xl mx-2 lg:max-w-6xl lg:mx-0',
     full: 'w-full max-w-[95vw] max-h-[95vh] mx-1 sm:mx-0',
   },
   
@@ -231,8 +231,8 @@ export const modal = {
   
   // Mobile-first responsive variants
   mobile: {
-    fullscreen: 'w-full h-full max-w-none max-h-none m-0 rounded-none md:w-auto md:h-auto md:max-w-2xl md:max-h-[90vh] md:rounded-lg md:m-4',
-    adaptive: 'w-full h-full max-h-[90vh] max-w-none m-2 rounded-lg md:w-auto md:h-auto md:max-w-2xl md:m-4',
+    fullscreen: 'w-full h-full max-w-none max-h-none m-0 rounded-none lg:w-auto lg:h-auto lg:max-w-2xl lg:max-h-[90vh] lg:rounded-lg lg:m-4',
+    adaptive: 'w-full h-full max-h-[90vh] max-w-none m-2 rounded-lg lg:w-auto lg:h-auto lg:max-w-2xl lg:m-4',
   },
   
   header: 'flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0',
@@ -324,9 +324,9 @@ export const pagination = {
 export const collapsible = {
   container: 'overflow-hidden',
   
-  // Trigger button styles
+  // Trigger button styles - mobile-first responsive
   trigger: {
-    base: 'flex items-center justify-between w-full text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500',
+    base: 'flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 gap-2',
     variants: {
       default: 'p-4 hover:bg-gray-50',
       minimal: 'py-2 hover:bg-gray-25',

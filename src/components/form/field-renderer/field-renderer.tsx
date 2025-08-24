@@ -1,4 +1,4 @@
-import { Input } from '@/components/common';
+import { Input, Portal } from '@/components/common';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '@/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
@@ -33,8 +33,17 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
 }) => {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+    const [isMobile, setIsMobile] = useState<boolean>(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const triggerRefs = useRef<Record<string, HTMLButtonElement>>({});
+
+    // Check if we're on mobile
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Smart dropdown opening with viewport-based positioning
     const handleDropdownOpen = useCallback((fieldId: string) => {
@@ -48,43 +57,75 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 if (trigger) {
                     const triggerRect = trigger.getBoundingClientRect();
                     const viewportHeight = window.innerHeight;
+                    const viewportWidth = window.innerWidth;
                     const dropdownHeight = 200;
+                    const isMobile = viewportWidth <= 768;
                     
                     // Check if there's enough space below
                     const spaceBelow = viewportHeight - triggerRect.bottom;
                     const spaceAbove = triggerRect.top;
                     
                     let top: number;
-                    let maxHeight = '240px';
+                    let left: number;
+                    let width: string | undefined;
+                    let maxHeight: string;
                     
-                    if (spaceBelow >= 150) {
-                        // Position below
-                        top = triggerRect.bottom + 4;
-                    } else if (spaceAbove >= 150) {
-                        // Position above
-                        top = triggerRect.top - Math.min(dropdownHeight, spaceAbove - 4);
-                    } else {
-                        // Use whatever space is larger
-                        if (spaceBelow > spaceAbove) {
+                    // Mobile-first calculations
+                    if (isMobile) {
+                        // On mobile, use more viewport space and better positioning
+                        const mobileMaxHeight = Math.max(150, Math.min(spaceBelow, spaceAbove, viewportHeight * 0.4));
+                        maxHeight = `${mobileMaxHeight}px`;
+                        
+                        if (spaceBelow >= 120) {
                             top = triggerRect.bottom + 4;
-                            maxHeight = `${spaceBelow - 20}px`;
+                        } else if (spaceAbove >= 120) {
+                            top = Math.max(4, triggerRect.top - mobileMaxHeight - 4);
                         } else {
-                            top = 4;
-                            maxHeight = `${triggerRect.top - 20}px`;
+                            // Use the larger space available
+                            if (spaceBelow > spaceAbove) {
+                                top = triggerRect.bottom + 4;
+                                maxHeight = `${Math.max(120, spaceBelow - 20)}px`;
+                            } else {
+                                top = Math.max(4, triggerRect.top - Math.max(120, spaceAbove - 20) - 4);
+                                maxHeight = `${Math.max(120, spaceAbove - 20)}px`;
+                            }
                         }
+                        
+                        // Mobile positioning: always use full trigger width, positioned at trigger left
+                        left = Math.max(8, Math.min(triggerRect.left, viewportWidth - triggerRect.width - 8));
+                        width = `${Math.min(triggerRect.width, viewportWidth - 16)}px`;
+                    } else {
+                        // Desktop calculations
+                        if (spaceBelow >= 150) {
+                            top = triggerRect.bottom + 4;
+                            maxHeight = '240px';
+                        } else if (spaceAbove >= 150) {
+                            top = triggerRect.top - Math.min(dropdownHeight, spaceAbove - 4);
+                            maxHeight = '240px';
+                        } else {
+                            if (spaceBelow > spaceAbove) {
+                                top = triggerRect.bottom + 4;
+                                maxHeight = `${spaceBelow - 20}px`;
+                            } else {
+                                top = 4;
+                                maxHeight = `${triggerRect.top - 20}px`;
+                            }
+                        }
+                        
+                        // Desktop positioning
+                        const isMultiSelect = field.type === 'multiselectdropdown';
+                        left = isMultiSelect ? triggerRect.left : triggerRect.right - 120;
+                        width = isMultiSelect ? `${triggerRect.width}px` : undefined;
                     }
-                    
-                    // Different positioning for different field types
-                    const isMultiSelect = field.type === 'multiselectdropdown';
                     
                     setDropdownStyle({
                         position: 'fixed',
                         top: `${top}px`,
-                        left: isMultiSelect ? `${triggerRect.left}px` : `${triggerRect.right - 120}px`,
-                        width: isMultiSelect ? `${triggerRect.width}px` : undefined,
-                        minWidth: isMultiSelect ? undefined : '120px',
+                        left: `${left}px`,
+                        width,
+                        minWidth: isMobile ? undefined : '120px',
                         maxHeight,
-                        zIndex: 9999,
+                        zIndex: isMobile ? 99999 : 9999,
                     });
                 }
             }, 10);
@@ -419,33 +460,65 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                             </button>
 
                             {openDropdown === field.id && !isLoading && (
-                                <div 
-                                    className="bg-white border border-gray-300 rounded-md shadow-xl overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200"
-                                    style={dropdownStyle}
-                                >
-                                    {ratingOptions.map((option) => (
-                                        <button
-                                            key={option.value}
-                                            type="button"
-                                            data-dropdown-option
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handleFieldChange(field.id, option.value);
-                                                setOpenDropdown(null);
-                                            }}
-                                            className={clsx(
-                                                'w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors duration-200 rounded',
-                                                value === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                                            )}
+                                isMobile ? (
+                                    <Portal>
+                                        <div 
+                                            className="bg-white border border-gray-300 rounded-md shadow-xl overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                            style={dropdownStyle}
                                         >
-                                            {option.label}
-                                            {option.isDefault && value !== option.value && (
-                                                <span className="ml-1 text-xs text-gray-500">(Default)</span>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
+                                            {ratingOptions.map((option) => (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    data-dropdown-option
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleFieldChange(field.id, option.value);
+                                                        setOpenDropdown(null);
+                                                    }}
+                                                    className={clsx(
+                                                        'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 transition-colors duration-200 rounded touch-manipulation',
+                                                        value === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                                    )}
+                                                >
+                                                    {option.label}
+                                                    {option.isDefault && value !== option.value && (
+                                                        <span className="ml-1 text-xs text-gray-500">(Default)</span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </Portal>
+                                ) : (
+                                    <div 
+                                        className="bg-white border border-gray-300 rounded-md shadow-xl overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                        style={dropdownStyle}
+                                    >
+                                        {ratingOptions.map((option) => (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                data-dropdown-option
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleFieldChange(field.id, option.value);
+                                                    setOpenDropdown(null);
+                                                }}
+                                                className={clsx(
+                                                    'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 transition-colors duration-200 rounded touch-manipulation',
+                                                    value === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                                )}
+                                            >
+                                                {option.label}
+                                                {option.isDefault && value !== option.value && (
+                                                    <span className="ml-1 text-xs text-gray-500">(Default)</span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )
                             )}
                         </div>
                     </div>
@@ -527,34 +600,67 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         </button>
 
                         {openDropdown === field.id && (
-                            <div 
-                                className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200"
-                                style={dropdownStyle}
-                            >
-                                {multiDropdownOptions.map((option) => {
-                                    const isSelected = selectedValues.includes(option.value);
-                                    return (
-                                        <label
-                                            key={option.value}
-                                            className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={(e) => {
-                                                    e.stopPropagation();
-                                                    const newValues = isSelected
-                                                        ? selectedValues.filter((val: string) => val !== option.value)
-                                                        : [...selectedValues, option.value];
-                                                    handleFieldChange(field.id, newValues);
-                                                }}
-                                                className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-                                            />
-                                            <span className="ml-3 text-gray-900">{option.label}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
+                            isMobile ? (
+                                <Portal>
+                                    <div 
+                                        className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                        style={dropdownStyle}
+                                    >
+                                        {multiDropdownOptions.map((option) => {
+                                            const isSelected = selectedValues.includes(option.value);
+                                            return (
+                                                <label
+                                                    key={option.value}
+                                                    className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 cursor-pointer touch-manipulation"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const newValues = isSelected
+                                                                ? selectedValues.filter((val: string) => val !== option.value)
+                                                                : [...selectedValues, option.value];
+                                                            handleFieldChange(field.id, newValues);
+                                                        }}
+                                                        className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                                    />
+                                                    <span className="ml-3 text-gray-900">{option.label}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </Portal>
+                            ) : (
+                                <div 
+                                    className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                    style={dropdownStyle}
+                                >
+                                    {multiDropdownOptions.map((option) => {
+                                        const isSelected = selectedValues.includes(option.value);
+                                        return (
+                                            <label
+                                                key={option.value}
+                                                className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 cursor-pointer touch-manipulation"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        const newValues = isSelected
+                                                            ? selectedValues.filter((val: string) => val !== option.value)
+                                                            : [...selectedValues, option.value];
+                                                        handleFieldChange(field.id, newValues);
+                                                    }}
+                                                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                                />
+                                                <span className="ml-3 text-gray-900">{option.label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            )
                         )}
                     </div>
                     {error && <p className="text-red-500 text-sm mt-1">{error}</p>}

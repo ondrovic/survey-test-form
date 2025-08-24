@@ -229,7 +229,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         Basic Configuration
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <Input
                             name="fieldLabel"
                             label="Field Label *"
@@ -285,7 +285,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             <p className="text-sm text-blue-700">
                                 Set minimum and maximum number of options users can select. Leave empty for no limits.
                             </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <Input
                                     name="minSelections"
                                     label="Minimum Selections"

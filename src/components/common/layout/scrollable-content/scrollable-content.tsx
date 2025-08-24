@@ -189,15 +189,29 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
       'scrollable-content-touch',
       'md:scrollable-content-mobile-hidden', // Hide scrollbar on mobile
       'scrollable-content-mobile'
-    ]
+    ],
+    // Desktop: only add padding class if content is scrollable
+    scrollState.isScrollable && window.innerWidth > 768 && 'has-overflow'
   );
 
   const scrollStyle: React.CSSProperties = {
     minHeight,
-    maxHeight: mobileOptimized ?
-      `min(${maxHeight}, calc(100vh - 180px))` : // Account for mobile viewport
-      maxHeight,
-    // Custom scrollbar styling
+    maxHeight: (() => {
+      if (mobileOptimized && window.innerWidth <= 768) {
+        // Mobile: always constrain height
+        return `min(${maxHeight}, calc(100vh - 120px))`;
+      } else if (window.innerWidth > 768) {
+        // Desktop: be more generous with height, only constrain if really needed
+        if (maxHeight === '60vh') {
+          // For 60vh default, allow more natural height on desktop
+          return 'none';
+        }
+        // Keep 100% as-is for forms that need full height constraint
+        return maxHeight;
+      }
+      return maxHeight;
+    })(),
+    // Custom scrollbar styling - only show when needed
     scrollbarWidth: 'thin',
     scrollbarColor: '#CBD5E0 #EDF2F7'
   };

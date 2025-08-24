@@ -680,8 +680,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     onSortableListMove={handleSortableListMove}
                 >
                     <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                        {/* Mobile-first responsive sidebar */}
-                        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r bg-gray-50 p-3 md:p-4 overflow-y-auto max-h-48 md:max-h-none">
+                        {/* Mobile-first responsive sidebar with better intermediate sizing */}
+                        <div className="w-full md:w-96 lg:w-80 xl:w-96 border-b md:border-b-0 md:border-r bg-gray-50 p-3 md:p-4 overflow-y-auto max-h-48 md:max-h-none">
                             <SurveyDetails
                                 title={state.config.title}
                                 description={state.config.description || ''}

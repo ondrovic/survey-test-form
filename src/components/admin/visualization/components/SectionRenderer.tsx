@@ -145,14 +145,14 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
     });
 
     // Adaptive grid logic
-    if (totalCharts <= 2) return 'grid-cols-1 md:grid-cols-2';
+    if (totalCharts <= 2) return 'grid-cols-1 lg:grid-cols-2';
     if (donutCount >= totalCharts * 0.6) {
-      if (hasLongTitles || hasLongLegendLabels) return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-      return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+      if (hasLongTitles || hasLongLegendLabels) return 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3';
+      return 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
     }
-    if (histogramCount >= totalCharts * 0.5) return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-    if (barCount >= totalCharts * 0.7) return 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1';
-    return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+    if (histogramCount >= totalCharts * 0.5) return 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
+    if (barCount >= totalCharts * 0.7) return 'grid-cols-1';
+    return 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
   };
 
   return (

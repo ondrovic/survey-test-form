@@ -87,6 +87,7 @@ export const useGenericImportExport = () => {
             if (originalId) {
               const existing = await databaseHelpers.getSurveyConfig(originalId);
               if (existing) {
+                // TODO: this should use a modal never the confirm()
                 const shouldCreateNew = confirm(
                   `A survey config with ID "${originalId}" already exists. Would you like to create a new one with a different ID?\n\nYes: Create new with different ID\nNo: Cancel import`
                 );

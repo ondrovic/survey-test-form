@@ -39,8 +39,8 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
   return (
     <div className="border rounded-lg p-4">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
             <h4 className="font-semibold">
               {instance.title}
             </h4>
@@ -51,7 +51,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
             <p className="text-xs text-gray-500">
               Config: {config?.title || instance.configId}
             </p>
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
               <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}>
                 {isActive ? 'Active' : 'Inactive'}
@@ -66,11 +66,12 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
             <Button
               size="sm"
               variant="outline"
               onClick={() => onToggleActive(instance)}
+              className="w-full sm:w-auto justify-start"
             >
               {instance.isActive ? 'Deactivate' : 'Activate'}
             </Button>
@@ -78,6 +79,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
               size="sm"
               variant="outline"
               onClick={() => onSettings(instance)}
+              className="w-full sm:w-auto justify-start"
             >
               <Settings className="w-4 h-4 mr-1" />
               Settings
@@ -86,6 +88,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
               size="sm"
               variant="outline"
               onClick={() => onDownload(instance.id)}
+              className="w-full sm:w-auto justify-start"
             >
               <Download className="w-4 h-4 mr-1" />
               Download
@@ -94,6 +97,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
               size="sm"
               variant="outline"
               onClick={onVisualize}
+              className="w-full sm:w-auto justify-start"
             >
               <BarChart3 className="w-4 h-4 mr-1" />
               Visualize
@@ -102,6 +106,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
               size="sm"
               variant="outline"
               onClick={onAnalytics}
+              className="w-full sm:w-auto justify-start"
             >
               <TrendingUp className="w-4 h-4 mr-1" />
               Analytics
@@ -111,6 +116,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
                 size="sm"
                 variant="outline"
                 onClick={() => onExport(instance)}
+                className="w-full sm:w-auto justify-start"
               >
                 <Upload className="w-4 h-4 mr-1" />
                 Export
@@ -120,6 +126,7 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
               size="sm"
               variant="outline"
               onClick={() => onDelete(instance)}
+              className="w-full sm:w-auto justify-start"
             >
               <Trash2 className="w-4 h-4 mr-1" />
               Delete

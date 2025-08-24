@@ -487,7 +487,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     </div>
 
                     {/* Scrollable Content Section */}
-                    <div className="flex-1 px-8 min-h-0 overflow-hidden">
+                    <div className="flex-1 px-8 min-h-0 overflow-hidden sm:dropdown-container-mobile">
                         <ScrollableContent
                             maxHeight="100%"
                             minHeight="200px"

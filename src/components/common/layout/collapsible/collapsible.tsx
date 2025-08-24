@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useId, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import { collapsible as collapsibleTokens } from '@/styles/design-tokens';
@@ -78,11 +78,114 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
   animationDuration = 200,
 }, ref) => {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  const [contentHeight, setContentHeight] = useState<number>(0);
+  const [shouldScroll, setShouldScroll] = useState<boolean>(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const innerContentRef = useRef<HTMLDivElement>(null);
   const isControlled = controlledExpanded !== undefined;
   const isExpanded = isControlled ? controlledExpanded : internalExpanded;
   
   const contentId = useId();
   const triggerId = useId();
+  
+  // Measure content height when expanded or children change
+  useEffect(() => {
+    if (innerContentRef.current && isExpanded) {
+      // Small delay to ensure DOM has updated
+      const timer = setTimeout(() => {
+        if (innerContentRef.current) {
+          const contentHeight = innerContentRef.current.scrollHeight;
+          
+          // Calculate available viewport space (accounting for header, navigation, etc.)
+          const viewportHeight = window.innerHeight;
+          const isMobile = window.innerWidth <= 768;
+          
+          // Use different height strategies for mobile vs desktop
+          let finalHeight: number;
+          if (isMobile) {
+            // Mobile: cap at 70% of viewport to prevent taking over the screen
+            const maxReasonableHeight = viewportHeight * 0.7;
+            finalHeight = Math.min(contentHeight, maxReasonableHeight);
+            setShouldScroll(finalHeight < contentHeight);
+          } else {
+            // Desktop: prefer natural height, only constrain if content is extremely large
+            const maxReasonableHeight = Math.min(viewportHeight * 0.8, 1000); // More generous desktop limit
+            
+            // For desktop, allow natural height unless content is really excessive
+            if (contentHeight <= maxReasonableHeight) {
+              finalHeight = contentHeight;
+              setShouldScroll(false); // Never scroll on desktop unless absolutely necessary
+            } else {
+              // Only constrain very large content on desktop
+              finalHeight = maxReasonableHeight;
+              setShouldScroll(true);
+            }
+          }
+          
+          setContentHeight(finalHeight);
+        }
+      }, 10);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // Return empty cleanup function when not expanded
+    return () => {};
+  }, [isExpanded, children]);
+  
+  // Reset scroll state when collapsed
+  useEffect(() => {
+    if (!isExpanded) {
+      setShouldScroll(false);
+    }
+  }, [isExpanded]);
+  
+  // Update height when window resizes (responsive layout changes)
+  useEffect(() => {
+    const updateHeight = () => {
+      if (innerContentRef.current && isExpanded) {
+        const contentHeight = innerContentRef.current.scrollHeight;
+        
+        // Recalculate viewport constraints
+        const viewportHeight = window.innerHeight;
+        const isMobile = window.innerWidth <= 768;
+        
+        let finalHeight: number;
+        if (isMobile) {
+          const maxReasonableHeight = viewportHeight * 0.7;
+          finalHeight = Math.min(contentHeight, maxReasonableHeight);
+          setShouldScroll(finalHeight < contentHeight);
+        } else {
+          // Desktop: prefer natural height, only constrain if content is extremely large
+          const maxReasonableHeight = Math.min(viewportHeight * 0.8, 1000); // More generous desktop limit
+          
+          // For desktop, allow natural height unless content is really excessive
+          if (contentHeight <= maxReasonableHeight) {
+            finalHeight = contentHeight;
+            setShouldScroll(false); // Never scroll on desktop unless absolutely necessary
+          } else {
+            // Only constrain very large content on desktop
+            finalHeight = maxReasonableHeight;
+            setShouldScroll(true);
+          }
+        }
+        setContentHeight(finalHeight);
+      }
+    };
+    
+    // Debounce resize events
+    let resizeTimer: NodeJS.Timeout;
+    const debouncedUpdateHeight = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(updateHeight, 150);
+    };
+    
+    window.addEventListener('resize', debouncedUpdateHeight);
+    return () => {
+      window.removeEventListener('resize', debouncedUpdateHeight);
+      clearTimeout(resizeTimer);
+    };
+  }, [isExpanded]);
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
@@ -145,41 +248,56 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
         className
       )}
     >
-      <div className={clsx(triggerClasses, "flex items-center justify-between")}>
-        <button
-          id={triggerId}
-          onClick={handleToggle}
-          onKeyDown={handleKeyDown}
-          className="flex items-center gap-3 min-w-0 flex-1 bg-transparent border-none p-0 text-left hover:bg-transparent focus:outline-none"
-          aria-expanded={isExpanded}
-          aria-controls={contentId}
-          disabled={disabled}
-          type="button"
-        >
-          <h3 className={titleClasses}>
-            {title}
-          </h3>
+      <div className={triggerClasses}>
+        <div className="flex items-center justify-between w-full sm:flex-1">
+          <button
+            id={triggerId}
+            onClick={handleToggle}
+            onKeyDown={handleKeyDown}
+            className="flex items-center gap-3 min-w-0 flex-1 bg-transparent border-none p-0 text-left hover:bg-transparent focus:outline-none"
+            aria-expanded={isExpanded}
+            aria-controls={contentId}
+            disabled={disabled}
+            type="button"
+          >
+            <h3 className={titleClasses}>
+              {title}
+            </h3>
+            
+            {badge !== undefined && (
+              <span className={badgeClasses}>
+                {typeof badge === 'number' && badge > 0 
+                  ? `${badge} ${badge === 1 ? 'item' : 'items'}`
+                  : badge
+                }
+              </span>
+            )}
+          </button>
           
-          {badge !== undefined && (
-            <span className={badgeClasses}>
-              {typeof badge === 'number' && badge > 0 
-                ? `${badge} ${badge === 1 ? 'item' : 'items'}`
-                : badge
-              }
-            </span>
-          )}
-        </button>
+          <button
+            onClick={handleToggle}
+            className="p-1 hover:bg-gray-100 rounded-md transition-colors bg-transparent border-none flex-shrink-0 sm:hidden"
+            aria-expanded={isExpanded}
+            aria-controls={contentId}
+            disabled={disabled}
+            type="button"
+          >
+            {icon || (
+              <ChevronDown className={iconClasses} />
+            )}
+          </button>
+        </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           {headerAction && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
               {headerAction}
             </div>
           )}
           
           <button
             onClick={handleToggle}
-            className="p-1 hover:bg-gray-100 rounded-md transition-colors bg-transparent border-none"
+            className="hidden sm:block p-1 hover:bg-gray-100 rounded-md transition-colors bg-transparent border-none flex-shrink-0"
             aria-expanded={isExpanded}
             aria-controls={contentId}
             disabled={disabled}
@@ -193,27 +311,39 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
       </div>
       
       <div
+        ref={contentRef}
         id={contentId}
-        className={contentClasses}
+        className={clsx(
+          contentClasses, 
+          isExpanded 
+            ? (shouldScroll ? 'overflow-y-auto' : 'overflow-y-hidden') 
+            : 'overflow-hidden'
+        )}
         style={{
-          maxHeight: isExpanded ? '1000px' : '0px',
+          maxHeight: isExpanded 
+            ? (shouldScroll ? `${contentHeight}px` : 'none') 
+            : '0px',
           opacity: isExpanded ? 1 : 0,
           transitionDuration: `${animationDuration}ms`,
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-          transitionProperty: 'max-height, opacity, padding',
+          transitionProperty: shouldScroll ? 'max-height, opacity, padding' : 'opacity, padding',
           paddingTop: isExpanded ? undefined : '0px',
           paddingBottom: isExpanded ? undefined : '0px',
+          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
         }}
         aria-hidden={!isExpanded}
         role="region"
         aria-labelledby={triggerId}
       >
-        <div style={{ 
-          transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)',
-          transitionDuration: `${animationDuration}ms`,
-          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-          transitionProperty: 'transform',
-        }}>
+        <div 
+          ref={innerContentRef}
+          style={{ 
+            transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)',
+            transitionDuration: `${animationDuration}ms`,
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionProperty: 'transform',
+          }}
+        >
           {children}
         </div>
       </div>
@@ -247,7 +377,7 @@ export const CollapsibleSection = forwardRef<HTMLDivElement, CollapsibleSectionP
 }, ref) => {
   // Combine headerContent and headerAction if both exist
   const combinedHeaderAction = headerContent || headerAction ? (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
       {headerContent}
       {headerAction}
     </div>

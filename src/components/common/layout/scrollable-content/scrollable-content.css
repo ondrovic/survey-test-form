@@ -33,13 +33,31 @@
 
 /* Add right padding to prevent content from being hidden behind scrollbar */
 /* This ensures the scrollbar doesn't overlay form content, especially in the non-paginated form view */
-.scrollable-content {
-  padding-right: 16px;
+/* Only add padding when content is actually scrollable on desktop */
+@media (min-width: 769px) {
+  .scrollable-content::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  /* Only add padding for containers that have scrollable content */
+  .scrollable-content.has-overflow {
+    padding-right: 16px;
+  }
+  
+  .scrollable-content.has-overflow form {
+    padding-right: 4px;
+  }
 }
 
-/* Ensure proper spacing for form content */
-.scrollable-content form {
-  padding-right: 4px;
+/* Mobile - always has padding since we manage scrollbar visibility differently */
+@media (max-width: 768px) {
+  .scrollable-content {
+    padding-right: 16px;
+  }
+  
+  .scrollable-content form {
+    padding-right: 4px;
+  }
 }
 
 /* Hide scrollbar on mobile while maintaining functionality */

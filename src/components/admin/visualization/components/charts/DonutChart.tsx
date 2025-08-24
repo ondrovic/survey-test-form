@@ -26,7 +26,7 @@ export const DonutChart: React.FC<BaseChartProps> = ({
   let cumulative = 0;
 
   return (
-    <div className={`grid gap-6 items-center ${chartSize === 'large' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
+    <div className={`grid gap-6 items-center ${chartSize === 'large' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 lg:grid-cols-2'}`}>
       <div className={`flex justify-center items-center ${chartSize === 'large' ? 'xl:col-span-1' : ''}`}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-sm">
           <circle cx={center} cy={center} r={radius} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />

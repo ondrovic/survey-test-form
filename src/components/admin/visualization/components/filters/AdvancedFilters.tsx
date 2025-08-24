@@ -27,9 +27,9 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
-      {/* Make search span two columns on md+ screens */}
-      <div className="md:col-span-3"></div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 items-end">
+      {/* Make search span two columns on lg+ screens */}
+      <div className="lg:col-span-3"></div>
       <div>
         <label
           htmlFor="search-input"

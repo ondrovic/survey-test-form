@@ -4,6 +4,7 @@ export * from "./cookie.utils";
 export * from "./date.utils";
 export * from "./env.utils";
 export * from "./excel.utils";
+export * from "./id.utils";
 export * from "./ip.utils";
 export * from "./recaptcha.utils";
 export * from "./validation.utils";

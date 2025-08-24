@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/auth-context/index';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useToast } from '@/contexts/toast-context/index';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
-import { isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
+import { generateUUID, isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 
@@ -21,7 +21,7 @@ import { routes } from '@/routes';
 import { isReCaptchaConfigured, verifyReCaptchaTokenClientSide } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
 // Remove hardcoded copyright - now handled by SurveyFooter component
 
@@ -141,17 +141,7 @@ function AppContent() {
                 <Route path={`${routes.adminVisualize(':instanceId')}`} element={<AdminVisualizationPage />} />
                 <Route path={`${routes.adminAnalytics(':instanceId')}`} element={<AdminAnalyticsPage />} />
                 <Route path={routes.admin} element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path={`${routes.confirmation(':slug')}`} element={
-                    (() => {
-                        const slug = window.location.pathname.split('/').pop() || '';
-                        const instance = getSurveyInstanceBySlug(slug);
-                        if (instance) {
-                            return <SurveyConfirmation surveyTitle={instance.title} />;
-                        } else {
-                            return <NotFoundPage title="Survey Not Found" message="The survey you're looking for doesn't exist or is no longer available." />;
-                        }
-                    })()
-                } />
+                <Route path="/survey-confirmation/:slug" element={<ConfirmationPage getSurveyInstanceBySlug={getSurveyInstanceBySlug} />} />
                 <Route path={`${routes.takeSurvey(':slug')}`} element={
                     (() => {
                         const slug = window.location.pathname.split('/').pop() || '';
@@ -264,15 +254,25 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             hasSurveyConfig: !!surveyConfig,
             surveyConfigId: surveyConfig?.id,
             responsesCount: Object.keys(responses).length,
-            responses: responses
+            responses: responses,
+            userAgent: navigator.userAgent,
+            location: window.location.href,
+            networkType: (navigator as any).connection?.effectiveType || 'unknown'
         });
 
         setIsSubmitting(true);
         try {
+            // Check network connectivity first
+            if (!navigator.onLine) {
+                throw new Error('No internet connection detected');
+            }
+            
             console.log('Starting survey submission...', {
                 instanceId: instance.id,
                 configVersion: surveyConfig.version,
-                responseCount: Object.keys(responses).length
+                responseCount: Object.keys(responses).length,
+                isOnline: navigator.onLine,
+                connectionType: (navigator as any).connection?.effectiveType || 'unknown'
             });
 
             // Verify reCAPTCHA if enabled
@@ -300,7 +300,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 
             const completedAt = getCurrentTimestamp();
             const surveyResponse: SurveyResponse = {
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 surveyInstanceId: instance.id,
                 sessionId: surveySession.session.sessionId || undefined,
                 configVersion: surveyConfig.version || 'unknown',
@@ -325,8 +325,25 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 hasResponses: Object.keys(responses).length > 0
             });
             
+            // Test database connectivity before submission
+            console.log('Testing database connectivity...');
+            try {
+                await databaseHelpers.getSurveyConfigs();
+                console.log('Database connectivity test passed');
+            } catch (connError) {
+                console.error('Database connectivity test failed:', connError);
+                throw new Error(`Database connection failed: ${connError instanceof Error ? connError.message : 'Unknown error'}`);
+            }
+            
             console.log('Submitting survey response to database...', surveyResponse);
-            await databaseHelpers.addSurveyResponse(surveyResponse);
+            
+            // Add timeout wrapper for mobile connections
+            const submissionPromise = databaseHelpers.addSurveyResponse(surveyResponse);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000);
+            });
+            
+            await Promise.race([submissionPromise, timeoutPromise]);
             
             // Mark session as completed
             if (surveySession.session.sessionId) {
@@ -339,10 +356,42 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 
             // Redirect to confirmation page instead of resetting form
             const urlParam = instance.slug || instance.id;
-            navigate(routes.confirmation(urlParam));
+            const confirmationUrl = `${window.location.origin}${routes.confirmation(urlParam)}`;
+            console.log('🔍 Redirecting to confirmation:', confirmationUrl);
+            
+            // Try React Router navigation first, fallback to window.location
+            try {
+                navigate(`/survey-confirmation/${urlParam}`);
+            } catch (navError) {
+                console.warn('React Router navigation failed, using window.location:', navError);
+                window.location.href = confirmationUrl;
+            }
         } catch (err) {
             console.error('Survey submission error:', err);
-            showError('Failed to submit survey. Please try again.');
+            
+            // Provide more specific error messages
+            let errorMessage = 'Failed to submit survey. Please try again.';
+            if (err instanceof Error) {
+                if (err.message.includes('No internet connection')) {
+                    errorMessage = 'No internet connection. Please check your connection and try again.';
+                } else if (err.message.includes('Database connection failed')) {
+                    errorMessage = 'Cannot connect to server. Please ensure you can access the application and try again.';
+                } else if (err.message.includes('network') || err.message.includes('fetch') || err.message.includes('NetworkError')) {
+                    errorMessage = 'Network error. Please check your connection and try again.';
+                } else if (err.message.includes('timeout')) {
+                    errorMessage = 'Request timed out. Please try again.';
+                }
+                console.error('Detailed error:', {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                    location: window.location.href,
+                    userAgent: navigator.userAgent,
+                    online: navigator.onLine
+                });
+            }
+            
+            showError(errorMessage);
             throw err; // Re-throw the error so DynamicForm can catch it
         } finally {
             setIsSubmitting(false);
@@ -398,6 +447,23 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             }}
         />
     );
+}
+
+// Confirmation Page Component
+function ConfirmationPage({ getSurveyInstanceBySlug }: { getSurveyInstanceBySlug: (slug: string) => SurveyInstance | undefined }) {
+    const { slug } = useParams<{ slug: string }>();
+    
+    if (!slug) {
+        return <NotFoundPage title="Invalid Survey" message="No survey identifier provided." />;
+    }
+    
+    const instance = getSurveyInstanceBySlug(slug);
+    
+    if (instance) {
+        return <SurveyConfirmation surveyTitle={instance.title} />;
+    } else {
+        return <NotFoundPage title="Survey Not Found" message="The survey you're looking for doesn't exist or is no longer available." />;
+    }
 }
 
 export default App; 

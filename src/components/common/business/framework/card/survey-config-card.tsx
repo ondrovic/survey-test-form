@@ -51,8 +51,8 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
 
   return (
     <div className="border rounded-lg p-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
           <h4 className="font-semibold">{config.title}</h4>
           <p className="text-sm text-gray-600">{config.description}</p>
           <span className="text-sm font-normal text-blue-600">
@@ -62,11 +62,12 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
             {formatStats()} • {instanceCount} instances
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
           <Button
             size="sm"
             variant="outline"
             onClick={() => onEdit(config)}
+            className="w-full sm:w-auto justify-start"
           >
             <Edit className="w-4 h-4 mr-1" />
             Edit
@@ -76,6 +77,7 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
             variant="outline"
             onClick={() => onCreateInstance(config)}
             disabled={validationStatus?.hasErrors}
+            className="w-full sm:w-auto justify-start"
           >
             <Plus className="w-4 h-4 mr-1" />
             Create Instance
@@ -84,6 +86,7 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
             size="sm"
             variant="outline"
             onClick={() => onExport(config)}
+            className="w-full sm:w-auto justify-start"
           >
             <Download className="w-4 h-4 mr-1" />
             Export
@@ -92,6 +95,7 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
             size="sm"
             variant="outline"
             onClick={() => onDelete(config)}
+            className="w-full sm:w-auto justify-start"
           >
             <Trash2 className="w-4 h-4 mr-1" />
             Delete

@@ -5,5 +5,5 @@ export const routes = {
   adminVisualize: (instanceIdOrSlug: string) => `${baseRoute}/admin/visualize/${instanceIdOrSlug}`,
   adminAnalytics: (instanceIdOrSlug: string) => `${baseRoute}/admin/analytics/${instanceIdOrSlug}`,
   takeSurvey: (instanceIdOrSlug: string) => `${baseRoute}/${instanceIdOrSlug}`,
-  confirmation: (instanceIdOrSlug: string) => `${baseRoute.replace(/\/$/, '')}/../survey-confirmation/${instanceIdOrSlug}` // not under base, left for reference
+  confirmation: (instanceIdOrSlug: string) => `/survey-confirmation/${instanceIdOrSlug}` // Absolute path from root
 } as const;

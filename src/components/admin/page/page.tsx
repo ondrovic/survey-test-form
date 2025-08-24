@@ -207,12 +207,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
 
     return (
         <ValidationStatusProvider>
-            <div className="min-h-screen bg-amber-50/30">
+            <div className="min-h-screen bg-amber-50/30 flex flex-col">
                 {/* Header */}
                 <AdminHeader onLogout={handleLogout} />
 
                 {/* Main Content */}
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <main className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 min-h-0">
                 {/* Tab Navigation */}
                 <div className="border-b border-gray-200 mb-8">
                     <nav className="-mb-px flex space-x-8">
@@ -239,42 +239,46 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
                 </div>
 
                 {/* Tab Content */}
-                {activeTab === 'overview' && (
-                    <AdminOverview
-                        onCreateNewSurvey={handleCreateNewSurvey}
-                        onDownloadAllData={handleDownloadAllData}
-                        onNavigateToTab={handleSetActiveTab}
-                    />
-                )}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                    <div className="h-full overflow-y-auto">
+                        {activeTab === 'overview' && (
+                            <AdminOverview
+                                onCreateNewSurvey={handleCreateNewSurvey}
+                                onDownloadAllData={handleDownloadAllData}
+                                onNavigateToTab={handleSetActiveTab}
+                            />
+                        )}
 
-                {activeTab === 'framework' && (
-                    <AdminFramework
-                        onCreateNewSurvey={handleCreateNewSurvey}
-                        onEditSurveyConfig={handleEditSurveyConfig}
-                        onDeleteSurveyConfig={adminOperations.deleteSurveyConfig}
-                        onDeleteSurveyInstance={adminOperations.permanentlyDeleteSurveyInstance}
-                        onToggleInstanceActive={adminOperations.toggleInstanceActive}
-                        onUpdateInstanceDateRange={adminOperations.updateInstanceDateRange}
-                    />
-                )}
+                        {activeTab === 'framework' && (
+                            <AdminFramework
+                                onCreateNewSurvey={handleCreateNewSurvey}
+                                onEditSurveyConfig={handleEditSurveyConfig}
+                                onDeleteSurveyConfig={adminOperations.deleteSurveyConfig}
+                                onDeleteSurveyInstance={adminOperations.permanentlyDeleteSurveyInstance}
+                                onToggleInstanceActive={adminOperations.toggleInstanceActive}
+                                onUpdateInstanceDateRange={adminOperations.updateInstanceDateRange}
+                            />
+                        )}
 
-                {activeTab === 'option-sets' && (
-                    <AdminOptionSets
-                        onShowRatingScaleManager={handleShowRatingScaleManager}
-                        onEditRatingScale={handleEditRatingScale}
-                        onDeleteRatingScale={adminOperations.deleteRatingScale}
-                        onCleanupDuplicates={adminOperations.cleanupDuplicateRatingScales}
-                        onShowRadioOptionSetManager={handleShowRadioOptionSetManager}
-                        onEditRadioOptionSet={handleEditRadioOptionSet}
-                        onDeleteRadioOptionSet={handleDeleteRadioOptionSet}
-                        onShowMultiSelectOptionSetManager={handleShowMultiSelectOptionSetManager}
-                        onEditMultiSelectOptionSet={handleEditMultiSelectOptionSet}
-                        onDeleteMultiSelectOptionSet={handleDeleteMultiSelectOptionSet}
-                        onShowSelectOptionSetManager={handleShowSelectOptionSetManager}
-                        onEditSelectOptionSet={handleEditSelectOptionSet}
-                        onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
-                    />
-                )}
+                        {activeTab === 'option-sets' && (
+                            <AdminOptionSets
+                                onShowRatingScaleManager={handleShowRatingScaleManager}
+                                onEditRatingScale={handleEditRatingScale}
+                                onDeleteRatingScale={adminOperations.deleteRatingScale}
+                                onCleanupDuplicates={adminOperations.cleanupDuplicateRatingScales}
+                                onShowRadioOptionSetManager={handleShowRadioOptionSetManager}
+                                onEditRadioOptionSet={handleEditRadioOptionSet}
+                                onDeleteRadioOptionSet={handleDeleteRadioOptionSet}
+                                onShowMultiSelectOptionSetManager={handleShowMultiSelectOptionSetManager}
+                                onEditMultiSelectOptionSet={handleEditMultiSelectOptionSet}
+                                onDeleteMultiSelectOptionSet={handleDeleteMultiSelectOptionSet}
+                                onShowSelectOptionSetManager={handleShowSelectOptionSetManager}
+                                onEditSelectOptionSet={handleEditSelectOptionSet}
+                                onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
+                            />
+                        )}
+                    </div>
+                </div>
 
 
 
