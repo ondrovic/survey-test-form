@@ -54,6 +54,8 @@ export interface ModalProps {
   children: React.ReactNode;
   portal?: boolean;
   initialFocus?: React.RefObject<HTMLElement>;
+  mobileFullscreen?: boolean;
+  mobileAdaptive?: boolean;
 }
 
 /**
@@ -96,6 +98,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       children,
       portal = true,
       initialFocus,
+      mobileFullscreen = false,
+      mobileAdaptive = false,
     },
     ref
   ) => {
@@ -221,6 +225,13 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
 
     if (!isOpen) return null;
 
+    // Determine mobile-responsive classes
+    const getMobileClasses = () => {
+      if (mobileFullscreen) return modalTokens.mobile.fullscreen;
+      if (mobileAdaptive) return modalTokens.mobile.adaptive;
+      return '';
+    };
+
     const modalContent = (
       <ModalContext.Provider value={contextValue}>
         <div
@@ -239,7 +250,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               ref={ref || modalRef}
               className={clsx(
                 modalTokens.content,
-                modalTokens.sizes[size],
+                // Use mobile-responsive classes if specified, otherwise use standard size classes
+                getMobileClasses() || modalTokens.sizes[size],
                 modalTokens.variants[variant],
                 className
               )}
@@ -353,10 +365,8 @@ const ModalBody = forwardRef<HTMLDivElement, ModalBodyProps>(({
       ref={ref}
       id={bodyId}
       className={clsx(
-        modalTokens.body,
-        {
-          'p-6': padding,
-        },
+        // Use design token body styles which now include responsive padding
+        padding ? modalTokens.body : 'flex-1 overflow-y-auto',
         className
       )}
     >

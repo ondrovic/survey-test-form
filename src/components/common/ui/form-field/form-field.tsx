@@ -1,6 +1,6 @@
 import React, { createContext, forwardRef, useContext } from 'react';
 import { clsx } from 'clsx';
-import { transitions, typography } from '@/styles/design-tokens';
+import { transitions, typography, input as inputTokens } from '@/styles/design-tokens';
 import { BaseFormProps } from '@/types/form.types';
 
 /**
@@ -58,7 +58,13 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(({
     <FormFieldContext.Provider value={contextValue}>
       <div
         ref={ref}
-        className={clsx('space-y-2', className)}
+        className={clsx(
+          // Mobile-first spacing
+          'space-y-2 sm:space-y-2',
+          // Ensure touch-friendly layout
+          'w-full',
+          className
+        )}
       >
         {children}
       </div>
@@ -90,8 +96,11 @@ const FormFieldLabel = forwardRef<HTMLLabelElement, FormFieldLabelProps>(({
       htmlFor={htmlFor || fieldId}
       className={clsx(
         'block font-medium text-gray-700',
-        typography.text.sm,
+        // Mobile-friendly label sizing
+        'text-base sm:text-sm',
         typography.weight.medium,
+        // Ensure good touch target for labels (when clickable)
+        'py-1',
         {
           'opacity-50': useFormField().disabled,
         },
@@ -99,7 +108,14 @@ const FormFieldLabel = forwardRef<HTMLLabelElement, FormFieldLabelProps>(({
       )}
     >
       {children}
-      {required && <span className="text-red-500 ml-1" aria-label="required">*</span>}
+      {required && (
+        <span 
+          className="text-red-500 ml-1 text-base sm:text-sm" 
+          aria-label="required"
+        >
+          *
+        </span>
+      )}
     </label>
   );
 });
@@ -125,7 +141,10 @@ const FormFieldDescription = forwardRef<HTMLParagraphElement, FormFieldDescripti
       ref={ref}
       className={clsx(
         'text-gray-600',
-        typography.text.sm,
+        // Mobile-friendly description text
+        'text-sm',
+        // Better spacing on mobile
+        'leading-relaxed',
         {
           'opacity-50': disabled,
         },
@@ -165,7 +184,12 @@ const FormFieldError = forwardRef<HTMLParagraphElement, FormFieldErrorProps>(({
       aria-live="polite"
       className={clsx(
         'text-red-600',
-        typography.text.sm,
+        // Mobile-friendly error text
+        'text-sm',
+        // Better visibility on mobile
+        'font-medium leading-relaxed',
+        // Add a subtle background for better contrast on mobile
+        'sm:bg-transparent bg-red-50 sm:p-0 px-3 py-1 rounded-md',
         transitions.default,
         className
       )}
@@ -191,18 +215,40 @@ const FormFieldControl = forwardRef<HTMLDivElement, FormFieldControlProps>(({
 }, ref) => {
   const { fieldId, errorId, error, disabled, required } = useFormField();
 
-  // Clone the child element and pass the necessary props
+  // Clone the child element and pass the necessary props including mobile optimizations
   const childWithProps = React.cloneElement(children, {
     id: fieldId,
     'aria-describedby': error ? errorId : undefined,
     'aria-invalid': error ? 'true' : 'false',
     'aria-required': required,
     disabled: disabled || children.props.disabled,
+    // Mobile-friendly enhancements
+    style: {
+      // Prevent iOS zoom on focus by ensuring font-size is at least 16px
+      fontSize: window?.innerWidth <= 768 ? '16px' : undefined,
+      ...children.props.style,
+    },
+    className: clsx(
+      // Add mobile touch target enhancements if it's an input-like element
+      typeof children.type === 'string' && ['input', 'textarea', 'select'].includes(children.type) && inputTokens.mobile.touchTarget,
+      typeof children.type === 'string' && ['input', 'textarea', 'select'].includes(children.type) && inputTokens.mobile.textSize,
+      typeof children.type === 'string' && ['input', 'textarea', 'select'].includes(children.type) && inputTokens.mobile.spacing,
+      children.props.className
+    ),
     ...children.props, // Preserve existing props
   });
 
   return (
-    <div ref={ref} className={className}>
+    <div 
+      ref={ref} 
+      className={clsx(
+        // Mobile-first container
+        'w-full',
+        // Ensure proper touch interaction space
+        'relative',
+        className
+      )}
+    >
       {childWithProps}
     </div>
   );

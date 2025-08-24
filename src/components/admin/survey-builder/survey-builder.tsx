@@ -662,8 +662,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     const handleCloseSelectOptionSetManager = useCallback(() => showSelectOptionSetManager(false), [showSelectOptionSetManager]);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full h-full md:max-w-6xl md:max-h-[90vh] flex flex-col">
                 <SurveyHeader
                     isEditing={!!editingConfig}
                     isPreviewMode={state.isPreviewMode}
@@ -679,9 +679,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     onFieldMove={handleMoveField}
                     onSortableListMove={handleSortableListMove}
                 >
-                    <div className="flex-1 flex overflow-hidden">
-                        {/* Sidebar */}
-                        <div className="w-80 border-r bg-gray-50 p-4 overflow-y-auto">
+                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                        {/* Mobile-first responsive sidebar */}
+                        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r bg-gray-50 p-3 md:p-4 overflow-y-auto max-h-48 md:max-h-none">
                             <SurveyDetails
                                 title={state.config.title}
                                 description={state.config.description || ''}
@@ -702,8 +702,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                             />
                         </div>
 
-                        {/* Main Content */}
-                        <div className="flex-1 p-6 overflow-y-auto">
+                        {/* Main Content - Mobile-optimized */}
+                        <div className="flex-1 p-3 md:p-6 overflow-y-auto">
                             {state.isPreviewMode ? (
                                 <SurveyPreview config={state.config} />
                             ) : selectedSection ? (
@@ -726,8 +726,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                     />
                                 </div>
                             ) : (
-                                <div className="text-center text-gray-500 mt-8">
-                                    Select a section to edit its configuration
+                                <div className="text-center text-gray-500 mt-8 p-4">
+                                    <div className="text-base md:text-lg">Select a section to edit its configuration</div>
+                                    <div className="text-sm mt-2 text-gray-400">Choose from the sections above on mobile or the sidebar on larger screens</div>
                                 </div>
                             )}
                         </div>

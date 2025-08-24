@@ -47,9 +47,15 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
         buttonTokens.base,
         buttonTokens.variants[variant],
         buttonTokens.sizes[size],
+        // Mobile enhancements
+        buttonTokens.mobile.touchTarget,
+        buttonTokens.mobile.touchFeedback,
+        buttonTokens.mobile.tapHighlight,
         transitions.default,
         {
             'cursor-not-allowed opacity-50': disabled || loading,
+            // Ensure touch feedback is disabled when button is disabled
+            'active:scale-100 active:bg-opacity-100': disabled || loading,
         },
         className
     );
@@ -64,6 +70,8 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
             disabled={disabled || loading}
             aria-label={computedAriaLabel}
             aria-busy={loading}
+            // Ensure proper touch interaction
+            style={{ WebkitTapHighlightColor: 'transparent' }}
             {...props}
         >
             {loading && (

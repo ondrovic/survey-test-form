@@ -2,7 +2,7 @@ import { Button, LoadingSpinner, ScrollableContent } from "@/components/common";
 import { routes } from "@/routes";
 import { TrendingUp } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import {
   AdvancedFilters,
@@ -17,7 +17,6 @@ import { useFilters, useSectionData, useVisualizationData } from "./hooks";
 
 const VisualizationContent: React.FC = React.memo(() => {
   const { instanceId } = useParams<{ instanceId: string }>();
-  const navigate = useNavigate();
   const { state, updateState, filters } = useVisualization();
 
   // Load data
@@ -112,7 +111,7 @@ const VisualizationContent: React.FC = React.memo(() => {
               <Button
                 variant="outline"
                 size="form"
-                onClick={() => navigate(routes.admin)}
+                onClick={() => window.location.href = `${window.location.origin}/${routes.admin}`}
               >
                 Back to Admin
               </Button>
@@ -141,7 +140,7 @@ const VisualizationContent: React.FC = React.memo(() => {
             <Button
               variant="outline"
               size="form"
-              onClick={() => navigate(routes.admin)}
+              onClick={() => window.location.href = `${window.location.origin}/${routes.admin}`}
             >
               Back to Admin
             </Button>

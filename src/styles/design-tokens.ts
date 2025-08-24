@@ -143,19 +143,27 @@ export const button = {
   base: 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
   
   variants: {
-    primary: 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 shadow-sm',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-sm',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-amber-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm',
+    primary: 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 shadow-sm active:bg-amber-800',
+    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-sm active:bg-gray-800',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-amber-500 active:bg-gray-100',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 active:bg-gray-200',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm active:bg-red-800',
   },
   
   sizes: {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
-    form: 'px-3 py-2 text-sm h-10',
-    fixed: 'px-4 py-2 text-sm h-10 w-20 text-center',
+    // Mobile-first sizing with minimum 44px touch targets
+    sm: 'px-3 py-2 text-sm min-h-[40px]',
+    md: 'px-4 py-2 text-sm min-h-[44px]',
+    lg: 'px-6 py-3 text-base min-h-[48px]',
+    form: 'px-3 py-2 text-sm min-h-[44px]',
+    fixed: 'px-4 py-2 text-sm min-h-[44px] w-20 text-center',
+  },
+  
+  // Mobile-specific enhancements
+  mobile: {
+    touchTarget: 'min-h-[44px] min-w-[44px]', // WCAG AAA compliance
+    touchFeedback: 'active:scale-95 transition-transform duration-150',
+    tapHighlight: '[&:active]:bg-opacity-80',
   },
 } as const;
 
@@ -165,6 +173,20 @@ export const input = {
   states: {
     default: 'border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-500 focus:border-amber-500',
     error: 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500',
+  },
+  
+  // Mobile-first sizing and interaction
+  sizes: {
+    sm: 'text-sm min-h-[40px] px-3 py-2',
+    md: 'text-base min-h-[44px] px-3 py-2 sm:text-sm',
+    lg: 'text-base min-h-[48px] px-4 py-3',
+  },
+  
+  // Mobile enhancements
+  mobile: {
+    touchTarget: 'min-h-[44px]', // WCAG AAA compliance
+    textSize: 'text-base sm:text-sm', // Prevent zoom on iOS
+    spacing: 'px-3 py-3 sm:py-2', // Larger tap area on mobile
   },
 } as const;
 
@@ -189,29 +211,35 @@ export const alert = {
 export const modal = {
   base: 'fixed inset-0 z-50',
   backdrop: `bg-black bg-opacity-50 ${transitions.default}`,
-  container: 'flex items-center justify-center min-h-full p-4',
+  container: 'flex items-center justify-center min-h-full p-2 sm:p-4',
   content: `bg-white rounded-lg shadow-xl overflow-hidden flex flex-col ${transitions.default}`,
   
   sizes: {
-    sm: 'w-full max-w-md',
-    md: 'w-full max-w-2xl',
-    lg: 'w-full max-w-4xl',
-    xl: 'w-full max-w-6xl',
-    full: 'w-full max-w-[95vw] max-h-[95vh]',
+    sm: 'w-full max-w-md mx-2 sm:mx-0',
+    md: 'w-full max-w-2xl mx-2 sm:mx-0',
+    lg: 'w-full max-w-4xl mx-2 sm:mx-0',
+    xl: 'w-full max-w-6xl mx-2 sm:mx-0',
+    full: 'w-full max-w-[95vw] max-h-[95vh] mx-1 sm:mx-0',
   },
   
   variants: {
     default: '',
-    confirmation: 'max-w-md',
-    form: 'max-w-2xl',
+    confirmation: 'max-w-md mx-2 sm:mx-0',
+    form: 'max-w-2xl mx-2 sm:mx-0',
     fullscreen: 'w-full h-full max-w-none max-h-none m-0 rounded-none',
   },
   
-  header: 'flex items-center justify-between p-6 border-b border-gray-200',
-  title: 'text-xl font-semibold text-gray-900 truncate',
-  closeButton: 'flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-all duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500',
-  body: 'flex-1 overflow-y-auto',
-  footer: 'flex-shrink-0 p-6 border-t border-gray-200 bg-gray-50',
+  // Mobile-first responsive variants
+  mobile: {
+    fullscreen: 'w-full h-full max-w-none max-h-none m-0 rounded-none md:w-auto md:h-auto md:max-w-2xl md:max-h-[90vh] md:rounded-lg md:m-4',
+    adaptive: 'w-full h-full max-h-[90vh] max-w-none m-2 rounded-lg md:w-auto md:h-auto md:max-w-2xl md:m-4',
+  },
+  
+  header: 'flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0',
+  title: 'text-lg sm:text-xl font-semibold text-gray-900 truncate pr-2',
+  closeButton: 'flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 transition-all duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 min-h-[44px] min-w-[44px] flex items-center justify-center',
+  body: 'flex-1 overflow-y-auto p-4 sm:p-6',
+  footer: 'flex-shrink-0 p-4 sm:p-6 border-t border-gray-200 bg-gray-50',
 } as const;
 
 export const loadingSpinner = {

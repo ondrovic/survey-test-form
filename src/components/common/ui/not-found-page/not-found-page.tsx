@@ -16,7 +16,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
   showHomeButton = true,
   homeButtonText = 'Go to Home',
   homeButtonPath = routes.admin,
-  className = 'min-h-screen bg-amber-50/30 flex items-center justify-center'
+  className = 'min-h-screen bg-amber-50/30 flex items-center justify-center px-4 py-8'
 }) => {
   
   return (

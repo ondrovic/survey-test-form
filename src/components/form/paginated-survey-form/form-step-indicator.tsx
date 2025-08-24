@@ -104,108 +104,188 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
 
       {/* Step Indicator */}
       {showStepIndicator && (
-        <div className={`
-          flex items-start relative
-          ${totalSections <= 4 ? 'justify-between' : 'justify-start gap-4 overflow-x-auto pb-2'}
-        `}>
-        {/* Connecting Line */}
-        <div className={`
-          absolute top-4 h-0.5 bg-gray-200 -z-10
-          ${totalSections <= 4 ? 'left-0 w-full' : 'left-4 right-4'}
-        `}>
-          <div
-            className="h-full bg-blue-600 transition-all duration-300 ease-in-out"
-            style={{
-              width: totalSections > 1 ? `${(currentIndex / (totalSections - 1)) * 100}%` : '0%'
-            }}
-          />
-        </div>
+        <>
+          {/* Desktop Step Indicator */}
+          <div className="hidden sm:block">
+            <div className={`
+              flex items-start relative
+              ${totalSections <= 4 ? 'justify-between' : 'justify-start gap-4 overflow-x-auto pb-2 scrollbar-hide'}
+            `}>
+              {/* Connecting Line */}
+              <div className={`
+                absolute top-5 h-0.5 bg-gray-200 -z-10
+                ${totalSections <= 4 ? 'left-0 w-full' : 'left-5 right-5'}
+              `}>
+                <div
+                  className="h-full bg-blue-600 transition-all duration-300 ease-in-out"
+                  style={{
+                    width: totalSections > 1 ? `${(currentIndex / (totalSections - 1)) * 100}%` : '0%'
+                  }}
+                />
+              </div>
 
-        {sections.map((section, index) => {
-          const status = getStepStatus(index);
-          const clickable = isClickable(index);
-          const isValid = sectionValidationStates[index];
+              {sections.map((section, index) => {
+                const status = getStepStatus(index);
+                const clickable = isClickable(index);
+                const isValid = sectionValidationStates[index];
 
-          return (
-            <div
-              key={section.id}
-              className={`
-                flex flex-col items-center relative flex-shrink-0
-                ${totalSections > 4 ? 'min-w-16' : ''}
-              `}
-              style={{ zIndex: 1 }}
-            >
-              {/* Step Circle */}
-              <button
-                onClick={() => clickable && onStepClick?.(index)}
-                disabled={!clickable}
-                className={`
-                  w-8 h-8 rounded-full border-2 flex items-center justify-center
-                  text-sm font-medium transition-all duration-200
-                  ${getStepStyles(status)}
-                  ${clickable
-                    ? 'cursor-pointer hover:scale-110'
-                    : 'cursor-default'
-                  }
-                `}
-                aria-label={`Section ${index + 1}: ${section.title} - ${
-                  status.includes('error') ? 'Has validation errors' : 
-                  status === 'completed' ? 'Completed' : 
-                  status === 'current' ? 'Current' : 'Upcoming'
-                }`}
-              >
-                {status === 'completed' ? (
-                  <Check className="w-4 h-4" />
-                ) : status === 'completed-error' || status === 'current-error' ? (
-                  <AlertTriangle className="w-4 h-4" />
-                ) : (
-                  <span>{index + 1}</span>
-                )}
-              </button>
-
-              {/* Step Title */}
-              {showTitles && (
-                <div className={`
-                  mt-2 text-center px-1
-                  ${totalSections <= 4 ? 'min-w-0 max-w-24' : 'w-16 min-w-16'}
-                `}>
-                  <span
+                return (
+                  <div
+                    key={section.id}
                     className={`
-                      text-xs font-medium block leading-tight break-words hyphens-auto
-                      ${status === 'current' || status === 'current-error'
-                        ? status === 'current-error' ? 'text-red-600' : 'text-blue-600'
-                        : status === 'completed'
-                          ? 'text-green-700'
-                          : status === 'completed-error'
-                            ? 'text-red-600'
-                            : 'text-gray-400'
-                      }
+                      flex flex-col items-center relative flex-shrink-0
+                      ${totalSections > 4 ? 'min-w-20' : ''}
                     `}
-                    title={section.title}
-                    style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                    style={{ zIndex: 1 }}
                   >
-                    {formatTitleForWrapping(section.title)}
-                  </span>
-                  
-                  {/* Validation indicator */}
-                  {hasSubmitted && !isValid && (
-                    <div className="text-xs text-red-500 mt-1 leading-tight">
-                      Needs attention
-                    </div>
-                  )}
-                </div>
-              )}
+                    {/* Step Circle - Desktop */}
+                    <button
+                      onClick={() => clickable && onStepClick?.(index)}
+                      disabled={!clickable}
+                      className={`
+                        w-10 h-10 rounded-full border-2 flex items-center justify-center
+                        text-sm font-medium transition-all duration-200
+                        ${getStepStyles(status)}
+                        ${clickable
+                          ? 'cursor-pointer hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                          : 'cursor-default'
+                        }
+                      `}
+                      aria-label={`Section ${index + 1}: ${section.title} - ${
+                        status.includes('error') ? 'Has validation errors' : 
+                        status === 'completed' ? 'Completed' : 
+                        status === 'current' ? 'Current' : 'Upcoming'
+                      }`}
+                    >
+                      {status === 'completed' ? (
+                        <Check className="w-5 h-5" />
+                      ) : status === 'completed-error' || status === 'current-error' ? (
+                        <AlertTriangle className="w-5 h-5" />
+                      ) : (
+                        <span>{index + 1}</span>
+                      )}
+                    </button>
+
+                    {/* Step Title - Desktop */}
+                    {showTitles && (
+                      <div className={`
+                        mt-3 text-center px-1
+                        ${totalSections <= 4 ? 'min-w-0 max-w-28' : 'w-20 min-w-20'}
+                      `}>
+                        <span
+                          className={`
+                            text-xs font-medium block leading-tight break-words hyphens-auto
+                            ${status === 'current' || status === 'current-error'
+                              ? status === 'current-error' ? 'text-red-600' : 'text-blue-600'
+                              : status === 'completed'
+                                ? 'text-green-700'
+                                : status === 'completed-error'
+                                  ? 'text-red-600'
+                                  : 'text-gray-400'
+                            }
+                          `}
+                          title={section.title}
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                        >
+                          {formatTitleForWrapping(section.title)}
+                        </span>
+                        
+                        {/* Validation indicator */}
+                        {hasSubmitted && !isValid && (
+                          <div className="text-xs text-red-500 mt-1 leading-tight">
+                            Needs attention
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-        </div>
+          </div>
+
+          {/* Mobile Step Indicator - Horizontal Scrolling */}
+          <div className="sm:hidden">
+            <div className="flex items-center gap-3 overflow-x-auto pb-3 px-1 scrollbar-hide">
+              {sections.map((section, index) => {
+                const status = getStepStatus(index);
+                const clickable = isClickable(index);
+                const isValid = sectionValidationStates[index];
+
+                return (
+                  <div
+                    key={section.id}
+                    className="flex items-center gap-2 flex-shrink-0"
+                  >
+                    {/* Mobile Step Circle - 44px minimum touch target */}
+                    <button
+                      onClick={() => clickable && onStepClick?.(index)}
+                      disabled={!clickable}
+                      className={`
+                        min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 flex items-center justify-center
+                        text-sm font-medium transition-all duration-200
+                        ${getStepStyles(status)}
+                        ${clickable
+                          ? 'cursor-pointer active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                          : 'cursor-default'
+                        }
+                      `}
+                      aria-label={`Section ${index + 1}: ${section.title} - ${
+                        status.includes('error') ? 'Has validation errors' : 
+                        status === 'completed' ? 'Completed' : 
+                        status === 'current' ? 'Current' : 'Upcoming'
+                      }`}
+                    >
+                      {status === 'completed' ? (
+                        <Check className="w-5 h-5" />
+                      ) : status === 'completed-error' || status === 'current-error' ? (
+                        <AlertTriangle className="w-5 h-5" />
+                      ) : (
+                        <span className="text-base font-semibold">{index + 1}</span>
+                      )}
+                    </button>
+
+                    {/* Mobile Step Title */}
+                    {showTitles && index === currentIndex && (
+                      <div className="flex-shrink-0 max-w-32">
+                        <span
+                          className={`
+                            text-sm font-medium block leading-tight
+                            ${status === 'current' || status === 'current-error'
+                              ? status === 'current-error' ? 'text-red-600' : 'text-blue-600'
+                              : status === 'completed'
+                                ? 'text-green-700'
+                                : status === 'completed-error'
+                                  ? 'text-red-600'
+                                  : 'text-gray-400'
+                            }
+                          `}
+                          title={section.title}
+                        >
+                          {section.title.length > 20 ? `${section.title.substring(0, 20)}...` : section.title}
+                        </span>
+                        
+                        {/* Mobile Validation indicator */}
+                        {hasSubmitted && !isValid && (
+                          <div className="text-xs text-red-500 mt-1 leading-tight">
+                            Needs attention
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Error Summary */}
       {hasSubmitted && !sectionValidationStates[currentIndex] && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex items-center">
-            <AlertTriangle className="w-4 h-4 text-red-500 mr-2" />
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <span className="text-sm text-red-700">
               Please correct the errors below before proceeding to the next section.
             </span>
@@ -213,12 +293,18 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
         </div>
       )}
 
-      {/* Mobile Alternative: Simple Progress */}
-      <div className="md:hidden mt-4">
-        <div className="flex justify-between items-center text-sm text-gray-600">
-          <span>Step {currentIndex + 1}</span>
-          <span>{sections[currentIndex]?.title}</span>
-          <span>{totalSections} steps</span>
+      {/* Mobile Current Step Display */}
+      <div className="sm:hidden mt-4">
+        <div className="flex justify-between items-center text-sm text-gray-600 bg-gray-50 px-4 py-3 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Step {currentIndex + 1} of {totalSections}</span>
+            {hasSubmitted && !sectionValidationStates[currentIndex] && (
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+            )}
+          </div>
+          <span className="font-medium text-gray-900 truncate ml-2 max-w-[60%]">
+            {sections[currentIndex]?.title}
+          </span>
         </div>
       </div>
     </div>

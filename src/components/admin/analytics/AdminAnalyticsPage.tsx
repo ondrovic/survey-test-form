@@ -1,12 +1,11 @@
 import { Button } from '@/components/common';
 import { routes } from '@/routes';
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Analytics } from './analytics';
 
 export const AdminAnalyticsPage: React.FC = () => {
     const { instanceId } = useParams<{ instanceId: string }>();
-    const navigate = useNavigate();
 
     console.log('🔍 AdminAnalyticsPage received instanceId:', instanceId);
 
@@ -20,7 +19,7 @@ export const AdminAnalyticsPage: React.FC = () => {
                         <Button
                             variant="outline"
                             size="form"
-                            onClick={() => navigate(routes.admin)}
+                            onClick={() => window.location.href = `${window.location.origin}/${routes.admin}`}
                             className="mt-4"
                         >
                             Back to Admin
@@ -37,7 +36,7 @@ export const AdminAnalyticsPage: React.FC = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="form" onClick={() => navigate(routes.admin)}>
+                        <Button variant="outline" size="form" onClick={() => window.location.href = `${window.location.origin}/${routes.admin}`}>
                             Back to Admin
                         </Button>
                     </div>
