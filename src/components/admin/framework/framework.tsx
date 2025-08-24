@@ -3,11 +3,12 @@ import { useValidationStatus } from '@/contexts/validation-status-context';
 import { useAdminFrameworkHandlers, useAdminFrameworkModals, useAutomaticValidation, useConfigValidation } from '@/hooks';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { getInstanceConfig, getInstanceCount } from '@/utils/admin-framework.utils';
+import { PAGINATION_DEFAULTS } from '@/constants/pagination.constants';
 import React, { useRef } from 'react';
 import {
   FrameworkHeader,
-  SurveyConfigSection,
-  SurveyInstanceSection
+  SurveyConfigPaginatedSection,
+  SurveyInstancePaginatedSection
 } from './components';
 
 export interface AdminFrameworkProps {
@@ -102,47 +103,39 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <FrameworkHeader
-        surveyConfigs={surveyConfigs}
-        onCreateNewSurvey={onCreateNewSurvey}
-        onImportConfig={configHandlers.handleImportConfig}
+      <FrameworkHeader />
+
+      {/* Survey Configurations */}
+      <SurveyConfigPaginatedSection
+        title="Survey Configurations"
+        configs={surveyConfigs}
+        onCreateNew={onCreateNewSurvey}
+        onEdit={configHandlers.handleEditConfig}
+        onDelete={configHandlers.handleDeleteConfig}
+        onCreateInstance={configHandlers.handleCreateInstance}
+        createButtonLabel="New Config"
+        emptyMessage="No survey configurations found. Create your first survey configuration to get started."
+        getInstanceCount={handleGetInstanceCount}
         validationStatus={validationStatus}
         onVerifyConfig={handleVerifyConfig}
         onClearValidationErrors={clearValidationStatus}
-      />
-
-      {/* Survey Configurations */}
-      <SurveyConfigSection
-        surveyConfigs={surveyConfigs}
-        getInstanceCount={handleGetInstanceCount}
-        onEdit={configHandlers.handleEditConfig}
-        onCreateInstance={configHandlers.handleCreateInstance}
-        onDelete={configHandlers.handleDeleteConfig}
-        onExport={configHandlers.handleExportConfig}
-        validationStatus={validationStatus}
-        validationResetCallback={() => {
-          // Reset validation status to clear any errors
-          console.log("🧹 Using validation reset callback to clear status");
-          clearValidationStatus();
-        }}
+        defaultExpanded={true}
+        itemsPerPage={PAGINATION_DEFAULTS.ITEMS_PER_PAGE}
       />
 
       {/* Survey Instances */}
-      <SurveyInstanceSection
-        surveyInstances={surveyInstances}
-        getInstanceConfig={handleGetInstanceConfig}
-        onToggleActive={instanceHandlers.handleToggleInstanceActive}
+      <SurveyInstancePaginatedSection
+        title="Survey Instances"
+        instances={surveyInstances}
         onSettings={instanceHandlers.handleInstanceSettings}
         onDelete={instanceHandlers.handleDeleteInstance}
+        onToggleActive={instanceHandlers.handleToggleInstanceActive}
         onVisualize={instanceHandlers.handleVisualize}
         onAnalytics={instanceHandlers.handleAnalytics}
-        onExport={instanceHandlers.handleExportInstance}
-        onImportInstance={instanceHandlers.handleImportInstance}
-        validationResetCallback={() => {
-          // Reset validation status to clear any errors
-          console.log("🧹 Using validation reset callback to clear status");
-          clearValidationStatus();
-        }}
+        emptyMessage="No survey instances found. Create an instance from a survey configuration to get started."
+        getInstanceConfig={handleGetInstanceConfig}
+        defaultExpanded={true}
+        itemsPerPage={PAGINATION_DEFAULTS.ITEMS_PER_PAGE}
       />
 
     </div>

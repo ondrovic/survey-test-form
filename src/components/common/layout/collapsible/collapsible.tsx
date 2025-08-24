@@ -232,6 +232,7 @@ export interface CollapsibleSectionProps {
   defaultExpanded?: boolean;
   className?: string;
   headerAction?: React.ReactNode;
+  headerContent?: React.ReactNode;
   count?: number;
 }
 
@@ -241,8 +242,17 @@ export const CollapsibleSection = forwardRef<HTMLDivElement, CollapsibleSectionP
   defaultExpanded = true,
   className,
   headerAction,
+  headerContent,
   count,
 }, ref) => {
+  // Combine headerContent and headerAction if both exist
+  const combinedHeaderAction = headerContent || headerAction ? (
+    <div className="flex items-center gap-3">
+      {headerContent}
+      {headerAction}
+    </div>
+  ) : undefined;
+
   return (
     <Collapsible
       ref={ref}
@@ -252,7 +262,7 @@ export const CollapsibleSection = forwardRef<HTMLDivElement, CollapsibleSectionP
       size="lg"
       className={className}
       badge={count}
-      headerAction={headerAction}
+      headerAction={combinedHeaderAction}
     >
       {children}
     </Collapsible>

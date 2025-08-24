@@ -52,6 +52,9 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
     // Start collapsed by default to show counts before expanding
     const actualDefaultExpanded = defaultExpanded;
 
+    // Search fields - focus on name, description for option sets
+    const searchFields: (keyof T)[] = ['name' as keyof T, 'description' as keyof T];
+
     const handleExport = (item: T) => {
         exportItem(item, dataType);
     };
@@ -136,6 +139,9 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                     itemsPerPage={itemsPerPage}
                     renderItem={renderItem}
                     emptyMessage={emptyMessage}
+                    searchable={true}
+                    searchPlaceholder={`Search ${title.toLowerCase()}...`}
+                    searchFields={searchFields}
                 />
             </div>
         </CollapsibleSection>

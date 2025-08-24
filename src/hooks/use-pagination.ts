@@ -74,6 +74,7 @@ export const usePagination = ({
     prevPage,
     goToFirstPage,
     goToLastPage,
+    resetToFirstPage,
   };
 };
 

@@ -29,4 +29,5 @@ export interface UsePaginationReturn {
     prevPage: () => void;
     goToFirstPage: () => void;
     goToLastPage: () => void;
+    resetToFirstPage: () => void;
 }

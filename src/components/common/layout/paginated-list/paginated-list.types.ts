@@ -4,4 +4,8 @@ export interface PaginatedListProps<T> {
     renderItem: (item: T, index: number) => React.ReactNode;
     emptyMessage?: string;
     className?: string;
+    searchable?: boolean;
+    searchPlaceholder?: string;
+    searchFields?: (keyof T)[];
+    onSearch?: (query: string) => void;
 }
