@@ -1,7 +1,7 @@
 import { AdminPage } from '@/components/admin';
 import { AdminAnalyticsPage } from '@/components/admin/analytics/AdminAnalyticsPage';
 import { AdminVisualizationPage } from '@/components/admin/visualization/visualization';
-import { ErrorBoundary, LoadingSpinner } from '@/components/common';
+import { ErrorBoundary, LoadingSpinner, NotFoundPage } from '@/components/common';
 import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { databaseHelpers, getDatabaseProviderInfo, initializeDatabase } from '@/config/database';
@@ -17,7 +17,7 @@ import { isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
 import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 
-import { baseRoute } from '@/routes';
+import { routes } from '@/routes';
 import { isReCaptchaConfigured, verifyReCaptchaTokenClientSide } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
@@ -138,43 +138,47 @@ function AppContent() {
         <ErrorBoundary>
             <Routes>
                 <Route path="/admin" element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path={`${baseRoute}/admin/visualize/:instanceId`} element={<AdminVisualizationPage />} />
-                <Route path={`${baseRoute}/admin/analytics/:instanceId`} element={<AdminAnalyticsPage />} />
-                <Route path={`${baseRoute}/admin`} element={<AdminPage onBack={() => navigate('/')} />} />
-                <Route path={`/survey-confirmation/:slug`} element={
+                <Route path={`${routes.adminVisualize(':instanceId')}`} element={<AdminVisualizationPage />} />
+                <Route path={`${routes.adminAnalytics(':instanceId')}`} element={<AdminAnalyticsPage />} />
+                <Route path={routes.admin} element={<AdminPage onBack={() => navigate('/')} />} />
+                <Route path={`${routes.confirmation(':slug')}`} element={
                     (() => {
                         const slug = window.location.pathname.split('/').pop() || '';
                         const instance = getSurveyInstanceBySlug(slug);
                         if (instance) {
                             return <SurveyConfirmation surveyTitle={instance.title} />;
                         } else {
-                            return <NotFoundPage />;
+                            return <NotFoundPage title="Survey Not Found" message="The survey you're looking for doesn't exist or is no longer available." />;
                         }
                     })()
                 } />
-                <Route path={`${baseRoute}/:slug`} element={
+                <Route path={`${routes.takeSurvey(':slug')}`} element={
                     (() => {
                         const slug = window.location.pathname.split('/').pop() || '';
                         const instance = getSurveyInstanceBySlug(slug);
                         if (instance) {
                             return <SurveyPage instance={instance} />;
                         } else {
-                            return <NotFoundPage />;
+                            return <NotFoundPage title="Survey Not Found" message="The survey you're looking for doesn't exist or is no longer available." />;
                         }
                     })()
                 } />
                 <Route path="/:slug" element={
                     (() => {
                         const slug = window.location.pathname.split('/').pop() || '';
+                        // Don't treat empty slug or admin routes as surveys
+                        if (!slug || slug === 'admin') {
+                            return <NotFoundPage title="Welcome" message="No surveys are currently available at this location." homeButtonText="Go to Admin" homeButtonPath={routes.admin} />;
+                        }
                         const instance = getSurveyInstanceBySlug(slug);
                         if (instance) {
                             return <SurveyPage instance={instance} />;
                         } else {
-                            return <NotFoundPage />;
+                            return <NotFoundPage title="Survey Not Found" message="The survey you're looking for doesn't exist or is no longer available." />;
                         }
                     })()
                 } />
-                <Route path="/" element={<NotFoundPage />} />
+                <Route path="/" element={<NotFoundPage title="Welcome" message="No surveys are currently available at this location." homeButtonText="Go to Admin" homeButtonPath={routes.admin} />} />
             </Routes>
             <Toaster />
         </ErrorBoundary>
@@ -335,7 +339,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 
             // Redirect to confirmation page instead of resetting form
             const urlParam = instance.slug || instance.id;
-            navigate(`/survey-confirmation/${urlParam}`);
+            navigate(routes.confirmation(urlParam));
         } catch (err) {
             console.error('Survey submission error:', err);
             showError('Failed to submit survey. Please try again.');
@@ -347,7 +351,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 
     // Check if instance is valid
     if (!instance) {
-        return <NotFoundPage />;
+        return <NotFoundPage title="Survey Not Found" message="The survey you're looking for doesn't exist or is no longer available." />;
     }
 
     if (loading) {
@@ -356,18 +360,12 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 
     if (error || !surveyConfig) {
         return (
-            <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Survey Not Found</h1>
-                    <p className="text-gray-600 mb-6">{error || 'The requested survey could not be loaded.'}</p>
-                    <button
-                        onClick={() => navigate('/')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        Go to Home
-                    </button>
-                </div>
-            </div>
+            <NotFoundPage 
+                title="Survey Not Found" 
+                message={error || 'The requested survey could not be loaded.'}
+                homeButtonText="Go to Admin"
+                homeButtonPath={routes.admin}
+            />
         );
     }
 
@@ -399,18 +397,6 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 surveySession.updateActivity();
             }}
         />
-    );
-}
-
-// Not Found Page Component
-function NotFoundPage() {
-    return (
-        <div className="min-h-screen bg-amber-50/30 flex items-center justify-center">
-            <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">Resource Not Found</h1>
-                <p className="text-gray-600 mb-6">The resource you&apos;re looking for doesn&apos;t exist.</p>
-            </div>
-        </div>
     );
 }
 

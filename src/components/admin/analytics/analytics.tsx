@@ -2,7 +2,8 @@ import { Button } from '@/components/common';
 import { databaseHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types/framework.types';
-import { BarChart3, Calendar, Clock, Filter, TrendingUp, Users } from 'lucide-react';
+import { routes } from '@/routes';
+import { BarChart3, Calendar, Clock, Filter, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface AnalyticsData {
@@ -39,6 +40,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
     const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d');
     const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day');
     const [selectedInstanceId, setSelectedInstanceId] = useState<string | undefined>(instanceId);
+    const [instance, setInstance] = useState<SurveyInstance | undefined>(undefined);
 
     const surveyData = useSurveyData();
     const { surveyInstances } = surveyData.state;
@@ -58,6 +60,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             const hours = Math.floor(seconds / 3600);
             const remainingMinutes = Math.round((seconds % 3600) / 60);
             return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+        }
+    };
+
+    // Handle visualize button click
+    const handleVisualize = () => {
+        if (selectedInstanceId) {
+            const url = `${window.location.origin}/${routes.adminVisualize(selectedInstanceId)}`;
+            window.open(url, '_blank');
         }
     };
 
@@ -102,6 +112,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 // Try to find by ID first, then by slug (exactly like visualization does)
                 instance = freshInstances.find(i => i.id === selectedInstanceId || i.slug === selectedInstanceId);
                 console.log('🔍 Found instance:', instance);
+                
+                // Update instance state
+                setInstance(instance);
 
                 if (instance) {
                     console.log('🔍 Fetching responses for instance:', instance.id);
@@ -122,6 +135,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 }
             } else {
                 // If no instance selected, show message to select one
+                setInstance(undefined);
                 setAnalyticsData(null);
                 setLoading(false);
                 return;
@@ -342,7 +356,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Survey Analytics</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            {selectedInstanceId ? 'Survey Analytics' : 'Survey Analytics'}
+                        </h2>
                         <p className="text-gray-600">Comprehensive insights into your survey performance</p>
                     </div>
                 </div>
@@ -373,12 +389,36 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Survey Analytics</h2>
-                    <p className="text-gray-600">Comprehensive insights into your survey performance</p>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                        {instance ? `${instance.title} - Analytics` : 'Survey Analytics'}
+                    </h2>
+                    <p className="text-gray-600">
+                        Comprehensive insights into your survey performance
+                    </p>
+                    {instance && (
+                        <>
+                        <p className="text-sm text-gray-500">
+                            {instance?.description}
+                        </p>
+                        <p className="text-sm text-blue-500 mb-1">
+                            {instance.id}
+                        </p>
+                        </>
+                    )}
                 </div>
 
                 {/* Filters */}
                 <div className="flex items-center space-x-4">
+                    <Button
+                        onClick={handleVisualize}
+                        variant="outline"
+                        size="sm"
+                        disabled={!selectedInstanceId}
+                    >
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Visualize
+                    </Button>
+
                     <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4 text-gray-500" />
                         <select
@@ -408,7 +448,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow">
                     <div className="flex items-center">
                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -444,20 +484,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                                 {analyticsData.averageCompletionTime > 0
                                     ? formatCompletionTime(analyticsData.averageCompletionTime)
                                     : 'N/A'}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <div className="flex items-center">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                            <TrendingUp className="w-6 h-6 text-orange-600" />
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Active Surveys</p>
-                            <p className="text-2xl font-bold text-gray-900">
-                                {surveyInstances.filter(i => i.isActive).length}
                             </p>
                         </div>
                     </div>

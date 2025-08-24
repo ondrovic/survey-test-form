@@ -126,34 +126,15 @@ serve(async (req) => {
       }
     }
 
-    // Get normalized field definitions if available
-    const { data: sections, error: sectionsError } = await supabaseClient
-      .from('survey_sections')
-      .select(`
-        *,
-        survey_fields(*)
-      `)
-      .eq('survey_config_id', instance.survey_configs.id)
-      .order('order_index')
-
+    // Get field definitions from JSONB schema
     let fieldDefinitions: Record<string, any> = {}
 
-    if (!sectionsError && sections) {
-      // Use normalized schema
-      sections.forEach(section => {
-        section.survey_fields?.forEach((field: any) => {
-          fieldDefinitions[field.field_key] = field
+    if (instance.survey_configs.sections) {
+      instance.survey_configs.sections.forEach((section: any) => {
+        section.fields?.forEach((field: any) => {
+          fieldDefinitions[field.key] = field
         })
       })
-    } else {
-      // Fall back to JSONB schema
-      if (instance.survey_configs.sections) {
-        instance.survey_configs.sections.forEach((section: any) => {
-          section.fields?.forEach((field: any) => {
-            fieldDefinitions[field.key] = field
-          })
-        })
-      }
     }
 
     // Validate each response

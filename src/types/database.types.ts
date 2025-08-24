@@ -164,7 +164,4 @@ export interface DatabaseProvider_Interface {
   databaseHelpers: DatabaseHelpers;
   initialize(config: DatabaseConfig): Promise<void>;
   isInitialized(): boolean;
-  getMigrationService(): any;
-  runMigrations(): Promise<void>;
-  isMigrationComplete(): Promise<boolean>;
 }

@@ -16,11 +16,9 @@ class SupabaseProviderImpl extends BaseDatabaseProvider {
 
     // Initialize operation services after base initialization
     const client = await this.clientService.getClient(config);
-    const migrationService = this.ensureMigrationService();
 
     this.surveyOperations = new SurveyOperationsService(
       client,
-      migrationService,
       this.clientService
     );
     this.optionSetsOperations = new OptionSetsOperationsService();

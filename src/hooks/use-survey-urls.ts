@@ -1,4 +1,4 @@
-import { baseRoute } from '@/routes';
+import { routes } from '@/routes';
 import { SurveyInstance } from '@/types';
 import { useToast } from '@/contexts/toast-context/index';
 import { useCallback } from 'react';
@@ -9,7 +9,7 @@ export const useSurveyUrls = () => {
   const generateSurveyUrl = useCallback((instance: SurveyInstance) => {
     // Use slug if available, otherwise fall back to id for backward compatibility
     const urlIdentifier = instance.slug || instance.id;
-    return `${window.location.origin}${baseRoute}/${urlIdentifier}`;
+    return `${window.location.origin}/${routes.takeSurvey(urlIdentifier)}`;
   }, []);
 
   const copySurveyUrl = useCallback(async (url: string) => {

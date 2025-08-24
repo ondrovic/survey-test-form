@@ -8,7 +8,6 @@ import {
   getRepositoryService,
   isRepositoryServiceInitialized,
 } from "../repository.service";
-import { MigrationService } from "../migration.service";
 import { SupabaseClientService } from "../supabase-client.service";
 
 /**
@@ -17,7 +16,6 @@ import { SupabaseClientService } from "../supabase-client.service";
 export class SurveyOperationsService {
   constructor(
     private client: SupabaseClient,
-    private migrationService: MigrationService,
     private clientService: SupabaseClientService
   ) {}
 
@@ -45,13 +43,7 @@ export class SurveyOperationsService {
   // Survey Configs
   async getSurveyConfigs() {
     const repositories = this.getRepositories();
-    const migrationsComplete = await this.migrationService.areAllMigrationsComplete();
-    
-    if (migrationsComplete) {
-      return repositories.surveyConfigs.findAll();
-    } else {
-      return repositories.surveyConfigs.findAll();
-    }
+    return repositories.surveyConfigs.findAll();
   }
 
   async getSurveyConfig(id: string) {
@@ -103,18 +95,7 @@ export class SurveyOperationsService {
   // Survey Responses
   async addSurveyResponse(response: Omit<SurveyResponse, "id">) {
     const repositories = this.getRepositories();
-    
-    const createdResponse = await repositories.surveyResponses.create(response);
-    
-    const instanceMigrated = await this.migrationService.areResponsesMigrated(
-      response.surveyInstanceId
-    );
-    
-    if (instanceMigrated && response.responses) {
-      // TODO: Create normalized field responses
-    }
-    
-    return createdResponse;
+    return repositories.surveyResponses.create(response);
   }
 
   async getSurveyResponses(instanceId?: string) {

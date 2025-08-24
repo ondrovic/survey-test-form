@@ -1,7 +1,6 @@
 import { useGenericImportExport, useSurveyOperations } from "@/hooks";
-import { baseRoute } from "@/routes";
+import { routes } from "@/routes";
 import { DateRange, SurveyConfig, SurveyInstance } from "@/types";
-import { useNavigate } from "react-router-dom";
 
 export interface AdminFrameworkOperations {
   onCreateNewSurvey: () => void;
@@ -62,7 +61,6 @@ export const useAdminFrameworkHandlers = (
   operations: AdminFrameworkOperations,
   modalActions: ModalActions
 ) => {
-  const navigate = useNavigate();
   const { createSurveyInstance } = useSurveyOperations();
   const { exportConfig, exportInstance, importConfig, importInstance } =
     useGenericImportExport();
@@ -123,12 +121,14 @@ export const useAdminFrameworkHandlers = (
 
   const handleVisualize = (instance: SurveyInstance) => {
     const urlParam = instance.slug || instance.id;
-    navigate(`${baseRoute}/admin/visualize/${urlParam}`);
+    const url = `${window.location.origin}/${routes.adminVisualize(urlParam)}`;
+    window.open(url, '_blank');
   };
 
   const handleAnalytics = (instance: SurveyInstance) => {
     const urlParam = instance.slug || instance.id;
-    navigate(`${baseRoute}/admin/analytics/${urlParam}`);
+    const url = `${window.location.origin}/${routes.adminAnalytics(urlParam)}`;
+    window.open(url, '_blank');
   };
 
   const handleExportInstance = (instance: SurveyInstance) => {

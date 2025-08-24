@@ -55,6 +55,9 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
         <div>
           <h4 className="font-semibold">{config.title}</h4>
           <p className="text-sm text-gray-600">{config.description}</p>
+          <span className="text-sm font-normal text-blue-600">
+            {config.id}
+          </span>
           <p className="text-xs text-gray-500">
             {formatStats()} • {instanceCount} instances
           </p>

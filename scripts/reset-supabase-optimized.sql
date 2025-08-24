@@ -16,22 +16,12 @@
 -- Drop all tables with CASCADE to handle foreign key dependencies
 -- The order doesn't matter as much with CASCADE, but we'll be systematic
 
--- Drop normalized schema tables (these reference legacy tables via FKs)
-DROP TABLE IF EXISTS survey_field_responses CASCADE;
-DROP TABLE IF EXISTS survey_fields CASCADE;
-DROP TABLE IF EXISTS survey_sections CASCADE;
-
 -- Drop analytics and tracking tables  
-DROP TABLE IF EXISTS survey_response_summaries CASCADE;
 DROP TABLE IF EXISTS survey_instance_status_changes CASCADE;
-DROP TABLE IF EXISTS entity_audit_log CASCADE;
-
--- Drop template and migration tables
-DROP TABLE IF EXISTS survey_templates CASCADE;
-DROP TABLE IF EXISTS migration_status CASCADE;
 
 -- Drop main survey tables (these have the primary keys others reference)
 DROP TABLE IF EXISTS survey_responses CASCADE;
+DROP TABLE IF EXISTS survey_sessions CASCADE;
 DROP TABLE IF EXISTS survey_instances CASCADE;
 DROP TABLE IF EXISTS survey_configs CASCADE;
 
@@ -41,8 +31,6 @@ DROP TABLE IF EXISTS radio_option_sets CASCADE;
 DROP TABLE IF EXISTS multi_select_option_sets CASCADE;
 DROP TABLE IF EXISTS select_option_sets CASCADE;
 
--- Drop legacy survey table
-DROP TABLE IF EXISTS surveys CASCADE;
 
 -- ===================================
 -- DROP FUNCTIONS
@@ -52,16 +40,7 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS log_survey_instance_status_change() CASCADE;
 DROP FUNCTION IF EXISTS update_survey_instance_statuses() CASCADE;
 DROP FUNCTION IF EXISTS get_upcoming_status_changes(INTEGER) CASCADE;
-DROP FUNCTION IF EXISTS migrate_survey_sections_to_normalized() CASCADE;
-DROP FUNCTION IF EXISTS migrate_survey_responses_to_normalized() CASCADE;
-DROP FUNCTION IF EXISTS generate_response_summaries(DATE, DATE) CASCADE;
-DROP FUNCTION IF EXISTS cleanup_migrated_jsonb_data() CASCADE;
-DROP FUNCTION IF EXISTS is_survey_config_migrated(UUID) CASCADE;
-DROP FUNCTION IF EXISTS are_responses_migrated(UUID) CASCADE;
-DROP FUNCTION IF EXISTS migrate_single_config_sections(UUID) CASCADE;
-DROP FUNCTION IF EXISTS get_survey_config_legacy(UUID) CASCADE;
-DROP FUNCTION IF EXISTS get_survey_responses_legacy(UUID) CASCADE;
-DROP FUNCTION IF EXISTS auto_migrate_survey_config() CASCADE;
+DROP FUNCTION IF EXISTS calculate_survey_completion_time() CASCADE;
 
 -- Drop RLS helper functions
 DROP FUNCTION IF EXISTS is_admin() CASCADE;
@@ -71,12 +50,6 @@ DROP FUNCTION IF EXISTS is_survey_public(UUID) CASCADE;
 DROP FUNCTION IF EXISTS bypass_rls_for_system_user() CASCADE;
 DROP FUNCTION IF EXISTS enable_rls() CASCADE;
 
--- ===================================
--- DROP VIEWS
--- ===================================
-
-DROP VIEW IF EXISTS survey_configs_legacy CASCADE;
-DROP VIEW IF EXISTS survey_responses_legacy CASCADE;
 
 -- ===================================
 -- DROP EXTENSIONS (if needed)
@@ -107,6 +80,12 @@ BEGIN
   
   BEGIN
     ALTER PUBLICATION supabase_realtime DROP TABLE survey_instances;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
+  
+  BEGIN
+    ALTER PUBLICATION supabase_realtime DROP TABLE survey_sessions;
   EXCEPTION WHEN OTHERS THEN
     NULL;
   END;

@@ -1,6 +1,6 @@
 import { Button, DateRangeSelector, UnifiedModal } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
-import { baseRoute } from '@/routes';
+import { routes } from '@/routes';
 import { DateRange, SurveyConfig, SurveyInstance } from '@/types';
 import { generateUniqueSlug } from '@/utils/slug.utils';
 import React, { useState } from 'react';
@@ -26,7 +26,7 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
   };
 
   const generateInstanceUrl = () => {
-    return `${window.location.origin}${baseRoute}/${generateInstanceId()}`;
+    return `${window.location.origin}/${routes.takeSurvey(generateInstanceId())}`;
   };
 
   const handleConfirm = () => {
@@ -70,7 +70,7 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
                     <span>{instance.id}</span>
                     <span className={`px-1 py-0.5 rounded text-xs ${instance.isActive
                       ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-600'
+                      : 'bg-red-100 text-red-600'
                       }`}>
                       {instance.isActive ? 'Active' : 'Inactive'}
                     </span>

@@ -95,9 +95,9 @@ VITE_USE_OPTIMIZED_PROVIDER=true
 
 ### 4. Database Setup
 
-**Quick Setup (Recommended):** Follow [SUPABASE_SIMPLE_SETUP.md](./SUPABASE_SIMPLE_SETUP.md) for a simple setup without RLS.
+**Quick Setup (Recommended):** Follow [SUPABASE_SIMPLE_SETUP.md](./docs/SUPABASE_SIMPLE_SETUP.md) for a simple setup without RLS.
 
-**Advanced Setup:** Follow [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) to set up your Supabase database with:
+**Advanced Setup:** Follow [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) to set up your Supabase database with:
 - Full SQL database capabilities
 - Advanced data visualization
 - Automated status management
@@ -120,7 +120,7 @@ For secure production deployment, set up the following GitHub secrets in your re
    | `SUPABASE_SERVICE_ROLE_KEY`   | For automated status mgmt | Yes      |
    | `VITE_ADMIN_PASSWORD`         | Admin panel password      | Yes      |
 
-**📖 Detailed Setup Guide:** See [GITHUB_SECRETS_SETUP.md](./GITHUB_SECRETS_SETUP.md) for step-by-step instructions.
+**📖 Detailed Setup Guide:** See [GITHUB_SECRETS_SETUP.md](./docs/GITHUB_SECRETS_SETUP.md) for step-by-step instructions.
 
 ### 6. Start Development Server
 
@@ -309,7 +309,7 @@ Set up your Supabase database:
 3. Configure environment variables
 4. Includes automated status management and advanced features
 
-See [DATABASE_SETUP.md](./DATABASE_SETUP.md) and [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed setup instructions.
+See [DATABASE_SETUP.md](./docs/DATABASE_SETUP.md) and [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for detailed setup instructions.
 
 ## 🧪 Testing
 
@@ -380,7 +380,7 @@ npm run test:coverage
 
 ### Getting Help
 
-1. Check the [Issues](../../issues) page for known problems
+1. Check the [Issues](./docs/ISSUES.MD) page for known problems
 2. Create a new issue with detailed error information
 3. Include browser console logs and error messages
 

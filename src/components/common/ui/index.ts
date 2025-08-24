@@ -9,3 +9,4 @@ export type { UnifiedModalProps as ModalProps } from "./unified-modal";
 // Compound Components
 export { FormField, useFormField } from "./form-field";
 export { DateRangeSelector, useDateRange } from "./date-range-selector";
+export { NotFoundPage } from "./not-found-page";

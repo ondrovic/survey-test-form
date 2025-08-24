@@ -108,20 +108,9 @@ export class SupabaseClientService {
       throw error;
     }
 
-    // Check if normalized schema exists
-    const { error: normalizedError } = await client
-      .from("survey_sections")
-      .select("id")
-      .limit(1);
-
-    if (normalizedError && normalizedError.message.includes("does not exist")) {
-      console.warn("Normalized schema not found. Running in legacy mode.");
-      console.warn(
-        "To enable optimized features, run migration-v2-normalized-schema.sql"
-      );
-    } else {
-      console.log("Normalized schema detected. Optimized features available.");
-    }
+    // Using optimized JSONB schema design
+    console.log("Using optimized JSONB schema (survey_configs.sections).");
+    console.log("Optimized features available with current schema design.");
 
     console.log("Supabase connection test successful");
   }

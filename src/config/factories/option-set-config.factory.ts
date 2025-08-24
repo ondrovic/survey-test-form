@@ -6,6 +6,12 @@ import {
   SelectOptionSet,
 } from "../../types/framework.types";
 import {
+  RATING_OPTION_SET_NAME,
+  RADIO_OPTION_SET_NAME,
+  MULTISELECT_OPTION_SET_NAME,
+  SELECT_OPTION_SET_NAME,
+} from "../../constants/options-sets.constants";
+import {
   validateName,
   validateOptions,
   validateMultiSelectFields,
@@ -24,7 +30,7 @@ import {
 // Factory functions for each option set type - now type-safe and DRY
 export const createRatingScaleConfig = (): OptionSetConfig<RatingScale> => ({
   type: "rating-scale",
-  displayName: "Rating Scale",
+  displayName: RATING_OPTION_SET_NAME,
   databaseHelpers: createRatingScaleDatabaseHelpers(),
   validation: {
     validateName,
@@ -35,7 +41,7 @@ export const createRatingScaleConfig = (): OptionSetConfig<RatingScale> => ({
 
 export const createRadioOptionSetConfig = (): OptionSetConfig<RadioOptionSet> => ({
   type: "radio",
-  displayName: "Radio Option Set",
+  displayName: RADIO_OPTION_SET_NAME,
   databaseHelpers: createRadioOptionSetDatabaseHelpers(),
   validation: {
     validateName,
@@ -46,7 +52,7 @@ export const createRadioOptionSetConfig = (): OptionSetConfig<RadioOptionSet> =>
 
 export const createMultiSelectOptionSetConfig = (): OptionSetConfig<MultiSelectOptionSet> => ({
   type: "multi-select",
-  displayName: "Multi-Select Option Set",
+  displayName: MULTISELECT_OPTION_SET_NAME,
   databaseHelpers: createMultiSelectOptionSetDatabaseHelpers(),
   validation: {
     validateName,
@@ -58,7 +64,7 @@ export const createMultiSelectOptionSetConfig = (): OptionSetConfig<MultiSelectO
 
 export const createSelectOptionSetConfig = (): OptionSetConfig<SelectOptionSet> => ({
   type: "select",
-  displayName: "Select Option Set",
+  displayName: SELECT_OPTION_SET_NAME,
   databaseHelpers: createSelectOptionSetDatabaseHelpers(),
   validation: {
     validateName,

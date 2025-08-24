@@ -74,7 +74,7 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
               </label>
               <span className={`px-2 py-1 text-xs rounded-full ${isActive
                 ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-800"
+                : "bg-red-100 text-red-800"
                 }`}>
                 {isActive ? 'Will be Active' : 'Will be Inactive'}
               </span>

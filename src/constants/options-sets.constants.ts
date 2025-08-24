@@ -46,3 +46,43 @@ export const SETS_STATISTIC_LABEL = 'Available Sets' as const;
 // Statistics value formatters
 export const SCALES_COUNT = (count: number) => `${count} scales` as const;
 export const SETS_COUNT = (count: number) => `${count} sets` as const;
+
+// Form labels and buttons
+export const SAVE_BUTTON_LABEL = 'Save' as const;
+export const SAVING_BUTTON_LABEL = 'Saving...' as const;
+export const CANCEL_BUTTON_LABEL = 'Cancel' as const;
+export const ADD_OPTION_BUTTON_LABEL = 'Add Option' as const;
+
+// Form section titles
+export const CREATE_NEW_PREFIX = 'Create New' as const;
+export const EDIT_PREFIX = 'Edit' as const;
+export const OPTIONS_SECTION_TITLE = 'Options' as const;
+export const PREVIEW_SECTION_TITLE = 'Preview' as const;
+export const LIVE_PREVIEW_BADGE = 'Live Preview' as const;
+
+// Form field labels
+export const NAME_FIELD_LABEL = 'Name' as const;
+export const DESCRIPTION_FIELD_LABEL = 'Description' as const;
+export const VALUE_FIELD_LABEL = 'Value' as const;
+export const LABEL_FIELD_LABEL = 'Label' as const;
+export const COLOR_FIELD_LABEL = 'Color' as const;
+export const DEFAULT_FIELD_LABEL = 'Default' as const;
+
+// Form placeholders
+export const NAME_FIELD_PLACEHOLDER = 'Enter name' as const;
+export const DESCRIPTION_FIELD_PLACEHOLDER = 'Enter description (optional)' as const;
+export const VALUE_FIELD_PLACEHOLDER = 'e.g., option_value' as const;
+export const LABEL_FIELD_PLACEHOLDER = 'e.g., Option label' as const;
+
+// Preview messages
+export const NO_OPTIONS_PREVIEW_TITLE = 'No options to preview' as const;
+export const NO_OPTIONS_PREVIEW_SUBTITLE = 'Add some options above to see how they\'ll appear' as const;
+
+// Option counters
+export const OPTION_COUNT_SINGLE = 'option' as const;
+export const OPTION_COUNT_PLURAL = 'options' as const;
+export const TOTAL_OPTIONS_LABEL = 'Total options:' as const;
+export const DEFAULT_OPTIONS_LABEL = 'Default options:' as const;
+
+// Tooltips
+export const DELETE_OPTION_TOOLTIP = 'Delete option' as const;

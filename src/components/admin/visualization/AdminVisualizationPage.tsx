@@ -1,7 +1,8 @@
-import { Button, LoadingSpinner, ScrollableContent } from '@/components/common';
-import { baseRoute } from '@/routes';
-import React, { useCallback, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Button, LoadingSpinner, ScrollableContent } from "@/components/common";
+import { routes } from "@/routes";
+import { TrendingUp } from "lucide-react";
+import React, { useCallback, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   AdvancedFilters,
@@ -9,10 +10,10 @@ import {
   CustomDateRange,
   QuickRangeFilter,
   SectionRenderer,
-  StatsPanel
-} from './components';
-import { VisualizationProvider, useVisualization } from './context';
-import { useFilters, useSectionData, useVisualizationData } from './hooks';
+  StatsPanel,
+} from "./components";
+import { VisualizationProvider, useVisualization } from "./context";
+import { useFilters, useSectionData, useVisualizationData } from "./hooks";
 
 const VisualizationContent: React.FC = React.memo(() => {
   const { instanceId } = useParams<{ instanceId: string }>();
@@ -20,10 +21,22 @@ const VisualizationContent: React.FC = React.memo(() => {
   const { state, updateState, filters } = useVisualization();
 
   // Load data
-  const { loading, error, config, responses, instance, computeAggregatedSeries } = useVisualizationData(instanceId);
+  const {
+    loading,
+    error,
+    config,
+    responses,
+    instance,
+    computeAggregatedSeries,
+  } = useVisualizationData(instanceId);
 
   // Filter data
-  const { filteredResponses, submissionsByDay, todayCount, seriesMatchesSearch } = useFilters(responses);
+  const {
+    filteredResponses,
+    submissionsByDay,
+    todayCount,
+    seriesMatchesSearch,
+  } = useFilters(responses);
 
   // Compute series - memoize to prevent recalculation on every render
   const series = useMemo(() => {
@@ -31,12 +44,20 @@ const VisualizationContent: React.FC = React.memo(() => {
   }, [computeAggregatedSeries, filteredResponses]);
 
   // Section data - memoize to prevent recalculation on every render
-  const { orderedSections, fieldIdToSeries, sectionNames, subsectionsBySection, availableFields } = useSectionData(config, series);
+  const {
+    orderedSections,
+    fieldIdToSeries,
+    // sectionNames,
+    // subsectionsBySection,
+    availableFields,
+  } = useSectionData(config, series);
 
   // Memoize the filtered sections to prevent unnecessary re-renders
   const filteredSections = useMemo(() => {
-    return orderedSections.filter((section) =>
-      filters.sectionFilter === 'all' || section.title === filters.sectionFilter
+    return orderedSections.filter(
+      (section) =>
+        filters.sectionFilter === "all" ||
+        section.title === filters.sectionFilter
     );
   }, [orderedSections, filters.sectionFilter]);
 
@@ -61,16 +82,23 @@ const VisualizationContent: React.FC = React.memo(() => {
   }, [series.length, filteredSections, fieldIdToSeries, seriesMatchesSearch]);
 
   // Memoize the entire ScrollableContent children to prevent unnecessary re-renders
-  const scrollableChildren = useMemo(() => (
-    <div className="w-full">
-      {chartGridContent}
-    </div>
-  ), [chartGridContent]);
+  const scrollableChildren = useMemo(
+    () => <div className="w-full">{chartGridContent}</div>,
+    [chartGridContent]
+  );
 
   // Memoize the updateState callback to prevent unnecessary re-renders
   const handleToggleAdvanced = useCallback(() => {
     updateState({ showAdvanced: !state.showAdvanced });
   }, [state.showAdvanced, updateState]);
+
+  // Handle analytics button click
+  const handleAnalytics = useCallback(() => {
+    if (instanceId) {
+      const url = `${window.location.origin}/${routes.adminAnalytics(instanceId)}`;
+      window.open(url, "_blank");
+    }
+  }, [instanceId]);
 
   if (loading) return <LoadingSpinner fullScreen text="Loading data..." />;
 
@@ -81,7 +109,11 @@ const VisualizationContent: React.FC = React.memo(() => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="form" onClick={() => navigate(`${baseRoute}/admin`)}>
+              <Button
+                variant="outline"
+                size="form"
+                onClick={() => navigate(routes.admin)}
+              >
                 Back to Admin
               </Button>
             </div>
@@ -89,7 +121,9 @@ const VisualizationContent: React.FC = React.memo(() => {
 
           <div className="bg-white rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-gray-900">Survey Data Visualization</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Survey Data Visualization
+              </h2>
               <p className="text-gray-700">{error}</p>
             </div>
           </div>
@@ -104,7 +138,11 @@ const VisualizationContent: React.FC = React.memo(() => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="form" onClick={() => navigate(`${baseRoute}/admin`)}>
+            <Button
+              variant="outline"
+              size="form"
+              onClick={() => navigate(routes.admin)}
+            >
               Back to Admin
             </Button>
           </div>
@@ -114,8 +152,24 @@ const VisualizationContent: React.FC = React.memo(() => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Survey Data Visualization</h2>
-              <p className="text-gray-600">Interactive charts and insights from your survey data</p>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Survey Data Visualization
+              </h2>
+              <p className="text-gray-600">
+                Interactive charts and insights from your survey data
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={handleAnalytics}
+                variant="outline"
+                size="form"
+                disabled={!instanceId}
+              >
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Analytics
+              </Button>
+              <QuickRangeFilter />
             </div>
           </div>
 
@@ -132,27 +186,26 @@ const VisualizationContent: React.FC = React.memo(() => {
           />
 
           {/* Filters */}
-          <div className="space-y-3 mb-6 flex-shrink-0">
+          <div className="mb-6 flex-shrink-0">
             <div className="flex flex-wrap items-end gap-2">
-              <QuickRangeFilter />
+              {/* Reserve space for advanced filters to prevent shifting */}
+              <div style={{ minWidth: 280 /* adjust as needed */ }}>
+                {state.showAdvanced ? (
+                  <AdvancedFilters orderedSections={orderedSections} />
+                ) : null}
+              </div>
               <CustomDateRange />
               <ChartControls availableFields={availableFields} />
               <Button
                 variant="outline"
                 size="form"
                 onClick={handleToggleAdvanced}
+                className="min-w-[120px]" // Ensures consistent button width
               >
-                {state.showAdvanced ? 'Hide filters' : 'More filters'}
+                {state.showAdvanced ? "Hide filters" : "More filters"}
               </Button>
             </div>
-
-            <AdvancedFilters
-              sectionNames={sectionNames}
-              subsectionsBySection={subsectionsBySection}
-              orderedSections={orderedSections}
-            />
           </div>
-
 
           {/* Chart Grid */}
           <div>
@@ -171,7 +224,7 @@ const VisualizationContent: React.FC = React.memo(() => {
   );
 });
 
-VisualizationContent.displayName = 'VisualizationContent';
+VisualizationContent.displayName = "VisualizationContent";
 
 export const AdminVisualizationPage: React.FC = () => {
   return (

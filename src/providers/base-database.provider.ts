@@ -4,7 +4,6 @@ import {
   DatabaseProvider_Interface,
 } from "../types/database.types";
 import { SupabaseClientService } from "../services/supabase-client.service";
-import { MigrationService } from "../services/migration.service";
 import { initializeRepositoryService } from "../services/repository.service";
 
 /**
@@ -13,7 +12,6 @@ import { initializeRepositoryService } from "../services/repository.service";
  */
 export abstract class BaseDatabaseProvider implements DatabaseProvider_Interface {
   protected clientService: SupabaseClientService;
-  protected migrationService: MigrationService | null = null;
   protected initialized = false;
 
   constructor() {
@@ -47,8 +45,6 @@ export abstract class BaseDatabaseProvider implements DatabaseProvider_Interface
           initializeRepositoryService(elevatedClient);
         });
 
-        // Initialize migration service
-        this.migrationService = new MigrationService(client);
 
         this.initialized = true;
         console.log("Database provider initialized successfully");
@@ -85,35 +81,4 @@ export abstract class BaseDatabaseProvider implements DatabaseProvider_Interface
     return this.initialized;
   }
 
-  getMigrationService(): MigrationService {
-    if (!this.migrationService) {
-      throw new Error("Migration service not initialized. Please call initialize() first.");
-    }
-    return this.migrationService;
-  }
-
-  async runMigrations(): Promise<void> {
-    const migration = this.getMigrationService();
-    console.log("Starting migration process...");
-
-    try {
-      await migration.runAllMigrations();
-      console.log("All migrations completed successfully!");
-    } catch (error) {
-      console.error("Migration failed:", error);
-      throw error;
-    }
-  }
-
-  async isMigrationComplete(): Promise<boolean> {
-    const migration = this.getMigrationService();
-    return migration.areAllMigrationsComplete();
-  }
-
-  protected ensureMigrationService(): MigrationService {
-    if (!this.migrationService) {
-      throw new Error("Migration service not initialized. Please call initialize() first.");
-    }
-    return this.migrationService;
-  }
 }

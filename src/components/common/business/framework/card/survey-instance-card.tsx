@@ -43,16 +43,16 @@ export const SurveyInstanceCard: React.FC<SurveyInstanceCardProps> = ({
           <div>
             <h4 className="font-semibold">
               {instance.title}
-              <span className="ml-2 text-sm font-normal text-blue-600">
-                (ID: {instance.id})
-              </span>
             </h4>
             <p className="text-sm text-gray-600">{instance.description}</p>
+            <span className="text-sm font-normal text-blue-600">
+              {instance.id}
+            </span>
             <p className="text-xs text-gray-500">
               Config: {config?.title || instance.configId}
             </p>
             <div className="flex items-center gap-4 mt-2">
-              <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+              <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}>
                 {isActive ? 'Active' : 'Inactive'}
               </span>

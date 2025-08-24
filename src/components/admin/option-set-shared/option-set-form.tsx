@@ -2,6 +2,34 @@ import { Plus, Save, Trash2, X } from 'lucide-react';
 import React from 'react';
 import { Button, ColorSelector, Input, SortableList } from '../../common';
 import { MultiSelectPreview, RadioSelectPreview, RatingScalePreview, SelectPreview } from './previews';
+import {
+    SAVE_BUTTON_LABEL,
+    SAVING_BUTTON_LABEL,
+    CANCEL_BUTTON_LABEL,
+    ADD_OPTION_BUTTON_LABEL,
+    CREATE_NEW_PREFIX,
+    EDIT_PREFIX,
+    OPTIONS_SECTION_TITLE,
+    PREVIEW_SECTION_TITLE,
+    LIVE_PREVIEW_BADGE,
+    NAME_FIELD_LABEL,
+    DESCRIPTION_FIELD_LABEL,
+    VALUE_FIELD_LABEL,
+    LABEL_FIELD_LABEL,
+    COLOR_FIELD_LABEL,
+    DEFAULT_FIELD_LABEL,
+    NAME_FIELD_PLACEHOLDER,
+    DESCRIPTION_FIELD_PLACEHOLDER,
+    VALUE_FIELD_PLACEHOLDER,
+    LABEL_FIELD_PLACEHOLDER,
+    NO_OPTIONS_PREVIEW_TITLE,
+    NO_OPTIONS_PREVIEW_SUBTITLE,
+    OPTION_COUNT_SINGLE,
+    OPTION_COUNT_PLURAL,
+    TOTAL_OPTIONS_LABEL,
+    DEFAULT_OPTIONS_LABEL,
+    DELETE_OPTION_TOOLTIP
+} from '@/constants/options-sets.constants';
 
 export type OptionLike = {
     value: string;
@@ -106,16 +134,16 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">
-                    {isCreating ? `Create New ${title}` : `Edit ${title}`}
+                    {isCreating ? `${CREATE_NEW_PREFIX} ${title}` : `${EDIT_PREFIX} ${title}`}
                 </h3>
                 <div className="flex space-x-2">
                     <Button onClick={onSave} disabled={loading} variant="primary" size="sm">
                         <Save className="h-4 w-4 mr-2" />
-                        {loading ? 'Saving...' : 'Save'}
+                        {loading ? SAVING_BUTTON_LABEL : SAVE_BUTTON_LABEL}
                     </Button>
                     <Button onClick={onCancel} variant="secondary" size="sm">
                         <X className="h-4 w-4 mr-2" />
-                        Cancel
+                        {CANCEL_BUTTON_LABEL}
                     </Button>
                 </div>
             </div>
@@ -123,18 +151,18 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
             <div className="grid grid-cols-2 gap-4">
                 <Input
                     name="optionSetName"
-                    label="Name"
+                    label={NAME_FIELD_LABEL}
                     value={data.name}
                     onChange={(value) => setField('name', value)}
-                    placeholder="Enter name"
+                    placeholder={NAME_FIELD_PLACEHOLDER}
                     required
                 />
                 <Input
                     name="description"
-                    label="Description"
+                    label={DESCRIPTION_FIELD_LABEL}
                     value={data.description || ''}
                     onChange={(value) => setField('description', value)}
-                    placeholder="Enter description (optional)"
+                    placeholder={DESCRIPTION_FIELD_PLACEHOLDER}
                 />
             </div>
 
@@ -147,14 +175,14 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
             <div>
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                        <h4 className="font-medium text-gray-900">Options</h4>
+                        <h4 className="font-medium text-gray-900">{OPTIONS_SECTION_TITLE}</h4>
                         <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
-                            {data.options.length} {data.options.length === 1 ? 'option' : 'options'}
+                            {data.options.length} {data.options.length === 1 ? OPTION_COUNT_SINGLE : OPTION_COUNT_PLURAL}
                         </span>
                     </div>
                     <Button onClick={addOption} variant="secondary" size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Option
+                        {ADD_OPTION_BUTTON_LABEL}
                     </Button>
                 </div>
 
@@ -171,23 +199,23 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                                     <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-4' : 'grid-cols-3'} gap-3`}>
                                         <Input
                                             name={`option-${index}-value`}
-                                            label="Value"
+                                            label={VALUE_FIELD_LABEL}
                                             value={option.value}
                                             onChange={(value) => updateOption(index, { value: String(value) } as Partial<TOption>)}
-                                            placeholder="e.g., option_value"
+                                            placeholder={VALUE_FIELD_PLACEHOLDER}
                                             required
                                         />
                                         <Input
                                             name={`option-${index}-label`}
-                                            label="Label"
+                                            label={LABEL_FIELD_LABEL}
                                             value={option.label}
                                             onChange={(value) => updateOption(index, { label: String(value) } as Partial<TOption>)}
-                                            placeholder="e.g., Option label"
+                                            placeholder={LABEL_FIELD_PLACEHOLDER}
                                             required
                                         />
                                         {showColor && (
                                             <div className="space-y-1 space-x-1">
-                                                <span className="block text-sm font-semibold text-gray-800 mb-2">Color</span>
+                                                <span className="block text-sm font-semibold text-gray-800 mb-2">{COLOR_FIELD_LABEL}</span>
                                                 <ColorSelector
                                                     value={option.color || 'transparent'}
                                                     onChange={(value) => updateOption(index, { color: String(value) } as Partial<TOption>)}
@@ -203,7 +231,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                                                         onChange={(e) => updateOption(index, { isDefault: e.target.checked } as Partial<TOption>)}
                                                         className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                                                     />
-                                                    <span className="ml-2 text-sm text-gray-700">Default</span>
+                                                    <span className="ml-2 text-sm text-gray-700">{DEFAULT_FIELD_LABEL}</span>
                                                 </label>
                                             </div>
                                         )}
@@ -213,7 +241,7 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                                             onClick={() => removeOption(index)}
                                             disabled={data.options.length <= 1}
                                             className="p-2 text-red-400 hover:text-red-600 disabled:opacity-50 hover:bg-red-50 rounded"
-                                            title="Delete option"
+                                            title={DELETE_OPTION_TOOLTIP}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>
@@ -229,17 +257,17 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
             {/* Preview Section */}
             <div className="border-t pt-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">Preview</h4>
+                    <h4 className="font-medium text-gray-900">{PREVIEW_SECTION_TITLE}</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
-                        Live Preview
+                        {LIVE_PREVIEW_BADGE}
                     </span>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     {data.options.length === 0 ? (
                         <div className="text-center text-gray-500 py-8">
-                            <p className="text-sm">No options to preview</p>
-                            <p className="text-xs mt-1">Add some options above to see how they&apos;ll appear</p>
+                            <p className="text-sm">{NO_OPTIONS_PREVIEW_TITLE}</p>
+                            <p className="text-xs mt-1">{NO_OPTIONS_PREVIEW_SUBTITLE}</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -280,8 +308,8 @@ export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormPr
                             {/* Summary */}
                             <div className="pt-3 border-t border-gray-200">
                                 <div className="flex items-center justify-between text-sm text-gray-600">
-                                    <span>Total options: {data.options.length}</span>
-                                    <span>Default options: {data.options.filter(opt => opt.isDefault).length}</span>
+                                    <span>{TOTAL_OPTIONS_LABEL} {data.options.length}</span>
+                                    <span>{DEFAULT_OPTIONS_LABEL} {data.options.filter(opt => opt.isDefault).length}</span>
                                 </div>
                             </div>
                         </div>

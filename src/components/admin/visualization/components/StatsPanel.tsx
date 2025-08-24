@@ -22,16 +22,22 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
   todayCount,
   totalFiltered
 }) => {
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 flex-shrink-0">
       <div className="p-4 border rounded-lg">
         <div className="text-xs text-gray-500">Instance</div>
-        <div className="text-sm bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={instance?.title || instanceId}>
+        <div className="text-sm text-gray-500 mt-1 truncate" title={instance?.title || instanceId}>
           {instance?.title || instanceId || 'Unknown'}
         </div>
         {instance?.description && (
           <div className="text-xs text-gray-500 mt-1 truncate" title={instance.description}>
             {instance.description}
+          </div>
+        )}
+        {instance && (
+          <div className="text-xs text-blue-500 mt-1">
+            {instance.id}
           </div>
         )}
       </div>
