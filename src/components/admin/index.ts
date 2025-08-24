@@ -5,7 +5,8 @@ export { AdminHeader } from "./header/";
 export { AdminOptionSets } from "./option-sets/";
 export { AdminOverview } from "./overview/";
 export { AdminPage } from "./page/";
-export { AdminRatingScales } from "./rating-scales/";
+// AdminRatingScales component has been replaced by AdminOptionSets
+// export { AdminRatingScales } from "./rating-scales/";
 export { SurveyBuilder } from "./survey-builder/";
 
 // Consolidated Option Set Managers (NEW)
