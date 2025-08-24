@@ -436,18 +436,18 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 </div>
 
                 {/* Render content using unified ordering */}
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {getOrderedSectionContent(section).map((contentItem) => {
                         if (contentItem.type === 'subsection') {
                             const subsection = contentItem.data as any;
                             return (
-                                <div key={subsection.id} className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                                    <div className="mb-6">
-                                        <h4 className="text-xl font-semibold text-gray-800 mb-2">
+                                <div key={subsection.id} className="bg-gray-50/50 border border-gray-200 rounded-xl p-8">
+                                    <div className="mb-8">
+                                        <h4 className="text-xl font-semibold text-gray-800 mb-3">
                                             {subsection.title}
                                         </h4>
                                         {subsection.description && (
-                                            <p className="text-gray-600">{subsection.description}</p>
+                                            <p className="text-gray-600 leading-relaxed">{subsection.description}</p>
                                         )}
                                     </div>
                                     <div className="space-y-6">
@@ -487,7 +487,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     </div>
 
                     {/* Scrollable Content Section */}
-                    <div className="flex-1 pl-12 pr-8 min-h-0 overflow-hidden">
+                    <div className="flex-1 px-8 min-h-0 overflow-hidden">
                         <ScrollableContent
                             maxHeight="100%"
                             minHeight="200px"
@@ -501,8 +501,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                                 // Removed excessive logging to improve performance
                             }}
                         >
-                            <div className="py-4">
-                                <form onSubmit={handleSubmit} className="space-y-8">
+                            <div className="py-6 px-4">
+                                <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
                                     {config.sections
                                         .sort((a, b) => a.order - b.order)
                                         .map(renderSection)}
@@ -512,8 +512,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                     </div>
 
                     {/* Fixed Submit Button */}
-                    <div className="px-12 pb-8 pt-6 border-t flex-shrink-0">
-                        <div className="flex justify-center">
+                    <div className="px-8 pb-8 pt-6 border-t flex-shrink-0">
+                        <div className="flex justify-center max-w-4xl mx-auto">
                             <Button
                                 type="submit"
                                 loading={loading}

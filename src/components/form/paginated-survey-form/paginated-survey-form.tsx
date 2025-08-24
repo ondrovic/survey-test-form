@@ -501,26 +501,31 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                             resetTrigger={scrollResetTrigger}
                             onScroll={handleScroll}
                         >
-                            <InteractiveSectionRenderer
-                                section={currentSection}
-                                sectionIndex={paginationState.currentSectionIndex}
-                                totalSections={paginationState.totalSections}
-                                showSectionPagination={showSectionPagination}
-                                fieldValues={formState.formData}
-                                fieldErrors={hasSubmitted || validatedSections.has(paginationState.currentSectionIndex) ? formState.errors : {}}
-                                onFieldChange={handleFieldChange}
-                                ratingScales={ratingScalesRecord}
-                                radioOptionSets={radioOptionSetsRecord}
-                                multiSelectOptionSets={multiSelectOptionSetsRecord}
-                                selectOptionSets={selectOptionSetsRecord}
-                                loadingOptionSets={isLoading}
-                            />
+                            <div className="py-6 px-4">
+                                <div className="max-w-3xl mx-auto">
+                                    <InteractiveSectionRenderer
+                                        section={currentSection}
+                                        sectionIndex={paginationState.currentSectionIndex}
+                                        totalSections={paginationState.totalSections}
+                                        showSectionPagination={showSectionPagination}
+                                        fieldValues={formState.formData}
+                                        fieldErrors={hasSubmitted || validatedSections.has(paginationState.currentSectionIndex) ? formState.errors : {}}
+                                        onFieldChange={handleFieldChange}
+                                        ratingScales={ratingScalesRecord}
+                                        radioOptionSets={radioOptionSetsRecord}
+                                        multiSelectOptionSets={multiSelectOptionSetsRecord}
+                                        selectOptionSets={selectOptionSetsRecord}
+                                        loadingOptionSets={isLoading}
+                                    />
+                                </div>
+                            </div>
                         </ScrollableContent>
                     </div>
 
                     {/* Fixed Navigation Controls */}
                     <div className="px-8 pb-8 pt-4 border-t flex-shrink-0">
-                        <FormNavigationControls
+                        <div className="max-w-3xl mx-auto">
+                            <FormNavigationControls
                             isFirstSection={paginationState.isFirstSection}
                             isLastSection={paginationState.isLastSection}
                             onPrevious={goToPrevious}
@@ -529,7 +534,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                             disabled={loading}
                             loading={loading}
                             hasValidationErrors={hasSubmitted && !currentSectionValidation.isValid}
-                        />
+                            />
+                        </div>
                     </div>
                 </div>
             </main>

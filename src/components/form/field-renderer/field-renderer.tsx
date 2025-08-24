@@ -32,7 +32,66 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     loadingOptionSets = false
 }) => {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const triggerRefs = useRef<Record<string, HTMLButtonElement>>({});
+
+    // Smart dropdown opening with viewport-based positioning
+    const handleDropdownOpen = useCallback((fieldId: string) => {
+        const newOpenDropdown = openDropdown === fieldId ? null : fieldId;
+        setOpenDropdown(newOpenDropdown);
+        
+        if (newOpenDropdown && triggerRefs.current[fieldId]) {
+            // Calculate position relative to viewport
+            setTimeout(() => {
+                const trigger = triggerRefs.current[fieldId];
+                if (trigger) {
+                    const triggerRect = trigger.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight;
+                    const dropdownHeight = 200;
+                    
+                    // Check if there's enough space below
+                    const spaceBelow = viewportHeight - triggerRect.bottom;
+                    const spaceAbove = triggerRect.top;
+                    
+                    let top: number;
+                    let maxHeight = '240px';
+                    
+                    if (spaceBelow >= 150) {
+                        // Position below
+                        top = triggerRect.bottom + 4;
+                    } else if (spaceAbove >= 150) {
+                        // Position above
+                        top = triggerRect.top - Math.min(dropdownHeight, spaceAbove - 4);
+                    } else {
+                        // Use whatever space is larger
+                        if (spaceBelow > spaceAbove) {
+                            top = triggerRect.bottom + 4;
+                            maxHeight = `${spaceBelow - 20}px`;
+                        } else {
+                            top = 4;
+                            maxHeight = `${triggerRect.top - 20}px`;
+                        }
+                    }
+                    
+                    // Different positioning for different field types
+                    const isMultiSelect = field.type === 'multiselectdropdown';
+                    
+                    setDropdownStyle({
+                        position: 'fixed',
+                        top: `${top}px`,
+                        left: isMultiSelect ? `${triggerRect.left}px` : `${triggerRect.right - 120}px`,
+                        width: isMultiSelect ? `${triggerRect.width}px` : undefined,
+                        minWidth: isMultiSelect ? undefined : '120px',
+                        maxHeight,
+                        zIndex: 9999,
+                    });
+                }
+            }, 10);
+        } else {
+            setDropdownStyle({});
+        }
+    }, [openDropdown, field.type]);
 
     // Click outside handler to close dropdown
     useEffect(() => {
@@ -47,24 +106,17 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             }
         };
 
-        // Throttled scroll handler to prevent excessive calls
+        // Throttled scroll handler to update dropdown position or close it
         let scrollTimeout: NodeJS.Timeout | null = null;
         const handleScroll = () => {
-            console.log('🔍 Scroll event fired, openDropdown:', openDropdown);
             if (openDropdown && !scrollTimeout) {
                 scrollTimeout = setTimeout(() => {
-                    // Only close dropdown if we're not in a scrollable container
-                    // This prevents the dropdown from closing when scrolling within the form
-                    const scrollableParent = dropdownRef.current?.closest('.scrollable-content');
-                    console.log('🔍 Scroll timeout triggered, scrollableParent:', scrollableParent);
-                    if (!scrollableParent) {
-                        console.log('🔍 Closing dropdown due to scroll outside scrollable container');
-                        setOpenDropdown(null);
-                    } else {
-                        console.log('🔍 Keeping dropdown open - inside scrollable container');
+                    // Update dropdown position when scrolling
+                    if (triggerRefs.current[openDropdown]) {
+                        handleDropdownOpen(openDropdown);
                     }
                     scrollTimeout = null;
-                }, 300); // Increased timeout to be less aggressive
+                }, 100);
             }
         };
 
@@ -86,7 +138,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 clearTimeout(scrollTimeout);
             }
         };
-    }, [openDropdown]);
+    }, [openDropdown, handleDropdownOpen]);
 
 
 
@@ -127,7 +179,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
 
         case 'textarea':
             return (
-                <div className="mb-4">
+                <div className="mb-6">
                     <label htmlFor={`${field.id}-textarea`} className="block text-base font-medium text-gray-700 mb-2">
                         {field.label}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -139,12 +191,12 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500",
+                            "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-y",
                             error ? "border-red-500" : "border-gray-300"
                         )}
                         rows={4}
                     />
-                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
                 </div>
             );
 
@@ -169,18 +221,18 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
 
             if (isSelectLoading) {
                 return (
-                    <div className="mb-4">
+                    <div className="mb-6">
                         <label className="block text-base font-medium text-gray-700 mb-2">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="text-gray-500 text-sm">Loading options...</div>
+                        <div className="text-gray-500 text-sm px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">Loading options...</div>
                     </div>
                 );
             }
 
             return (
-                <div className="mb-4">
+                <div className="mb-6">
                     <label htmlFor={`${field.id}-select`} className="block text-base font-medium text-gray-700 mb-2">
                         {field.label}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -202,7 +254,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                             </option>
                         ))}
                     </select>
-                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
                 </div>
             );
         }
@@ -256,23 +308,6 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             let multiSelectOptions = field.options || [];
             let isMultiSelectLoading = false;
 
-            console.log('🔍 Rendering multiselect field:', {
-                fieldId: field.id,
-                fieldLabel: field.label,
-                hasOptionSetId: !!field.multiSelectOptionSetId,
-                optionSetId: field.multiSelectOptionSetId,
-                hasLoadedOptionSet: field.multiSelectOptionSetId ? !!multiSelectOptionSets[field.multiSelectOptionSetId] : false,
-                isLoading: loadingOptionSets,
-                loadedOptionSets: Object.keys(multiSelectOptionSets),
-                availableOptionSets: Object.keys(multiSelectOptionSets),
-                fieldOptions: field.options?.length || 0,
-                multiSelectOptionSetsKeys: Object.keys(multiSelectOptionSets),
-                multiSelectOptionSetsValues: Object.values(multiSelectOptionSets).map(set => ({ id: set?.id, name: set?.name, optionsCount: set?.options?.length })),
-                totalOptionSetsProvided: Object.keys(multiSelectOptionSets).length,
-                isObjectEmpty: Object.keys(multiSelectOptionSets).length === 0,
-                typeOfMultiSelectOptionSets: typeof multiSelectOptionSets
-            });
-
             if (field.multiSelectOptionSetId) {
                 if (multiSelectOptionSets[field.multiSelectOptionSetId]) {
                     // Use loaded multi-select option set options
@@ -282,12 +317,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         color: opt.color,
                         isDefault: opt.isDefault
                     }));
-                    console.log('✅ Using loaded option set options:', multiSelectOptions);
                 } else if (loadingOptionSets) {
                     isMultiSelectLoading = true;
-                    console.log('⏳ Option set is loading...');
-                } else {
-                    console.log('❌ Option set not found and not loading');
                 }
             }
 
@@ -320,17 +351,6 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 maxSelections = maxRule?.value;
             }
 
-            console.log('🎯 Final options for multiselect:', multiSelectOptions);
-            console.log('🎯 CheckboxGroup props:', {
-                name: field.id,
-                label: field.label,
-                optionsCount: multiSelectOptions.length,
-                selectedValues: value || [],
-                required: field.required,
-                hasError: !!error,
-                minSelections,
-                maxSelections
-            });
 
             return (
                 <CheckboxGroup
@@ -367,21 +387,23 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             }
 
             return (
-                <div className="mb-4">
-                    <div className="flex items-center justify-between p-3 border border-green-200 rounded-lg bg-white">
-                        <div className="text-gray-700">
+                <div className="mb-6">
+                    <div className="flex items-center justify-between p-4 border border-green-200 rounded-lg bg-white shadow-sm">
+                        <div className="text-gray-700 font-medium">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </div>
                         <div className="relative" ref={dropdownRef}>
                             <button
+                                ref={(el) => {
+                                    if (el) triggerRefs.current[field.id] = el;
+                                }}
                                 type="button"
                                 disabled={isLoading}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    const newOpenDropdown = openDropdown === field.id ? null : field.id;
-                                    setOpenDropdown(newOpenDropdown);
+                                    handleDropdownOpen(field.id);
                                 }}
                                 className={clsx(
                                     "px-3 py-2 rounded text-sm font-medium transition-all duration-200 flex items-center gap-2",
@@ -390,11 +412,17 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 )}
                             >
                                 {isLoading ? "Loading..." : getSelectedRatingLabel(value, ratingOptions)}
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className={clsx(
+                                    "w-4 h-4 transition-transform duration-200",
+                                    openDropdown === field.id ? "rotate-180" : ""
+                                )} />
                             </button>
 
                             {openDropdown === field.id && !isLoading && (
-                                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-[9999] min-w-[120px] max-h-60 overflow-y-auto">
+                                <div 
+                                    className="bg-white border border-gray-300 rounded-md shadow-xl overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200"
+                                    style={dropdownStyle}
+                                >
                                     {ratingOptions.map((option) => (
                                         <button
                                             key={option.value}
@@ -463,25 +491,24 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 .filter(Boolean);
 
             return (
-                <div className="mb-4">
-                    <label className="block text-base font-medium text-gray-700 mb-2">
+                <div className="mb-6">
+                    <label className="block text-base font-medium text-gray-700 mb-3">
                         {field.label}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
                     <div className="relative" ref={dropdownRef}>
                         <button
+                            ref={(el) => {
+                                if (el) triggerRefs.current[field.id] = el;
+                            }}
                             type="button"
                             onClick={(e) => {
-                                console.log('🔍 Dropdown button clicked for field:', field.id);
-                                console.log('🔍 Current openDropdown state:', openDropdown);
                                 e.preventDefault();
                                 e.stopPropagation();
-                                const newOpenDropdown = openDropdown === field.id ? null : field.id;
-                                console.log('🔍 Setting new openDropdown to:', newOpenDropdown);
-                                setOpenDropdown(newOpenDropdown);
+                                handleDropdownOpen(field.id);
                             }}
                             className={clsx(
-                                "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-left flex items-center justify-between",
+                                "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-left flex items-center justify-between transition-all duration-200",
                                 error ? "border-red-500" : "border-gray-300"
                             )}
                         >
@@ -493,19 +520,16 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                     : field.placeholder || 'Select options...'
                                 }
                             </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                            <ChevronDown className={clsx(
+                                "w-4 h-4 text-gray-400 transition-transform duration-200",
+                                openDropdown === field.id ? "rotate-180" : ""
+                            )} />
                         </button>
 
                         {openDropdown === field.id && (
-                            <div
-                                className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                                style={{
-                                    position: 'absolute',
-                                    zIndex: 9999,
-                                    top: '100%',
-                                    left: 0,
-                                    right: 0
-                                }}
+                            <div 
+                                className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200"
+                                style={dropdownStyle}
                             >
                                 {multiDropdownOptions.map((option) => {
                                     const isSelected = selectedValues.includes(option.value);
