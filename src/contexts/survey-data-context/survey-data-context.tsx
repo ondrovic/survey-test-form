@@ -8,7 +8,6 @@ import {
     SurveyConfig,
     SurveyInstance
 } from '../../types/framework.types';
-import { SurveyData } from '../../types/survey.types';
 
 /**
  * Check and update survey instance statuses based on their date ranges
@@ -94,7 +93,6 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
 interface SurveyDataState {
     surveyConfigs: SurveyConfig[];
     surveyInstances: SurveyInstance[];
-    surveys: SurveyData[];
     ratingScales: RatingScale[];
     radioOptionSets: RadioOptionSet[];
     multiSelectOptionSets: MultiSelectOptionSet[];
@@ -110,7 +108,6 @@ type SurveyDataAction =
     | { type: 'SET_ERROR'; payload: string | null }
     | { type: 'SET_SURVEY_CONFIGS'; payload: SurveyConfig[] }
     | { type: 'SET_SURVEY_INSTANCES'; payload: SurveyInstance[] }
-    | { type: 'SET_SURVEYS'; payload: SurveyData[] }
     | { type: 'SET_RATING_SCALES'; payload: RatingScale[] }
     | { type: 'SET_RADIO_OPTION_SETS'; payload: RadioOptionSet[] }
     | { type: 'SET_MULTI_SELECT_OPTION_SETS'; payload: MultiSelectOptionSet[] }
@@ -140,7 +137,6 @@ type SurveyDataAction =
 const initialState: SurveyDataState = {
     surveyConfigs: [],
     surveyInstances: [],
-    surveys: [],
     ratingScales: [],
     radioOptionSets: [],
     multiSelectOptionSets: [],
@@ -165,8 +161,6 @@ function surveyDataReducer(state: SurveyDataState, action: SurveyDataAction): Su
         case 'SET_SURVEY_INSTANCES':
             return { ...state, surveyInstances: action.payload };
 
-        case 'SET_SURVEYS':
-            return { ...state, surveys: action.payload };
 
         case 'SET_RATING_SCALES':
             return { ...state, ratingScales: action.payload };
@@ -299,7 +293,6 @@ interface SurveyDataContextType {
     dispatch: React.Dispatch<SurveyDataAction>;
     // Convenience methods
     loadFrameworkData: () => Promise<void>;
-    loadLegacyData: () => Promise<void>;
     loadRatingScales: () => Promise<void>;
     loadRadioOptionSets: () => Promise<void>;
     loadMultiSelectOptionSets: () => Promise<void>;
@@ -381,28 +374,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         }
     }, [setLoading, setError, setLastUpdated]);
 
-    const loadLegacyData = useCallback(async () => {
-        try {
-            // Check if database is initialized
-            const dbInfo = getDatabaseProviderInfo();
-            if (!dbInfo.isInitialized) {
-                console.log('⏳ Legacy data - Database not ready yet, skipping load...');
-                return;
-            }
-
-            setLoading(true);
-            setError(null);
-
-            const legacySurveys = await databaseHelpers.getSurveys();
-            dispatch({ type: 'SET_SURVEYS', payload: legacySurveys });
-            setLastUpdated();
-        } catch (error) {
-            console.error("Error loading legacy data:", error);
-            setError("Failed to load legacy data");
-        } finally {
-            setLoading(false);
-        }
-    }, [setLoading, setError, setLastUpdated]);
 
     const loadRatingScales = useCallback(async () => {
         try {
@@ -487,14 +458,13 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
         await Promise.all([
             loadFrameworkData(),
-            loadLegacyData(),
             loadRatingScales(),
             loadRadioOptionSets(),
             loadMultiSelectOptionSets(),
             loadSelectOptionSets(),
         ]);
         console.log("refreshAll completed - all data reloaded");
-    }, [loadFrameworkData, loadLegacyData, loadRatingScales, loadRadioOptionSets, loadMultiSelectOptionSets, loadSelectOptionSets]);
+    }, [loadFrameworkData, loadRatingScales, loadRadioOptionSets, loadMultiSelectOptionSets, loadSelectOptionSets]);
 
     // Manual validation of survey instance statuses based on date ranges
     const validateSurveyInstanceStatuses = useCallback(async () => {
@@ -644,7 +614,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         state,
         dispatch,
         loadFrameworkData,
-        loadLegacyData,
         loadRatingScales,
         loadRadioOptionSets,
         loadMultiSelectOptionSets,

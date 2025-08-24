@@ -4,7 +4,6 @@ import { useToast } from "@/contexts/toast-context";
 import { RatingScale, SurveyResponse } from "@/types";
 import {
   downloadFrameworkResponsesAsExcel,
-  downloadSurveyDataAsExcel,
 } from "@/utils/excel.utils";
 import { useCallback } from "react";
 
@@ -12,18 +11,6 @@ export const useAdminOperations = () => {
   const { showSuccess, showError } = useToast();
   const { refreshAll } = useSurveyData();
 
-  const deleteSurvey = useCallback(
-    async (surveyId: string) => {
-      try {
-        await databaseHelpers.deleteSurvey(surveyId);
-        showSuccess("Survey deleted!");
-        await refreshAll();
-      } catch (error) {
-        showError("Failed to delete survey");
-      }
-    },
-    [showSuccess, showError, refreshAll]
-  );
 
   const deleteSurveyConfig = useCallback(
     async (
@@ -202,28 +189,6 @@ export const useAdminOperations = () => {
     [showSuccess, showError, refreshAll]
   );
 
-  const downloadLegacyData = useCallback(
-    async (surveyId?: string) => {
-      try {
-        if (surveyId) {
-          // Download specific survey data
-          const surveys = await databaseHelpers.getSurveys();
-          const survey = surveys.find((s) => s.id === surveyId);
-          if (survey) {
-            await downloadSurveyDataAsExcel([survey], survey.title || "Survey");
-          }
-        } else {
-          // Download all survey data
-          const surveys = await databaseHelpers.getSurveys();
-          await downloadSurveyDataAsExcel(surveys);
-        }
-        showSuccess("Survey data downloaded!");
-      } catch (error) {
-        showError("Failed to download survey data");
-      }
-    },
-    [showSuccess, showError]
-  );
 
   const downloadFrameworkData = useCallback(
     async (instanceId?: string) => {
@@ -403,14 +368,12 @@ export const useAdminOperations = () => {
   );
 
   return {
-    deleteSurvey,
     deleteSurveyConfig,
 
     permanentlyDeleteSurveyInstance,
     deleteRatingScale,
     toggleInstanceActive,
     updateInstanceDateRange,
-    downloadLegacyData,
     downloadFrameworkData,
     cleanupDuplicateRatingScales,
     deleteRadioOptionSet,

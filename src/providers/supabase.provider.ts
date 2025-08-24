@@ -61,11 +61,11 @@ class SupabaseProviderImpl extends BaseDatabaseProvider {
     const optionSetsOps = this.optionSetsOperations;
 
     return {
-      // Survey operations
-      getSurveys: () => surveyOps.getSurveys(),
-      addSurvey: (data: any) => surveyOps.addSurvey(data),
-      updateSurvey: (id: string, data: any) => surveyOps.updateSurvey(id, data),
-      deleteSurvey: (id: string) => surveyOps.deleteSurvey(id),
+      // Legacy survey operations (removed - no longer supported)
+      getSurveys: () => Promise.resolve([]),
+      addSurvey: (_data: any) => Promise.reject(new Error('Legacy surveys no longer supported')),
+      updateSurvey: (_id: string, _data: any) => Promise.reject(new Error('Legacy surveys no longer supported')),
+      deleteSurvey: (_id: string) => Promise.reject(new Error('Legacy surveys no longer supported')),
 
       // Survey config operations
       getSurveyConfigs: () => surveyOps.getSurveyConfigs(),

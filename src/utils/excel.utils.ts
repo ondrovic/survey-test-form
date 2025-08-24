@@ -1,5 +1,4 @@
 import * as XLSX from "xlsx";
-import { SurveyData } from "../types/survey.types";
 import { SurveyConfig, SurveyResponse } from "../types/framework.types";
 
 export interface ExcelExportOptions {
@@ -7,59 +6,6 @@ export interface ExcelExportOptions {
   sheetName?: string;
 }
 
-/**
- * Downloads survey data as an Excel file
- * Note: This function is deprecated. Use downloadFrameworkResponsesAsExcel instead.
- */
-export function downloadSurveyDataAsExcel(
-  surveys: SurveyData[],
-  options: ExcelExportOptions = {}
-): void {
-  console.warn(
-    "downloadSurveyDataAsExcel is deprecated. Use downloadFrameworkResponsesAsExcel instead."
-  );
-
-  const { filename = "survey-data.xlsx", sheetName = "Survey Data" } = options;
-
-  try {
-    // Convert SurveyData to SurveyResponse format for compatibility
-    const responses: SurveyResponse[] = surveys.map((survey) => ({
-      id: survey.id,
-      surveyInstanceId: "legacy",
-      configVersion: "1.0.0",
-      submittedAt: survey.submittedAt,  // Top-level field
-      metadata: {
-        userAgent: "Legacy Export",
-        ipAddress: "Not Available",
-      },
-      responses: {
-        // Convert survey data to response format
-        personal_info_full_name: survey.personalInfo.fullName,
-        personal_info_email: survey.personalInfo.email,
-        personal_info_franchise: survey.personalInfo.franchise,
-        business_info_market_regions: survey.businessInfo.marketRegions,
-        business_info_other_market: survey.businessInfo.otherMarket,
-        business_info_number_of_licenses: survey.businessInfo.numberOfLicenses,
-        business_info_business_focus: survey.businessInfo.businessFocus,
-        // Add service line data
-        ...survey.serviceLines,
-      },
-    }));
-
-    // Use the framework function instead
-    downloadFrameworkResponsesAsExcel(responses, undefined, {
-      filename,
-      sheetName,
-    });
-
-    console.log(
-      `Excel file "${filename}" downloaded successfully with ${surveys.length} survey records`
-    );
-  } catch (error) {
-    console.error("Error generating Excel file:", error);
-    throw new Error("Failed to generate Excel file");
-  }
-}
 
 /**
  * Downloads framework survey responses as an Excel file with proper ordering based on survey configuration
