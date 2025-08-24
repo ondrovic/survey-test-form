@@ -14,7 +14,15 @@ let isImportOperationInProgress = false;
 export const useAutomaticValidation = (updateValidationStatus: (results: any) => void) => {
   const { verifyConfig } = useSurveyOperations();
   const { openReactiveModal, closeModal, forceUpdateModal, isModalOpen } = useModal();
-  const { handleCreateMissingItem } = useConfigValidation();
+  
+  // Try to get config validation, but don't fail if context is not available
+  let handleCreateMissingItem: any = () => console.log('No validation context available for creating missing items');
+  try {
+    const configValidation = useConfigValidation();
+    handleCreateMissingItem = configValidation.handleCreateMissingItem;
+  } catch (error) {
+    console.log('⚠️ Validation context not available in useAutomaticValidation');
+  }
 
   // Store current validation results to avoid recreating the modal
   const currentValidationResults = useRef<any>(null);
@@ -58,18 +66,25 @@ export const useAutomaticValidation = (updateValidationStatus: (results: any) =>
               const result = await runBackgroundValidation();
 
               if (result) {
-                // Update validation status for UI
+                // Update validation status for UI - ensure this always happens
+                console.log("🔧 Updating validation status from delayed validation");
                 updateValidationStatus(result);
 
                 if (result.invalidConfigs > 0) {
                   console.log("⚠️ Delayed validation still has issues:", result.errors);
                   console.log("🔍 This suggests the survey configuration still references the old option set ID");
                 } else {
-                  console.log("✅ Delayed validation passed - all configurations are valid");
+                  console.log("✅ Delayed validation passed - validation badges should clear");
                 }
+              } else {
+                console.warn("⚠️ Delayed validation returned null - clearing validation status");
+                // If validation fails, clear the status to prevent stuck badges
+                updateValidationStatus({ invalidConfigs: 0, validConfigs: 0, totalConfigs: 0 });
               }
             } catch (error) {
               console.error("❌ Delayed validation failed:", error);
+              // On error, clear validation status to prevent stuck badges
+              updateValidationStatus({ invalidConfigs: 0, validConfigs: 0, totalConfigs: 0 });
             }
           }, 5000); // Wait 5 seconds for complete data refresh cycle
 

@@ -15,6 +15,7 @@ import { useAdminTab } from '@/contexts/admin-tab-context/index';
 import { useAuth } from '@/contexts/auth-context/index';
 import { useModal } from '@/contexts/modal-context';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
+import { ValidationStatusProvider } from '@/contexts/validation-status-context';
 import { useAdminOperations } from '@/hooks';
 import { RatingScale, SurveyConfig } from '@/types';
 import { clsx } from 'clsx';
@@ -205,12 +206,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
     }
 
     return (
-        <div className="min-h-screen bg-amber-50/30">
-            {/* Header */}
-            <AdminHeader onLogout={handleLogout} />
+        <ValidationStatusProvider>
+            <div className="min-h-screen bg-amber-50/30">
+                {/* Header */}
+                <AdminHeader onLogout={handleLogout} />
 
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Main Content */}
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Tab Navigation */}
                 <div className="border-b border-gray-200 mb-8">
                     <nav className="-mb-px flex space-x-8">
@@ -276,8 +278,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
 
 
 
-            </main>
-        </div>
+                </main>
+            </div>
+        </ValidationStatusProvider>
     );
 };
 

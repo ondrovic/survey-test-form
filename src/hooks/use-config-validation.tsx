@@ -7,35 +7,17 @@ import {
 import { ValidationResultsModal } from "@/components/common";
 import { useModal } from "@/contexts/modal-context";
 import { useToast } from "@/contexts/toast-context/index";
-import { useState } from "react";
+import { useValidationStatus } from "@/contexts/validation-status-context";
 import { useSurveyOperations } from "./use-survey-operations";
 
-interface ValidationStatus {
-  hasErrors: boolean;
-  errorCount: number;
-  lastChecked: Date | null;
-}
 
 export const useConfigValidation = () => {
   const { showError, showInfo } = useToast();
   const { verifyConfig } = useSurveyOperations();
   const { openReactiveModal, closeModal } = useModal();
-
-  // Validation status state
-  const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
-    hasErrors: false,
-    errorCount: 0,
-    lastChecked: null,
-  });
-
-  // Update validation status helper
-  const updateValidationStatus = (results: any) => {
-    setValidationStatus({
-      hasErrors: results.invalidConfigs > 0,
-      errorCount: results.invalidConfigs,
-      lastChecked: new Date(),
-    });
-  };
+  
+  // Use validation status from context (single source of truth)
+  const { validationStatus, updateValidationStatus, clearValidationStatus } = useValidationStatus();
 
   // Handle validation refresh after item creation
   const handleRefreshValidation = async () => {
@@ -46,6 +28,9 @@ export const useConfigValidation = () => {
 
       // Run validation to check if issues are resolved (silent mode for automatic refresh)
       const results = await verifyConfig(true);
+      
+      // Always update validation status with the results
+      console.log("🔄 Updating validation status after refresh validation");
       updateValidationStatus(results);
 
       if (results.invalidConfigs > 0) {
@@ -64,10 +49,12 @@ export const useConfigValidation = () => {
           )
         );
       } else {
-        console.log("✅ Validation passed after item creation");
+        console.log("✅ Validation passed after item creation - badges should clear");
       }
     } catch (error) {
       console.error("❌ Error refreshing validation:", error);
+      // On error, clear validation status to prevent stuck badges
+      updateValidationStatus({ invalidConfigs: 0, validConfigs: 0, totalConfigs: 0 });
     }
   };
 
@@ -75,7 +62,11 @@ export const useConfigValidation = () => {
   const handleVerifyConfig = async () => {
     try {
       const results = await verifyConfig();
+      
+      // Always update validation status
+      console.log("🔄 Updating validation status after manual verification");
       updateValidationStatus(results);
+      
       openReactiveModal(
         "validation-results",
         () => (
@@ -101,6 +92,8 @@ export const useConfigValidation = () => {
     } catch (error) {
       showError("Failed to verify configurations. Please try again.");
       console.error("Failed to verify config:", error);
+      // On error, clear validation status to prevent stuck badges
+      updateValidationStatus({ invalidConfigs: 0, validConfigs: 0, totalConfigs: 0 });
     }
   };
 
@@ -248,5 +241,6 @@ export const useConfigValidation = () => {
     handleVerifyConfig,
     handleCreateMissingItem,
     updateValidationStatus,
+    clearValidationStatus,
   };
 };

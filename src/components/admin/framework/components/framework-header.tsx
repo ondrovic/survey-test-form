@@ -1,6 +1,6 @@
 import { Button } from '@/components/common';
 import { SurveyConfig } from '@/types';
-import { AlertTriangle, Plus, Upload } from 'lucide-react';
+import { AlertTriangle, Plus, Upload, X } from 'lucide-react';
 import React from 'react';
 
 interface ValidationStatus {
@@ -15,6 +15,7 @@ interface FrameworkHeaderProps {
   onImportConfig: () => void;
   validationStatus: ValidationStatus;
   onVerifyConfig: () => Promise<void>;
+  onClearValidationErrors?: () => void;
 }
 
 export const FrameworkHeader: React.FC<FrameworkHeaderProps> = ({
@@ -22,8 +23,16 @@ export const FrameworkHeader: React.FC<FrameworkHeaderProps> = ({
   onCreateNewSurvey,
   onImportConfig,
   validationStatus,
-  onVerifyConfig
+  onVerifyConfig,
+  onClearValidationErrors
 }) => {
+  // Debug logging to see if component re-renders when validation status changes
+  console.log("🖼️ FrameworkHeader rendering with validation status:", {
+    hasErrors: validationStatus.hasErrors,
+    errorCount: validationStatus.errorCount,
+    lastChecked: validationStatus.lastChecked,
+    object: validationStatus
+  });
   return (
     <>
       <div className="flex items-center justify-between">
@@ -44,6 +53,18 @@ export const FrameworkHeader: React.FC<FrameworkHeaderProps> = ({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {validationStatus.hasErrors && onClearValidationErrors && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearValidationErrors}
+              className="text-gray-600 border-gray-600 hover:bg-gray-50"
+              title="Clear validation error badges (troubleshooting)"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Clear Errors
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

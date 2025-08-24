@@ -332,9 +332,9 @@ export const collapsible = {
   content: {
     base: 'overflow-hidden transition-all duration-300',
     variants: {
-      default: 'px-4 pb-4',
+      default: 'px-4 pb-4 pt-2',
       minimal: 'py-2',
-      card: 'p-6 pt-0',
+      card: 'p-6 pt-4',
     },
   },
   

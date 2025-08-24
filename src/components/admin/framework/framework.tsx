@@ -1,4 +1,5 @@
 import { useSurveyData } from '@/contexts/survey-data-context/index';
+import { useValidationStatus } from '@/contexts/validation-status-context';
 import { useAdminFrameworkHandlers, useAdminFrameworkModals, useAutomaticValidation, useConfigValidation } from '@/hooks';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { getInstanceConfig, getInstanceCount } from '@/utils/admin-framework.utils';
@@ -30,10 +31,13 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     state: { surveyConfigs, surveyInstances }
   } = useSurveyData();
 
-  // Get validation status from the same hook that automatic validation uses
-  const { validationStatus, handleVerifyConfig, updateValidationStatus } = useConfigValidation();
+  // Get validation status from context (single source of truth)
+  const { validationStatus, updateValidationStatus, clearValidationStatus } = useValidationStatus();
+  
+  // Get config validation operations
+  const { handleVerifyConfig } = useConfigValidation();
 
-  // Automatic validation
+  // Automatic validation using the context
   const { runOnPageLoad } = useAutomaticValidation(updateValidationStatus);
 
   // Track if validation has already run to prevent loops
@@ -104,6 +108,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         onImportConfig={configHandlers.handleImportConfig}
         validationStatus={validationStatus}
         onVerifyConfig={handleVerifyConfig}
+        onClearValidationErrors={clearValidationStatus}
       />
 
       {/* Survey Configurations */}
@@ -117,7 +122,8 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         validationStatus={validationStatus}
         validationResetCallback={() => {
           // Reset validation status to clear any errors
-          updateValidationStatus({ hasErrors: false, errorCount: 0, lastChecked: Date.now() });
+          console.log("🧹 Using validation reset callback to clear status");
+          clearValidationStatus();
         }}
       />
 
@@ -134,7 +140,8 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
         onImportInstance={instanceHandlers.handleImportInstance}
         validationResetCallback={() => {
           // Reset validation status to clear any errors
-          updateValidationStatus({ hasErrors: false, errorCount: 0, lastChecked: Date.now() });
+          console.log("🧹 Using validation reset callback to clear status");
+          clearValidationStatus();
         }}
       />
 

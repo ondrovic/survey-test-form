@@ -145,17 +145,17 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
         className
       )}
     >
-      <button
-        id={triggerId}
-        onClick={handleToggle}
-        onKeyDown={handleKeyDown}
-        className={triggerClasses}
-        aria-expanded={isExpanded}
-        aria-controls={contentId}
-        disabled={disabled}
-        type="button"
-      >
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className={clsx(triggerClasses, "flex items-center justify-between")}>
+        <button
+          id={triggerId}
+          onClick={handleToggle}
+          onKeyDown={handleKeyDown}
+          className="flex items-center gap-3 min-w-0 flex-1 bg-transparent border-none p-0 text-left hover:bg-transparent focus:outline-none"
+          aria-expanded={isExpanded}
+          aria-controls={contentId}
+          disabled={disabled}
+          type="button"
+        >
           <h3 className={titleClasses}>
             {title}
           </h3>
@@ -168,29 +168,29 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
               }
             </span>
           )}
-        </div>
+        </button>
         
         <div className="flex items-center gap-2">
           {headerAction && (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.stopPropagation();
-                }
-              }}
-            >
+            <div className="flex items-center gap-2">
               {headerAction}
             </div>
           )}
           
-          {icon || (
-            <ChevronDown className={iconClasses} />
-          )}
+          <button
+            onClick={handleToggle}
+            className="p-1 hover:bg-gray-100 rounded-md transition-colors bg-transparent border-none"
+            aria-expanded={isExpanded}
+            aria-controls={contentId}
+            disabled={disabled}
+            type="button"
+          >
+            {icon || (
+              <ChevronDown className={iconClasses} />
+            )}
+          </button>
         </div>
-      </button>
+      </div>
       
       <div
         id={contentId}
