@@ -181,6 +181,7 @@ export class SurveyOperationsService {
         total_sections: sessionData.totalSections || 1,
         status: sessionData.status || 'started',
         user_agent: sessionData.userAgent,
+        ip_address: sessionData.ipAddress, // Add IP address mapping
         metadata: sessionData.metadata || {},
         created_at: new Date().toISOString(),
       };
@@ -214,6 +215,7 @@ export class SurveyOperationsService {
       if (data.currentSection !== undefined) dbData.current_section = data.currentSection;
       if (data.status) dbData.status = data.status;
       if (data.metadata) dbData.metadata = data.metadata;
+      if (data.ipAddress) dbData.ip_address = data.ipAddress;
 
       // Use admin privileges for survey sessions due to RLS policy complexity
       await this.withAdminPrivileges(async (client) => {
