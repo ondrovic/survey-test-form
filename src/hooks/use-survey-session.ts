@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { databaseHelpers } from '@/config/database';
+import { getClientIPAddressWithTimeout } from '../utils/ip.utils';
 
 interface SessionMetrics {
   sessionId: string | null;
@@ -18,10 +19,8 @@ interface UseSurveySessionOptions {
 export const useSurveySession = ({ 
   surveyInstanceId, 
   totalSections = 1,
-  activityTimeoutMs = 24 * 60 * 60 * 1000 // Reserved for future session timeout functionality
+  activityTimeoutMs = 30 * 60 * 1000 // 30 minutes default timeout
 }: UseSurveySessionOptions) => {
-  // Mark parameter as used for future functionality
-  void activityTimeoutMs;
   const [session, setSession] = useState<SessionMetrics>({
     sessionId: null,
     startedAt: null,
@@ -33,6 +32,7 @@ export const useSurveySession = ({
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const sessionTokenRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const abandonCheckRef = useRef<NodeJS.Timeout>();
 
   // Generate a unique session token
   const generateSessionToken = useCallback(() => {
@@ -57,6 +57,9 @@ export const useSurveySession = ({
       const sessionToken = generateSessionToken();
       const now = new Date();
       
+      // Get client IP address with timeout
+      const clientIP = await getClientIPAddressWithTimeout(3000);
+      
       const sessionData = {
         surveyInstanceId,
         sessionToken,
@@ -66,9 +69,14 @@ export const useSurveySession = ({
         totalSections,
         status: 'started' as const,
         userAgent: navigator.userAgent,
+        ipAddress: clientIP || '127.0.0.1', // Fallback to localhost if IP detection fails
         metadata: {
           createdBy: 'survey-form',
-          sessionStart: now.toISOString()
+          sessionStart: now.toISOString(),
+          ipDetected: !!clientIP,
+          browser: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language
         }
       };
 
@@ -94,6 +102,10 @@ export const useSurveySession = ({
           sessionToken,
           surveyInstanceId
         });
+
+        // Start abandon timer for new session
+        setTimeout(() => startAbandonTimer(), 100); // Small delay to ensure session is set
+
         return savedSession.id;
       } else {
         console.log('❌ No session ID returned from database');
@@ -107,9 +119,58 @@ export const useSurveySession = ({
     }
   }, [surveyInstanceId, totalSections, generateSessionToken, isCreatingSession, session.sessionId]);
 
+  // Mark session as abandoned
+  const abandonSession = useCallback(async () => {
+    if (!session.sessionId || session.status === 'completed' || session.status === 'abandoned') return;
+
+    try {
+      await databaseHelpers.updateSurveySession(session.sessionId, {
+        status: 'abandoned',
+        lastActivityAt: new Date().toISOString()
+      });
+
+      setSession(prev => ({
+        ...prev,
+        status: 'abandoned',
+        lastActivityAt: new Date()
+      }));
+
+      console.log('⏰ Session marked as abandoned:', session.sessionId);
+    } catch (error) {
+      console.error('❌ Failed to mark session as abandoned:', error);
+    }
+  }, [session.sessionId, session.status]);
+
+  // Start abandon detection timer
+  const startAbandonTimer = useCallback(() => {
+    if (!session.sessionId || session.status === 'completed' || session.status === 'abandoned') return;
+
+    // Clear any existing timer
+    if (abandonCheckRef.current) {
+      clearTimeout(abandonCheckRef.current);
+    }
+
+    // Set new timer
+    abandonCheckRef.current = setTimeout(() => {
+      console.log('⏰ Session timeout reached, marking as abandoned...');
+      abandonSession();
+    }, activityTimeoutMs);
+
+    console.log(`⏰ Abandon timer started: ${activityTimeoutMs / 1000}s`);
+  }, [session.sessionId, session.status, abandonSession, activityTimeoutMs]);
+
+  // Reset abandon detection timer on activity
+  const resetAbandonTimer = useCallback(() => {
+    if (session.status === 'completed' || session.status === 'abandoned') return;
+    startAbandonTimer();
+  }, [startAbandonTimer, session.status]);
+
   // Update session activity (debounced)
   const updateActivity = useCallback((newSection?: number) => {
-    if (!session.sessionId) return;
+    if (!session.sessionId || session.status === 'completed' || session.status === 'abandoned') return;
+
+    // Reset abandon timer on activity
+    resetAbandonTimer();
 
     // Clear previous timeout
     if (debounceTimeoutRef.current) {
@@ -144,13 +205,18 @@ export const useSurveySession = ({
         console.error('❌ Failed to update session activity:', error);
       }
     }, 2000); // 2 second debounce
-  }, [session.sessionId, session.status, session.currentSection]);
+  }, [session.sessionId, session.status, session.currentSection, resetAbandonTimer]);
 
   // Complete the session
   const completeSession = useCallback(async () => {
     if (!session.sessionId) return;
 
     try {
+      // Clear any pending abandon check
+      if (abandonCheckRef.current) {
+        clearTimeout(abandonCheckRef.current);
+      }
+
       await databaseHelpers.updateSurveySession(session.sessionId, {
         status: 'completed',
         lastActivityAt: new Date().toISOString()
@@ -202,8 +268,9 @@ export const useSurveySession = ({
             
             console.log('🔄 Resumed existing session:', existingSession.id);
             
-            // Update activity to mark as active again
+            // Update activity to mark as active again and start abandon timer
             updateActivity();
+            setTimeout(() => startAbandonTimer(), 100); // Start abandon timer for resumed session
             return;
           } else {
             // Clean up invalid session
@@ -227,11 +294,14 @@ export const useSurveySession = ({
     initializeSession();
   }, [surveyInstanceId, createSession, updateActivity, session.sessionId]);
 
-  // Clean up timeout on unmount
+  // Clean up timeouts on unmount
   useEffect(() => {
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
+      }
+      if (abandonCheckRef.current) {
+        clearTimeout(abandonCheckRef.current);
       }
     };
   }, []);
@@ -242,6 +312,7 @@ export const useSurveySession = ({
     createSession,
     updateActivity,
     completeSession,
+    abandonSession,
     // Helper functions
     getSessionDuration: useCallback(() => {
       if (!session.startedAt) return 0;
@@ -250,6 +321,10 @@ export const useSurveySession = ({
     
     isSessionActive: useCallback(() => {
       return session.sessionId && session.status !== 'completed' && session.status !== 'abandoned';
-    }, [session.sessionId, session.status])
+    }, [session.sessionId, session.status]),
+
+    // Abandon timer control
+    resetAbandonTimer,
+    startAbandonTimer
   };
 };

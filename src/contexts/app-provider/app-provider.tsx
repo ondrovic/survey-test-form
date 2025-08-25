@@ -7,16 +7,17 @@ import { OptionSetCrudProvider } from '../option-set-crud-context';
 import { SurveyBuilderProvider } from '../survey-builder-context';
 import { SurveyDataProvider } from '../survey-data-context';
 import { ToastProvider } from '../toast-context';
+import { useSessionCleanup } from '../../hooks/use-session-cleanup';
 
 interface AppProviderProps {
     children: ReactNode;
     initialConfig?: any;
 }
 
-export const AppProvider: React.FC<AppProviderProps> = ({
-    children,
-    initialConfig
-}) => {
+const AppProviderWithCleanup: React.FC<{ children: ReactNode; initialConfig?: any }> = ({ children, initialConfig }) => {
+    // Initialize session cleanup service
+    useSessionCleanup(true);
+
     return (
         <AuthProvider>
             <ToastProvider>
@@ -36,4 +37,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({
             </ToastProvider>
         </AuthProvider>
     );
+};
+
+export const AppProvider: React.FC<AppProviderProps> = (props) => {
+    return <AppProviderWithCleanup {...props} />;
 };

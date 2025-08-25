@@ -8,11 +8,26 @@ import React, { useEffect, useState } from 'react';
 
 interface AnalyticsData {
     totalResponses: number;
+    totalSessions: number;
     completionRate: number;
+    abandonmentRate: number;
     averageCompletionTime: number;
+    sessionsByStatus: {
+        started: number;
+        in_progress: number;
+        completed: number;
+        abandoned: number;
+        expired: number;
+    };
     responsesByPeriod: Array<{
         period: string;
         count: number;
+    }>;
+    sessionsByPeriod: Array<{
+        period: string;
+        started: number;
+        completed: number;
+        abandoned: number;
     }>;
     fieldAnalysis: Array<{
         fieldKey: string;
@@ -25,6 +40,7 @@ interface AnalyticsData {
     trends: Array<{
         date: string;
         responses: number;
+        sessions: number;
         completionRate: number;
     }>;
 }
@@ -98,8 +114,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             console.log('🔍 Loading analytics data for instance:', selectedInstanceId);
             console.log('🔍 Available survey instances:', surveyInstances);
 
-            // Get survey responses for selected instance
+            // Get survey responses and sessions for selected instance
             let responses: SurveyResponse[] = [];
+            let sessions: any[] = [];
             let config: SurveyConfig | undefined;
             let instance: SurveyInstance | undefined;
 
@@ -117,14 +134,26 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 setInstance(instance);
 
                 if (instance) {
-                    console.log('🔍 Fetching responses for instance:', instance.id);
-                    // Add error handling like visualization does
-                    responses = await databaseHelpers.getSurveyResponsesFromCollection(instance.id).catch(() => {
-                        console.log('❌ Failed to fetch responses, returning empty array');
-                        return [];
-                    });
+                    console.log('🔍 Fetching responses and sessions for instance:', instance.id);
+                    
+                    // Fetch both responses and sessions
+                    const [responsesResult, sessionsResult] = await Promise.allSettled([
+                        databaseHelpers.getSurveyResponsesFromCollection(instance.id).catch(() => {
+                            console.log('❌ Failed to fetch responses, returning empty array');
+                            return [];
+                        }),
+                        databaseHelpers.getSurveySessions(instance.id).catch(() => {
+                            console.log('❌ Failed to fetch sessions, returning empty array');
+                            return [];
+                        })
+                    ]);
+
+                    responses = responsesResult.status === 'fulfilled' ? responsesResult.value : [];
+                    sessions = sessionsResult.status === 'fulfilled' ? sessionsResult.value : [];
+
                     console.log('🔍 Fetched responses count:', responses.length);
-                    console.log('🔍 Fetched responses:', responses);
+                    console.log('🔍 Fetched sessions count:', sessions.length);
+                    console.log('🔍 Session statuses:', sessions.map(s => s.status));
 
                     const configResult = await databaseHelpers.getSurveyConfig(instance.configId);
                     config = configResult || undefined;
@@ -141,9 +170,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 return;
             }
 
-            console.log('🔍 Calculating analytics with:', { responses: responses.length, config: !!config });
+            console.log('🔍 Calculating analytics with:', { responses: responses.length, sessions: sessions.length, config: !!config });
             // Calculate analytics (always calculate, even with 0 responses)
-            const data = calculateAnalytics(responses, config, dateRange, groupBy);
+            const data = calculateAnalytics(responses, sessions, config, dateRange, groupBy);
             console.log('🔍 Calculated analytics data:', data);
             setAnalyticsData(data);
         } catch (err) {
@@ -156,6 +185,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
     const calculateAnalytics = (
         responses: SurveyResponse[],
+        sessions: any[],
         config: SurveyConfig | undefined,
         dateRange: string,
         groupBy: string
@@ -170,14 +200,33 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             return submitted >= startDate && submitted <= now;
         });
 
+        // Filter sessions by date range  
+        const filteredSessions = sessions.filter(s => {
+            const started = new Date(s.started_at || s.created_at);
+            return started >= startDate && started <= now;
+        });
+
+        // Calculate session metrics
+        const sessionsByStatus = {
+            started: filteredSessions.filter(s => s.status === 'started').length,
+            in_progress: filteredSessions.filter(s => s.status === 'in_progress').length,
+            completed: filteredSessions.filter(s => s.status === 'completed').length,
+            abandoned: filteredSessions.filter(s => s.status === 'abandoned').length,
+            expired: filteredSessions.filter(s => s.status === 'expired').length,
+        };
+
+        const totalSessions = filteredSessions.length;
+        const completedSessions = sessionsByStatus.completed;
+        const abandonedSessions = sessionsByStatus.abandoned + sessionsByStatus.expired;
+
         // Calculate total responses
         const totalResponses = filteredResponses.length;
 
-        // Calculate real completion rate based on completion_status field
-        const completedResponses = filteredResponses.filter(r => 
-            r.completion_status === 'completed' || r.completion_status === undefined // treat undefined as completed for legacy data
-        ).length;
-        const completionRate = totalResponses > 0 ? Math.round((completedResponses / totalResponses) * 100) : 0;
+        // Calculate real completion rate based on sessions (sessions completed / total sessions started)
+        const completionRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
+        
+        // Calculate abandonment rate
+        const abandonmentRate = totalSessions > 0 ? Math.round((abandonedSessions / totalSessions) * 100) : 0;
 
         // Calculate average completion time from completion_time_seconds field
         const responsesWithTime = filteredResponses.filter(r => 
@@ -191,6 +240,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         const responsesByPeriod = groupResponsesByPeriod(filteredResponses, groupBy);
         console.log('🔍 Responses by period:', responsesByPeriod);
 
+        // Group sessions by period
+        const sessionsByPeriod = groupSessionsByPeriod(filteredSessions, groupBy);
+        console.log('🔍 Sessions by period:', sessionsByPeriod);
+
         // Calculate field analysis
         const fieldAnalysis = calculateFieldAnalysis(filteredResponses, config);
         console.log('🔍 Field analysis:', fieldAnalysis);
@@ -198,14 +251,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         console.log('🔍 Filtered responses:', filteredResponses);
 
         // Calculate trends
-        const trends = calculateTrends(filteredResponses, groupBy);
+        const trends = calculateTrends(filteredResponses, filteredSessions, groupBy);
         console.log('🔍 Trends:', trends);
 
         return {
             totalResponses,
+            totalSessions,
             completionRate,
+            abandonmentRate,
             averageCompletionTime,
+            sessionsByStatus,
             responsesByPeriod,
+            sessionsByPeriod,
             fieldAnalysis,
             trends
         };
@@ -233,6 +290,41 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
         return Object.entries(periodCounts)
             .map(([period, count]) => ({ period, count }))
+            .sort((a, b) => a.period.localeCompare(b.period));
+    };
+
+    const groupSessionsByPeriod = (sessions: any[], groupBy: string) => {
+        const periodData: Record<string, { started: number; completed: number; abandoned: number }> = {};
+
+        sessions.forEach(session => {
+            const date = new Date(session.started_at || session.created_at);
+            let period: string;
+
+            if (groupBy === 'day') {
+                period = date.toISOString().split('T')[0];
+            } else if (groupBy === 'week') {
+                const weekStart = new Date(date);
+                weekStart.setDate(date.getDate() - date.getDay());
+                period = weekStart.toISOString().split('T')[0];
+            } else {
+                period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            }
+
+            if (!periodData[period]) {
+                periodData[period] = { started: 0, completed: 0, abandoned: 0 };
+            }
+
+            periodData[period].started++;
+            
+            if (session.status === 'completed') {
+                periodData[period].completed++;
+            } else if (session.status === 'abandoned' || session.status === 'expired') {
+                periodData[period].abandoned++;
+            }
+        });
+
+        return Object.entries(periodData)
+            .map(([period, data]) => ({ period, ...data }))
             .sort((a, b) => a.period.localeCompare(b.period));
     };
 
@@ -321,14 +413,35 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         return fieldAnalysis;
     };
 
-    const calculateTrends = (responses: SurveyResponse[], groupBy: string) => {
-        const periodCounts = groupResponsesByPeriod(responses, groupBy);
+    const calculateTrends = (responses: SurveyResponse[], sessions: any[], groupBy: string) => {
+        const responsesByPeriod = groupResponsesByPeriod(responses, groupBy);
+        const sessionsByPeriod = groupSessionsByPeriod(sessions, groupBy);
 
-        return periodCounts.map(({ period, count }) => ({
-            date: period,
-            responses: count,
-            completionRate: 100 // Simplified
-        }));
+        // Create a combined dataset
+        const allPeriods = new Set([
+            ...responsesByPeriod.map(r => r.period),
+            ...sessionsByPeriod.map(s => s.period)
+        ]);
+
+        return Array.from(allPeriods).sort().map(period => {
+            const responsePeriod = responsesByPeriod.find(r => r.period === period);
+            const sessionPeriod = sessionsByPeriod.find(s => s.period === period);
+
+            const responses = responsePeriod?.count || 0;
+            const sessionsStarted = sessionPeriod?.started || 0;
+            const sessionsCompleted = sessionPeriod?.completed || 0;
+            
+            const completionRate = sessionsStarted > 0 
+                ? Math.round((sessionsCompleted / sessionsStarted) * 100)
+                : 0;
+
+            return {
+                date: period,
+                responses,
+                sessions: sessionsStarted,
+                completionRate
+            };
+        });
     };
 
     if (loading) {
@@ -448,11 +561,23 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 <div className="bg-white p-6 rounded-lg shadow">
                     <div className="flex items-center">
                         <div className="p-2 bg-blue-100 rounded-lg">
                             <Users className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-600">Total Sessions</p>
+                            <p className="text-2xl font-bold text-gray-900">{analyticsData.totalSessions}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="flex items-center">
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                            <BarChart3 className="w-6 h-6 text-indigo-600" />
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Total Responses</p>
@@ -475,6 +600,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
                 <div className="bg-white p-6 rounded-lg shadow">
                     <div className="flex items-center">
+                        <div className="p-2 bg-red-100 rounded-lg">
+                            <BarChart3 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-600">Abandonment Rate</p>
+                            <p className="text-2xl font-bold text-gray-900">{analyticsData.abandonmentRate}%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="flex items-center">
                         <div className="p-2 bg-purple-100 rounded-lg">
                             <Clock className="w-6 h-6 text-purple-600" />
                         </div>
@@ -490,25 +627,81 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 </div>
             </div>
 
+            {/* Session Status Breakdown */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">Session Status Breakdown</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{analyticsData.sessionsByStatus.started}</div>
+                        <div className="text-sm text-gray-500">Started</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-yellow-600">{analyticsData.sessionsByStatus.in_progress}</div>
+                        <div className="text-sm text-gray-500">In Progress</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{analyticsData.sessionsByStatus.completed}</div>
+                        <div className="text-sm text-gray-500">Completed</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{analyticsData.sessionsByStatus.abandoned}</div>
+                        <div className="text-sm text-gray-500">Abandoned</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-600">{analyticsData.sessionsByStatus.expired}</div>
+                        <div className="text-sm text-gray-500">Expired</div>
+                    </div>
+                </div>
+            </div>
+
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Response Trends */}
+                {/* Session & Response Trends */}
                 <div className="bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold mb-4">Response Trends</h3>
+                    <h3 className="text-lg font-semibold mb-4">Session & Response Trends</h3>
                     <div className="h-64 flex items-end justify-between space-x-1">
-                        {analyticsData.trends.map((trend) => (
-                            <div key={trend.date} className="flex-1 flex flex-col items-center">
-                                <div
-                                    className="w-full bg-blue-500 rounded-t"
-                                    style={{
-                                        height: `${(trend.responses / Math.max(...analyticsData.trends.map(t => t.responses))) * 200}px`
-                                    }}
-                                ></div>
-                                <span className="text-xs text-gray-500 mt-2 text-center">
-                                    {trend.date}
-                                </span>
-                            </div>
-                        ))}
+                        {analyticsData.trends.map((trend) => {
+                            const maxSessions = Math.max(...analyticsData.trends.map(t => t.sessions));
+                            const maxResponses = Math.max(...analyticsData.trends.map(t => t.responses));
+                            const maxValue = Math.max(maxSessions, maxResponses, 1);
+                            
+                            return (
+                                <div key={trend.date} className="flex-1 flex flex-col items-center space-y-1">
+                                    <div className="w-full flex flex-col items-center space-y-1">
+                                        <div
+                                            className="w-4/5 bg-blue-500 rounded-t"
+                                            style={{
+                                                height: `${(trend.sessions / maxValue) * 180}px`
+                                            }}
+                                            title={`Sessions: ${trend.sessions}`}
+                                        ></div>
+                                        <div
+                                            className="w-4/5 bg-green-500 rounded-t"
+                                            style={{
+                                                height: `${(trend.responses / maxValue) * 180}px`
+                                            }}
+                                            title={`Responses: ${trend.responses}`}
+                                        ></div>
+                                    </div>
+                                    <span className="text-xs text-gray-500 text-center">
+                                        {trend.date}
+                                    </span>
+                                    <span className="text-xs text-gray-400 text-center">
+                                        {trend.completionRate}%
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="flex justify-center mt-4 space-x-4">
+                        <div className="flex items-center">
+                            <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
+                            <span className="text-sm text-gray-600">Sessions Started</span>
+                        </div>
+                        <div className="flex items-center">
+                            <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                            <span className="text-sm text-gray-600">Responses Completed</span>
+                        </div>
                     </div>
                 </div>
 
