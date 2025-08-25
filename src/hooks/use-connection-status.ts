@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/auth-context';
 import { databaseHelpers, getDatabaseProviderInfo } from '@/config/database';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface ConnectionStatus {
   connected: boolean;
@@ -23,7 +23,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
   // Track only when the last check completed (success or failure)
 
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -36,12 +36,10 @@ export const useConnectionStatus = (): ConnectionStatus => {
         setError('Database service initializing...');
         setLoading(false);
         setLastCheckedAt(new Date());
-        // Don't create infinite retry loops - let the auth context handle database initialization
         return;
       }
       
       // Try a simple database operation to test connection
-      // This works with any provider (Firebase, Supabase, PostgreSQL)
       await databaseHelpers.getSurveyConfigs();
       
       setConnected(true);
@@ -54,7 +52,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
       setLoading(false);
       setLastCheckedAt(new Date());
     }
-  };
+  }, []);
 
   const retry = () => {
     checkConnection();
@@ -65,7 +63,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
     if (!authLoading) {
       checkConnection();
     }
-  }, [authLoading]);
+  }, [authLoading, checkConnection]);
 
   // Poll periodically to keep status fresh
   useEffect(() => {
@@ -80,7 +78,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
     }, POLL_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, checkConnection]);
 
   // Re-check on window focus for responsiveness
   useEffect(() => {
@@ -96,7 +94,7 @@ export const useConnectionStatus = (): ConnectionStatus => {
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [authLoading, loading]);
+  }, [authLoading, loading, checkConnection]);
 
   return {
     connected,

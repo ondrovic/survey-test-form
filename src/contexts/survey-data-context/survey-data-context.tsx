@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer, useRef } from 'react';
+import { useAuth } from '../auth-context';
 import { databaseHelpers, getDatabaseProviderInfo } from '../../config/database';
 import {
     MultiSelectOptionSet,
@@ -332,6 +333,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
     autoLoad = true
 }) => {
     const [state, dispatch] = useReducer(surveyDataReducer, initialState);
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
 
     const setLoading = useCallback((loading: boolean) => {
         dispatch({ type: 'SET_LOADING', payload: loading });
@@ -447,7 +449,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
     }, []);
 
     const refreshAll = useCallback(async () => {
-        console.log("refreshAll called - starting data reload...");
+        console.log("🔄 refreshAll called - starting data reload...");
 
         // Check if database is initialized before proceeding
         const dbInfo = getDatabaseProviderInfo();
@@ -463,7 +465,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             loadMultiSelectOptionSets(),
             loadSelectOptionSets(),
         ]);
-        console.log("refreshAll completed - all data reloaded");
+        console.log("✅ refreshAll completed - all data reloaded");
     }, [loadFrameworkData, loadRatingScales, loadRadioOptionSets, loadMultiSelectOptionSets, loadSelectOptionSets]);
 
     // Manual validation of survey instance statuses based on date ranges
@@ -594,21 +596,22 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         dispatch({ type: 'DELETE_SELECT_OPTION_SET', payload: id });
     }, []);
 
-    // Auto-load data on mount - use ref to avoid dependency issues
-    const autoLoadRef = useRef(false);
+    // Auto-load data when authenticated and database is ready
+    const hasLoadedRef = useRef(false);
+    
     useEffect(() => {
-        if (autoLoad && !autoLoadRef.current) {
-            const dbInfo = getDatabaseProviderInfo();
-            if (dbInfo.isInitialized) {
-                console.log('✅ Database is ready, loading survey data...');
-                autoLoadRef.current = true; // Prevent multiple loads
-                refreshAll();
-            } else {
-                console.log('⏳ Database not ready yet, skipping auto-load (will load when database becomes ready)...');
-                // Don't create infinite retry loops - let the auth context handle database initialization
-            }
+        // Only auto-load when authenticated, not loading, and haven't loaded yet
+        if (!autoLoad || authLoading || !isAuthenticated || hasLoadedRef.current) return;
+
+        const dbInfo = getDatabaseProviderInfo();
+        if (dbInfo.isInitialized) {
+            console.log('✅ Database is ready and user authenticated, loading survey data...');
+            hasLoadedRef.current = true;
+            refreshAll();
+        } else {
+            console.log('⏳ Database not ready yet, skipping auto-load...');
         }
-    }, [autoLoad, refreshAll]);
+    }, [autoLoad, authLoading, isAuthenticated, refreshAll]);
 
     const value: SurveyDataContextType = {
         state,

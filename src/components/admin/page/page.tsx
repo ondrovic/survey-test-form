@@ -19,7 +19,7 @@ import { ValidationStatusProvider } from '@/contexts/validation-status-context';
 import { useAdminOperations } from '@/hooks';
 import { RatingScale, SurveyConfig } from '@/types';
 import { clsx } from 'clsx';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AdminPageProps } from './page.types';
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
@@ -29,12 +29,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
     const adminOperations = useAdminOperations();
     const { openModal, closeModal } = useModal();
 
-    // Check for existing authentication on component mount
-    useEffect(() => {
-        if (isAuthenticated) {
-            refreshAll();
-        }
-    }, [isAuthenticated, refreshAll]);
+    // Data loading is handled automatically by the survey data context
+    // No need to manually refresh on authentication change
 
     const handleLogout = () => {
         logout();

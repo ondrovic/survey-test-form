@@ -10,7 +10,7 @@ import { useSurveySession } from '@/hooks/use-survey-session';
 
 import { AppProvider } from '@/contexts/app-provider';
 import { useAuth } from '@/contexts/auth-context/index';
-import { useSurveyData } from '@/contexts/survey-data-context/index';
+// import { useSurveyData } from '@/contexts/survey-data-context/index'; // Removed as not needed
 import { useToast } from '@/contexts/toast-context/index';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types';
 import { generateUUID, isSurveyInstanceActive, suppressConsoleWarnings } from '@/utils';
@@ -192,7 +192,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     const [resetFormTrigger] = useState(0); // Add trigger for form reset
     const navigate = useNavigate();
     const { showSuccess, showError } = useToast();
-    const { refreshAll } = useSurveyData();
+    // Data loading handled automatically by survey data context
     
     // Initialize survey session tracking
     const surveySession = useSurveySession({
@@ -232,16 +232,10 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
         }
     }, [instance?.id]);
 
-    // Load survey config and ensure all option sets are loaded
+    // Load survey config - option sets are loaded automatically by context
     useEffect(() => {
-        const loadData = async () => {
-            await Promise.all([
-                loadSurveyConfig(),
-                refreshAll() // Ensure all option sets are loaded
-            ]);
-        };
-        loadData();
-    }, [loadSurveyConfig, refreshAll]);
+        loadSurveyConfig();
+    }, [loadSurveyConfig]);
 
     const handleSubmit = useCallback(async (responses: Record<string, any>) => {
         if (!instance || !surveyConfig) {

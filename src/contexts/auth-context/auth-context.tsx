@@ -187,11 +187,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         checkAuth,
     };
 
-    console.log("🔄 AuthContext - State update:", {
-        isAuthenticated,
-        isLoading,
-        error: error ? error.substring(0, 50) + "..." : null
-    });
+    // Only log significant state changes, not every render
+    // console.log("🔄 AuthContext - State update:", {
+    //     isAuthenticated,
+    //     isLoading,
+    //     error: error ? error.substring(0, 50) + "..." : null
+    // });
 
     return (
         <AuthContext.Provider value={contextValue}>

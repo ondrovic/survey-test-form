@@ -2,6 +2,43 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { databaseHelpers } from '@/config/database';
 import { getClientIPAddressWithTimeout } from '../utils/ip.utils';
 
+// Global session creation tracker to prevent duplicates across React StrictMode
+class SessionCreationTracker {
+  private static instance: SessionCreationTracker;
+  private creatingInstances = new Set<string>();
+  private createdSessions = new Map<string, string>(); // surveyInstanceId -> sessionId
+  
+  static getInstance(): SessionCreationTracker {
+    if (!SessionCreationTracker.instance) {
+      SessionCreationTracker.instance = new SessionCreationTracker();
+    }
+    return SessionCreationTracker.instance;
+  }
+  
+  isCreating(surveyInstanceId: string): boolean {
+    return this.creatingInstances.has(surveyInstanceId);
+  }
+  
+  startCreating(surveyInstanceId: string): void {
+    this.creatingInstances.add(surveyInstanceId);
+  }
+  
+  finishCreating(surveyInstanceId: string, sessionId?: string): void {
+    this.creatingInstances.delete(surveyInstanceId);
+    if (sessionId) {
+      this.createdSessions.set(surveyInstanceId, sessionId);
+    }
+  }
+  
+  getExistingSession(surveyInstanceId: string): string | undefined {
+    return this.createdSessions.get(surveyInstanceId);
+  }
+  
+  clearSession(surveyInstanceId: string): void {
+    this.createdSessions.delete(surveyInstanceId);
+  }
+}
+
 interface SessionMetrics {
   sessionId: string | null;
   startedAt: Date | null;
@@ -33,6 +70,7 @@ export const useSurveySession = ({
   const sessionTokenRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
   const abandonCheckRef = useRef<NodeJS.Timeout>();
+  const sessionTracker = SessionCreationTracker.getInstance();
 
   // Generate a unique session token
   const generateSessionToken = useCallback(() => {
@@ -43,15 +81,30 @@ export const useSurveySession = ({
   const createSession = useCallback(async (): Promise<string | null> => {
     console.log('🔍 createSession called:', {
       isCreatingSession,
-      hasExistingSessionId: !!session.sessionId,
-      surveyInstanceId
+      surveyInstanceId,
+      trackerIsCreating: sessionTracker.isCreating(surveyInstanceId),
+      trackerHasExisting: !!sessionTracker.getExistingSession(surveyInstanceId)
     });
 
-    if (isCreatingSession || session.sessionId) {
-      console.log('🔍 Skipping session creation - already exists or in progress');
-      return session.sessionId; // Avoid duplicate creation
+    // Check global tracker first
+    if (sessionTracker.isCreating(surveyInstanceId)) {
+      console.log('🔍 Skipping session creation - already creating globally');
+      return null;
     }
 
+    const existingSessionId = sessionTracker.getExistingSession(surveyInstanceId);
+    if (existingSessionId) {
+      console.log('🔍 Using existing session from global tracker:', existingSessionId);
+      return existingSessionId;
+    }
+
+    if (isCreatingSession) {
+      console.log('🔍 Skipping session creation - already in progress locally');
+      return null;
+    }
+
+    // Mark as creating globally and locally
+    sessionTracker.startCreating(surveyInstanceId);
     setIsCreatingSession(true);
     try {
       const sessionToken = generateSessionToken();
@@ -69,7 +122,7 @@ export const useSurveySession = ({
         totalSections,
         status: 'started' as const,
         userAgent: navigator.userAgent,
-        ipAddress: clientIP || '127.0.0.1', // Fallback to localhost if IP detection fails
+        ipAddress: clientIP || '127.0.0.1',
         metadata: {
           createdBy: 'survey-form',
           sessionStart: now.toISOString(),
@@ -103,21 +156,22 @@ export const useSurveySession = ({
           surveyInstanceId
         });
 
-        // Start abandon timer for new session
-        setTimeout(() => startAbandonTimer(), 100); // Small delay to ensure session is set
-
+        // Mark as finished in global tracker
+        sessionTracker.finishCreating(surveyInstanceId, savedSession.id);
         return savedSession.id;
       } else {
         console.log('❌ No session ID returned from database');
+        sessionTracker.finishCreating(surveyInstanceId); // Mark as finished even if failed
         return null;
       }
     } catch (error) {
       console.error('❌ Failed to create survey session:', error);
+      sessionTracker.finishCreating(surveyInstanceId); // Mark as finished even if failed
       return null;
     } finally {
       setIsCreatingSession(false);
     }
-  }, [surveyInstanceId, totalSections, generateSessionToken, isCreatingSession, session.sessionId]);
+  }, [surveyInstanceId, totalSections, generateSessionToken, sessionTracker]);
 
   // Mark session as abandoned
   const abandonSession = useCallback(async () => {
@@ -228,17 +282,22 @@ export const useSurveySession = ({
         lastActivityAt: new Date()
       }));
 
-      // Clean up localStorage
+      // Clean up localStorage and global tracker
       localStorage.removeItem(`survey_session_${surveyInstanceId}`);
+      sessionTracker.clearSession(surveyInstanceId);
       
       console.log('✅ Session completed:', session.sessionId);
     } catch (error) {
       console.error('❌ Failed to complete session:', error);
     }
-  }, [session.sessionId, surveyInstanceId]);
+  }, [session.sessionId, surveyInstanceId, sessionTracker]);
 
   // Initialize session on mount or resume existing session
   useEffect(() => {
+    if (session.sessionId) {
+      return; // Already have a session, don't initialize again
+    }
+
     const initializeSession = async () => {
       console.log('🔍 Initializing session for:', {
         surveyInstanceId,
@@ -250,7 +309,7 @@ export const useSurveySession = ({
       
       console.log('🔍 Found stored token:', storedToken ? 'YES' : 'NO');
       
-      if (storedToken && !session.sessionId) {
+      if (storedToken) {
         try {
           // Try to resume existing session
           const existingSession = await databaseHelpers.getSurveySessionByToken(storedToken);
@@ -269,8 +328,12 @@ export const useSurveySession = ({
             console.log('🔄 Resumed existing session:', existingSession.id);
             
             // Update activity to mark as active again and start abandon timer
-            updateActivity();
-            setTimeout(() => startAbandonTimer(), 100); // Start abandon timer for resumed session
+            setTimeout(() => {
+              if (existingSession.id) {
+                updateActivity();
+                startAbandonTimer();
+              }
+            }, 100);
             return;
           } else {
             // Clean up invalid session
@@ -283,16 +346,15 @@ export const useSurveySession = ({
       }
 
       // Create new session if no valid session exists
-      if (!session.sessionId) {
-        console.log('🔍 No existing session found, creating new one...');
-        await createSession();
-      } else {
-        console.log('🔍 Session already exists, skipping creation');
+      console.log('🔍 No existing session found, creating new one...');
+      const sessionId = await createSession();
+      if (sessionId) {
+        setTimeout(() => startAbandonTimer(), 100);
       }
     };
 
     initializeSession();
-  }, [surveyInstanceId, createSession, updateActivity, session.sessionId]);
+  }, [surveyInstanceId]); // Remove unstable dependencies
 
   // Clean up timeouts on unmount
   useEffect(() => {

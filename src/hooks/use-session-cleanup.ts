@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { SessionCleanupService } from '../services/session-cleanup.service';
+import { getDatabaseProviderInfo } from '../config/database';
 
 /**
  * Hook to manage the session cleanup service lifecycle
@@ -9,6 +10,13 @@ export const useSessionCleanup = (enabled: boolean = true) => {
 
   useEffect(() => {
     if (!enabled) return;
+
+    // Only start cleanup service if database is initialized
+    const dbInfo = getDatabaseProviderInfo();
+    if (!dbInfo.isInitialized) {
+      console.log('⏳ Session cleanup - Database not ready yet, skipping service start...');
+      return;
+    }
 
     // Get singleton instance
     const cleanupService = SessionCleanupService.getInstance();

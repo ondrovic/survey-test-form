@@ -4,7 +4,7 @@ import { useSurveyData } from '@/contexts/survey-data-context';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types/framework.types';
 import { routes } from '@/routes';
 import { BarChart3, Calendar, Clock, Filter, Users } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface AnalyticsData {
     totalResponses: number;
@@ -95,18 +95,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         }
     }, [surveyInstances.length, loadFrameworkData]);
 
-    useEffect(() => {
-        console.log('🔍 useEffect triggered with:', { selectedInstanceId, dateRange, groupBy });
-        loadAnalyticsData();
-    }, [selectedInstanceId, dateRange, groupBy]);
-
-    // Update selected instance when prop changes
-    useEffect(() => {
-        console.log('🔍 instanceId prop changed:', instanceId);
-        setSelectedInstanceId(instanceId);
-    }, [instanceId]);
-
-    const loadAnalyticsData = async () => {
+    const loadAnalyticsData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -181,7 +170,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedInstanceId, dateRange, groupBy, surveyInstances]);
+
+    useEffect(() => {
+        console.log('🔍 useEffect triggered with:', { selectedInstanceId, dateRange, groupBy });
+        loadAnalyticsData();
+    }, [selectedInstanceId, dateRange, groupBy, loadAnalyticsData]);
+
+    // Update selected instance when prop changes
+    useEffect(() => {
+        console.log('🔍 instanceId prop changed:', instanceId);
+        setSelectedInstanceId(instanceId);
+    }, [instanceId]);
 
     const calculateAnalytics = (
         responses: SurveyResponse[],
