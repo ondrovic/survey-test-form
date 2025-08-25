@@ -1,4 +1,4 @@
-import { Button, DateRangeSelector, UnifiedModal } from '@/components/common';
+import { Button, DateRangeSelector, Modal } from '@/components/common';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { routes } from '@/routes';
 import { DateRange, SurveyConfig, SurveyInstance } from '@/types';
@@ -34,23 +34,15 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
   };
 
   return (
-    <UnifiedModal
+    <Modal
       isOpen={true}
       onClose={onClose}
-      title="Create New Survey Instance"
       size="md"
-      footer={
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm}>
-            Create Instance
-          </Button>
-        </div>
-      }
     >
-      <div className="p-6">
+      <Modal.Header>
+        <Modal.Title>Create New Survey Instance</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
 
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-2">
@@ -105,7 +97,15 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
             />
           </div>
 
-      </div>
-    </UnifiedModal>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleConfirm}>
+          Create Instance
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 };

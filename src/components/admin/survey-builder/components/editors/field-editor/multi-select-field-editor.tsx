@@ -7,7 +7,7 @@ import { RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../
 import { updateMetadata } from '../../../../../../utils/metadata.utils';
 import { Button, Input } from '../../../../../common';
 import { RatingScaleManager } from '../../../../option-set-manager';
-import { UnifiedModal } from '../../../../../common';
+import { Modal } from '../../../../../common';
 import { RATING_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, MULTISELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 
 interface MultiSelectFieldEditorProps {
@@ -383,14 +383,17 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
 
     return (
         <>
-            <UnifiedModal
+            <Modal
                 isOpen={true}
                 onClose={onClose}
-                title="Multi-Select Field Editor"
                 size="xl"
                 className="h-full max-h-[90vh]"
             >
-                <div className="flex-1 flex overflow-hidden h-full">
+                <Modal.Header>
+                    <Modal.Title>Multi-Select Field Editor</Modal.Title>
+                </Modal.Header>
+                <Modal.Body padding={false}>
+                    <div className="flex-1 flex overflow-hidden h-full">
 
                     {/* Left Panel - Field Selection */}
                     <div className="w-1/2 border-r p-6 overflow-y-auto">
@@ -501,8 +504,9 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                             )}
                         </div>
                     </div>
-                </div>
-            </UnifiedModal>
+                    </div>
+                </Modal.Body>
+            </Modal>
 
             {/* Rating Scale Manager Modal */}
             {showRatingScaleManager && (

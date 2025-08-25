@@ -1,5 +1,5 @@
 export { 
-  Modal, 
+  default as Modal, 
   ConfirmationModal, 
   LegacyModal,
   useModal

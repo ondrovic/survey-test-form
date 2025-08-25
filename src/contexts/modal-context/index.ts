@@ -1,1 +1,1 @@
-export { ModalProvider, useModal, useConfirmation, useAlert } from './unified-modal-context';
+export { ModalProvider, useModal, useConfirmation, useAlert } from './modal-context';

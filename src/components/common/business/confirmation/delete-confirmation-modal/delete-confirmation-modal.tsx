@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfirmationModal } from '../../../ui/unified-modal';
+import { ConfirmationModal } from '../../../ui/modal/Modal';
 
 interface DeleteConfirmationModalProps {
     isOpen: boolean;

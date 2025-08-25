@@ -6,6 +6,6 @@ export { SurveyInstanceCard } from './card/survey-instance-card';
 export { SurveyList } from './list/survey-list';
 
 // Modal components
-export { ConfirmationModal } from './modal/confirmation-modal';
+export { ConfirmationModal as BusinessConfirmationModal } from './modal/confirmation-modal';
 export { InstanceSettingsModal } from './modal/instance-settings-modal';
 export { ValidationResultsModal } from './modal/validation-results-modal';

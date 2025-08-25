@@ -20,7 +20,7 @@ import {
 import { createMetadata } from "@/utils/metadata.utils";
 import { useCallback } from "react";
 import { useAutomaticValidation } from "./use-automatic-validation";
-import { useConfirmation } from "@/contexts/modal-context/unified-modal-context";
+import { useConfirmation } from "@/contexts/modal-context";
 import { IMPORT_CANCELLED_MESSAGE } from "@/constants/import-export.constants";
 
 export const useGenericImportExport = () => {

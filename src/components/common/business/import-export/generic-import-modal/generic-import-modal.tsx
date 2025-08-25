@@ -1,5 +1,5 @@
 import { Button } from '@/components/common';
-import { UnifiedModal } from '@/components/common';
+import { Modal } from '@/components/common';
 import { useToast } from '@/contexts/toast-context';
 import { ExportableDataType, getDataTypeDisplayName } from '@/utils/generic-import-export.utils';
 import { AlertCircle, FileText, Upload } from 'lucide-react';
@@ -128,14 +128,16 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <UnifiedModal
+    <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={modalTitle}
       size="sm"
       closable={!isImporting}
     >
-      <div className="p-6">
+      <Modal.Header>
+        <Modal.Title>{modalTitle}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
 
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-3">
@@ -241,7 +243,7 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
             )}
           </Button>
         </div>
-      </div>
-    </UnifiedModal>
+      </Modal.Body>
+    </Modal>
   );
 };

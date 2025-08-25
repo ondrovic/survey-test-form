@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UnifiedModal, ModalProps } from '../../components/common';
+import { Modal, ModalProps } from '../../components/common';
 import { ConfirmationModal } from '../../components/common/ui/modal/Modal';
 
 interface ModalState {
@@ -191,27 +191,27 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
 
     openModal(
       id,
-      <UnifiedModal
+      <Modal
         isOpen={true}
         onClose={handleClose}
-        title={title}
         size="sm"
         variant="confirmation"
-        footer={
-          <div className="flex justify-end">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              OK
-            </button>
-          </div>
-        }
       >
-        <div className="p-6">
+        <Modal.Header>
+          <Modal.Title>{title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
           <p className="text-gray-700">{message}</p>
-        </div>
-      </UnifiedModal>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            OK
+          </button>
+        </Modal.Footer>
+      </Modal>
     );
   };
 
