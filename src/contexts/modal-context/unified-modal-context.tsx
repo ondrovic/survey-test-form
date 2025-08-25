@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UnifiedModal, ConfirmationModal, ModalProps } from '../../components/common';
+import { UnifiedModal, ModalProps } from '../../components/common';
+import { ConfirmationModal } from '../../components/common/ui/modal/Modal';
 
 interface ModalState {
   id: string;
@@ -24,7 +25,7 @@ interface ModalContextType {
     id?: string;
     title: string;
     message: string;
-    onConfirm: () => void;
+    onConfirm?: () => void;
     onCancel?: () => void;
     confirmText?: string;
     cancelText?: string;
@@ -144,7 +145,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     onAlternative
   }: Parameters<ModalContextType['showConfirmation']>[0]) => {
     const handleConfirm = () => {
-      onConfirm();
+      onConfirm?.();
       closeModal(id);
     };
 
@@ -162,15 +163,17 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       id,
       <ConfirmationModal
         isOpen={true}
-        onCancel={handleCancel}
+        onClose={handleCancel}
         onConfirm={handleConfirm}
         title={title}
         message={message}
         confirmText={confirmText}
         cancelText={cancelText}
-        showDeactivate={showAlternative}
-        deactivateText={alternativeText}
-        onDeactivate={showAlternative ? handleAlternative : undefined}
+        showAlternative={showAlternative}
+        alternativeText={alternativeText}
+        onAlternative={showAlternative ? handleAlternative : undefined}
+        zIndex={20000}
+        closeOnBackdrop={false}
       />
     );
   };
@@ -229,8 +232,8 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       {children}
       
       {/* Render all active modals */}
-      {modals.map((modal, index) => (
-        <div key={`${modal.id}-${modal.forceUpdate || 0}`} style={{ zIndex: 9999 + index }}>
+      {modals.map((modal) => (
+        <div key={`${modal.id}-${modal.forceUpdate || 0}`}>
           {modal.component}
         </div>
       ))}
@@ -247,7 +250,7 @@ export const useConfirmation = () => {
       showConfirmation({
         ...options,
         onConfirm: () => {
-          options.onConfirm();
+          options.onConfirm?.();
           resolve(true);
         },
         onCancel: () => {

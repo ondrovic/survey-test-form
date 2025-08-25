@@ -3,7 +3,8 @@ import { UnifiedModal } from '@/components/common';
 import { useToast } from '@/contexts/toast-context';
 import { ExportableDataType, getDataTypeDisplayName } from '@/utils/generic-import-export.utils';
 import { AlertCircle, FileText, Upload } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
+import { IMPORT_CANCELLED_MESSAGE } from '@/constants/import-export.constants';
 
 interface GenericImportModalProps {
   isOpen: boolean;
@@ -20,29 +21,48 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
   dataType,
   title
 }) => {
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+
+  // Reset modal state when it opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log("📂 Generic import modal opened - resetting state");
+      setSelectedFile(null);
+      setIsDragging(false);
+      setIsImporting(false);
+    } else {
+      console.log("📂 Generic import modal closed");
+    }
+  }, [isOpen]);
 
   const displayName = dataType ? getDataTypeDisplayName(dataType) : 'Data';
   const modalTitle = title || `Import ${displayName}`;
 
   const handleFileSelect = useCallback((file: File) => {
+    console.log("📁 File selected:", file.name, "Type:", file.type, "Size:", file.size);
     if (file.type === 'application/json' || file.name.endsWith('.json')) {
       setSelectedFile(file);
+      console.log("✅ File accepted and set as selected file");
     } else {
+      console.log("❌ File rejected - not a JSON file");
       showError('Please select a JSON file');
     }
   }, [showError]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    console.log("📂 File dropped on generic import modal");
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
+      console.log("📁 Processing dropped file:", files[0].name);
       handleFileSelect(files[0]);
+    } else {
+      console.log("⚠️ No files in drop event");
     }
   }, [handleFileSelect]);
 
@@ -57,33 +77,53 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
   }, []);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("📂 File input changed");
     const file = e.target.files?.[0];
     if (file) {
+      console.log("📁 File selected from input:", file.name);
       handleFileSelect(file);
+    } else {
+      console.log("⚠️ No file in input event");
     }
   }, [handleFileSelect]);
 
   const handleImport = useCallback(async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      console.log("⚠️ Import clicked but no file selected");
+      return;
+    }
 
+    console.log("🚀 Starting import process for file:", selectedFile.name);
     setIsImporting(true);
     try {
       const success = await onImport(selectedFile);
+      console.log("📊 Import result:", success ? "SUCCESS" : "FAILED/CANCELLED");
       if (success) {
+        console.log("✅ Import successful - clearing file and closing modal");
         setSelectedFile(null);
         onClose();
+      } else {
+        console.log("❌ Import failed or cancelled - clearing selected file");
+        setSelectedFile(null);
       }
     } finally {
+      console.log("🔄 Import process finished - setting isImporting to false");
       setIsImporting(false);
     }
   }, [selectedFile, onImport, onClose]);
 
   const handleClose = useCallback(() => {
     if (!isImporting) {
+      console.log("❌ User clicked Cancel button on generic import modal");
+      console.log("📤 Showing cancel toast:", IMPORT_CANCELLED_MESSAGE);
       setSelectedFile(null);
+      showSuccess(IMPORT_CANCELLED_MESSAGE);
+      console.log("🚪 Closing generic import modal");
       onClose();
+    } else {
+      console.log("⚠️ Close attempted while importing - blocked");
     }
-  }, [isImporting, onClose]);
+  }, [isImporting, onClose, showSuccess]);
 
   if (!isOpen) return null;
 
@@ -122,7 +162,10 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedFile(null)}
+                  onClick={() => {
+                    console.log("🗑️ User clicked Remove button - clearing selected file");
+                    setSelectedFile(null);
+                  }}
                   className="mt-2"
                   disabled={isImporting}
                 >

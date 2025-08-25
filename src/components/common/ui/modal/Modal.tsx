@@ -56,6 +56,7 @@ export interface ModalProps {
   initialFocus?: React.RefObject<HTMLElement>;
   mobileFullscreen?: boolean;
   mobileAdaptive?: boolean;
+  zIndex?: number;
 }
 
 /**
@@ -100,6 +101,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       initialFocus,
       mobileFullscreen = false,
       mobileAdaptive = false,
+      zIndex,
     },
     ref
   ) => {
@@ -236,6 +238,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       <ModalContext.Provider value={contextValue}>
         <div
           className={modalTokens.base}
+          style={zIndex ? { zIndex } : undefined}
           role="presentation"
           onClick={handleBackdropClick}
           onKeyDown={(e) => {
@@ -455,6 +458,8 @@ export interface ConfirmationModalProps {
   showAlternative?: boolean;
   alternativeText?: string;
   onAlternative?: () => void;
+  zIndex?: number;
+  closeOnBackdrop?: boolean;
 }
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -469,6 +474,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   showAlternative = false,
   alternativeText = 'Alternative',
   onAlternative,
+  zIndex,
+  closeOnBackdrop = true,
 }) => {
   const variantStyles = {
     danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
@@ -482,6 +489,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       onClose={onClose}
       size="sm"
       variant="confirmation"
+      zIndex={zIndex}
+      closeOnBackdrop={closeOnBackdrop}
     >
       <ModalHeader>
         <ModalTitle>{title}</ModalTitle>

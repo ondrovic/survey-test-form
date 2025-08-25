@@ -212,7 +212,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
 
   const handleImportFile = async (file: File) => {
     const dataType = getExportDataType();
-    const success = await importItem(file, dataType);
+    const success = await importItem(file, dataType, () => closeModal('import-modal'));
     if (success) {
       // Refresh local items
       await loadItemsData();

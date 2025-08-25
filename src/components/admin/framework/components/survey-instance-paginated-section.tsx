@@ -51,7 +51,7 @@ export const SurveyInstancePaginatedSection: React.FC<SurveyInstanceSectionProps
     };
 
     const handleImportFile = async (file: File) => {
-        const success = await importItem(file, 'instance');
+        const success = await importItem(file, 'instance', () => setIsImportModalOpen(false));
         if (success) {
             setIsImportModalOpen(false);
         }

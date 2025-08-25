@@ -161,7 +161,7 @@ export const useAutomaticValidation = (updateValidationStatus: (results: any) =>
   /**
    * Run validation after config import
    * Should be called after successfully importing a configuration
-   * Shows modal if issues are found
+   * Shows modal if issues are found and shows success/error toasts like create/edit operations
    */
   const runPostImportValidation = useCallback(async () => {
     try {
@@ -170,7 +170,8 @@ export const useAutomaticValidation = (updateValidationStatus: (results: any) =>
       // Set import operation flag to prevent page load validation from running
       isImportOperationInProgress = true;
 
-      const result = await runBackgroundValidation();
+      // Use non-silent mode to show toasts like create/edit operations
+      const result = await verifyConfig(false);
 
       if (result && result.invalidConfigs > 0) {
         console.log("⚠️ Post-import validation found issues - showing modal");

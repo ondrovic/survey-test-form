@@ -64,7 +64,7 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
     };
 
     const handleImportFile = async (file: File) => {
-        const success = await importItem(file, dataType);
+        const success = await importItem(file, dataType, () => setIsImportModalOpen(false));
         if (success) {
             setIsImportModalOpen(false);
         }
