@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../config/database';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '../../../../types/framework.types';
+import { RATING_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, MULTISELECT_OPTION_BUTTON_NAME, SELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 
 interface OptionSetPreviewProps {
     type: 'rating' | 'radio' | 'multiselect' | 'select';
@@ -70,13 +71,13 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
     const getTypeLabel = () => {
         switch (type) {
             case 'rating':
-                return 'Rating Scale Options:';
+                return `${RATING_OPTION_BUTTON_NAME} Scale Options:`;
             case 'radio':
-                return 'Radio Option Set Options:';
+                return `${RADIO_OPTION_BUTTON_NAME} Option Set Options:`;
             case 'multiselect':
-                return 'Multi-Select Option Set Options:';
+                return `${MULTISELECT_OPTION_BUTTON_NAME} Option Set Options:`;
             case 'select':
-                return 'Select Option Set Options:';
+                return `${SELECT_OPTION_BUTTON_NAME} Option Set Options:`;
             default:
                 return 'Options:';
         }

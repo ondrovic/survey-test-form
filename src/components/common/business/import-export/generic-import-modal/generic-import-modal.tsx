@@ -162,10 +162,10 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Import Notes:</p>
               <ul className="text-xs space-y-1 space-x-1">
-                <li>• The imported {dataType ? displayName.toLowerCase() : 'item'} will be renamed with &quot;(Imported)&quot; suffix</li>
-                <li>• New unique IDs will be generated for all entities</li>
-                {dataType === 'config' && <li>• The config will be created as active by default</li>}
-                {dataType === 'instance' && <li>• The instance will be created as inactive by default</li>}
+                <li>• All data will be preserved exactly as exported (no renaming or modifications)</li>
+                <li>• Original IDs will be maintained for data consistency</li>
+                <li>• Active status, date ranges, and all settings will be preserved</li>
+                <li>• Only the updatedAt timestamp will be refreshed to track the import</li>
                 {!dataType && <li>• Auto-detection will determine the data type from file structure</li>}
               </ul>
             </div>

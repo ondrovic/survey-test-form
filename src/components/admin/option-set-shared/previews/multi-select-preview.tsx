@@ -1,4 +1,5 @@
 import React from 'react';
+import { MULTISELECT_OPTION_BUTTON_NAME, DEFAULT_FIELD_LABEL } from '@/constants/options-sets.constants';
 
 interface MultiSelectPreviewProps {
     data: {
@@ -17,7 +18,7 @@ export const MultiSelectPreview: React.FC<MultiSelectPreviewProps> = ({ data, mi
     if (data.options.length === 0) {
         return (
             <div className="space-y-3">
-                <h5 className="text-sm font-medium text-gray-700">Multi-Select Preview</h5>
+                <h5 className="text-sm font-medium text-gray-700">{MULTISELECT_OPTION_BUTTON_NAME} Preview</h5>
                 <div className="text-sm text-gray-500 italic">No options configured yet</div>
             </div>
         );
@@ -38,7 +39,7 @@ export const MultiSelectPreview: React.FC<MultiSelectPreviewProps> = ({ data, mi
                             <span className="text-sm text-gray-700">{option.label || `Option ${index + 1}`}</span>
                             {option.isDefault && (
                                 <span className="px-1 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 rounded">
-                                    Default
+                                    {DEFAULT_FIELD_LABEL}
                                 </span>
                             )}
                         </div>

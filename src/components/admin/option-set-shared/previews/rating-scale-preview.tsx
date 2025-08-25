@@ -1,4 +1,5 @@
 import React from 'react';
+import { RATING_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 
 interface RatingScalePreviewProps {
     data: {
@@ -17,7 +18,7 @@ export const RatingScalePreview: React.FC<RatingScalePreviewProps> = ({ data }) 
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
-                <span className="text-sm text-gray-700">Rating Scale - {data.name || 'Option Set'} *</span>
+                <span className="text-sm text-gray-700">{RATING_OPTION_BUTTON_NAME} Scale - {data.name || 'Option Set'} *</span>
                 <div className="flex items-center space-x-2">
                     <span
                         className="text-sm font-medium"

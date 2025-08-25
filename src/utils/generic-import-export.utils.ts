@@ -6,6 +6,12 @@ import {
   SurveyConfig,
   SurveyInstance,
 } from "@/types";
+import {
+  RATING_OPTION_SET_NAME,
+  RADIO_OPTION_SET_NAME,
+  MULTISELECT_OPTION_SET_NAME,
+  SELECT_OPTION_SET_NAME,
+} from "@/constants/options-sets.constants";
 
 // Define supported data types
 export type ExportableDataType =
@@ -50,33 +56,34 @@ const DATA_TYPE_CONFIG = {
     filePrefix: "survey-instance",
     displayName: "Survey Instance",
     requiredFields: ["title", "configId"],
+    optionalFields: ["activeDateRange", "active_date_range"], // Support both naming conventions
     titleField: "title",
     descriptionField: "description",
   },
   "rating-scale": {
     filePrefix: "rating-scale",
-    displayName: "Rating Scale",
+    displayName: RATING_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
   },
   "radio-option-set": {
     filePrefix: "radio-option-set",
-    displayName: "Radio Option Set",
+    displayName: RADIO_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
   },
   "multi-select-option-set": {
     filePrefix: "multi-select-option-set",
-    displayName: "Multi-Select Option Set",
+    displayName: MULTISELECT_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
   },
   "select-option-set": {
     filePrefix: "select-option-set",
-    displayName: "Select Option Set",
+    displayName: SELECT_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
@@ -137,7 +144,12 @@ const cleanDataForExport = <T>(data: T, type: ExportableDataType): T => {
   // Type-specific cleaning
   switch (type) {
     case "instance":
-      // For instances, we might want to keep configId for reference
+      // For instances, ensure we keep essential fields
+      // Ensure activeDateRange is preserved (handle both camelCase and snake_case)
+      if ((cleaned as any).active_date_range && !(cleaned as any).activeDateRange) {
+        (cleaned as any).activeDateRange = (cleaned as any).active_date_range;
+      }
+      delete (cleaned as any).active_date_range; // Remove snake_case version after copying
       break;
     case "config":
       // Remove any instance-specific data
@@ -338,13 +350,13 @@ const processConfigData = (
 
   return {
     ...(data.id && { id: data.id }), // Include ID if present
-    title: data.title, // Don't add "(Imported)" since we're preserving IDs
+    title: data.title,
     description: data.description || "",
     sections: processedSections,
-    version: data.version || "1.0.0",
-    paginatorConfig: data.paginatorConfig || {},
-    footerConfig: data.footerConfig || {},
-    isActive: true,
+    version: data.version,
+    paginatorConfig: data.paginatorConfig,
+    footerConfig: data.footerConfig,
+    isActive: data.isActive !== undefined ? data.isActive : true, // Preserve original isActive status, default to true only if not specified
   };
 };
 
@@ -360,16 +372,44 @@ const processInstanceData = (
     );
   }
 
+  // Handle activeDateRange (support both camelCase and snake_case from export)
+  const activeDateRange = data.activeDateRange || data.active_date_range;
+  
+  // Validate date range format if present
+  let processedDateRange: any = undefined;
+  if (activeDateRange) {
+    // Ensure the date range has the correct structure
+    const tempDateRange: any = {
+      start: activeDateRange.start || activeDateRange.startDate,
+      end: activeDateRange.end || activeDateRange.endDate,
+      startDate: activeDateRange.startDate || activeDateRange.start,
+      endDate: activeDateRange.endDate || activeDateRange.end,
+    };
+    
+    // Remove undefined properties to keep the object clean
+    if (!tempDateRange.start) delete tempDateRange.start;
+    if (!tempDateRange.end) delete tempDateRange.end;
+    if (!tempDateRange.startDate) delete tempDateRange.startDate;
+    if (!tempDateRange.endDate) delete tempDateRange.endDate;
+    
+    // If no valid dates, set to undefined
+    if (Object.keys(tempDateRange).length === 0) {
+      processedDateRange = undefined;
+    } else {
+      processedDateRange = tempDateRange;
+    }
+  }
+
   return {
     ...(data.id && { id: data.id }), // Include ID if present
     configId: data.configId,
     title: data.title, // Don't add "(Imported)" since we're preserving IDs
     description: data.description || "",
     slug: undefined, // Will be generated
-    isActive: false, // Import as inactive by default
-    activeDateRange: data.activeDateRange,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    isActive: data.isActive !== undefined ? data.isActive : false, // Preserve original isActive status, default to false if not specified
+    activeDateRange: processedDateRange,
+    createdAt: data.createdAt || new Date().toISOString(), // Preserve original createdAt or use current time
+    updatedAt: new Date().toISOString(), // Always update the updatedAt to current time for import tracking
   };
 };
 
@@ -378,10 +418,10 @@ const processRatingScaleData = (
 ): Omit<RatingScale, "metadata"> => {
   return {
     ...(data.id && { id: data.id }), // Include ID if present
-    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
+    name: data.name,
     description: data.description || "",
     options: data.options || [],
-    isActive: true,
+    isActive: data.isActive !== undefined ? data.isActive : true, // Preserve original isActive status
   };
 };
 
@@ -390,10 +430,10 @@ const processRadioOptionSetData = (
 ): Omit<RadioOptionSet, "metadata"> => {
   return {
     ...(data.id && { id: data.id }), // Include ID if present
-    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
+    name: data.name,
     description: data.description || "",
     options: data.options || [],
-    isActive: true,
+    isActive: data.isActive !== undefined ? data.isActive : true, // Preserve original isActive status
   };
 };
 
@@ -402,12 +442,12 @@ const processMultiSelectOptionSetData = (
 ): Omit<MultiSelectOptionSet, "metadata"> => {
   return {
     ...(data.id && { id: data.id }), // Include ID if present
-    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
+    name: data.name,
     description: data.description || "",
     options: data.options || [],
     minSelections: data.minSelections,
     maxSelections: data.maxSelections,
-    isActive: true,
+    isActive: data.isActive !== undefined ? data.isActive : true, // Preserve original isActive status
   };
 };
 
@@ -416,11 +456,11 @@ const processSelectOptionSetData = (
 ): Omit<SelectOptionSet, "metadata"> => {
   return {
     ...(data.id && { id: data.id }), // Include ID if present
-    name: data.name, // Don't add "(Imported)" suffix since we're preserving IDs
+    name: data.name,
     description: data.description || "",
     options: data.options || [],
-    allowMultiple: data.allowMultiple || false,
-    isActive: true,
+    allowMultiple: data.allowMultiple !== undefined ? data.allowMultiple : false, // Preserve original allowMultiple setting
+    isActive: data.isActive !== undefined ? data.isActive : true, // Preserve original isActive status
   };
 };
 

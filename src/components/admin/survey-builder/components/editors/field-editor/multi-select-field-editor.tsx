@@ -8,6 +8,7 @@ import { updateMetadata } from '../../../../../../utils/metadata.utils';
 import { Button, Input } from '../../../../../common';
 import { RatingScaleManager } from '../../../../option-set-manager';
 import { UnifiedModal } from '../../../../../common';
+import { RATING_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, MULTISELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 
 interface MultiSelectFieldEditorProps {
     config: SurveyConfig;
@@ -222,9 +223,9 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
             text: 'Text Input',
             email: 'Email Input',
             textarea: 'Text Area',
-            radio: 'Radio Buttons',
-            multiselect: 'Checkboxes',
-            rating: 'Rating',
+            radio: RADIO_OPTION_BUTTON_NAME,
+            multiselect: MULTISELECT_OPTION_BUTTON_NAME,
+            rating: RATING_OPTION_BUTTON_NAME,
             number: 'Number Input'
         };
         return typeLabels[type] || type;

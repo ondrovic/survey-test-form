@@ -1,4 +1,5 @@
 import React from 'react';
+import { SELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 
 interface SelectPreviewProps {
     data: {
@@ -16,7 +17,7 @@ export const SelectPreview: React.FC<SelectPreviewProps> = ({ data, allowMultipl
     if (data.options.length === 0) {
         return (
             <div className="space-y-3">
-                <h5 className="text-sm font-medium text-gray-700">Select Preview</h5>
+                <h5 className="text-sm font-medium text-gray-700">{SELECT_OPTION_BUTTON_NAME} Preview</h5>
                 <div className="text-sm text-gray-500 italic">No options configured yet</div>
             </div>
         );
