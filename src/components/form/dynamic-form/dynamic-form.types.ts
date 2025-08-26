@@ -7,4 +7,5 @@ export interface DynamicFormProps {
   className?: string;
   resetTrigger?: number; // Add reset trigger prop
   onActivityUpdate?: () => void;
+  surveyInstanceId?: string; // For session-based answer persistence
 }

@@ -8,4 +8,5 @@ export interface PaginatedSurveyFormProps {
     className?: string;
     resetTrigger?: number;
     onSectionChange?: (sectionIndex: number) => void;
+    surveyInstanceId?: string; // For session-based answer persistence
 }

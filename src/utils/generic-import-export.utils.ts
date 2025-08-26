@@ -42,6 +42,16 @@ export interface ImportValidationResult {
 }
 
 /**
+ * Helper function to convert display name to kebab-case
+ */
+const toKebabCase = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
+/**
  * Configuration for different data types
  */
 const DATA_TYPE_CONFIG = {
@@ -61,28 +71,28 @@ const DATA_TYPE_CONFIG = {
     descriptionField: "description",
   },
   "rating-scale": {
-    filePrefix: "rating-scale",
+    filePrefix: toKebabCase(RATING_OPTION_SET_NAME), // "rating-scales"
     displayName: RATING_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
   },
   "radio-option-set": {
-    filePrefix: "radio-option-set",
+    filePrefix: toKebabCase(RADIO_OPTION_SET_NAME), // "radio-buttons"
     displayName: RADIO_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
   },
   "multi-select-option-set": {
-    filePrefix: "multi-select-option-set",
+    filePrefix: toKebabCase(MULTISELECT_OPTION_SET_NAME), // "checkboxes"
     displayName: MULTISELECT_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
     descriptionField: "description",
   },
   "select-option-set": {
-    filePrefix: "select-option-set",
+    filePrefix: toKebabCase(SELECT_OPTION_SET_NAME), // "dropdowns"
     displayName: SELECT_OPTION_SET_NAME,
     requiredFields: ["name", "options"],
     titleField: "name",
@@ -143,14 +153,28 @@ const cleanDataForExport = <T>(data: T, type: ExportableDataType): T => {
 
   // Type-specific cleaning
   switch (type) {
-    case "instance":
-      // For instances, ensure we keep essential fields
-      // Ensure activeDateRange is preserved (handle both camelCase and snake_case)
-      if ((cleaned as any).active_date_range && !(cleaned as any).activeDateRange) {
-        (cleaned as any).activeDateRange = (cleaned as any).active_date_range;
+    case "instance": {
+      // For instances, normalize activeDateRange to clean format
+      const activeDateRange = (cleaned as any).activeDateRange || (cleaned as any).active_date_range;
+      if (activeDateRange) {
+        // Extract dates and create clean format (only startDate/endDate)
+        const startDate = activeDateRange.startDate || activeDateRange.start;
+        const endDate = activeDateRange.endDate || activeDateRange.end;
+        
+        if (startDate && endDate) {
+          (cleaned as any).activeDateRange = {
+            startDate: startDate,
+            endDate: endDate
+          };
+        } else {
+          // Remove invalid date range
+          delete (cleaned as any).activeDateRange;
+        }
       }
-      delete (cleaned as any).active_date_range; // Remove snake_case version after copying
+      // Always remove snake_case version
+      delete (cleaned as any).active_date_range;
       break;
+    }
     case "config":
       // Remove any instance-specific data
       delete (cleaned as any).isActive;
@@ -372,31 +396,22 @@ const processInstanceData = (
     );
   }
 
-  // Handle activeDateRange (support both camelCase and snake_case from export)
+  // Handle activeDateRange (normalize to standard format)
   const activeDateRange = data.activeDateRange || data.active_date_range;
   
   // Validate date range format if present
   let processedDateRange: any = undefined;
   if (activeDateRange) {
-    // Ensure the date range has the correct structure
-    const tempDateRange: any = {
-      start: activeDateRange.start || activeDateRange.startDate,
-      end: activeDateRange.end || activeDateRange.endDate,
-      startDate: activeDateRange.startDate || activeDateRange.start,
-      endDate: activeDateRange.endDate || activeDateRange.end,
-    };
+    // Extract start and end dates, preferring the cleaner format
+    const startDate = activeDateRange.startDate || activeDateRange.start;
+    const endDate = activeDateRange.endDate || activeDateRange.end;
     
-    // Remove undefined properties to keep the object clean
-    if (!tempDateRange.start) delete tempDateRange.start;
-    if (!tempDateRange.end) delete tempDateRange.end;
-    if (!tempDateRange.startDate) delete tempDateRange.startDate;
-    if (!tempDateRange.endDate) delete tempDateRange.endDate;
-    
-    // If no valid dates, set to undefined
-    if (Object.keys(tempDateRange).length === 0) {
-      processedDateRange = undefined;
-    } else {
-      processedDateRange = tempDateRange;
+    // Only create date range if we have both dates
+    if (startDate && endDate) {
+      processedDateRange = {
+        startDate: startDate,
+        endDate: endDate
+      };
     }
   }
 

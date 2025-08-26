@@ -18,6 +18,7 @@ import { getCurrentTimestamp } from '@/utils/date.utils';
 import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 
 import { routes } from '@/routes';
+import { DatabaseSessionManagerService } from '@/services/database-session-manager.service';
 import { isReCaptchaConfigured, verifyReCaptchaTokenClientSide } from '@/utils/recaptcha.utils';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
@@ -83,6 +84,15 @@ function AppContent() {
                 })),
                 timestamp: new Date().toISOString()
             });
+
+            // Start the database session manager for reliable session tracking
+            try {
+                const sessionManager = DatabaseSessionManagerService.getInstance();
+                sessionManager.start();
+                console.log('📊 Database session manager started');
+            } catch (error) {
+                console.error('❌ Failed to start session manager:', error);
+            }
 
             setIsMigrating(false);
         } catch (error) {
@@ -423,6 +433,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 loading={isSubmitting}
                 showSectionPagination={surveyConfig.paginatorConfig?.showSectionPagination !== false}
                 resetTrigger={resetFormTrigger}
+                surveyInstanceId={instance?.id}
                 onSectionChange={(sectionIndex: number) => {
                     surveySession.updateActivity(sectionIndex);
                 }}
@@ -436,6 +447,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
             onSubmit={handleSubmit}
             loading={isSubmitting}
             resetTrigger={resetFormTrigger}
+            surveyInstanceId={instance?.id}
             onActivityUpdate={() => {
                 surveySession.updateActivity();
             }}

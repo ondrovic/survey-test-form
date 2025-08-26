@@ -42,6 +42,12 @@ DROP FUNCTION IF EXISTS update_survey_instance_statuses() CASCADE;
 DROP FUNCTION IF EXISTS get_upcoming_status_changes(INTEGER) CASCADE;
 DROP FUNCTION IF EXISTS calculate_survey_completion_time() CASCADE;
 
+-- Drop session automation functions
+DROP FUNCTION IF EXISTS update_session_status() CASCADE;
+DROP FUNCTION IF EXISTS check_session_status_on_update() CASCADE;
+DROP FUNCTION IF EXISTS cleanup_survey_sessions() CASCADE;
+DROP FUNCTION IF EXISTS get_session_analytics(UUID, INTEGER) CASCADE;
+
 -- Drop RLS helper functions
 DROP FUNCTION IF EXISTS is_admin() CASCADE;
 DROP FUNCTION IF EXISTS is_anonymous() CASCADE;
@@ -49,6 +55,33 @@ DROP FUNCTION IF EXISTS current_user_email() CASCADE;
 DROP FUNCTION IF EXISTS is_survey_public(UUID) CASCADE;
 DROP FUNCTION IF EXISTS bypass_rls_for_system_user() CASCADE;
 DROP FUNCTION IF EXISTS enable_rls() CASCADE;
+
+-- ===================================
+-- CLEANUP CRON JOBS
+-- ===================================
+
+-- Remove scheduled cron jobs if they exist
+DO $$
+BEGIN
+  -- Remove survey instance status updates job
+  BEGIN
+    PERFORM cron.unschedule('survey-instance-status-updates');
+    RAISE NOTICE '✅ Removed cron job: survey-instance-status-updates';
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE '⚠️  Cron job survey-instance-status-updates not found or already removed';
+  END;
+  
+  -- Remove session cleanup job
+  BEGIN
+    PERFORM cron.unschedule('session-cleanup');
+    RAISE NOTICE '✅ Removed cron job: session-cleanup';
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE '⚠️  Cron job session-cleanup not found or already removed';
+  END;
+  
+  -- Note: We don't drop the pg_cron extension as it might be used by other applications
+  RAISE NOTICE 'ℹ️  pg_cron extension left enabled (may be used by other applications)';
+END $$;
 
 
 -- ===================================
@@ -206,6 +239,7 @@ BEGIN
     RAISE NOTICE '   - All views and indexes';
     RAISE NOTICE '   - All RLS policies';
     RAISE NOTICE '   - Realtime subscriptions';
+    RAISE NOTICE '   - Automated cron jobs (pg_cron jobs unscheduled)';
     RAISE NOTICE '';
     RAISE NOTICE '🚀 Next steps:';
     RAISE NOTICE '   1. Run setup-supabase-optimized.sql to recreate the optimized schema';

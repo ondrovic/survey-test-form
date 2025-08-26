@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import React, { useCallback } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
+import { useSurveySession } from '../../../hooks/use-survey-session';
 import { SurveyField, SurveySection } from '../../../types/framework.types';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 import { Button, ScrollableContent, SurveyFooter } from '../../common';
@@ -18,11 +19,19 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     loading = false,
     className,
     resetTrigger,
-    onActivityUpdate
+    onActivityUpdate,
+    surveyInstanceId
 }) => {
     // Use context providers
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
+
+    // Initialize survey session - always call hook but pass null when not needed
+    const surveySession = useSurveySession(surveyInstanceId ? {
+        surveyInstanceId,
+        totalSections: config.sections?.length || 1,
+        activityTimeoutMs: 24 * 60 * 60 * 1000 // 24 hours
+    } : null);
     
     console.log('🔍 DynamicForm - SurveyData context state:', {
         isLoading: surveyDataState.isLoading,
@@ -37,6 +46,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     // Track if form has been submitted to control when to show validation
     const [hasSubmitted, setHasSubmitted] = React.useState(false);
+    // Track if answers have been restored from session
+    const [answersRestored, setAnswersRestored] = React.useState(false);
 
     // Extract data from survey data context
     const { ratingScales, radioOptionSets, multiSelectOptionSets, selectOptionSets, isLoading } = surveyDataState;
@@ -205,8 +216,26 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     React.useEffect(() => {
         if (resetTrigger && resetTrigger > 0) {
             setupFormState();
+            setAnswersRestored(false); // Reset restoration flag on form reset
         }
     }, [resetTrigger, setupFormState]);
+
+    // Restore answers from session when session data is available
+    React.useEffect(() => {
+        if (surveySession?.session.sessionId && surveySession.session.savedAnswers && !answersRestored) {
+            console.log('🔄 Restoring answers from session:', {
+                sessionId: surveySession.session.sessionId,
+                answersCount: Object.keys(surveySession.session.savedAnswers).length
+            });
+
+            // Restore saved answers to form state
+            Object.entries(surveySession.session.savedAnswers).forEach(([fieldId, value]) => {
+                setFieldValue(fieldId, value);
+            });
+
+            setAnswersRestored(true);
+        }
+    }, [surveySession?.session.sessionId, surveySession?.session.savedAnswers, answersRestored, setFieldValue]);
 
     // Set default values when rating scales are loaded
     React.useEffect(() => {
@@ -322,6 +351,13 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
 
+        // Save answers to session if session is available
+        if (surveySession?.saveAnswersToSession) {
+            // Get current form state and update with new value
+            const currentAnswers = { ...formState.formData, [fieldId]: value };
+            surveySession.saveAnswersToSession(currentAnswers);
+        }
+
         // Track activity when user interacts with form
         if (onActivityUpdate) {
             onActivityUpdate();
@@ -331,7 +367,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         if (hasSubmitted && formState.errors[fieldId]) {
             setTimeout(() => validateField(fieldId, value), 300);
         }
-    }, [setFieldValue, validateField, formState.errors, hasSubmitted, onActivityUpdate]);
+    }, [setFieldValue, validateField, formState.errors, formState.formData, hasSubmitted, onActivityUpdate, surveySession]);
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();

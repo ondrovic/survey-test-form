@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from '../../../contexts/form-context';
 import { useSurveyData } from '../../../contexts/survey-data-context';
+import { useSurveySession } from '../../../hooks/use-survey-session';
 import { SurveyField, SurveySection } from '../../../types/framework.types';
 import { ScrollableContent, SurveyFooter } from '../../common';
 import { useSectionPagination } from '../../survey/section-paginator';
@@ -21,11 +22,19 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     showSectionPagination = true,
     className,
     resetTrigger,
-    onSectionChange
+    onSectionChange,
+    surveyInstanceId
 }) => {
     // Use context providers - reuse ALL logic from DynamicForm
     const { state: formState, setFieldValue, setFieldError, setErrors, resetForm } = useForm();
     const { state: surveyDataState } = useSurveyData();
+
+    // Initialize survey session - always call hook but pass null when not needed
+    const surveySession = useSurveySession(surveyInstanceId ? {
+        surveyInstanceId,
+        totalSections: config.sections?.length || 1,
+        activityTimeoutMs: 24 * 60 * 60 * 1000 // 24 hours
+    } : null);
     
     console.log('🔍 PaginatedSurveyForm - SurveyData context state:', {
         isLoading: surveyDataState.isLoading,
@@ -53,6 +62,8 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     const [hasSubmitted, setHasSubmitted] = useState(false);
     // Track which sections have been validated (for progressive validation)
     const [validatedSections, setValidatedSections] = useState<Set<number>>(new Set());
+    // Track if answers have been restored from session
+    const [answersRestored, setAnswersRestored] = useState(false);
 
     // Extract data from survey data context
     const { ratingScales, radioOptionSets, multiSelectOptionSets, selectOptionSets, isLoading } = surveyDataState;
@@ -173,6 +184,23 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         setupFormState();
     }, [setupFormState]);
 
+    // Restore answers from session when session data is available
+    useEffect(() => {
+        if (surveySession?.session.sessionId && surveySession.session.savedAnswers && !answersRestored) {
+            console.log('🔄 Restoring answers from session:', {
+                sessionId: surveySession.session.sessionId,
+                answersCount: Object.keys(surveySession.session.savedAnswers).length
+            });
+
+            // Restore saved answers to form state
+            Object.entries(surveySession.session.savedAnswers).forEach(([fieldId, value]) => {
+                setFieldValue(fieldId, value);
+            });
+
+            setAnswersRestored(true);
+        }
+    }, [surveySession?.session.sessionId, surveySession?.session.savedAnswers, answersRestored, setFieldValue]);
+
     // Handle form reset when resetTrigger changes
     useEffect(() => {
         if (resetTrigger && resetTrigger > 0) {
@@ -272,6 +300,13 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     const handleFieldChange = useCallback((fieldId: string, value: any) => {
         setFieldValue(fieldId, value);
 
+        // Save answers to session if session is available
+        if (surveySession?.saveAnswersToSession) {
+            // Get current form state and update with new value
+            const currentAnswers = { ...formState.formData, [fieldId]: value };
+            surveySession.saveAnswersToSession(currentAnswers);
+        }
+
         // Find which section this field belongs to
         let fieldSectionIndex = -1;
         for (let i = 0; i < config.sections.length; i++) {
@@ -305,7 +340,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                 setFieldError(fieldId, '');
             }
         }
-    }, [setFieldValue, setFieldError, formState.errors, hasSubmitted, validatedSections, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord]);
+    }, [setFieldValue, setFieldError, formState.errors, formState.formData, hasSubmitted, validatedSections, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord, surveySession]);
 
 
 
