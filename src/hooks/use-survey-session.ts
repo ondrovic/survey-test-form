@@ -207,7 +207,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
   }, [session.sessionId, session.status]);
 
   // Save survey answers to session (debounced to avoid excessive writes)
-  const saveAnswersToSession = useCallback((answers: Record<string, any>) => {
+  const saveAnswersToSession = useCallback((answers: Record<string, any>, currentPage?: number) => {
     if (!session.sessionId || session.status === 'completed' || session.status === 'abandoned') return;
 
     // Update local state immediately for instant feedback
@@ -224,13 +224,21 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     // Debounce the database save to avoid excessive writes
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
-        // Update session metadata with answers
-        const existingMetadata = await databaseHelpers.getSurveySession(session.sessionId!);
+        // Get existing metadata to merge with new values
+        const existingSession = await databaseHelpers.getSurveySession(session.sessionId!);
+        const existingMetadata = existingSession?.metadata || {};
+        
+        // Merge existing metadata with new values
         const updatedMetadata = {
-          ...existingMetadata?.metadata,
+          ...existingMetadata,
           savedAnswers: answers,
           lastAnswerSave: new Date().toISOString()
         };
+        
+        // Only add currentPage if provided
+        if (currentPage !== undefined) {
+          updatedMetadata.currentPage = currentPage;
+        }
 
         await databaseHelpers.updateSurveySession(session.sessionId!, {
           metadata: updatedMetadata,
@@ -239,7 +247,11 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
 
         console.log('📊 Survey answers saved to session:', {
           sessionId: session.sessionId,
-          answerCount: Object.keys(answers).length
+          answersCount: Object.keys(answers).length,
+          answers: answers,
+          updatedMetadata: updatedMetadata,
+          answerCount: Object.keys(answers).length,
+          currentPage: currentPage
         });
       } catch (error) {
         console.error('❌ Failed to save answers to session:', error);
@@ -261,11 +273,33 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
       try {
         const now = new Date();
         
-        await databaseHelpers.updateSurveySession(session.sessionId!, {
+        // If changing section, also update metadata to keep page tracking in sync
+        const updateData: any = {
           lastActivityAt: now.toISOString(),
           currentSection: newSection !== undefined ? newSection : session.currentSection
           // Note: status will be updated by database triggers based on activity and section progress
-        });
+        };
+        
+        // If section is changing, also update metadata.currentPage for consistent page restoration
+        if (newSection !== undefined && newSection !== session.currentSection) {
+          // Get existing metadata to merge with new values
+          const existingSession = await databaseHelpers.getSurveySession(session.sessionId!);
+          const existingMetadata = existingSession?.metadata || {};
+          
+          updateData.metadata = {
+            ...existingMetadata,
+            currentPage: newSection,
+            lastPageUpdate: now.toISOString()
+          };
+          
+          console.log('📍 Updating page in metadata:', {
+            sessionId: session.sessionId,
+            newSection: newSection,
+            previousSection: session.currentSection
+          });
+        }
+        
+        await databaseHelpers.updateSurveySession(session.sessionId!, updateData);
 
         setSession(prev => {
           // Determine status based on section progress (database trigger will also handle this)
@@ -458,6 +492,17 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           if (existingSession && existingSession.status !== 'completed' && existingSession.status !== 'abandoned') {
             // Resume session - convert snake_case to camelCase and restore saved answers
             const savedAnswers = existingSession.metadata?.savedAnswers || {};
+            
+            console.log('🔍 SESSION RESUME DEBUG:', {
+              sessionId: existingSession.id,
+              hasMetadata: !!existingSession.metadata,
+              metadataKeys: existingSession.metadata ? Object.keys(existingSession.metadata) : [],
+              hasSavedAnswers: !!existingSession.metadata?.savedAnswers,
+              savedAnswersCount: savedAnswers ? Object.keys(savedAnswers).length : 0,
+              savedAnswers: savedAnswers,
+              fullMetadata: existingSession.metadata
+            });
+            
             setSession({
               sessionId: existingSession.id,
               startedAt: new Date(existingSession.started_at),
@@ -493,7 +538,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     };
 
     initializeSession();
-  }, [surveyInstanceId]); // Remove unstable dependencies
+  }, [surveyInstanceId]); // Keep minimal dependencies to avoid infinite loops
 
   // Clean up timeouts on unmount
   useEffect(() => {
@@ -523,6 +568,33 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     
     isSessionActive: useCallback(() => {
       return session.sessionId && session.status !== 'completed' && session.status !== 'abandoned' && session.status !== 'expired';
-    }, [session.sessionId, session.status])
+    }, [session.sessionId, session.status]),
+    
+    getSavedPage: useCallback(async (): Promise<number | null> => {
+      if (!session.sessionId) {
+        console.log('🔍 getSavedPage: No session ID');
+        return null;
+      }
+      try {
+        console.log('🔍 getSavedPage: Fetching session data for ID:', session.sessionId);
+        const sessionData = await databaseHelpers.getSurveySession(session.sessionId);
+        console.log('🔍 getSavedPage: Session data retrieved:', {
+          hasMetadata: !!sessionData?.metadata,
+          metadata: sessionData?.metadata,
+          currentPage: sessionData?.metadata?.currentPage,
+          currentSection: sessionData?.current_section
+        });
+        
+        // Check metadata.currentPage first, then fall back to current_section
+        const savedPage = sessionData?.metadata?.currentPage !== undefined 
+          ? sessionData.metadata.currentPage 
+          : sessionData?.current_section;
+          
+        return savedPage !== undefined ? savedPage : null;
+      } catch (error) {
+        console.error('❌ Failed to get saved page from session:', error);
+        return null;
+      }
+    }, [session.sessionId])
   };
 };

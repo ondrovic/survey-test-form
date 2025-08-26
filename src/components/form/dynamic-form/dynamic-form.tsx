@@ -222,18 +222,33 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     // Restore answers from session when session data is available
     React.useEffect(() => {
-        if (surveySession?.session.sessionId && surveySession.session.savedAnswers && !answersRestored) {
-            console.log('🔄 Restoring answers from session:', {
+        if (surveySession?.session.sessionId) {
+            console.log('🔍 DYNAMIC FORM - SESSION RESTORE DEBUG:', {
                 sessionId: surveySession.session.sessionId,
-                answersCount: Object.keys(surveySession.session.savedAnswers).length
+                hasSavedAnswers: !!surveySession.session.savedAnswers,
+                savedAnswers: surveySession.session.savedAnswers,
+                answersCount: surveySession.session.savedAnswers ? Object.keys(surveySession.session.savedAnswers).length : 0,
+                answersRestored,
+                sessionStatus: surveySession.session.status,
+                fullSession: surveySession.session
             });
 
-            // Restore saved answers to form state
-            Object.entries(surveySession.session.savedAnswers).forEach(([fieldId, value]) => {
-                setFieldValue(fieldId, value);
-            });
+            if (surveySession.session.savedAnswers && !answersRestored) {
+                console.log('🔄 DYNAMIC FORM - Restoring answers from session:', {
+                    sessionId: surveySession.session.sessionId,
+                    answersCount: Object.keys(surveySession.session.savedAnswers).length,
+                    answers: surveySession.session.savedAnswers
+                });
 
-            setAnswersRestored(true);
+                // Restore saved answers to form state
+                Object.entries(surveySession.session.savedAnswers).forEach(([fieldId, value]) => {
+                    setFieldValue(fieldId, value);
+                });
+
+                setAnswersRestored(true);
+            } else if (!surveySession.session.savedAnswers) {
+                console.log('❌ DYNAMIC FORM - No saved answers found in session');
+            }
         }
     }, [surveySession?.session.sessionId, surveySession?.session.savedAnswers, answersRestored, setFieldValue]);
 
@@ -355,7 +370,19 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         if (surveySession?.saveAnswersToSession) {
             // Get current form state and update with new value
             const currentAnswers = { ...formState.formData, [fieldId]: value };
-            surveySession.saveAnswersToSession(currentAnswers);
+            console.log('💾 DYNAMIC FORM - SAVING ANSWERS TO SESSION:', {
+                fieldId,
+                value,
+                answerCount: Object.keys(currentAnswers).length,
+                currentPage: 0, // Dynamic form is always page 0 (single page)
+                sessionId: surveySession.session?.sessionId
+            });
+            surveySession.saveAnswersToSession(currentAnswers, 0);
+        } else {
+            console.log('❌ DYNAMIC FORM - Cannot save answers - surveySession or saveAnswersToSession not available:', {
+                hasSurveySession: !!surveySession,
+                hasSaveFunction: !!surveySession?.saveAnswersToSession
+            });
         }
 
         // Track activity when user interacts with form

@@ -186,18 +186,71 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
     // Restore answers from session when session data is available
     useEffect(() => {
-        if (surveySession?.session.sessionId && surveySession.session.savedAnswers && !answersRestored) {
-            console.log('🔄 Restoring answers from session:', {
+        if (surveySession?.session.sessionId) {
+            console.log('🔍 SESSION RESTORE DEBUG:', {
                 sessionId: surveySession.session.sessionId,
-                answersCount: Object.keys(surveySession.session.savedAnswers).length
+                hasSavedAnswers: !!surveySession.session.savedAnswers,
+                savedAnswers: surveySession.session.savedAnswers,
+                answersCount: surveySession.session.savedAnswers ? Object.keys(surveySession.session.savedAnswers).length : 0,
+                answersRestored,
+                sessionStatus: surveySession.session.status,
+                fullSession: surveySession.session
             });
 
-            // Restore saved answers to form state
-            Object.entries(surveySession.session.savedAnswers).forEach(([fieldId, value]) => {
-                setFieldValue(fieldId, value);
-            });
+            const hasAnswersToRestore = surveySession.session.savedAnswers && 
+                Object.keys(surveySession.session.savedAnswers).length > 0;
+                
+            if (hasAnswersToRestore && !answersRestored && surveySession.session.savedAnswers) {
+                console.log('🔄 Restoring answers from session:', {
+                    sessionId: surveySession.session.sessionId,
+                    answersCount: Object.keys(surveySession.session.savedAnswers).length,
+                    answers: surveySession.session.savedAnswers
+                });
 
-            setAnswersRestored(true);
+                // Restore saved answers to form state
+                Object.entries(surveySession.session.savedAnswers).forEach(([fieldId, value]) => {
+                    setFieldValue(fieldId, value);
+                });
+
+                // Restore saved page if available
+                if (surveySession.getSavedPage) {
+                    console.log('🔍 Attempting to get saved page...');
+                    surveySession.getSavedPage().then(savedPage => {
+                        console.log('🔍 getSavedPage result:', savedPage);
+                        if (savedPage !== null && savedPage >= 0) {
+                            const isValidPage = savedPage < (config.sections?.length || 0);
+                            const needsRestoration = savedPage !== paginationState.currentSectionIndex;
+                            
+                            console.log('🔄 Page restoration check:', {
+                                currentPage: paginationState.currentSectionIndex,
+                                savedPage: savedPage,
+                                totalSections: config.sections?.length,
+                                isValidPage,
+                                needsRestoration
+                            });
+                            
+                            if (isValidPage && needsRestoration) {
+                                console.log('🔄 Restoring page from session:', savedPage);
+                                goToSection(savedPage);
+                            } else if (!isValidPage) {
+                                console.log('❌ Saved page out of bounds:', {savedPage, totalSections: config.sections?.length});
+                            } else {
+                                console.log('✅ Already on correct page, no restoration needed');
+                            }
+                        } else {
+                            console.log('🔍 No saved page found or invalid page number:', savedPage);
+                        }
+                    }).catch(error => {
+                        console.error('❌ Failed to restore page from session:', error);
+                    });
+                } else {
+                    console.log('❌ getSavedPage function not available');
+                }
+
+                setAnswersRestored(true);
+            } else if (!surveySession.session.savedAnswers) {
+                console.log('❌ No saved answers found in session');
+            }
         }
     }, [surveySession?.session.sessionId, surveySession?.session.savedAnswers, answersRestored, setFieldValue]);
 
@@ -304,7 +357,19 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         if (surveySession?.saveAnswersToSession) {
             // Get current form state and update with new value
             const currentAnswers = { ...formState.formData, [fieldId]: value };
-            surveySession.saveAnswersToSession(currentAnswers);
+            console.log('💾 SAVING ANSWERS TO SESSION:', {
+                fieldId,
+                value,
+                answerCount: Object.keys(currentAnswers).length,
+                currentPage: paginationState.currentSectionIndex,
+                sessionId: surveySession.session?.sessionId
+            });
+            surveySession.saveAnswersToSession(currentAnswers, paginationState.currentSectionIndex);
+        } else {
+            console.log('❌ Cannot save answers - surveySession or saveAnswersToSession not available:', {
+                hasSurveySession: !!surveySession,
+                hasSaveFunction: !!surveySession?.saveAnswersToSession
+            });
         }
 
         // Find which section this field belongs to
@@ -340,7 +405,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
                 setFieldError(fieldId, '');
             }
         }
-    }, [setFieldValue, setFieldError, formState.errors, formState.formData, hasSubmitted, validatedSections, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord, surveySession]);
+    }, [setFieldValue, setFieldError, formState.errors, formState.formData, hasSubmitted, validatedSections, config.sections, ratingScalesRecord, radioOptionSetsRecord, multiSelectOptionSetsRecord, selectOptionSetsRecord, surveySession, paginationState.currentSectionIndex]);
 
 
 
