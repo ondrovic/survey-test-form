@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { databaseHelpers } from '@/config/database';
 import { getClientIPAddressWithTimeout } from '../utils/ip.utils';
+import { emailService } from '../services/email.service';
 
 // Global session creation tracker to prevent duplicates across React StrictMode
 class SessionCreationTracker {
@@ -289,8 +290,22 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
   }, [session.sessionId, session.status, session.currentSection]);
 
   // Complete the session
-  const completeSession = useCallback(async () => {
-    if (!session.sessionId) return;
+  const completeSession = useCallback(async (surveyData?: {
+    responses: Record<string, any>;
+    surveyTitle?: string;
+  }) => {
+    console.log('🔍 completeSession called with:', {
+      sessionId: session.sessionId,
+      hasSurveyData: !!surveyData,
+      surveyDataKeys: surveyData ? Object.keys(surveyData) : [],
+      responses: surveyData?.responses,
+      surveyTitle: surveyData?.surveyTitle
+    });
+
+    if (!session.sessionId) {
+      console.log('❌ No session ID, skipping session completion');
+      return;
+    }
 
     try {
       await databaseHelpers.updateSurveySession(session.sessionId, {
@@ -307,6 +322,104 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         status: 'completed',
         lastActivityAt: new Date()
       }));
+
+      // Send email notification if survey data is provided
+      if (surveyData && surveyInstanceId) {
+        try {
+          console.log('🔍 Email notification check - Survey data received:', {
+            hasSurveyData: !!surveyData,
+            hasResponses: !!surveyData.responses,
+            responseKeys: Object.keys(surveyData.responses || {}),
+            responseValues: surveyData.responses,
+            surveyTitle: surveyData.surveyTitle
+          });
+
+          // Look for email field in responses using multiple strategies
+          let recipientEmail: string | undefined;
+          let foundField: string | undefined;
+          
+          // Strategy 1: Look for common field name patterns (including transformed names)
+          const emailFields = [
+            'email', 'Email', 'EMAIL',
+            'emailAddress', 'EmailAddress', 'email_address', 
+            'participantEmail', 'userEmail', 'user_email',
+            'contactEmail', 'contact_email', 'e_mail', 'eMail'
+          ];
+          
+          for (const field of emailFields) {
+            if (surveyData.responses[field] && typeof surveyData.responses[field] === 'string') {
+              recipientEmail = surveyData.responses[field] as string;
+              foundField = field;
+              break;
+            }
+          }
+          
+          // Strategy 2: Look for fields that END with common email patterns (for transformed field names)
+          if (!recipientEmail) {
+            const emailPatterns = ['_email', '_Email', 'email', 'Email'];
+            for (const [fieldName, value] of Object.entries(surveyData.responses)) {
+              if (typeof value === 'string' && emailPatterns.some(pattern => fieldName.endsWith(pattern))) {
+                recipientEmail = value;
+                foundField = fieldName;
+                break;
+              }
+            }
+          }
+          
+          // Strategy 3: Look for any field that contains a valid email address (fallback)
+          if (!recipientEmail) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            for (const [fieldName, value] of Object.entries(surveyData.responses)) {
+              if (typeof value === 'string' && emailRegex.test(value)) {
+                recipientEmail = value;
+                foundField = fieldName;
+                break;
+              }
+            }
+          }
+
+          console.log('🔍 Email field search results:', {
+            foundField,
+            recipientEmail,
+            hasAtSymbol: recipientEmail ? recipientEmail.includes('@') : false,
+            allResponseFields: Object.keys(surveyData.responses),
+            strategy: foundField ? (
+              emailFields.includes(foundField) ? 'Strategy 1: Direct match' :
+              foundField.endsWith('_email') || foundField.endsWith('_Email') || foundField.endsWith('email') || foundField.endsWith('Email') ? 'Strategy 2: Ends with email pattern' :
+              'Strategy 3: Email regex match'
+            ) : 'No email found'
+          });
+
+          if (recipientEmail && recipientEmail.includes('@')) {
+            console.log('📧 Sending survey completion email to:', recipientEmail);
+            
+            const emailResult = await emailService.sendSurveyCompletionEmail({
+              surveyInstanceId: surveyInstanceId,
+              sessionId: session.sessionId,
+              recipientEmail: recipientEmail,
+              surveyResponses: surveyData.responses,
+              surveyTitle: surveyData.surveyTitle
+            });
+
+            if (emailResult.success) {
+              console.log('✅ Survey completion email sent successfully');
+            } else {
+              console.warn('⚠️ Email sending failed but survey was completed:', emailResult.error);
+            }
+          } else {
+            console.log('📧 No valid email address found in survey responses, skipping email notification');
+            console.log('📧 Available response fields:', Object.keys(surveyData.responses || {}));
+          }
+        } catch (emailError) {
+          console.warn('⚠️ Email sending failed but survey was completed:', emailError);
+          // Don't throw - email failure shouldn't prevent session completion
+        }
+      } else {
+        console.log('🔍 Email notification skipped:', {
+          hasSurveyData: !!surveyData,
+          surveyInstanceId
+        });
+      }
 
       // Clean up localStorage and global tracker
       if (surveyInstanceId) {

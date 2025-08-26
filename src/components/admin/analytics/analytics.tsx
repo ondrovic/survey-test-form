@@ -659,36 +659,46 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 {/* Session & Response Trends */}
                 <div className="bg-white p-6 rounded-lg shadow">
                     <h3 className="text-lg font-semibold mb-4">Session & Response Trends</h3>
-                    <div className="h-64 flex items-end justify-between space-x-1">
+                    <div className="h-64 flex items-end justify-between space-x-2 overflow-hidden px-2">
                         {analyticsData.trends.map((trend) => {
                             const maxSessions = Math.max(...analyticsData.trends.map(t => t.sessions));
                             const maxResponses = Math.max(...analyticsData.trends.map(t => t.responses));
                             const maxValue = Math.max(maxSessions, maxResponses, 1);
                             
+                            // Calculate available height for bars (leave room for labels)
+                            const availableHeight = 180;
+                            
+                            const sessionHeight = Math.max(8, (trend.sessions / maxValue) * availableHeight);
+                            const responseHeight = Math.max(8, (trend.responses / maxValue) * availableHeight);
+                            
                             return (
-                                <div key={trend.date} className="flex-1 flex flex-col items-center space-y-1">
-                                    <div className="w-full flex flex-col items-center space-y-1">
-                                        <div
-                                            className="w-4/5 bg-blue-500 rounded-t"
-                                            style={{
-                                                height: `${(trend.sessions / maxValue) * 180}px`
-                                            }}
-                                            title={`Sessions: ${trend.sessions}`}
-                                        ></div>
-                                        <div
-                                            className="w-4/5 bg-green-500 rounded-t"
-                                            style={{
-                                                height: `${(trend.responses / maxValue) * 180}px`
-                                            }}
-                                            title={`Responses: ${trend.responses}`}
-                                        ></div>
+                                <div key={trend.date} className="flex-1 flex flex-col items-center justify-end h-full max-w-[120px]">
+                                    {/* Chart bars side by side */}
+                                    <div className="flex items-end justify-center space-x-1 mb-2 w-full">
+                                        <div className="flex flex-col items-center">
+                                            <div
+                                                className="w-6 bg-blue-500 rounded-t"
+                                                style={{ height: `${sessionHeight}px` }}
+                                                title={`Sessions: ${trend.sessions}`}
+                                            ></div>
+                                        </div>
+                                        <div className="flex flex-col items-center">
+                                            <div
+                                                className="w-6 bg-green-500 rounded-t"
+                                                style={{ height: `${responseHeight}px` }}
+                                                title={`Responses: ${trend.responses}`}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <span className="text-xs text-gray-500 text-center">
-                                        {trend.date}
-                                    </span>
-                                    <span className="text-xs text-gray-400 text-center">
-                                        {trend.completionRate}%
-                                    </span>
+                                    {/* Labels */}
+                                    <div className="flex flex-col items-center space-y-1 flex-shrink-0">
+                                        <span className="text-xs text-gray-500 text-center truncate w-full">
+                                            {trend.date}
+                                        </span>
+                                        <span className="text-xs text-gray-400 text-center">
+                                            {trend.completionRate}%
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         })}

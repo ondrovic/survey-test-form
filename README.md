@@ -19,6 +19,7 @@ A comprehensive survey framework application built on Supabase with advanced sur
 - **Survey Instances**: Create multiple instances of surveys with different configurations
 - **Automated Status Management**: Time-based activation/deactivation with audit trails
 - **Slug-based URLs**: Human-readable survey URLs for easy sharing
+- **Email Notifications**: Automatic email notifications sent to participants upon survey completion
 
 ### Data & Analytics
 - **Advanced Data Visualization**: Interactive ECharts-powered charts and graphs for survey responses
@@ -32,6 +33,7 @@ A comprehensive survey framework application built on Supabase with advanced sur
 - **Import/Export System**: Backup and restore survey configurations
 - **Generic Option Set Management**: Reusable rating scales, radio sets, and multi-select options
 - **Security**: reCAPTCHA integration and secure authentication
+- **SMTP Email Integration**: Universal email support for Gmail, Exchange, Mailtrap, and any SMTP provider
 
 ## 🛠️ Tech Stack
 
@@ -47,6 +49,7 @@ A comprehensive survey framework application built on Supabase with advanced sur
 - **Charts**: Apache ECharts with echarts-for-react for advanced data visualization
 - **Excel Export**: xlsx library for admin downloads
 - **reCAPTCHA**: Google reCAPTCHA v2 integration
+- **Email**: Supabase Edge Functions with universal SMTP support
 - **Deployment**: GitHub Pages → Netlify (planned)
 - **CI/CD**: GitHub Actions with automated survey status management
 - **Automation**: Database functions and triggers for scheduled tasks
@@ -176,6 +179,7 @@ npm run test:coverage # Run tests with coverage
 - `yarn supabase:login` - Login to Supabase CLI
 - `yarn supabase:link` - Link to your Supabase project
 - `yarn supabase:functions:deploy` - Deploy all Edge Functions
+- `yarn supabase:functions:deploy:email` - Deploy email notification function
 - `yarn supabase:functions:deploy:analytics` - Deploy analytics function
 - `yarn supabase:functions:deploy:validation` - Deploy validation function
 
@@ -206,6 +210,7 @@ service-line-survey/
 │   └── main.tsx            # App entry point
 ├── supabase/
 │   └── functions/          # Edge Functions
+│       ├── send-survey-email/   # Email notification function
 │       ├── survey-analytics/    # Analytics function
 │       └── survey-validation/   # Validation function
 ├── scripts/                # Database and utility scripts
@@ -291,6 +296,7 @@ npm run build
 - **Audit Trail**: Complete logging of all system changes and user actions
 - **Slug-based URLs**: Human-readable survey links for better user experience
 - **Security**: Admin authentication and reCAPTCHA spam protection
+- **Email Notifications**: Automatic survey completion emails with professional HTML formatting
 
 ### Environment Variables
 
@@ -300,6 +306,22 @@ npm run build
 | `VITE_SUPABASE_ANON_KEY`   | Supabase anon key         | Yes      |
 | `VITE_ADMIN_PASSWORD`       | Admin panel password      | Yes      |
 
+### SMTP Configuration (for Email Notifications)
+
+To enable email notifications, configure these Supabase secrets:
+
+| Secret Name      | Description                    | Required for Email |
+| ---------------- | ------------------------------ | ------------------ |
+| `SMTP_HOST`      | SMTP server hostname           | Yes                |
+| `SMTP_PORT`      | SMTP server port (usually 587) | Yes                |
+| `SMTP_USERNAME`  | SMTP authentication username   | Yes                |
+| `SMTP_PASSWORD`  | SMTP authentication password   | Yes                |
+| `ADMIN_EMAIL`    | Admin email for copies         | Optional           |
+
+Set these using the Supabase CLI: `npx supabase secrets set SMTP_HOST=your-host`
+
+See [SMTP_EMAIL_SETUP.md](./docs/SMTP_EMAIL_SETUP.md) for detailed configuration instructions.
+
 ### Database Setup
 
 Set up your Supabase database:
@@ -307,9 +329,10 @@ Set up your Supabase database:
 1. Create a Supabase project at [https://supabase.com](https://supabase.com)
 2. Run the setup script from `scripts/setup-supabase.sql`
 3. Configure environment variables
-4. Includes automated status management and advanced features
+4. Set up SMTP secrets for email notifications (optional)
+5. Includes automated status management and advanced features
 
-See [DATABASE_SETUP.md](./docs/DATABASE_SETUP.md) and [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for detailed setup instructions.
+See [DATABASE_SETUP.md](./docs/DATABASE_SETUP.md), [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md), and [SMTP_EMAIL_SETUP.md](./docs/SMTP_EMAIL_SETUP.md) for detailed setup instructions.
 
 ## 🧪 Testing
 
@@ -412,6 +435,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Security Improvements**: Updated deployment workflow to use GitHub secrets instead of environment files for secure Supabase configuration
 - **Documentation**: Added comprehensive GitHub secrets setup guide for secure deployment
 - **Visualization Upgrade**: Migrated from CSS-based charts to Apache ECharts for enhanced data visualization capabilities
+- **Email Notifications**: Added SMTP email system with automatic survey completion notifications
+- **Universal SMTP Support**: Works with Gmail, Exchange, Mailtrap, and any SMTP provider
 
 ### Previous Versions
 

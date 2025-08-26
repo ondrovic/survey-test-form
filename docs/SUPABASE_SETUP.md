@@ -149,11 +149,18 @@ yarn supabase:link --project-ref YOUR_PROJECT_REF
 yarn supabase:functions:deploy
 
 # Or deploy individually
+npx supabase functions deploy send-survey-email
 yarn supabase:functions:deploy:analytics
 yarn supabase:functions:deploy:validation
 ```
 
 ### Available Functions
+
+**send-survey-email**
+- Automatic email notifications on survey completion
+- Universal SMTP support (Gmail, Exchange, Mailtrap, etc.)
+- Professional HTML and plain text email formatting
+- Dynamic email field detection in survey responses
 
 **survey-analytics**
 - Real-time analytics and reporting
@@ -172,6 +179,22 @@ yarn supabase:functions:deploy:validation
 After deployment, you can call them from your application:
 
 ```typescript
+// Send Survey Email (called automatically on survey completion)
+const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-survey-email`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${session.access_token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    surveyInstanceId: 'survey-instance-id',
+    sessionId: 'session-id',
+    recipientEmail: 'user@example.com',
+    surveyResponses: { field1: 'value1', field2: 'value2' },
+    surveyTitle: 'My Survey'
+  })
+});
+
 // Survey Analytics
 const response = await fetch(`${supabaseUrl}/functions/v1/survey-analytics`, {
   method: 'POST',
@@ -199,6 +222,67 @@ const validation = await fetch(`${supabaseUrl}/functions/v1/survey-validation`, 
 });
 ```
 
+## 6.5: Configure Email Notifications (Optional)
+
+To enable automatic email notifications when surveys are completed:
+
+### Set SMTP Secrets
+
+Configure SMTP settings using the Supabase CLI:
+
+```bash
+# Required SMTP settings
+npx supabase secrets set SMTP_HOST=your-smtp-host
+npx supabase secrets set SMTP_PORT=587
+npx supabase secrets set SMTP_USERNAME=your-email@example.com
+npx supabase secrets set SMTP_PASSWORD=your-password
+
+# Optional: Admin email for receiving copies
+npx supabase secrets set ADMIN_EMAIL=admin@yourcompany.com
+```
+
+### SMTP Provider Examples
+
+**Gmail:**
+```bash
+npx supabase secrets set SMTP_HOST=smtp.gmail.com
+npx supabase secrets set SMTP_PORT=587
+npx supabase secrets set SMTP_USERNAME=your-gmail@gmail.com
+npx supabase secrets set SMTP_PASSWORD=your-app-password  # Use App Password, not regular password
+```
+
+**Exchange/Outlook:**
+```bash
+npx supabase secrets set SMTP_HOST=smtp-mail.outlook.com
+npx supabase secrets set SMTP_PORT=587
+npx supabase secrets set SMTP_USERNAME=your-email@outlook.com
+npx supabase secrets set SMTP_PASSWORD=your-password
+```
+
+**Mailtrap (for testing):**
+```bash
+npx supabase secrets set SMTP_HOST=sandbox.smtp.mailtrap.io
+npx supabase secrets set SMTP_PORT=2525
+npx supabase secrets set SMTP_USERNAME=your-mailtrap-username
+npx supabase secrets set SMTP_PASSWORD=your-mailtrap-password
+```
+
+### Deploy Email Function
+
+```bash
+npx supabase functions deploy send-survey-email
+```
+
+### Test Email Configuration
+
+The system automatically:
+- Detects email fields in survey responses (looks for fields containing 'email')
+- Sends professional HTML and plain text emails
+- Works with any SMTP provider
+- Fails gracefully (survey completion works even if email fails)
+
+📖 **Detailed Guide**: See [SMTP_EMAIL_SETUP.md](./SMTP_EMAIL_SETUP.md) for comprehensive instructions.
+
 ## 7. Configure Automation (Required for Production)
 
 ### GitHub Secrets Setup
@@ -215,6 +299,8 @@ For the automated survey status management to work, you need to configure GitHub
    | `SUPABASE_SERVICE_ROLE_KEY` | **Service role key (important!)** | Supabase → Settings → API |
 
    ⚠️ **Important**: The `SUPABASE_SERVICE_ROLE_KEY` is different from the anon key and is required for the automation to work.
+
+   **Note**: SMTP secrets are set separately using the Supabase CLI and are not added to GitHub secrets.
 
 ### Test the Automation
 
@@ -254,6 +340,12 @@ When you're ready for production:
 4. **Missing tables**
    - Re-run the setup script in the Supabase SQL Editor
    - Check the database schema in the Table Editor
+
+5. **Email notifications not working**
+   - Verify SMTP secrets are set: `npx supabase secrets list`
+   - Check Edge Function logs in Supabase dashboard
+   - Ensure the send-survey-email function is deployed
+   - Test with Mailtrap for debugging
 
 ### Useful Supabase Dashboard Sections:
 

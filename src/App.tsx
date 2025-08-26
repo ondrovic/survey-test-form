@@ -248,6 +248,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
     }, [loadSurveyConfig]);
 
     const handleSubmit = useCallback(async (responses: Record<string, any>) => {
+        console.log('🚀 [EMAIL-DEBUG-v1] App.tsx handleSubmit called with responses:', responses);
         if (!instance || !surveyConfig) {
             console.error('❌ No instance or survey config available, cannot submit');
             showError('Survey configuration not found');
@@ -339,7 +340,8 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 throw new Error(`Database connection failed: ${connError instanceof Error ? connError.message : 'Unknown error'}`);
             }
             
-            console.log('Submitting survey response to database...', surveyResponse);
+            console.log('🚀 [EMAIL-DEBUG-v2] Submitting survey response to database...', surveyResponse);
+            console.log('🚀 [EMAIL-DEBUG-v2] Original responses for email:', responses);
             
             // Add timeout wrapper for mobile connections
             const submissionPromise = databaseHelpers.addSurveyResponse(surveyResponse);
@@ -347,12 +349,45 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
                 setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000);
             });
             
-            await Promise.race([submissionPromise, timeoutPromise]);
+            try {
+                await Promise.race([submissionPromise, timeoutPromise]);
+                console.log('✅ Database submission completed successfully');
+            } catch (submissionError) {
+                console.error('❌ Database submission error:', submissionError);
+                throw submissionError;
+            }
             
-            // Mark session as completed
-            if (surveySession.session.sessionId) {
-                await surveySession.completeSession();
-                console.log('Survey session marked as completed');
+            console.log('🔧 About to start session completion - if this is the last log you see, there\'s a silent error!');
+            
+            // Add window error handler to catch any silent errors
+            const originalHandler = window.onerror;
+            window.onerror = (message, source, lineno, colno, error) => {
+                console.error('🚨 CAUGHT SILENT ERROR:', { message, source, lineno, colno, error });
+                if (originalHandler) originalHandler(message, source, lineno, colno, error);
+                return true;
+            };
+            
+            // Mark session as completed and send email notification
+            try {
+                console.log('🔍 About to check session completion...');
+                console.log('🔍 Session details:', {
+                    hasSession: !!surveySession,
+                    hasSessionId: !!surveySession?.session?.sessionId,
+                    sessionId: surveySession?.session?.sessionId,
+                    sessionStatus: surveySession?.session?.status
+                });
+                
+                if (surveySession.session.sessionId) {
+                    await surveySession.completeSession({
+                        responses,
+                        surveyTitle: surveyConfig.title
+                    });
+                } else {
+                    console.log('❌ No session ID found, skipping session completion');
+                }
+            } catch (sessionError) {
+                console.error('❌ Session completion error:', sessionError);
+                // Don't throw - continue with success message even if session completion fails
             }
             
             console.log('Survey response submitted successfully!');

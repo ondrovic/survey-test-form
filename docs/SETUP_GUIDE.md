@@ -10,6 +10,7 @@ The Survey Framework is a comprehensive application that provides:
 - **Automated Status Management**: Time-based survey activation/deactivation
 - **Data Visualization**: Interactive ECharts-powered charts and analytics
 - **Import/Export**: Full system backup and restore capabilities
+- **Email Notifications**: Automatic SMTP email notifications on survey completion
 
 ## Prerequisites
 
@@ -49,6 +50,53 @@ npm install
    VITE_SUPABASE_ANON_KEY=your-anon-key
    VITE_ADMIN_PASSWORD=your-secure-password
    ```
+3. **Optional: Configure SMTP for email notifications** (see Step 2.5 below)
+
+## Step 2.5: Configure Email Notifications (Optional)
+
+The Survey Framework can automatically send email notifications to participants when they complete surveys.
+
+**SMTP Configuration:**
+
+Set up SMTP secrets in your Supabase project:
+
+```bash
+# Gmail example
+npx supabase secrets set SMTP_HOST=smtp.gmail.com
+npx supabase secrets set SMTP_PORT=587
+npx supabase secrets set SMTP_USERNAME=your-gmail@gmail.com
+npx supabase secrets set SMTP_PASSWORD=your-app-password
+
+# Exchange/Outlook example
+npx supabase secrets set SMTP_HOST=smtp-mail.outlook.com
+npx supabase secrets set SMTP_PORT=587
+npx supabase secrets set SMTP_USERNAME=your-email@outlook.com
+npx supabase secrets set SMTP_PASSWORD=your-password
+
+# Mailtrap (for testing) example
+npx supabase secrets set SMTP_HOST=sandbox.smtp.mailtrap.io
+npx supabase secrets set SMTP_PORT=2525
+npx supabase secrets set SMTP_USERNAME=your-mailtrap-username
+npx supabase secrets set SMTP_PASSWORD=your-mailtrap-password
+
+# Optional: Admin email for receiving copies
+npx supabase secrets set ADMIN_EMAIL=admin@yourcompany.com
+```
+
+**Deploy the Email Edge Function:**
+
+```bash
+# Deploy the email function
+npx supabase functions deploy send-survey-email
+```
+
+**How it works:**
+- Automatically detects email fields in survey responses
+- Sends professional HTML and plain text emails
+- Works with any SMTP provider (Gmail, Exchange, Mailtrap, etc.)
+- Non-blocking: survey completion works even if email fails
+
+📖 **Detailed Guide**: See [SMTP_EMAIL_SETUP.md](./SMTP_EMAIL_SETUP.md) for comprehensive instructions.
 
 ## Step 3: Local Development
 
@@ -64,6 +112,7 @@ npm run dev
 2. ✅ Admin panel is accessible at `/admin`
 3. ✅ You can create survey configurations
 4. ✅ Database connection is working
+5. ✅ Email notifications work (if configured)
 
 ## Step 4: GitHub Setup for Deployment
 
@@ -77,6 +126,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For automation
 VITE_ADMIN_PASSWORD=your-secure-password
+# Email secrets are set separately using supabase CLI
 ```
 
 **📖 Detailed Instructions:** See [GITHUB_SECRETS_SETUP.md](./GITHUB_SECRETS_SETUP.md)
@@ -157,6 +207,7 @@ node scripts/test-status-automation.js
 ✅ **Full Import/Export**: Complete system backup and restore capabilities  
 ✅ **GitHub Actions Integration**: Scheduled automation workflows  
 ✅ **SQL Database**: PostgreSQL with advanced query capabilities  
+✅ **Email Notifications**: Universal SMTP support for automatic survey completion emails  
 ✅ **Predictable Pricing**: Fixed-tier pricing model
 
 ## Next Steps
@@ -179,6 +230,7 @@ node scripts/test-status-automation.js
 - **[README.md](./README.md)** - Overview and quick start
 - **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Database provider comparison
 - **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** - Detailed Supabase setup
+- **[SMTP_EMAIL_SETUP.md](./SMTP_EMAIL_SETUP.md)** - Email notification configuration
 - **[GITHUB_SECRETS_SETUP.md](./GITHUB_SECRETS_SETUP.md)** - GitHub deployment setup
 - **[ADMIN_PASSWORD_SETUP.md](./ADMIN_PASSWORD_SETUP.md)** - Admin security setup
 
