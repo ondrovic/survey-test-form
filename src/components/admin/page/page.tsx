@@ -192,9 +192,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
         adminOperations.deleteSelectOptionSet(optionSetId, optionSetName);
     };
 
-    const handleDownloadAllData = () => {
-        adminOperations.downloadFrameworkData();
-    };
 
     // Authentication screen
     if (!isAuthenticated) {
@@ -240,7 +237,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
                         {activeTab === 'overview' && (
                             <AdminOverview
                                 onCreateNewSurvey={handleCreateNewSurvey}
-                                onDownloadAllData={handleDownloadAllData}
                                 onNavigateToTab={handleSetActiveTab}
                             />
                         )}

@@ -1,4 +1,5 @@
 import { Button } from '@/components/common';
+import { Plus } from 'lucide-react';
 import React from 'react';
 
 interface OverviewCardProps {
@@ -19,19 +20,22 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({
     className = ''
 }) => {
     return (
-        <div className={`bg-white p-6 rounded-lg shadow ${className}`}>
-            <h3 className="text-lg font-semibold mb-4">{title}</h3>
-            <div className="space-y-2 mb-6">
-                <p className="text-sm text-gray-600">{description}</p>
-                <div className="text-sm">
+        <div className={`bg-white p-6 rounded-lg shadow flex flex-col h-full ${className}`}>
+            <div className="flex-grow flex flex-col">
+                <h3 className="text-lg font-semibold mb-4">{title}</h3>
+                <p className="text-sm text-gray-600 mb-6 flex-shrink-0">{description}</p>
+                <div className="flex-grow"></div>
+                <div className="text-sm mb-6">
                     {statistics.map((stat, index) => (
-                        <p key={index}>
-                            <strong>{stat.label}:</strong> {stat.value}
-                        </p>
+                        <div key={index} className="flex justify-between items-center mb-1">
+                            <span className="font-medium text-gray-700">{stat.label}:</span>
+                            <span className="text-gray-900">{stat.value}</span>
+                        </div>
                     ))}
                 </div>
             </div>
             <Button onClick={onAction} className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
                 {actionLabel}
             </Button>
         </div>

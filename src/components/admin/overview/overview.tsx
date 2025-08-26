@@ -1,10 +1,8 @@
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import React from 'react';
 import {
-    FrameworkOverviewCard,
-    // LegacyOverviewCard,
     MultiSelectOptionSetsOverviewCard,
-    QuickActionsOverviewCard,
+    OverviewCard,
     RadioOptionSetsOverviewCard,
     RatingScalesOverviewCard,
     SelectOptionSetsOverviewCard
@@ -12,20 +10,17 @@ import {
 
 interface AdminOverviewProps {
     onCreateNewSurvey: () => void;
-    onDownloadAllData: () => void;
-    onNavigateToTab: (tab: 'overview' | 'framework' | 'legacy' | 'option-sets') => void;
+    onNavigateToTab: (tab: 'overview' | 'framework' | 'option-sets') => void;
 }
 
 export const AdminOverview: React.FC<AdminOverviewProps> = ({
     onCreateNewSurvey,
-    onDownloadAllData,
     onNavigateToTab
 }) => {
     const {
         state: {
             surveyConfigs,
             surveyInstances,
-            // surveys,
             ratingScales,
             radioOptionSets,
             multiSelectOptionSets,
@@ -33,22 +28,20 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
         }
     } = useSurveyData();
 
-    // const totalResponses = surveys.reduce((sum, s) => sum + (s.responses?.length || 0), 0);
     const activeInstances = surveyInstances.filter(i => i.isActive).length;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <FrameworkOverviewCard
-                surveyConfigs={surveyConfigs}
-                activeInstances={activeInstances}
-                onNavigateToFramework={() => onNavigateToTab('framework')}
+            <OverviewCard
+                title="Survey Framework"
+                description="Manage survey configurations and instances"
+                statistics={[
+                    { label: "Configurations", value: surveyConfigs.length },
+                    { label: "Active Instances", value: activeInstances }
+                ]}
+                actionLabel="Manage Framework"
+                onAction={() => onNavigateToTab('framework')}
             />
-
-            {/* <LegacyOverviewCard
-                surveys={surveys}
-                totalResponses={totalResponses}
-                onNavigateToLegacy={() => onNavigateToTab('legacy')}
-            /> */}
 
             <RatingScalesOverviewCard
                 ratingScales={ratingScales}
@@ -70,9 +63,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                 onNavigateToOptionSets={() => onNavigateToTab('option-sets')}
             />
 
-            <QuickActionsOverviewCard
-                onCreateNewSurvey={onCreateNewSurvey}
-                onDownloadAllData={onDownloadAllData}
+            <OverviewCard
+                title="Quick Actions"
+                description="Common administrative tasks"
+                statistics={[
+                    { label: "Available Actions", value: "Create survey" }
+                ]}
+                actionLabel="Create New Survey"
+                onAction={onCreateNewSurvey}
             />
         </div>
     );
