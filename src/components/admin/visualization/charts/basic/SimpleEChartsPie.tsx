@@ -6,6 +6,7 @@ interface SimpleEChartsPieProps extends BaseChartProps {
   variant?: 'pie' | 'donut';
   padAngle?: number;
   fieldName?: string; // The actual field/question name
+  showLegend?: boolean; // Controls legend visibility
 }
 
 export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(({
@@ -17,8 +18,11 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
   size = 'normal',
   variant = 'donut',
   padAngle = 5, // Padding angle between segments like the example
-  fieldName = 'Survey Data' // Default fallback
+  fieldName = 'Survey Data', // Default fallback
+  showLegend = size === 'large' // Default: show legend on large modal, hide on small
 }, ref) => {
+  console.log('SimpleEChartsPie props:', { size, showLegend, fieldName });
+  
   const isLarge = size === 'large';
   const isDonut = variant === 'donut';
 
@@ -57,14 +61,21 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
           return `${params.name}<br/>Count: ${originalCount}<br/>Percentage: ${pct}%`;
         }
       },
-      legend: {
-        top: '5%',
-        left: 'center',
-        textStyle: {
-          fontSize: isLarge ? 12 : 10,
-          color: '#666'
+      ...(showLegend && {
+        legend: {
+          top: '5%',
+          left: 'center',
+          textStyle: {
+            fontSize: isLarge ? 12 : 10,
+            color: '#666'
+          },
+          formatter: (name: string) => {
+            const count = counts[name] || 0;
+            const pct = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+            return `${name}: ${count} (${pct}%)`;
+          }
         }
-      },
+      }),
       series: [{
         name: fieldName, // Dynamic field name like "Overall Satisfaction"
         type: 'pie',
@@ -114,7 +125,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         '#d4a574', '#8d98b3', '#e5cf54', '#97b552', '#95706d'
       ]
     };
-  }, [chartData, isLarge, isDonut, padAngle, showPercent]);
+  }, [chartData, isLarge, isDonut, padAngle, showPercent, showLegend, counts, total]);
 
   const containerStyle = {
     height: isLarge ? '650px' : '400px', // Optimized modal size: 650px vs 400px for grid

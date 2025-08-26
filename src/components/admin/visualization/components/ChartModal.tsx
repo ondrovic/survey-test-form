@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type ReactECharts from 'echarts-for-react';
 import { Button } from '@/components/common';
 import { 
@@ -15,6 +15,7 @@ export const ChartModal: React.FC = () => {
   const { state, filters, preferences, closeChartModal } = useVisualization();
   const { selectedChart, isChartModalOpen } = state;
   const modalChartRef = useRef<ReactECharts>(null);
+  const [showLegend, setShowLegend] = useState(true); // Default to true for large modal
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -64,6 +65,7 @@ export const ChartModal: React.FC = () => {
       colorSalt: hashSaltFrom(selectedChart.series.fieldId),
       size: 'large' as const,
       fieldName: selectedChart.series.label, // Pass the field name for ECharts
+      ...(chartType === 'donut' && { showLegend: showLegend }), // Only pass showLegend for charts that support it
       ref: modalChartRef
     };
 
@@ -116,6 +118,29 @@ export const ChartModal: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {(() => {
+              const chartType = preferences.perFieldChartType[selectedChart.series.fieldId] || preferences.defaultChartType;
+              const supportsLegend = chartType === 'donut';
+              
+              console.log('ChartModal Debug:', { chartType, supportsLegend, showLegend });
+              
+              return supportsLegend ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    console.log('Legend toggle clicked! Current showLegend:', showLegend);
+                    setShowLegend(!showLegend);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  {showLegend ? 'Hide' : 'Show'} Legend
+                </Button>
+              ) : null;
+            })()}
             <Button
               variant="outline"
               size="sm"
