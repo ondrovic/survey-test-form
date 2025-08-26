@@ -29,7 +29,7 @@ import { Route, Routes, useNavigate, useParams } from 'react-router-dom';
 /**
  * Main App component that integrates all survey functionality
  */
-function AppContent() {
+const AppContent = () => {
     // Suppress console warnings for passive event listeners
     useEffect(() => {
         suppressConsoleWarnings();
@@ -185,7 +185,7 @@ function AppContent() {
     );
 }
 
-function App() {
+const App = () => {
     return (
         <AppProvider>
             <AppContent />
@@ -194,7 +194,7 @@ function App() {
 }
 
 // Survey Page Component
-function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
+const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
     const [surveyConfig, setSurveyConfig] = useState<SurveyConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -491,7 +491,7 @@ function SurveyPage({ instance }: { instance: SurveyInstance | undefined }) {
 }
 
 // Confirmation Page Component
-function ConfirmationPage({ getSurveyInstanceBySlug }: { getSurveyInstanceBySlug: (slug: string) => SurveyInstance | undefined }) {
+const ConfirmationPage = ({ getSurveyInstanceBySlug }: { getSurveyInstanceBySlug: (slug: string) => SurveyInstance | undefined }) => {
     const { slug } = useParams<{ slug: string }>();
     
     if (!slug) {

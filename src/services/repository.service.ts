@@ -34,13 +34,13 @@ export class RepositoryService {
 let repositoryService: RepositoryService | null = null;
 
 // Initialize repository service
-export function initializeRepositoryService(supabase: SupabaseClient): RepositoryService {
+export const initializeRepositoryService = (supabase: SupabaseClient): RepositoryService => {
   repositoryService = new RepositoryService(supabase);
   return repositoryService;
 }
 
 // Get repository service instance
-export function getRepositoryService(): RepositoryService {
+export const getRepositoryService = (): RepositoryService => {
   if (!repositoryService) {
     throw new Error('Repository service not initialized. Call initializeRepositoryService() first.');
   }
@@ -48,6 +48,6 @@ export function getRepositoryService(): RepositoryService {
 }
 
 // Check if repository service is initialized
-export function isRepositoryServiceInitialized(): boolean {
+export const isRepositoryServiceInitialized = (): boolean => {
   return repositoryService !== null;
 }

@@ -664,7 +664,7 @@ interface SurveyBuilderContextType {
 
 const SurveyBuilderContext = createContext<SurveyBuilderContextType | undefined>(undefined);
 
-export function SurveyBuilderProvider({ children, initialConfig }: { children: ReactNode; initialConfig?: SurveyConfig }) {
+export const SurveyBuilderProvider = ({ children, initialConfig }: { children: ReactNode; initialConfig?: SurveyConfig }) => {
     const [state, dispatch] = useReducer(surveyBuilderReducer, {
         ...initialState,
         config: initialConfig || initialState.config
@@ -832,7 +832,7 @@ export function SurveyBuilderProvider({ children, initialConfig }: { children: R
     );
 }
 
-export function useSurveyBuilder() {
+export const useSurveyBuilder = () => {
     const context = useContext(SurveyBuilderContext);
     if (context === undefined) {
         throw new Error('useSurveyBuilder must be used within a SurveyBuilderProvider');

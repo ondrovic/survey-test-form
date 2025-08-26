@@ -308,10 +308,10 @@ export const databaseHelpers = DatabaseHelperProxy.createProxy<DatabaseHelpers>(
  * Utility function to get current provider info
  * This function provides safe access to provider information without requiring initialization
  */
-export function getDatabaseProviderInfo(): {
+export const getDatabaseProviderInfo = (): {
   provider: string;
   isInitialized: boolean;
-} {
+} => {
   return {
     provider: databaseService.getCurrentProvider(),
     isInitialized: databaseService.isInitialized(),
@@ -323,10 +323,10 @@ export function getDatabaseProviderInfo(): {
  * @param operation Function to execute if database is initialized
  * @param fallback Optional fallback value if database is not initialized
  */
-export function withDatabaseInitialized<T>(
+export const withDatabaseInitialized = <T>(
   operation: () => T,
   fallback?: T
-): T | undefined {
+): T | undefined => {
   if (!databaseService.isInitialized()) {
     if (fallback !== undefined) {
       return fallback;

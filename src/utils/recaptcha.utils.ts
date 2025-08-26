@@ -89,7 +89,7 @@ export async function verifyReCaptchaTokenClientSide(
  * Get reCAPTCHA site key from environment variables
  * @returns string | undefined - The site key or undefined if not configured
  */
-export function getReCaptchaSiteKey(): string | undefined {
+export const getReCaptchaSiteKey = (): string | undefined => {
   return import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 }
 
@@ -97,7 +97,7 @@ export function getReCaptchaSiteKey(): string | undefined {
  * Check if reCAPTCHA is properly configured
  * @returns boolean - Whether reCAPTCHA is configured
  */
-export function isReCaptchaConfigured(): boolean {
+export const isReCaptchaConfigured = (): boolean => {
   return !!getReCaptchaSiteKey();
 }
 

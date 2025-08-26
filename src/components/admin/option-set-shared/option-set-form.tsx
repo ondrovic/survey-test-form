@@ -66,7 +66,7 @@ interface OptionSetFormProps<TOption extends OptionLike> {
     }) => React.ReactNode;
 }
 
-export function OptionSetForm<TOption extends OptionLike>(props: OptionSetFormProps<TOption>) {
+export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormProps<TOption>) => {
     const {
         title,
         loading = false,

@@ -1,6 +1,6 @@
 import { DatabaseConfig, DatabaseProvider } from '../types/database.types';
 
-export function createDatabaseConfig(): DatabaseConfig {
+export const createDatabaseConfig = (): DatabaseConfig => {
   const provider = (import.meta.env.VITE_DATABASE_PROVIDER || 'supabase') as DatabaseProvider;
 
   const config: DatabaseConfig = {
@@ -23,7 +23,7 @@ export function createDatabaseConfig(): DatabaseConfig {
   return config;
 }
 
-export function validateDatabaseConfig(config: DatabaseConfig): void {
+export const validateDatabaseConfig = (config: DatabaseConfig): void => {
   switch (config.provider) {
     case 'supabase':
       if (!config.supabase) {

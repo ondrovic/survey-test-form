@@ -1,10 +1,10 @@
 import { UseLocalStorageReturn } from "@/types";
 import { useCallback, useEffect, useState } from "react";
 
-export function useLocalStorage<T>(
+export const useLocalStorage = <T>(
   key: string,
   defaultValue: T
-): UseLocalStorageReturn<T> {
+): UseLocalStorageReturn<T> => {
   const [value, setValue] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key);

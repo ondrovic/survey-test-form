@@ -10,11 +10,11 @@ export interface ExcelExportOptions {
 /**
  * Downloads framework survey responses as an Excel file with proper ordering based on survey configuration
  */
-export function downloadFrameworkResponsesAsExcel(
+export const downloadFrameworkResponsesAsExcel = (
   responses: SurveyResponse[],
   surveyConfig?: SurveyConfig,
   options: ExcelExportOptions = {}
-): void {
+): void => {
   const {
     filename = "framework-survey-data.xlsx",
     sheetName = "Survey Responses",
