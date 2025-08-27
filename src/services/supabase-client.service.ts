@@ -128,6 +128,15 @@ export class SupabaseClientService {
   }
 
   /**
+   * Get the current client without throwing (returns null if not initialized)
+   * Used for error logging to prevent recursive errors
+   */
+  getClientSafe(): SupabaseClient | null {
+    return this.globalClient;
+  }
+
+
+  /**
    * Create a temporary admin client for privileged operations
    * This client is created on-demand and not cached to avoid multiple client issues
    */

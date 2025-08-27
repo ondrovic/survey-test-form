@@ -17,6 +17,7 @@
 -- The order doesn't matter as much with CASCADE, but we'll be systematic
 
 -- Drop analytics and tracking tables  
+DROP TABLE IF EXISTS error_logs CASCADE;
 DROP TABLE IF EXISTS survey_instance_status_changes CASCADE;
 
 -- Drop main survey tables (these have the primary keys others reference)
@@ -47,6 +48,11 @@ DROP FUNCTION IF EXISTS update_session_status() CASCADE;
 DROP FUNCTION IF EXISTS check_session_status_on_update() CASCADE;
 DROP FUNCTION IF EXISTS cleanup_survey_sessions() CASCADE;
 DROP FUNCTION IF EXISTS get_session_analytics(UUID, INTEGER) CASCADE;
+
+-- Drop error logging functions
+DROP FUNCTION IF EXISTS log_error CASCADE;
+DROP FUNCTION IF EXISTS get_error_statistics(INTEGER, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS cleanup_error_logs(INTEGER) CASCADE;
 
 -- Drop RLS helper functions
 DROP FUNCTION IF EXISTS is_admin() CASCADE;
@@ -131,6 +137,12 @@ BEGIN
   
   BEGIN
     ALTER PUBLICATION supabase_realtime DROP TABLE survey_instance_status_changes;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
+  
+  BEGIN
+    ALTER PUBLICATION supabase_realtime DROP TABLE error_logs;
   EXCEPTION WHEN OTHERS THEN
     NULL;
   END;

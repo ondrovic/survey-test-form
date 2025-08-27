@@ -7,10 +7,11 @@ import {
     RatingScalesOverviewCard,
     SelectOptionSetsOverviewCard
 } from './index';
+import { SimpleErrorLogsOverview } from '@/components/admin/error-logs/simple-error-logs-overview';
 
 interface AdminOverviewProps {
     onCreateNewSurvey: () => void;
-    onNavigateToTab: (tab: 'overview' | 'framework' | 'option-sets') => void;
+    onNavigateToTab: (tab: 'overview' | 'framework' | 'option-sets' | 'error-logs') => void;
 }
 
 export const AdminOverview: React.FC<AdminOverviewProps> = ({
@@ -61,6 +62,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             <SelectOptionSetsOverviewCard
                 selectOptionSets={selectOptionSets}
                 onNavigateToOptionSets={() => onNavigateToTab('option-sets')}
+            />
+
+            <SimpleErrorLogsOverview
+                onNavigateToErrorLogs={() => onNavigateToTab('error-logs')}
             />
 
             <OverviewCard

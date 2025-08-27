@@ -1,3 +1,4 @@
+import { logError } from '@/utils/error-logging.utils';
 import {
   AuthHelpers,
   DatabaseConfig,
@@ -45,8 +46,16 @@ class DatabaseService {
           this.provider = SupabaseProvider;
           break;
         }
-        default:
-          throw new Error(`Unknown database provider: ${config.provider}`);
+        default: {
+          const error = new Error(`Unknown database provider: ${config.provider}`);
+          await logError('Database initialization failed', error, {
+            severity: 'critical',
+            componentName: 'DatabaseService',
+            userAction: 'Database initialization',
+            additionalContext: { provider: config.provider }
+          });
+          throw error;
+        }
       }
     }
 

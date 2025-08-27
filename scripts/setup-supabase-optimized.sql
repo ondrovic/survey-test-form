@@ -851,6 +851,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE survey_instances;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_sessions;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_responses;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_instance_status_changes;
+ALTER PUBLICATION supabase_realtime ADD TABLE error_logs;
+
+-- Apply error logging migration
+\i 20250827000000_error_logging_system.sql
 
 -- Print completion message
 DO $$
@@ -868,6 +872,7 @@ BEGIN
     RAISE NOTICE '   - Advanced completion time tracking';
     RAISE NOTICE '   - Session analytics and cleanup functions';
     RAISE NOTICE '   - pg_cron automated survey and session management';
+    RAISE NOTICE '   - Comprehensive error logging system';
     RAISE NOTICE '';
     RAISE NOTICE '🧹 Session Management:';
     RAISE NOTICE '   - Sessions auto-abandon after 30 minutes of inactivity';
@@ -876,8 +881,15 @@ BEGIN
     RAISE NOTICE '   - Call cleanup_survey_sessions() for manual cleanup';
     RAISE NOTICE '   - Call get_session_analytics() for session stats';
     RAISE NOTICE '';
+    RAISE NOTICE '🛠️ Error Logging:';
+    RAISE NOTICE '   - Comprehensive error tracking with deduplication';
+    RAISE NOTICE '   - Context-aware logging (component, file, line)';
+    RAISE NOTICE '   - Automated error categorization and resolution tracking';
+    RAISE NOTICE '   - Call log_error() function for manual error logging';
+    RAISE NOTICE '   - Call get_error_statistics() for error analytics';
+    RAISE NOTICE '';
     RAISE NOTICE '🚀 Next steps:';
     RAISE NOTICE '   1. Deploy Edge Functions (optional): supabase functions deploy';
     RAISE NOTICE '   2. Test your application with the optimized database';
-    RAISE NOTICE '   3. Your sessions will now be managed automatically!';
+    RAISE NOTICE '   3. Your sessions and errors will now be managed automatically!';
 END $$;

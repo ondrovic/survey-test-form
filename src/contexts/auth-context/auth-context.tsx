@@ -1,4 +1,5 @@
 import { authHelpers, initializeDatabase, retryDatabaseInitialization } from "@/config/database";
+import { logCriticalError } from "@/utils/error-logging.utils";
 import { cookieUtils } from "@/utils/cookie.utils";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -82,6 +83,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     await retryDatabaseInitialization();
                 } catch (dbError) {
                     console.error("❌ AuthContext - Database initialization failed after retries:", dbError);
+                    await logCriticalError(
+                        "Database initialization failed after retries in AuthContext", 
+                        dbError instanceof Error ? dbError : new Error(String(dbError)),
+                        'AuthProvider',
+                        'Database initialization'
+                    );
                     // Try once more with the regular method in case it's a transient issue
                     await initializeDatabase();
                 }

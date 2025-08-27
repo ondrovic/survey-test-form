@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 import { Button } from '../../ui/button';
 
 interface Props {
@@ -24,6 +25,23 @@ export class ErrorBoundary extends Component<Props, State> {
 
     override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('Error caught by boundary:', error, errorInfo);
+        
+        // Log error to our error logging service
+        ErrorLoggingService.logUnhandledError(error, { 
+            componentStack: errorInfo.componentStack || undefined 
+        }, {
+            severity: 'high',
+            tags: ['react', 'error-boundary'],
+            userAction: 'Component rendered',
+            additionalContext: {
+                componentStack: errorInfo.componentStack || undefined,
+                errorBoundary: true,
+                timestamp: new Date().toISOString()
+            }
+        }).catch(logErr => {
+            console.error('Failed to log error to service:', logErr);
+        });
+
         this.props.onError?.(error, errorInfo);
     }
 

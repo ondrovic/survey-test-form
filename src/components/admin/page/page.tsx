@@ -1,5 +1,6 @@
 
 import { AdminAuth } from '@/components/admin/auth';
+import { SimpleErrorLogsPage } from '@/components/admin/error-logs/simple-error-logs-page';
 import { AdminFramework } from '@/components/admin/framework';
 import { AdminHeader } from '@/components/admin/header';
 import {
@@ -36,7 +37,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
         logout();
     };
 
-    const handleSetActiveTab = (tab: 'overview' | 'framework' | 'legacy' | 'option-sets') => {
+    const handleSetActiveTab = (tab: 'overview' | 'framework' | 'legacy' | 'option-sets' | 'error-logs') => {
         setActiveTab(tab);
     };
 
@@ -213,6 +214,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
                             { id: 'overview', label: 'Overview' },
                             { id: 'framework', label: 'Survey Framework' },
                             { id: 'option-sets', label: 'Option Sets' },
+                            { id: 'error-logs', label: 'Error Logs' },
                             // { id: 'legacy', label: 'Legacy Surveys' },
                         ].map((tab) => (
                             <button
@@ -268,6 +270,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
                                 onEditSelectOptionSet={handleEditSelectOptionSet}
                                 onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
                             />
+                        )}
+
+                        {activeTab === 'error-logs' && (
+                            <SimpleErrorLogsPage />
                         )}
                     </div>
                 </div>
