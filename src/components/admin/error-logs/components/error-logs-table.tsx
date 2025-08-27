@@ -6,7 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { clsx } from 'clsx';
-import { ErrorLogTableProps, SortField, SortDirection } from '../error-logs.types';
+import { ErrorLogTableProps, SortField, SortDirection, ErrorStatus } from '../error-logs.types';
 import { ErrorLogStatusBadge, getSeverityColorClasses } from './error-log-status-badge';
 
 const sortableColumns: { key: SortField; label: string; className?: string }[] = [
@@ -158,7 +158,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div className="bg-white shadow-sm rounded-lg border border-gray-200 w-full min-w-0">
       {/* Bulk Actions Bar */}
       {selectedErrors.length > 0 && (
         <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
@@ -190,8 +190,8 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -439,17 +439,154 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
         </div>
       </div>
 
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-4 p-2 w-full min-w-0" style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}>
+        {errors.map((error) => {
+          const isExpanded = expandedRows.has(error.id);
+          const isSelected = selectedErrors.includes(error.id);
+          const formatted = formatDate(error.occurred_at);
+          const severityColors = getSeverityColorClasses(error.severity);
+
+          return (
+            <div
+              key={error.id}
+              className={clsx(
+                "bg-white border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden",
+                isSelected ? "border-blue-300 bg-blue-50" : "border-gray-200"
+              )}
+              style={{maxWidth: '100%', boxSizing: 'border-box', width: '100%'}}
+            >
+              {/* Card Header */}
+              <div className="flex items-start justify-between mb-2 gap-2">
+                <div className="flex items-center space-x-2 min-w-0 flex-1">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => handleSelectRow(error.id, e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 flex-shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1">
+                      <ErrorLogStatusBadge status={error.status} />
+                      <span className={clsx("px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap", severityColors)}>
+                        {error.severity}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 truncate">
+                      {formatted.date} at {formatted.time}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggleRowExpansion(error.id)}
+                  className="text-gray-400 hover:text-gray-600 p-1 flex-shrink-0"
+                >
+                  <svg
+                    className={clsx("h-4 w-4 transition-transform", isExpanded ? "rotate-90" : "")}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Error Message */}
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-gray-900 mb-1">Error Message</h4>
+                <p className="text-sm text-gray-700 break-words">
+                  {isExpanded ? error.error_message : truncateMessage(error.error_message, 100)}
+                </p>
+              </div>
+
+              {/* Component and File Path */}
+              {(error.component_name || error.file_path) && (
+                <div className="mb-3">
+                  <h4 className="text-sm font-medium text-gray-900 mb-1">Component/File</h4>
+                  <div className="text-sm text-gray-600">
+                    {error.component_name && (
+                      <div className="font-medium">{error.component_name}</div>
+                    )}
+                    {error.file_path && (
+                      <div className="text-xs text-gray-400 font-mono break-all w-full" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>{error.file_path}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* User and Actions Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100">
+                <div className="text-sm text-gray-600 min-w-0 flex-1">
+                  {error.user_email ? (
+                    <span className="truncate">User: {error.user_email}</span>
+                  ) : (
+                    <span>Anonymous user</span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <button
+                    onClick={() => onSelectError(error)}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    View Details
+                  </button>
+                  {onUpdateStatus && (
+                    <select
+                      value={error.status}
+                      onChange={(e) => onUpdateStatus(error.id, e.target.value as ErrorStatus)}
+                      className="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                    >
+                      <option value="open">Open</option>
+                      <option value="investigating">Investigating</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="ignored">Ignored</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                  {error.stack_trace && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Stack Trace</h4>
+                      <pre className="text-xs bg-gray-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap">
+                        {error.stack_trace}
+                      </pre>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-900">Error ID:</span>
+                      <br />
+                      <span className="text-gray-600 font-mono text-xs">{error.id}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">Occurred:</span>
+                      <br />
+                      <span className="text-gray-600">{new Date(error.occurred_at).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {/* Pagination */}
-      <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white px-2 sm:px-4 md:px-6 py-3 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
           {/* Results Info */}
-          <div className="flex items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0">
             <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{startItem}</span> to{' '}
-              <span className="font-medium">{endItem}</span> of{' '}
-              <span className="font-medium">{totalCount}</span> results
+              <span className="sm:hidden font-medium">{startItem}-{endItem} / {totalCount}</span>
+              <span className="hidden sm:inline">Showing <span className="font-medium">{startItem}</span> to <span className="font-medium">{endItem}</span> of <span className="font-medium">{totalCount}</span> results</span>
             </p>
-            <div className="ml-4 flex items-center space-x-2">
+            <div className="sm:ml-4 flex items-center space-x-2">
               <label htmlFor="pageSize" className="text-sm text-gray-700">
                 Show:
               </label>
@@ -469,7 +606,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2 overflow-x-auto">
             <button
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1}
@@ -491,7 +628,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                   <button
                     onClick={() => onPageChange(Number(pageNum))}
                     className={clsx(
-                      "relative inline-flex items-center px-4 py-2 text-sm font-medium border rounded-md",
+                      "relative inline-flex items-center px-2 sm:px-4 py-2 text-sm font-medium border rounded-md whitespace-nowrap",
                       page === pageNum
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-white text-gray-500 border-gray-300 hover:bg-gray-50"

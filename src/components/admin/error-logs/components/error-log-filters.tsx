@@ -119,10 +119,10 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
       {/* Search Bar and Quick Actions */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="p-3 sm:p-4 border-b border-gray-200">
+        <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
           {/* Search Input */}
-          <div className="flex-1">
+          <div className="w-full">
             <Controller
               name="search"
               control={control}
@@ -138,6 +138,7 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
                     type="text"
                     placeholder="Search error messages, components, or file paths..."
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}
                     onChange={(e) => {
                       field.onChange(e);
                       handleQuickSearch(e.target.value);
@@ -149,7 +150,7 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 w-full justify-center sm:justify-end">
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}

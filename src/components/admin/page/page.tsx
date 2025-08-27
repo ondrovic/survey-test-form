@@ -253,7 +253,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
 
                     {/* Page Content */}
                     <main className="flex-1 overflow-y-auto bg-amber-50/30">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <div className="max-w-7xl mx-auto px-1 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-8 w-full min-w-0">
                             {activePage === 'overview' && (
                                 <AdminOverview
                                     onCreateNewSurvey={handleCreateNewSurvey}

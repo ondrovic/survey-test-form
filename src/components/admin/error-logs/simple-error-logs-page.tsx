@@ -140,14 +140,14 @@ export const SimpleErrorLogsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-0 sm:p-2 md:p-4 lg:p-6 w-full min-w-0">
       {/* Title and description removed - displayed in top navigation bar */}
 
       {/* Search and Filter Controls */}
-      <div className="mb-6 space-y-4">
+      <div className="mb-4 sm:mb-6 space-y-4 w-full max-w-full overflow-hidden" style={{boxSizing: 'border-box'}}>
         {/* Search */}
-        <div className="flex items-center space-x-4">
-          <div className="flex-1 relative">
+        <div className="flex flex-col space-y-4 w-full">
+          <div className="w-full relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -159,12 +159,13 @@ export const SimpleErrorLogsPage: React.FC = () => {
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}
             />
           </div>
           
           {/* Page Size Selector */}
-          <div className="flex items-center space-x-2">
-            <label htmlFor="pageSize" className="text-sm font-medium text-gray-700">Show:</label>
+          <div className="flex items-center space-x-2 w-full justify-center sm:justify-start">
+            <label htmlFor="pageSize" className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
             <select
               id="pageSize"
               value={pageSize}
@@ -181,9 +182,9 @@ export const SimpleErrorLogsPage: React.FC = () => {
         </div>
 
         {/* Severity Filter */}
-        <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium text-gray-700">Filter by severity:</span>
-          <div className="flex space-x-2">
+        <div className="flex flex-col space-y-2 w-full">
+          <span className="text-sm font-medium text-gray-700 text-center sm:text-left">Filter by severity:</span>
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {['critical', 'high', 'medium', 'low'].map((severity) => (
               <button
                 key={severity}
@@ -222,8 +223,9 @@ export const SimpleErrorLogsPage: React.FC = () => {
           <p className="text-green-800">No error logs found. This is good! 🎉</p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="overflow-x-auto">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg w-full min-w-0" style={{boxSizing: 'border-box'}}>
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -290,12 +292,69 @@ export const SimpleErrorLogsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3 p-2 w-full min-w-0" style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}>
+            {errors.map((log) => (
+              <div key={log.id} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden" style={{maxWidth: '100%', boxSizing: 'border-box', width: '100%'}}>
+                {/* Card Header */}
+                <div className="flex items-start justify-between mb-2 gap-2">
+                  <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityColor(log.severity)}`}>
+                      {log.severity}
+                    </span>
+                    <div className="text-xs text-gray-500 truncate">
+                      {new Date(log.occurred_at).toLocaleString()}
+                    </div>
+                  </div>
+                  {log.stack_trace && (
+                    <button 
+                      onClick={() => handleViewStack(log)}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 border border-blue-300 rounded flex-shrink-0"
+                      title="Click to view stack trace details"
+                    >
+                      View Stack
+                    </button>
+                  )}
+                </div>
+
+                {/* Error Message */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-medium text-gray-900 mb-1">Error Message</h4>
+                  <p className="text-sm text-gray-700 break-words">
+                    {log.error_message}
+                  </p>
+                </div>
+
+                {/* Component and File Path */}
+                {(log.component_name || log.file_path) && (
+                  <div className="mb-3">
+                    <h4 className="text-sm font-medium text-gray-900 mb-1">Component/File</h4>
+                    <div className="text-sm text-gray-600">
+                      {log.component_name && (
+                        <div className="font-medium">{log.component_name}</div>
+                      )}
+                      {log.file_path && (
+                        <div className="text-xs text-gray-400 font-mono break-all w-full" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>{log.file_path}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* User */}
+                <div className="text-sm text-gray-600 pt-3 border-t border-gray-100">
+                  <span className="font-medium">User:</span> {log.user_email || 'Anonymous'}
+                </div>
+              </div>
+            ))}
+          </div>
           
           {/* Pagination Controls */}
-          <div className="bg-gray-50 px-6 py-3 flex items-center justify-between">
+          <div className="bg-gray-50 px-2 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center">
               <p className="text-sm text-gray-600">
-                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalCount)} of {totalCount} error logs
+                <span className="sm:hidden">{((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, totalCount)} / {totalCount}</span>
+                <span className="hidden sm:inline">Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalCount)} of {totalCount} error logs</span>
               </p>
             </div>
             
