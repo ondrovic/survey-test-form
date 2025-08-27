@@ -2,7 +2,7 @@
 import { AdminAuth } from '@/components/admin/auth';
 import { SimpleErrorLogsPage } from '@/components/admin/error-logs/simple-error-logs-page';
 import { AdminFramework } from '@/components/admin/framework';
-import { AdminHeader } from '@/components/admin/header';
+import { AppDrawer, DrawerPage } from '@/components/admin/layout';
 import {
     MultiSelectOptionSetManager,
     RadioOptionSetManager,
@@ -12,23 +12,35 @@ import {
 import { AdminOptionSets } from '@/components/admin/option-sets';
 import { AdminOverview } from '@/components/admin/overview';
 import { SurveyBuilder } from '@/components/admin/survey-builder';
-import { useAdminTab } from '@/contexts/admin-tab-context/index';
+import { useAdminPage } from '@/contexts/admin-page-context/index';
 import { useAuth } from '@/contexts/auth-context/index';
 import { useModal } from '@/contexts/modal-context';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { ValidationStatusProvider } from '@/contexts/validation-status-context';
 import { useAdminOperations } from '@/hooks';
 import { RatingScale, SurveyConfig } from '@/types';
-import { clsx } from 'clsx';
-import React from 'react';
+import React, { useState } from 'react';
 import { AdminPageProps } from './page.types';
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
     const { isAuthenticated, logout } = useAuth();
-    const { activeTab, setActiveTab } = useAdminTab();
+    const { activePage, setActivePage } = useAdminPage();
     const { refreshAll } = useSurveyData();
     const adminOperations = useAdminOperations();
     const { openModal, closeModal } = useModal();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
+
+    // Get page title based on active page
+    const getPageTitle = (page: DrawerPage): string => {
+        switch (page) {
+            case 'overview': return 'Overview';
+            case 'framework': return 'Framework';
+            case 'option-sets': return 'Option Sets';
+            case 'error-logs': return 'Error Logs';
+            default: return 'Overview';
+        }
+    };
 
     // Data loading is handled automatically by the survey data context
     // No need to manually refresh on authentication change
@@ -37,8 +49,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
         logout();
     };
 
-    const handleSetActiveTab = (tab: 'overview' | 'framework' | 'legacy' | 'option-sets' | 'error-logs') => {
-        setActiveTab(tab);
+    const handleSetActivePage = (page: DrawerPage) => {
+        setActivePage(page);
+    };
+
+    const toggleDrawer = () => {
+        setIsDrawerOpen(!isDrawerOpen);
     };
 
     const handleCreateNewSurvey = () => {
@@ -201,86 +217,85 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
 
     return (
         <ValidationStatusProvider>
-            <div className="min-h-screen bg-amber-50/30 flex flex-col">
-                {/* Header */}
-                <AdminHeader onLogout={handleLogout} />
+            <div className="min-h-screen bg-amber-50/30 flex">
+                {/* App Drawer */}
+                <AppDrawer
+                    activePage={activePage as DrawerPage}
+                    onPageChange={handleSetActivePage}
+                    isOpen={isDrawerOpen}
+                    onToggle={toggleDrawer}
+                    isCollapsed={isDrawerCollapsed}
+                    onCollapsedChange={setIsDrawerCollapsed}
+                    onLogout={handleLogout}
+                />
 
-                {/* Main Content */}
-                <main className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 min-h-0">
-                {/* Tab Navigation */}
-                <div className="border-b border-gray-200 mb-8">
-                    <nav className="-mb-px flex space-x-8">
-                        {[
-                            { id: 'overview', label: 'Overview' },
-                            { id: 'framework', label: 'Survey Framework' },
-                            { id: 'option-sets', label: 'Option Sets' },
-                            { id: 'error-logs', label: 'Error Logs' },
-                            // { id: 'legacy', label: 'Legacy Surveys' },
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleSetActiveTab(tab.id as any)}
-                                className={clsx(
-                                    "py-2 px-1 border-b-2 font-medium text-sm",
-                                    activeTab === tab.id
-                                        ? "border-blue-500 text-blue-600"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-
-                {/* Tab Content */}
-                <div className="flex-1 min-h-0 overflow-hidden">
-                    <div className="h-full overflow-y-auto">
-                        {activeTab === 'overview' && (
-                            <AdminOverview
-                                onCreateNewSurvey={handleCreateNewSurvey}
-                                onNavigateToTab={handleSetActiveTab}
-                            />
-                        )}
-
-                        {activeTab === 'framework' && (
-                            <AdminFramework
-                                onCreateNewSurvey={handleCreateNewSurvey}
-                                onEditSurveyConfig={handleEditSurveyConfig}
-                                onDeleteSurveyConfig={adminOperations.deleteSurveyConfig}
-                                onDeleteSurveyInstance={adminOperations.permanentlyDeleteSurveyInstance}
-                                onToggleInstanceActive={adminOperations.toggleInstanceActive}
-                                onUpdateInstanceDateRange={adminOperations.updateInstanceDateRange}
-                            />
-                        )}
-
-                        {activeTab === 'option-sets' && (
-                            <AdminOptionSets
-                                onShowRatingScaleManager={handleShowRatingScaleManager}
-                                onEditRatingScale={handleEditRatingScale}
-                                onDeleteRatingScale={adminOperations.deleteRatingScale}
-                                onCleanupDuplicates={adminOperations.cleanupDuplicateRatingScales}
-                                onShowRadioOptionSetManager={handleShowRadioOptionSetManager}
-                                onEditRadioOptionSet={handleEditRadioOptionSet}
-                                onDeleteRadioOptionSet={handleDeleteRadioOptionSet}
-                                onShowMultiSelectOptionSetManager={handleShowMultiSelectOptionSetManager}
-                                onEditMultiSelectOptionSet={handleEditMultiSelectOptionSet}
-                                onDeleteMultiSelectOptionSet={handleDeleteMultiSelectOptionSet}
-                                onShowSelectOptionSetManager={handleShowSelectOptionSetManager}
-                                onEditSelectOptionSet={handleEditSelectOptionSet}
-                                onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
-                            />
-                        )}
-
-                        {activeTab === 'error-logs' && (
-                            <SimpleErrorLogsPage />
-                        )}
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col">
+                    {/* Header with page title and mobile menu button */}
+                    <div className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+                        <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center">
+                                <button
+                                    onClick={toggleDrawer}
+                                    className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 lg:hidden mr-2"
+                                    aria-label="Open navigation drawer"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                </button>
+                                <h1 className="text-xl font-semibold text-gray-900">
+                                    {getPageTitle(activePage as DrawerPage)}
+                                </h1>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Page Content */}
+                    <main className="flex-1 overflow-y-auto bg-amber-50/30">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                            {activePage === 'overview' && (
+                                <AdminOverview
+                                    onCreateNewSurvey={handleCreateNewSurvey}
+                                    onNavigateToTab={handleSetActivePage}
+                                />
+                            )}
+
+                            {activePage === 'framework' && (
+                                <AdminFramework
+                                    onCreateNewSurvey={handleCreateNewSurvey}
+                                    onEditSurveyConfig={handleEditSurveyConfig}
+                                    onDeleteSurveyConfig={adminOperations.deleteSurveyConfig}
+                                    onDeleteSurveyInstance={adminOperations.permanentlyDeleteSurveyInstance}
+                                    onToggleInstanceActive={adminOperations.toggleInstanceActive}
+                                    onUpdateInstanceDateRange={adminOperations.updateInstanceDateRange}
+                                />
+                            )}
+
+                            {activePage === 'option-sets' && (
+                                <AdminOptionSets
+                                    onShowRatingScaleManager={handleShowRatingScaleManager}
+                                    onEditRatingScale={handleEditRatingScale}
+                                    onDeleteRatingScale={adminOperations.deleteRatingScale}
+                                    onCleanupDuplicates={adminOperations.cleanupDuplicateRatingScales}
+                                    onShowRadioOptionSetManager={handleShowRadioOptionSetManager}
+                                    onEditRadioOptionSet={handleEditRadioOptionSet}
+                                    onDeleteRadioOptionSet={handleDeleteRadioOptionSet}
+                                    onShowMultiSelectOptionSetManager={handleShowMultiSelectOptionSetManager}
+                                    onEditMultiSelectOptionSet={handleEditMultiSelectOptionSet}
+                                    onDeleteMultiSelectOptionSet={handleDeleteMultiSelectOptionSet}
+                                    onShowSelectOptionSetManager={handleShowSelectOptionSetManager}
+                                    onEditSelectOptionSet={handleEditSelectOptionSet}
+                                    onDeleteSelectOptionSet={handleDeleteSelectOptionSet}
+                                />
+                            )}
+
+                            {activePage === 'error-logs' && (
+                                <SimpleErrorLogsPage />
+                            )}
+                        </div>
+                    </main>
                 </div>
-
-
-
-                </main>
             </div>
         </ValidationStatusProvider>
     );

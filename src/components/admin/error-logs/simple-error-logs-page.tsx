@@ -141,10 +141,7 @@ export const SimpleErrorLogsPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Error Logs</h1>
-        <p className="text-sm text-gray-600 mt-1">Monitor and track application errors automatically</p>
-      </div>
+      {/* Title and description removed - displayed in top navigation bar */}
 
       {/* Search and Filter Controls */}
       <div className="mb-6 space-y-4">

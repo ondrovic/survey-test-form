@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { AdminTabProvider } from '../admin-tab-context';
+import { AdminPageProvider } from '../admin-page-context';
 import { AuthProvider } from '../auth-context';
 import { FormProvider } from '../form-context';
 import { ModalProvider } from '../modal-context';
@@ -23,7 +23,7 @@ const AppProviderWithCleanup: React.FC<{ children: ReactNode; initialConfig?: an
             <ToastProvider>
                 <OptionSetCrudProvider>
                     <SurveyDataProvider>
-                        <AdminTabProvider>
+                        <AdminPageProvider>
                             <FormProvider>
                                 <ModalProvider>
                                     <SurveyBuilderProvider initialConfig={initialConfig}>
@@ -31,7 +31,7 @@ const AppProviderWithCleanup: React.FC<{ children: ReactNode; initialConfig?: an
                                     </SurveyBuilderProvider>
                                 </ModalProvider>
                             </FormProvider>
-                        </AdminTabProvider>
+                        </AdminPageProvider>
                     </SurveyDataProvider>
                 </OptionSetCrudProvider>
             </ToastProvider>

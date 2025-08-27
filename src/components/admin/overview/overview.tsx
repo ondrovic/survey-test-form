@@ -8,10 +8,11 @@ import {
     SelectOptionSetsOverviewCard
 } from './index';
 import { SimpleErrorLogsOverview } from '@/components/admin/error-logs/simple-error-logs-overview';
+import { DrawerPage } from '@/components/admin/layout';
 
 interface AdminOverviewProps {
     onCreateNewSurvey: () => void;
-    onNavigateToTab: (tab: 'overview' | 'framework' | 'option-sets' | 'error-logs') => void;
+    onNavigateToTab: (page: DrawerPage) => void;
 }
 
 export const AdminOverview: React.FC<AdminOverviewProps> = ({
