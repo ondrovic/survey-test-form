@@ -56,7 +56,7 @@ export interface UseFormOptions<T> {
   onSubmit: (values: T) => Promise<void> | void;
 }
 
-export interface UseFormReturn<T> {
+export interface UseApiFormReturn<T> {
   values: T;
   errors: any; // Allow nested error structure
   touched: Partial<Record<keyof T, boolean>>;

@@ -1,14 +1,8 @@
+import { ReCaptchaVerificationResponse } from '@/types';
 
 /**
  * reCAPTCHA utility functions for token verification
  */
-
-interface ReCaptchaVerificationResponse {
-  success: boolean;
-  challenge_ts?: string;
-  hostname?: string;
-  "error-codes"?: string[];
-}
 
 /**
  * Verify reCAPTCHA token with Google's verification API

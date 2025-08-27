@@ -1,24 +1,8 @@
-import { SurveyField } from "@/types";
+import { SurveyField, SurveyFormState, UseSurveyFormReturn } from "@/types";
 import { useCallback, useState } from "react";
 
-interface FormState {
-  [fieldId: string]: any;
-}
-
-interface UseFormReturn {
-  formState: FormState;
-  errors: Record<string, string>;
-  setFieldValue: (fieldId: string, value: any) => void;
-  setFieldError: (fieldId: string, error: string) => void;
-  clearFieldError: (fieldId: string) => void;
-  validateField: (field: SurveyField, value: any) => string | null;
-  validateForm: (fields: SurveyField[]) => boolean;
-  resetForm: () => void;
-  getFieldValue: (fieldId: string) => any;
-}
-
-export const useForm = (initialState: FormState = {}): UseFormReturn => {
-  const [formState, setFormState] = useState<FormState>(initialState);
+export const useForm = (initialState: SurveyFormState = {}): UseSurveyFormReturn => {
+  const [formState, setFormState] = useState<SurveyFormState>(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const setFieldValue = useCallback(

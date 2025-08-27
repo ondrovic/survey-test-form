@@ -1,6 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-
-type AdminPage = 'overview' | 'framework' | 'legacy' | 'option-sets' | 'error-logs';
+import { AdminPage } from '@/types';
 
 interface AdminPageContextType {
     activePage: AdminPage;

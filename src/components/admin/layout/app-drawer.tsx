@@ -3,14 +3,7 @@ import { ConnectionStatus } from '@/components/survey/connection-status/connecti
 import { useConnectionStatus } from '@/hooks';
 import { clsx } from 'clsx';
 import React from 'react';
-
-export type DrawerPage = 'overview' | 'framework' | 'option-sets' | 'error-logs';
-
-interface NavigationItem {
-    id: DrawerPage;
-    label: string;
-    icon: JSX.Element;
-}
+import { DrawerPage, NavigationItem } from '@/types';
 
 interface AppDrawerProps {
     activePage: DrawerPage;

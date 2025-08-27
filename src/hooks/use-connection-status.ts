@@ -1,15 +1,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { databaseHelpers, getDatabaseProviderInfo } from '@/config/database';
 import { useCallback, useEffect, useState } from 'react';
-
-interface ConnectionStatus {
-  connected: boolean;
-  loading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-  retry: () => void;
-  lastCheckedAt: Date | null;
-}
+import { ConnectionStatus } from '@/types';
 
 /**
  * Hook to monitor database connection status and authentication state

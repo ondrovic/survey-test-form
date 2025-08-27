@@ -8,18 +8,7 @@
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { clsx } from 'clsx';
-import { ErrorLogFiltersProps, ErrorSeverity, ErrorStatus } from '../error-logs.types';
-
-interface FilterFormData {
-  search: string;
-  severity: ErrorSeverity[];
-  status: ErrorStatus[];
-  componentName: string;
-  assignedTo: string;
-  dateStart: string;
-  dateEnd: string;
-  tags: string;
-}
+import { ErrorLogFiltersProps, ErrorSeverity, ErrorStatus, FilterFormData } from '@/types';
 
 const severityOptions: { value: ErrorSeverity; label: string; color: string }[] = [
   { value: 'critical', label: 'Critical', color: 'text-red-600' },

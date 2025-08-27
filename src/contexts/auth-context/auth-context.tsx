@@ -2,15 +2,7 @@ import { authHelpers, initializeDatabase, retryDatabaseInitialization } from "@/
 import { logCriticalError } from "@/utils/error-logging.utils";
 import { cookieUtils } from "@/utils/cookie.utils";
 import React, { createContext, useContext, useEffect, useState } from "react";
-
-interface AuthContextType {
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    error: string | null;
-    login: (password: string) => Promise<boolean>;
-    logout: () => void;
-    checkAuth: () => boolean;
-}
+import { AuthContextType, AuthInitializationState } from '@/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -24,27 +16,6 @@ export const useAuth = (): AuthContextType => {
 
 interface AuthProviderProps {
     children: React.ReactNode;
-}
-
-// Global singleton state to prevent double initialization in StrictMode
-class AuthInitializationState {
-    private static instance: AuthInitializationState;
-    private _inProgress = false;
-    
-    static getInstance(): AuthInitializationState {
-        if (!AuthInitializationState.instance) {
-            AuthInitializationState.instance = new AuthInitializationState();
-        }
-        return AuthInitializationState.instance;
-    }
-    
-    get inProgress(): boolean {
-        return this._inProgress;
-    }
-    
-    set inProgress(value: boolean) {
-        this._inProgress = value;
-    }
 }
 
 const authState = AuthInitializationState.getInstance();

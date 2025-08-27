@@ -1,20 +1,5 @@
 import { getClientIPAddressWithTimeout } from './ip.utils';
-
-interface BaseMetadata {
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  ip?: string;
-}
-
-interface CreateMetadataOptions extends Partial<Pick<BaseMetadata, 'createdBy' | 'ip'>> {
-  // Create-specific options can be added here in the future
-}
-
-interface UpdateMetadataOptions extends Partial<Pick<BaseMetadata, 'createdBy' | 'ip'>> {
-  // For semantic clarity, we can also accept updatedBy as an alias
-  updatedBy?: string;
-}
+import { BaseMetadata, CreateMetadataOptions, UpdateMetadataOptions } from '@/types';
 
 export const createMetadata = async (options: CreateMetadataOptions = {}): Promise<BaseMetadata> => {
   const now = new Date().toISOString();
@@ -76,4 +61,4 @@ export const createMetadataSync = (options: CreateMetadataOptions = {}): BaseMet
   };
 };
 
-export type { BaseMetadata, CreateMetadataOptions, UpdateMetadataOptions };
+// Types are now exported from @/types

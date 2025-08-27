@@ -1,6 +1,6 @@
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useConfirmation } from '@/contexts/modal-context';
-import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '@/types';
+import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, DeleteModalData } from '@/types';
 import React from 'react';
 import { OptionSetSection } from './option-set-section';
 import {
@@ -19,13 +19,6 @@ import {
     MULTISELECT_EMPTY_MESSAGE,
     SELECT_EMPTY_MESSAGE,
 } from '@/constants/options-sets.constants';
-
-// Define the delete modal data type with proper type safety
-type DeleteModalData =
-    | { id: string; name: string; type: 'rating' }
-    | { id: string; name: string; type: 'radio' }
-    | { id: string; name: string; type: 'multi-select' }
-    | { id: string; name: string; type: 'select' };
 
 interface AdminOptionSetsProps {
     onShowRatingScaleManager: () => void;
@@ -66,7 +59,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
 
     // Helper function to create type-safe delete confirmations
     const createDeleteHandler = (type: DeleteModalData['type']) => (item: { id: string; name: string }) => {
-        if (!item || !item.id || !item.name) {
+        if (!item?.id || !item?.name) {
             console.error('Invalid item data for delete confirmation:', item);
             return;
         }

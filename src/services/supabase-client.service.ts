@@ -1,11 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { DatabaseConfig } from "../types/database.types";
-
-interface SupabaseConfig {
-  url: string;
-  anonKey: string;
-  serviceRoleKey?: string;
-}
+import { DatabaseConfig, SupabaseConfig } from "@/types";
 
 /**
  * Singleton service for managing a single Supabase client instance

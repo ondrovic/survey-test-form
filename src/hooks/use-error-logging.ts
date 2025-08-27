@@ -13,47 +13,7 @@ import {
   logValidationError,
   logUserActionError
 } from '@/utils/error-logging.utils';
-
-interface UseErrorLoggingReturn {
-  logError: (
-    message: string, 
-    error?: Error, 
-    severity?: 'low' | 'medium' | 'high' | 'critical',
-    userAction?: string
-  ) => Promise<void>;
-  
-  logCriticalError: (
-    message: string,
-    error?: Error,
-    userAction?: string
-  ) => Promise<void>;
-  
-  logApiError: (
-    endpoint: string,
-    method: string,
-    statusCode: number,
-    errorMessage: string,
-    response?: any
-  ) => Promise<void>;
-  
-  logDatabaseError: (
-    operation: string,
-    table: string,
-    error: Error,
-    additionalData?: Record<string, any>
-  ) => Promise<void>;
-  
-  logValidationError: (
-    formName: string,
-    fieldErrors: Record<string, string>
-  ) => Promise<void>;
-  
-  logUserActionError: (
-    action: string,
-    error: Error,
-    element?: string
-  ) => Promise<void>;
-}
+import { UseErrorLoggingReturn } from '@/types';
 
 /**
  * Custom hook for error logging with automatic component context

@@ -2,58 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { databaseHelpers } from '@/config/database';
 import { getClientIPAddressWithTimeout } from '../utils/ip.utils';
 import { emailService } from '../services/email.service';
-
-// Global session creation tracker to prevent duplicates across React StrictMode
-class SessionCreationTracker {
-  private static instance: SessionCreationTracker;
-  private creatingInstances = new Set<string>();
-  private createdSessions = new Map<string, string>(); // surveyInstanceId -> sessionId
-  
-  static getInstance(): SessionCreationTracker {
-    if (!SessionCreationTracker.instance) {
-      SessionCreationTracker.instance = new SessionCreationTracker();
-    }
-    return SessionCreationTracker.instance;
-  }
-  
-  isCreating(surveyInstanceId: string): boolean {
-    return this.creatingInstances.has(surveyInstanceId);
-  }
-  
-  startCreating(surveyInstanceId: string): void {
-    this.creatingInstances.add(surveyInstanceId);
-  }
-  
-  finishCreating(surveyInstanceId: string, sessionId?: string): void {
-    this.creatingInstances.delete(surveyInstanceId);
-    if (sessionId) {
-      this.createdSessions.set(surveyInstanceId, sessionId);
-    }
-  }
-  
-  getExistingSession(surveyInstanceId: string): string | undefined {
-    return this.createdSessions.get(surveyInstanceId);
-  }
-  
-  clearSession(surveyInstanceId: string): void {
-    this.createdSessions.delete(surveyInstanceId);
-  }
-}
-
-interface SessionMetrics {
-  sessionId: string | null;
-  startedAt: Date | null;
-  lastActivityAt: Date | null;
-  currentSection: number;
-  status: 'started' | 'in_progress' | 'completed' | 'abandoned' | 'expired';
-  savedAnswers?: Record<string, any>; // Store survey answers for persistence
-}
-
-interface UseSurveySessionOptions {
-  surveyInstanceId: string;
-  totalSections?: number;
-  activityTimeoutMs?: number; // How long to wait before considering session abandoned (now less critical due to DB triggers)
-}
+import { SessionCreationTracker, SessionMetrics, UseSurveySessionOptions } from '@/types';
 
 export const useSurveySession = (options: UseSurveySessionOptions | null) => {
   // Extract options or use defaults when null

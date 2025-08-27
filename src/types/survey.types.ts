@@ -60,7 +60,7 @@ export interface FormField<T> {
   required?: boolean;
 }
 
-export type FormState<T> = {
+export type LegacyFormState<T> = {
   [K in keyof T]: FormField<T[K]>;
 };
 

@@ -7,17 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '@/contexts/toast-context';
 import { Modal } from '@/components/common/ui/modal';
 import { ErrorLoggingService } from '@/services/error-logging.service';
-
-interface SimpleErrorLog {
-  id: string;
-  occurred_at: string;
-  severity: string;
-  error_message: string;
-  component_name?: string;
-  file_path?: string;
-  user_email?: string;
-  stack_trace?: string;
-}
+import { SimpleErrorLog } from '@/types';
 
 export const SimpleErrorLogsPage: React.FC = () => {
   const [selectedError, setSelectedError] = useState<SimpleErrorLog | null>(null);

@@ -16,12 +16,21 @@ export const useAutomaticValidation = (updateValidationStatus: (results: any) =>
   const { openReactiveModal, closeModal, forceUpdateModal, isModalOpen } = useModal();
   
   // Try to get config validation, but don't fail if context is not available
-  let handleCreateMissingItem: any = () => console.log('No validation context available for creating missing items');
+  let handleCreateMissingItem: any = () => {
+    console.log('No validation context available for creating missing items');
+    // Since we can't create missing items without context, just show info message
+    return Promise.resolve();
+  };
+  
   try {
     const configValidation = useConfigValidation();
     handleCreateMissingItem = configValidation.handleCreateMissingItem;
   } catch (error) {
-    console.log('⚠️ Validation context not available in useAutomaticValidation');
+    // This is expected when the hook is used outside the ValidationStatusProvider
+    // Only log in development/debug mode to avoid console spam
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ Validation context not available in useAutomaticValidation (expected when used at framework level)');
+    }
   }
 
   // Store current validation results to avoid recreating the modal
@@ -253,6 +262,13 @@ export const useAutomaticValidation = (updateValidationStatus: (results: any) =>
         console.log(
           "✅ Page load validation passed - all configurations are valid"
         );
+        
+        // Close validation modal if it's open since all issues are resolved
+        if (isModalOpen("validation-results")) {
+          console.log("🔄 Closing validation modal since all issues are resolved");
+          closeModal("validation-results");
+        }
+        
         // Update validation status for UI
         console.log("🔄 Updating validation status for UI (page load valid):", {
           validConfigs: result.validConfigs,

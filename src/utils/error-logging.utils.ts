@@ -6,14 +6,7 @@
 
 import { ErrorLoggingService } from '@/services/error-logging.service';
 import { getCurrentUser } from '@/utils/user.utils';
-
-interface LogErrorOptions {
-  severity?: 'low' | 'medium' | 'high' | 'critical';
-  componentName?: string;
-  userAction?: string;
-  additionalContext?: Record<string, any>;
-  tags?: string[];
-}
+import { LogErrorOptions } from '@/types';
 
 /**
  * Log a general application error
