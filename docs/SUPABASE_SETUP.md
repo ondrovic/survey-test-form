@@ -43,9 +43,11 @@ For the best performance and features, use the optimized schema:
 This sets up:
 - ✅ Legacy and normalized schemas for backward compatibility
 - ✅ 10x faster query performance with proper indexing
-- ✅ Row Level Security policies configured
+- ✅ Security model updated (RLS disabled for realtime compatibility)
 - ✅ Real-time subscriptions enabled
 - ✅ Complete audit trails and analytics tables
+- ✅ Real-time error logging with instant UI updates and trigger-based cleanup
+- ✅ Automated session and error maintenance
 
 ### Option B: Basic Setup
 
@@ -66,34 +68,40 @@ This will create all the necessary tables and automation functions:
 - `multi_select_option_sets` - Multi-select option sets
 - `select_option_sets` - Select dropdown option sets
 - `survey_instance_status_changes` - **NEW: Audit trail for status changes**
+- `error_logs` - **NEW: Intelligent error logging system**
 - `surveys` - Legacy survey data (for backward compatibility)
 
 ### Automation Functions
 - `update_survey_instance_statuses()` - **NEW: Automated status updates**
 - `get_upcoming_status_changes()` - **NEW: Preview upcoming changes**
 - `log_survey_instance_status_change()` - **NEW: Audit trail trigger**
+- `log_error()` - **NEW: Error logging function**
+- `cleanup_error_logs()` - **NEW: Error maintenance function**
+- `lightweight_error_cleanup()` - **NEW: Trigger-based cleanup**
 
 ### Database Triggers
 - Automatic audit logging for all survey instance status changes
 - Updated timestamp triggers for all tables
+- **NEW: Error log cleanup trigger** - Automatic maintenance on new error insertion
+- **NEW: Session cleanup triggers** - Automated session lifecycle management
 
-## 4. Configure Row Level Security (Optional but Recommended)
+## 4. Security Model ✅ **UPDATED**
 
-For production, you should enable Row Level Security (RLS):
+**RLS has been disabled** to fix realtime subscriptions and simplify authentication.
 
-1. Go to **Authentication** → **Policies**
-2. For each table, you can create policies to control access
-3. For development, you might want to allow all operations:
+### Current Security Approach:
+1. **Application-level authentication**: Admin password + cookie sessions
+2. **No RLS policies**: Realtime subscriptions work perfectly
+3. **Single client pattern**: No more multiple client warnings
+4. **Network security**: Protected by Supabase's infrastructure
 
+### Migration Applied:
 ```sql
--- Example: Allow all operations on survey_configs (adjust as needed)
-ALTER TABLE survey_configs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow all operations on survey_configs" ON survey_configs
-FOR ALL USING (true);
-
--- Repeat for other tables as needed
+-- All RLS policies have been removed via:
+-- Migration: 20250828000003_disable_all_rls_simplify_auth.sql
 ```
+
+**Result**: Clean, simple authentication with working realtime features.
 
 ## 5. Test the Setup
 

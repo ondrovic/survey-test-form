@@ -41,7 +41,7 @@ export abstract class BaseDatabaseProvider implements DatabaseProvider_Interface
         await this.clientService.testConnection(client);
 
         // Initialize repository service with elevated privileges for admin operations
-        await this.clientService.withElevatedPrivileges(async (elevatedClient) => {
+        await this.clientService.withClient(async (elevatedClient) => {
           initializeRepositoryService(elevatedClient);
         });
 

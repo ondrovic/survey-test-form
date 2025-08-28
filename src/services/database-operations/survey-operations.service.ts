@@ -26,7 +26,7 @@ export class SurveyOperationsService {
   private async withAdminPrivileges<T>(
     operation: (client: SupabaseClient) => Promise<T>
   ): Promise<T> {
-    return this.clientService.withElevatedPrivileges(operation);
+    return this.clientService.withClient(operation);
   }
 
 

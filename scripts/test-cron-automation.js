@@ -2,8 +2,8 @@
 
 /**
  * Test script to verify pg_cron automation is working correctly
- * This script checks that both survey instance status updates and session cleanup
- * are scheduled and running properly via pg_cron
+ * This script checks that survey instance status updates, session cleanup,
+ * and error log cleanup are scheduled and running properly via pg_cron
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -131,6 +131,18 @@ async function testCronSetup() {
     } else {
       console.log('✅ cleanup_survey_sessions succeeded');
       console.log(`   📊 Result: ${sessionResult?.message || JSON.stringify(sessionResult)}`);
+    }
+
+    // Test error log cleanup (new trigger-based system)
+    console.log('   🗂️  Testing error log cleanup functions...');
+    const { data: errorCleanupResult, error: errorCleanupError } = await supabase
+      .rpc('lightweight_error_cleanup');
+    
+    if (errorCleanupError) {
+      console.error('❌ lightweight_error_cleanup failed:', errorCleanupError.message);
+    } else {
+      console.log('✅ lightweight_error_cleanup succeeded');
+      console.log(`   📊 Result: ${JSON.stringify(errorCleanupResult)}`);
     }
 
     // Test 5: Check current session status

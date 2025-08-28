@@ -1,5 +1,5 @@
--- Test Error Logging Script
--- Run this in your Supabase SQL editor to simulate adding an error
+-- Test Error Logging Script with Trigger-Based Cleanup
+-- Run this in your Supabase SQL editor to simulate adding an error and test auto-cleanup
 
 -- First, let's see the current state of error logs
 SELECT 
@@ -62,3 +62,25 @@ LIMIT 1;
 
 -- Get error statistics to see the counts
 SELECT * FROM get_error_statistics(24, null);
+
+-- Test the new trigger-based cleanup system
+-- Note: The cleanup trigger runs automatically when the error above is inserted
+-- You can also manually test the lightweight cleanup function:
+SELECT lightweight_error_cleanup();
+
+-- Check if triggers are properly set up
+SELECT 
+    trigger_name,
+    event_manipulation,
+    action_timing,
+    action_statement
+FROM information_schema.triggers 
+WHERE event_object_table = 'error_logs';
+
+-- View current cron jobs (weekly deep cleanup)
+SELECT jobname, schedule, command, active 
+FROM cron.job 
+WHERE jobname LIKE '%error%';
+
+-- Test manual deep cleanup (keeps 90 days by default)
+-- SELECT cleanup_error_logs(90);

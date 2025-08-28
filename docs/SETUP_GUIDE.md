@@ -11,6 +11,7 @@ The Survey Framework is a comprehensive application that provides:
 - **Data Visualization**: Interactive ECharts-powered charts and analytics
 - **Import/Export**: Full system backup and restore capabilities
 - **Email Notifications**: Automatic SMTP email notifications on survey completion
+- **Real-time Error Logging**: Live error tracking with instant UI updates and automatic cleanup
 
 ## Prerequisites
 
@@ -40,6 +41,7 @@ npm install
 - ✅ SQL capabilities for complex queries
 - ✅ GitHub Actions integration
 - ✅ Real-time updates
+- ✅ Real-time error logging with live UI updates
 - ✅ Predictable pricing
 
 **Setup Steps:**

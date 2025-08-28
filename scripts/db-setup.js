@@ -3,6 +3,7 @@
 /**
  * Database Setup Script
  * Executes the setup-supabase-optimized.sql script via Supabase CLI
+ * Includes real-time error logging with trigger-based cleanup
  * 
  * Usage: node scripts/db-setup.js
  * Or: yarn db:setup

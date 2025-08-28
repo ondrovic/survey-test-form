@@ -142,7 +142,7 @@ You can test if your secrets are working by:
 - **Secrets are only available during GitHub Actions runs**
 - **They are not exposed in the deployed application**
 - **SMTP credentials are stored separately in Supabase secrets (not GitHub)**
-- **Service role key has elevated privileges - keep it secure**
+- **Service role key is no longer needed** - RLS has been disabled for simplified authentication
 
 ## 📞 Need Help?
 

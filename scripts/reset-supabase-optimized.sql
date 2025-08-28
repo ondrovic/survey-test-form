@@ -1,6 +1,7 @@
 -- Supabase Optimized Database Reset Script
 -- WARNING: This will delete ALL data in your database
 -- Run this in your Supabase SQL Editor to completely reset the database
+-- Includes cleanup of error logging system and cron jobs
 
 -- ===================================
 -- DISABLE TRIGGERS AND CONSTRAINTS
@@ -83,6 +84,21 @@ BEGIN
     RAISE NOTICE '✅ Removed cron job: session-cleanup';
   EXCEPTION WHEN OTHERS THEN
     RAISE NOTICE '⚠️  Cron job session-cleanup not found or already removed';
+  END;
+
+  -- Remove error log cleanup jobs
+  BEGIN
+    PERFORM cron.unschedule('error-log-cleanup');
+    RAISE NOTICE '✅ Removed cron job: error-log-cleanup';
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE '⚠️  Cron job error-log-cleanup not found or already removed';
+  END;
+  
+  BEGIN
+    PERFORM cron.unschedule('error-log-deep-cleanup');
+    RAISE NOTICE '✅ Removed cron job: error-log-deep-cleanup';
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE '⚠️  Cron job error-log-deep-cleanup not found or already removed';
   END;
   
   -- Note: We don't drop the pg_cron extension as it might be used by other applications
@@ -251,7 +267,7 @@ BEGIN
     RAISE NOTICE '   - All views and indexes';
     RAISE NOTICE '   - All RLS policies';
     RAISE NOTICE '   - Realtime subscriptions';
-    RAISE NOTICE '   - Automated cron jobs (pg_cron jobs unscheduled)';
+    RAISE NOTICE '   - Automated cron jobs (pg_cron jobs unscheduled including error log cleanup)';
     RAISE NOTICE '';
     RAISE NOTICE '🚀 Next steps:';
     RAISE NOTICE '   1. Run setup-supabase-optimized.sql to recreate the optimized schema';

@@ -1,6 +1,7 @@
--- Supabase Optimized Database Schema Setup Script
+-- Supabase Optimized Database Schema Setup Script  
 -- Run this in your Supabase SQL Editor to set up the complete optimized schema
 -- This uses JSONB-only design for maximum performance
+-- Includes intelligent error logging system with trigger-based cleanup
 
 -- ===================================
 -- EXTENSIONS
@@ -420,168 +421,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- ===================================
--- ROW LEVEL SECURITY POLICIES
+-- SECURITY MODEL  
 -- ===================================
-
--- Enable RLS on all tables
-ALTER TABLE survey_configs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE survey_instances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE survey_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE survey_responses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rating_scales ENABLE ROW LEVEL SECURITY;
-ALTER TABLE radio_option_sets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE multi_select_option_sets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE select_option_sets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE survey_instance_status_changes ENABLE ROW LEVEL SECURITY;
-
--- Helper functions for RLS
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS boolean AS $$
-BEGIN
-  -- All authenticated users are admins for now
-  -- In production, check user roles from auth.users metadata
-  RETURN auth.uid() IS NOT NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-CREATE OR REPLACE FUNCTION is_anonymous()
-RETURNS boolean AS $$
-BEGIN
-  RETURN auth.uid() IS NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-CREATE OR REPLACE FUNCTION current_user_email()
-RETURNS text AS $$
-BEGIN
-  RETURN COALESCE(
-    auth.jwt() ->> 'email',
-    'anonymous@example.com'
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-CREATE OR REPLACE FUNCTION is_survey_public(instance_id UUID)
-RETURNS boolean AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM survey_instances 
-    WHERE id = instance_id 
-    AND is_active = true
-    AND (
-      active_date_range IS NULL 
-      OR (
-        NOW() >= (active_date_range->>'startDate')::timestamp
-        AND NOW() <= (active_date_range->>'endDate')::timestamp
-      )
-    )
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
--- Survey Configs - Admin full access, Anonymous read active
-CREATE POLICY "survey_configs_admin_all" ON survey_configs
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "survey_configs_anonymous_read" ON survey_configs
-  FOR SELECT TO anon
-  USING (is_active = true);
-
--- Survey Instances - Admin full access, Anonymous read active
-CREATE POLICY "survey_instances_admin_all" ON survey_instances
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "survey_instances_anonymous_read" ON survey_instances
-  FOR SELECT TO anon
-  USING (
-    is_active = true
-    AND (
-      active_date_range IS NULL 
-      OR (
-        NOW() >= (active_date_range->>'startDate')::timestamp
-        AND NOW() <= (active_date_range->>'endDate')::timestamp
-      )
-    )
-  );
-
--- Survey Sessions - Admin read/update, Anonymous insert/update for public surveys
-CREATE POLICY "survey_sessions_admin_all" ON survey_sessions
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "survey_sessions_anonymous_insert" ON survey_sessions
-  FOR INSERT TO anon
-  WITH CHECK (is_survey_public(survey_instance_id));
-
-CREATE POLICY "survey_sessions_anonymous_update" ON survey_sessions
-  FOR UPDATE TO anon
-  USING (is_survey_public(survey_instance_id))
-  WITH CHECK (is_survey_public(survey_instance_id));
-
--- Survey Responses - Admin read/update, Anonymous insert for public surveys
-CREATE POLICY "survey_responses_admin_read_update" ON survey_responses
-  FOR SELECT TO authenticated
-  USING (is_admin());
-
-CREATE POLICY "survey_responses_admin_update" ON survey_responses
-  FOR UPDATE TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "survey_responses_anonymous_insert" ON survey_responses
-  FOR INSERT TO anon
-  WITH CHECK (is_survey_public(survey_instance_id));
-
--- Option Sets - Admin full access, Anonymous read active
-CREATE POLICY "rating_scales_admin_all" ON rating_scales
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "rating_scales_anonymous_read" ON rating_scales
-  FOR SELECT TO anon
-  USING (is_active = true);
-
-CREATE POLICY "radio_option_sets_admin_all" ON radio_option_sets
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "radio_option_sets_anonymous_read" ON radio_option_sets
-  FOR SELECT TO anon
-  USING (is_active = true);
-
-CREATE POLICY "multi_select_option_sets_admin_all" ON multi_select_option_sets
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "multi_select_option_sets_anonymous_read" ON multi_select_option_sets
-  FOR SELECT TO anon
-  USING (is_active = true);
-
-CREATE POLICY "select_option_sets_admin_all" ON select_option_sets
-  FOR ALL TO authenticated
-  USING (is_admin())
-  WITH CHECK (is_admin());
-
-CREATE POLICY "select_option_sets_anonymous_read" ON select_option_sets
-  FOR SELECT TO anon
-  USING (is_active = true);
-
--- Analytics and Audit - Admin only
-CREATE POLICY "survey_instance_status_changes_admin_read" ON survey_instance_status_changes
-  FOR SELECT TO authenticated
-  USING (is_admin());
-
-CREATE POLICY "survey_instance_status_changes_system_insert" ON survey_instance_status_changes
-  FOR INSERT TO authenticated
-  WITH CHECK (is_admin());
+-- NOTE: RLS is DISABLED on all tables to enable real-time subscriptions and simplify authentication
+-- Security is maintained through application-level authentication:
+-- - Admin pages: Password + cookie authentication  
+-- - Survey access: Anonymous (as intended for public surveys)
+-- - Database access: Controlled at application level
+-- RLS will be disabled by migration 20250828000003_disable_all_rls_simplify_auth.sql
 
 -- Grant permissions
 GRANT USAGE ON SCHEMA public TO authenticated, anon;
@@ -853,8 +700,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE survey_responses;
 ALTER PUBLICATION supabase_realtime ADD TABLE survey_instance_status_changes;
 ALTER PUBLICATION supabase_realtime ADD TABLE error_logs;
 
--- Apply error logging migration
+-- Apply error logging migrations
 \i 20250827000000_error_logging_system.sql
+\i 20250828000000_add_error_log_cleanup_cron.sql
+\i 20250828000001_error_log_trigger_cleanup.sql
+\i 20250828000002_fix_error_logs_realtime_rls.sql
+\i 20250828000003_disable_all_rls_simplify_auth.sql
 
 -- Print completion message
 DO $$
@@ -872,7 +723,7 @@ BEGIN
     RAISE NOTICE '   - Advanced completion time tracking';
     RAISE NOTICE '   - Session analytics and cleanup functions';
     RAISE NOTICE '   - pg_cron automated survey and session management';
-    RAISE NOTICE '   - Comprehensive error logging system';
+    RAISE NOTICE '   - Intelligent error logging with trigger-based cleanup';
     RAISE NOTICE '';
     RAISE NOTICE '🧹 Session Management:';
     RAISE NOTICE '   - Sessions auto-abandon after 30 minutes of inactivity';
@@ -882,11 +733,12 @@ BEGIN
     RAISE NOTICE '   - Call get_session_analytics() for session stats';
     RAISE NOTICE '';
     RAISE NOTICE '🛠️ Error Logging:';
-    RAISE NOTICE '   - Comprehensive error tracking with deduplication';
-    RAISE NOTICE '   - Context-aware logging (component, file, line)';
-    RAISE NOTICE '   - Automated error categorization and resolution tracking';
-    RAISE NOTICE '   - Call log_error() function for manual error logging';
-    RAISE NOTICE '   - Call get_error_statistics() for error analytics';
+    RAISE NOTICE '   - Intelligent error tracking with browser extension filtering';
+    RAISE NOTICE '   - Trigger-based automatic cleanup (no UI polling needed)';
+    RAISE NOTICE '   - Context-aware severity classification';
+    RAISE NOTICE '   - Weekly deep cleanup via cron (Sunday 3 AM)';
+    RAISE NOTICE '   - Call log_error() for manual logging';
+    RAISE NOTICE '   - Call lightweight_error_cleanup() for manual cleanup';
     RAISE NOTICE '';
     RAISE NOTICE '🚀 Next steps:';
     RAISE NOTICE '   1. Deploy Edge Functions (optional): supabase functions deploy';

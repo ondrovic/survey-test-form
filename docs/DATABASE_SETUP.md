@@ -9,6 +9,7 @@ This application uses **Supabase** as its database provider. Supabase provides a
 ✅ **Advanced Data Visualization**: ECharts-powered interactive charts and analytics  
 ✅ **Complete Audit Trail**: Track all survey changes and user actions  
 ✅ **Real-time Updates**: Live data synchronization  
+✅ **Real-time Error Logging**: Live error tracking with instant UI updates and automatic cleanup  
 ✅ **GitHub Actions Integration**: Scheduled automation workflows  
 ✅ **Self-hosted Option**: Deploy on your own infrastructure if needed  
 ✅ **Predictable Pricing**: Fixed-tier pricing model
@@ -41,6 +42,7 @@ Supabase provides a PostgreSQL database with advanced features including automat
 - ✅ **Automated Status Management**: Surveys automatically activate/deactivate based on date ranges
 - ✅ **Advanced Data Visualization**: ECharts-powered interactive charts and analytics
 - ✅ **Audit Trail**: Complete logging of all survey changes
+- ✅ **Real-time Error Logging**: Live error tracking with instant UI updates and smart cleanup
 - ✅ **SQL Capabilities**: Complex queries and data analysis
 - ✅ **GitHub Actions Integration**: Scheduled automation
 
@@ -58,6 +60,7 @@ Supabase provides a PostgreSQL database with advanced features including automat
    - **Automated status management functions**
    - **Audit trail system** for tracking changes
    - **Database triggers** for automatic logging
+   - **Error logging system** with trigger-based cleanup
 
 3. **Set up environment variables**:
 
@@ -78,6 +81,8 @@ With Supabase, you get these automated features:
 
 - **Scheduled Status Updates**: GitHub Actions runs every 6 hours to activate/deactivate surveys
 - **Audit Trail**: Every status change is logged with timestamp and reason
+- **Error Log Management**: Automatic cleanup of old errors with trigger-based maintenance
+- **Session Cleanup**: Automated removal of abandoned and expired survey sessions
 - **Upcoming Changes**: System tracks surveys that will change status soon
 - **Manual Testing**: Use `scripts/test-status-automation.js` to verify setup
 

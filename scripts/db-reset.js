@@ -3,6 +3,7 @@
 /**
  * Database Reset Script
  * Executes the reset-supabase-optimized.sql script to completely wipe the database
+ * Includes cleanup of error logging system and real-time subscriptions
  * 
  * Usage: node scripts/db-reset.js
  * Or: yarn db:reset

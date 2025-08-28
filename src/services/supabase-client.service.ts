@@ -131,72 +131,14 @@ export class SupabaseClientService {
 
 
   /**
-   * Create a temporary admin client for privileged operations
-   * This client is created on-demand and not cached to avoid multiple client issues
+   * Execute operation with the single global client
+   * Since RLS is disabled, all operations use the same client
    */
-  async withElevatedPrivileges<T>(
+  async withClient<T>(
     operation: (client: SupabaseClient) => Promise<T>
   ): Promise<T> {
-    if (!this.serviceRoleKey || this.serviceRoleKey === "your_service_role_key_here") {
-      console.warn("Service role key not available, using regular client");
-      return operation(this.getCurrentClient());
-    }
-
-    if (!this.globalConfig) {
-      throw new Error("Client not properly initialized");
-    }
-
-    // Create temporary admin client for this operation only
-    const adminClient = createClient(
-      this.globalConfig.url,
-      this.serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-          storage: undefined,
-        },
-      }
-    );
-
-    try {
-      return await operation(adminClient);
-    } finally {
-      // Admin client will be garbage collected after this scope
-      // No explicit cleanup needed
-    }
-  }
-
-  /**
-   * Create a temporary anonymous client for public survey operations
-   * This bypasses authentication but respects RLS policies for anonymous users
-   */
-  async withAnonymousAccess<T>(
-    operation: (client: SupabaseClient) => Promise<T>
-  ): Promise<T> {
-    if (!this.globalConfig) {
-      throw new Error("Client not properly initialized");
-    }
-
-    // Create temporary anonymous client for this operation only
-    const anonClient = createClient(
-      this.globalConfig.url,
-      this.globalConfig.anonKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-          storage: undefined,
-        },
-      }
-    );
-
-    try {
-      return await operation(anonClient);
-    } finally {
-      // Anonymous client will be garbage collected after this scope
-      // No explicit cleanup needed
-    }
+    const client = this.getCurrentClient();
+    return await operation(client);
   }
 
   private canReuseClient(config: SupabaseConfig): boolean {

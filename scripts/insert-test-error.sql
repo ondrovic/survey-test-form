@@ -1,5 +1,6 @@
--- Direct INSERT script to test error logging table
+-- Direct INSERT script to test error logging table with trigger-based cleanup
 -- Run this in your Supabase SQL editor
+-- Note: This will also test the automatic cleanup trigger
 
 -- First, let's see the current state
 SELECT COUNT(*) as current_error_count FROM error_logs;
@@ -73,5 +74,21 @@ FROM error_logs
 ORDER BY occurred_at DESC 
 LIMIT 3;
 
--- Check total count after insert
+-- Check total count after insert (trigger may have cleaned up old errors)
 SELECT COUNT(*) as total_error_count FROM error_logs;
+
+-- Test that the cleanup trigger is working
+SELECT 
+    trigger_name,
+    event_manipulation, 
+    action_timing
+FROM information_schema.triggers 
+WHERE event_object_table = 'error_logs'
+  AND trigger_name = 'trigger_cleanup_on_error_insert';
+
+-- Show cleanup activity (if any occurred)
+-- Note: If >1000 errors exist, the trigger automatically cleaned up old resolved/ignored ones
+SELECT 
+    COUNT(*) FILTER (WHERE status IN ('resolved', 'ignored')) as resolved_ignored_count,
+    COUNT(*) FILTER (WHERE occurred_at < NOW() - INTERVAL '7 days') as old_errors_count
+FROM error_logs;

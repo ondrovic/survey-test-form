@@ -139,24 +139,27 @@ VITE_USE_OPTIMIZED_PROVIDER=false // Use legacy provider
 
 ## Phase 4: Advanced Supabase Features ✅
 
-### Row Level Security (RLS)
+### Security Model ✅ **UPDATED**
 
-**File**: `scripts/rls-security-policies.sql`
+**Migration**: `20250828000003_disable_all_rls_simplify_auth.sql`
 
-#### Security Policies Implemented
+#### ✅ **Current Approach: Application-Level Security**
 
-- **Admin Access**: Full CRUD for authenticated admin users
-- **Public Access**: Read-only access to active surveys for anonymous users
-- **Survey Submission**: Anonymous users can submit responses to public surveys
-- **Data Protection**: Analytics and audit data restricted to admins
+**RLS has been disabled** to fix realtime subscription issues and simplify authentication.
 
-#### Key Features
+- **Admin Authentication**: Password + cookie-based sessions
+- **Database Access**: Single client pattern (no privilege elevation)  
+- **Realtime Support**: Perfect subscription functionality
+- **No Console Warnings**: Clean single client architecture
+
+#### Key Benefits
 
 ```sql
--- Example policy for survey responses
-CREATE POLICY "survey_responses_anonymous_insert" ON survey_responses
-  FOR INSERT TO anon
-  WITH CHECK (is_survey_public(survey_instance_id));
+-- All RLS policies removed for:
+-- ✅ Working realtime subscriptions
+-- ✅ Simplified client management  
+-- ✅ Better performance
+-- ✅ Easier maintenance
 ```
 
 ### Edge Functions

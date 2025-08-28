@@ -8,6 +8,10 @@ import { useToast } from '@/contexts/toast-context';
 import { Modal } from '@/components/common/ui/modal';
 import { ErrorLoggingService } from '@/services/error-logging.service';
 import { SimpleErrorLog } from '@/types';
+import { SupabaseClientService } from '@/services/supabase-client.service';
+
+type SortField = 'occurred_at' | 'severity' | 'error_message' | 'component_name' | 'user_email';
+type SortDirection = 'asc' | 'desc';
 
 export const SimpleErrorLogsPage: React.FC = () => {
   const [selectedError, setSelectedError] = useState<SimpleErrorLog | null>(null);
@@ -18,7 +22,10 @@ export const SimpleErrorLogsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const { showError } = useToast();
+  const [sortField, setSortField] = useState<SortField>('occurred_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const { showError, showSuccess } = useToast();
 
   // Fetch all errors from the service
   const fetchErrors = async () => {
@@ -41,25 +48,127 @@ export const SimpleErrorLogsPage: React.FC = () => {
     fetchErrors();
   }, []);
 
-  // Filter and search logic
-  const filteredErrors = allErrors.filter(error => {
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        error.error_message?.toLowerCase().includes(searchLower) ||
-        error.component_name?.toLowerCase().includes(searchLower) ||
-        error.file_path?.toLowerCase().includes(searchLower);
-      if (!matchesSearch) return false;
+  // Set up real-time subscription for new error logs
+  useEffect(() => {
+    const client = SupabaseClientService.getInstance().getClientSafe();
+    if (!client) {
+      console.error('❌ Supabase client not available for real-time subscription');
+      return;
     }
 
-    // Severity filter
-    if (severityFilter.length > 0 && !severityFilter.includes(error.severity)) {
-      return false;
-    }
+    console.log('🔌 Setting up real-time subscription for error logs...');
 
-    return true;
-  });
+    // Subscribe to all changes on error_logs table
+    const subscription = client
+      .channel('error-logs-changes')
+      .on('postgres_changes', { 
+        event: '*', // Listen to ALL events (INSERT, UPDATE, DELETE)
+        schema: 'public', 
+        table: 'error_logs' 
+      }, (payload) => {
+        console.log('🔔 ERROR LOG EVENT:', payload.eventType, payload);
+        
+        if (payload.eventType === 'INSERT') {
+          console.log('🔔 NEW ERROR LOG DETECTED:', payload.new);
+          
+          // Add the new error to the beginning of the list (since we sort by date desc)
+          const newError = payload.new as SimpleErrorLog;
+          setAllErrors(prevErrors => [newError, ...prevErrors]);
+          
+          // Show toast notification for critical errors
+          if (newError.severity === 'critical') {
+            showError(`New critical error: ${newError.error_message}`);
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          console.log('🔄 ERROR LOG UPDATED:', payload.new);
+          
+          // Update the specific error in the list
+          const updatedError = payload.new as SimpleErrorLog;
+          setAllErrors(prevErrors => 
+            prevErrors.map(error => 
+              error.id === updatedError.id ? updatedError : error
+            )
+          );
+        } else if (payload.eventType === 'DELETE') {
+          console.log('🗑️ ERROR LOG DELETED:', payload.old);
+          
+          // Remove the deleted error from the list
+          const deletedError = payload.old as SimpleErrorLog;
+          setAllErrors(prevErrors => 
+            prevErrors.filter(error => error.id !== deletedError.id)
+          );
+        }
+      })
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status changed:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to error_logs changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Real-time subscription failed - check database realtime settings');
+        } else if (status === 'TIMED_OUT') {
+          console.error('⏰ Real-time subscription timed out');
+        } else if (status === 'CLOSED') {
+          console.warn('🔌 Real-time subscription closed');
+        }
+      });
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [showError]);
+
+  // Sort comparison function
+  const sortErrors = (a: SimpleErrorLog, b: SimpleErrorLog): number => {
+    let comparison = 0;
+    
+    switch (sortField) {
+      case 'occurred_at':
+        comparison = new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime();
+        break;
+      case 'severity': {
+        const severityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+        comparison = (severityOrder[a.severity as keyof typeof severityOrder] || 0) - 
+                    (severityOrder[b.severity as keyof typeof severityOrder] || 0);
+        break;
+      }
+      case 'error_message':
+        comparison = (a.error_message || '').localeCompare(b.error_message || '');
+        break;
+      case 'component_name':
+        comparison = (a.component_name || '').localeCompare(b.component_name || '');
+        break;
+      case 'user_email':
+        comparison = (a.user_email || '').localeCompare(b.user_email || '');
+        break;
+      default:
+        comparison = 0;
+    }
+    
+    return sortDirection === 'desc' ? -comparison : comparison;
+  };
+
+  // Filter, search, and sort logic
+  const filteredErrors = allErrors
+    .filter(error => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          error.error_message?.toLowerCase().includes(searchLower) ||
+          error.component_name?.toLowerCase().includes(searchLower) ||
+          error.file_path?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Severity filter
+      if (severityFilter.length > 0 && !severityFilter.includes(error.severity)) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort(sortErrors);
 
   // Pagination logic
   const totalCount = filteredErrors.length;
@@ -117,6 +226,47 @@ export const SimpleErrorLogsPage: React.FC = () => {
     setSelectedError(null);
   };
 
+  // Sort handler
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field with default direction
+      setSortField(field);
+      setSortDirection(field === 'occurred_at' ? 'desc' : 'asc');
+    }
+  };
+
+  // Show clear confirmation
+  const handleClearLogsClick = () => {
+    setShowClearConfirm(true);
+  };
+
+  // Actually clear the logs
+  const handleConfirmClearLogs = async () => {
+    setShowClearConfirm(false);
+    
+    try {
+      const success = await ErrorLoggingService.clearAllErrorLogs();
+      
+      if (success) {
+        setAllErrors([]);
+        showSuccess('All error logs have been cleared');
+      } else {
+        showError('Failed to clear error logs');
+      }
+    } catch (err) {
+      console.error('Failed to clear logs:', err);
+      showError('Failed to clear error logs');
+    }
+  };
+
+  // Cancel clear operation
+  const handleCancelClearLogs = () => {
+    setShowClearConfirm(false);
+  };
+
   const handlePreviousPage = () => {
     if (page > 1) {
       setPage(page - 1);
@@ -135,6 +285,8 @@ export const SimpleErrorLogsPage: React.FC = () => {
 
       {/* Search and Filter Controls */}
       <div className="mb-4 sm:mb-6 space-y-4 w-full max-w-full overflow-hidden" style={{boxSizing: 'border-box'}}>
+        
+
         {/* Search */}
         <div className="flex flex-col space-y-4 w-full">
           <div className="w-full relative">
@@ -153,21 +305,30 @@ export const SimpleErrorLogsPage: React.FC = () => {
             />
           </div>
           
-          {/* Page Size Selector */}
-          <div className="flex items-center space-x-2 w-full justify-center sm:justify-start">
-            <label htmlFor="pageSize" className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
-            <select
-              id="pageSize"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          {/* Page Size Selector and Clear Logs Button */}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-2">
+              <label htmlFor="pageSize" className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
+              <select
+                id="pageSize"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <button
+              onClick={handleClearLogsClick}
+              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+              disabled={loading || allErrors.length === 0}
             >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
+              Clear All Logs
+            </button>
           </div>
         </div>
 
@@ -179,10 +340,10 @@ export const SimpleErrorLogsPage: React.FC = () => {
               <button
                 key={severity}
                 onClick={() => handleSeverityFilterChange(severity)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border-2 ${
                   severityFilter.includes(severity)
-                    ? getSeverityColor(severity)
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? `${getSeverityColor(severity)} border-gray-800`
+                    : `${getSeverityColor(severity)} border-transparent`
                 }`}
               >
                 {severity}
@@ -219,20 +380,165 @@ export const SimpleErrorLogsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date/Time
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('occurred_at')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Date/Time</span>
+                      <div className="flex flex-col">
+                        <svg
+                          className={`h-3 w-3 -mb-1 ${
+                            sortField === 'occurred_at' && sortDirection === 'asc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        <svg
+                          className={`h-3 w-3 ${
+                            sortField === 'occurred_at' && sortDirection === 'desc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Severity
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('severity')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Severity</span>
+                      <div className="flex flex-col">
+                        <svg
+                          className={`h-3 w-3 -mb-1 ${
+                            sortField === 'severity' && sortDirection === 'asc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        <svg
+                          className={`h-3 w-3 ${
+                            sortField === 'severity' && sortDirection === 'desc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Message
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('error_message')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Message</span>
+                      <div className="flex flex-col">
+                        <svg
+                          className={`h-3 w-3 -mb-1 ${
+                            sortField === 'error_message' && sortDirection === 'asc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        <svg
+                          className={`h-3 w-3 ${
+                            sortField === 'error_message' && sortDirection === 'desc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Component/File
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('component_name')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Component/File</span>
+                      <div className="flex flex-col">
+                        <svg
+                          className={`h-3 w-3 -mb-1 ${
+                            sortField === 'component_name' && sortDirection === 'asc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        <svg
+                          className={`h-3 w-3 ${
+                            sortField === 'component_name' && sortDirection === 'desc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('user_email')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>User</span>
+                      <div className="flex flex-col">
+                        <svg
+                          className={`h-3 w-3 -mb-1 ${
+                            sortField === 'user_email' && sortDirection === 'asc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        <svg
+                          className={`h-3 w-3 ${
+                            sortField === 'user_email' && sortDirection === 'desc'
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Details
@@ -445,6 +751,48 @@ export const SimpleErrorLogsPage: React.FC = () => {
           >
             Close
           </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Clear Logs Confirmation Modal */}
+      <Modal isOpen={showClearConfirm} onClose={handleCancelClearLogs} size="sm">
+        <Modal.Header>
+          <Modal.Title>Clear All Error Logs</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Delete All Error Logs
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Are you sure you want to clear all error logs? This action cannot be undone and will permanently delete <strong>{allErrors.length}</strong> error log{allErrors.length === 1 ? '' : 's'}.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleCancelClearLogs}
+              className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmClearLogs}
+              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-md transition-colors"
+            >
+              Clear All Logs
+            </button>
+          </div>
         </Modal.Footer>
       </Modal>
 

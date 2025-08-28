@@ -129,7 +129,7 @@ export class ErrorLoggingService {
         // Fallback: Direct table insertion with elevated privileges
         const clientService = SupabaseClientService.getInstance();
         
-        return await clientService.withElevatedPrivileges(async (adminClient) => {
+        return await clientService.withClient(async (adminClient) => {
           const { data: insertData, error: insertError } = await adminClient
             .from('error_logs')
             .insert({
@@ -211,8 +211,26 @@ export class ErrorLoggingService {
     errorInfo?: { componentStack?: string },
     context?: Partial<ErrorLogData>
   ): Promise<string | null> {
+    // Determine severity based on error type and context
+    let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+    
+    if (error.name === 'ChunkLoadError' || error.message.includes('Loading chunk')) {
+      severity = 'low'; // Network/chunk loading errors are usually not critical
+    } else if (error.name === 'TypeError' || error.name === 'ReferenceError') {
+      severity = 'high'; // Code errors are more serious
+    } else if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+      severity = 'medium'; // Network errors are moderate
+    } else if (errorInfo?.componentStack && errorInfo.componentStack.includes('ErrorBoundary')) {
+      severity = 'high'; // Component crashes are serious
+    }
+    
+    // Allow context to override
+    if (context?.severity) {
+      severity = context.severity;
+    }
+
     const errorData: ErrorLogData = {
-      severity: 'high',
+      severity,
       errorMessage: error.message,
       stackTrace: error.stack || errorInfo?.componentStack,
       errorCode: error.name,
@@ -269,7 +287,7 @@ export class ErrorLoggingService {
       const clientService = SupabaseClientService.getInstance();
       
       // Use elevated privileges for admin operations
-      return await clientService.withElevatedPrivileges(async (adminClient) => {
+      return await clientService.withClient(async (adminClient) => {
         const cutoffTime = new Date();
         cutoffTime.setHours(cutoffTime.getHours() - hoursBack);
         const cutoffISO = cutoffTime.toISOString();
@@ -325,7 +343,7 @@ export class ErrorLoggingService {
       const clientService = SupabaseClientService.getInstance();
       
       // Use elevated privileges for admin operations
-      return await clientService.withElevatedPrivileges(async (adminClient) => {
+      return await clientService.withClient(async (adminClient) => {
         let query = adminClient
           .from('error_logs')
           .select('*')
@@ -352,6 +370,33 @@ export class ErrorLoggingService {
     } catch (err) {
       console.error('Recent errors service failed:', err);
       return null;
+    }
+  }
+
+  /**
+   * Clear all error logs (admin function)
+   */
+  static async clearAllErrorLogs(): Promise<boolean> {
+    try {
+      const clientService = SupabaseClientService.getInstance();
+      
+      // Use elevated privileges for admin operations
+      return await clientService.withClient(async (adminClient) => {
+        const { error } = await adminClient
+          .from('error_logs')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
+        
+        if (error) {
+          console.error('Failed to clear error logs:', error);
+          return false;
+        }
+        
+        return true;
+      });
+    } catch (err) {
+      console.error('Clear error logs failed:', err);
+      return false;
     }
   }
 
@@ -454,13 +499,43 @@ export class ErrorLoggingService {
 
 // Global error handlers setup
 export const setupGlobalErrorHandlers = () => {
+  // Filter out known browser extension errors
+  const isExtensionError = (error: Error | string, source?: string): boolean => {
+    const errorMessage = typeof error === 'string' ? error : error.message;
+    const errorSource = source || '';
+    
+    // Known browser extension patterns
+    const extensionPatterns = [
+      'injected.js',
+      'hide-notification',
+      'chrome-extension://',
+      'moz-extension://',
+      'safari-extension://',
+      'extension_',
+      'content-script',
+      'Non-Error promise rejection captured',
+      'Script error.'
+    ];
+    
+    return extensionPatterns.some(pattern => 
+      errorMessage.includes(pattern) || errorSource.includes(pattern)
+    );
+  };
   // Unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
+    const errorMessage = event.reason?.message || 'Unhandled Promise Rejection';
+    
+    // Skip browser extension errors
+    if (isExtensionError(errorMessage)) {
+      console.debug('Skipping browser extension error:', errorMessage);
+      return;
+    }
+    
     ErrorLoggingService.logUnhandledError(
-      new Error(event.reason?.message || 'Unhandled Promise Rejection'),
+      new Error(errorMessage),
       undefined,
       {
-        severity: 'high',
+        severity: 'medium', // Promise rejections are often network/API issues
         tags: ['unhandled', 'promise'],
         additionalContext: {
           reason: event.reason,
@@ -472,11 +547,19 @@ export const setupGlobalErrorHandlers = () => {
 
   // Global error handler
   window.addEventListener('error', (event) => {
+    const error = event.error || new Error(event.message);
+    
+    // Skip browser extension errors
+    if (isExtensionError(error, event.filename)) {
+      console.debug('Skipping browser extension error:', error.message, event.filename);
+      return;
+    }
+    
     ErrorLoggingService.logUnhandledError(
-      event.error || new Error(event.message),
+      error,
       undefined,
       {
-        severity: 'high',
+        severity: 'medium', // Will be auto-determined based on error type
         tags: ['unhandled', 'javascript'],
         filePath: event.filename,
         lineNumber: event.lineno,

@@ -105,11 +105,26 @@ export const logDatabaseError = async (
   componentName?: string,
   additionalData?: Record<string, any>
 ): Promise<void> => {
+  // Determine severity based on operation type and error
+  let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+  
+  if (operation.toLowerCase().includes('delete') || operation.toLowerCase().includes('update')) {
+    severity = 'high'; // Data modification failures are more serious
+  } else if (operation.toLowerCase().includes('insert')) {
+    severity = 'high'; // Insert failures can indicate data loss
+  } else if (operation.toLowerCase().includes('select') || operation.toLowerCase().includes('read')) {
+    severity = 'medium'; // Read failures are less critical
+  } else if (error.message.includes('permission') || error.message.includes('access')) {
+    severity = 'high'; // Permission errors are serious
+  } else if (error.message.includes('timeout') || error.message.includes('connection')) {
+    severity = 'medium'; // Network/timeout errors are moderate
+  }
+  
   await logError(
     `Database ${operation} failed on ${table}: ${error.message}`,
     error,
     {
-      severity: 'high',
+      severity,
       componentName,
       tags: ['database', 'supabase', operation.toLowerCase()],
       additionalContext: {
