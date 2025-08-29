@@ -1,4 +1,5 @@
 import { Button } from '@/components/common';
+import { SkeletonPage, SkeletonStatsCard, SkeletonChart } from '@/components/common/ui/skeleton';
 import { databaseHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context';
 import { routes } from '@/routes';
@@ -466,8 +467,69 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="space-y-6">
+                {/* Header skeleton */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        <div className="h-4 w-96 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                    <div className="flex space-x-4">
+                        <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        <div className="h-10 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                </div>
+
+                {/* Stats cards skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {Array.from({ length: 5 }, (_, i) => (
+                        <SkeletonStatsCard key={i} hasIcon={true} />
+                    ))}
+                </div>
+
+                {/* Session status breakdown skeleton */}
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                        {Array.from({ length: 5 }, (_, i) => (
+                            <div key={i} className="text-center">
+                                <div className="h-8 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto mb-2"></div>
+                                <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Charts skeleton */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <SkeletonChart type="bar" hasLegend={true} />
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+                        <div className="space-y-4 max-h-64">
+                            {Array.from({ length: 5 }, (_, i) => (
+                                <div key={i} className="border-b border-gray-100 dark:border-gray-700 pb-2">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <div className="flex-1 space-y-1">
+                                            <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                            <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                        </div>
+                                        <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                    </div>
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 animate-pulse"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Use SkeletonPage for the detailed table */}
+                <SkeletonPage 
+                    hasHeader={false}
+                    hasNavigation={false}
+                    contentType="table" 
+                    itemCount={6}
+                />
             </div>
         );
     }

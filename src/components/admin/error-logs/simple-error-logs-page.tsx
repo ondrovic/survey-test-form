@@ -4,6 +4,7 @@
  */
 
 import { Modal } from '@/components/common/ui/modal';
+import { SkeletonTableRow } from '@/components/common/ui/skeleton';
 import { useToast } from '@/contexts/toast-context';
 import { ErrorLoggingService } from '@/services/error-logging.service';
 import { SupabaseClientService } from '@/services/supabase-client.service';
@@ -364,9 +365,62 @@ export const SimpleErrorLogsPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="ml-3 text-gray-600 dark:text-gray-400">Loading error logs...</p>
+        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center justify-center mb-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <p className="ml-3 text-gray-600 dark:text-gray-400">Loading error logs...</p>
+            </div>
+            
+            {/* Table skeleton */}
+            <div className="overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3">
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    </th>
+                    <th className="px-6 py-3">
+                      <div className="h-4 w-14 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    </th>
+                    <th className="px-6 py-3">
+                      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    </th>
+                    <th className="px-6 py-3">
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    </th>
+                    <th className="px-6 py-3">
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    </th>
+                    <th className="px-6 py-3">
+                      <div className="h-4 w-12 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {Array.from({ length: pageSize }, (_, i) => (
+                    <SkeletonTableRow key={i} columns={6} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination skeleton */}
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 mt-4">
+              <div className="flex justify-between sm:hidden">
+                <div className="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                <div className="flex space-x-2">
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : errors.length === 0 ? (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">

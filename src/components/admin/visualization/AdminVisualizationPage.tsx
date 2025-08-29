@@ -1,4 +1,4 @@
-import { Button, LoadingSpinner, ScrollableContent } from "@/components/common";
+import { Button, ScrollableContent, SkeletonPage } from "@/components/common";
 import { routes } from "@/routes";
 import { TrendingUp } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
@@ -101,7 +101,21 @@ const VisualizationContent: React.FC = React.memo(() => {
     }
   }, [instanceId]);
 
-  if (loading) return <LoadingSpinner fullScreen text="Loading data..." />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900">
+        <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8">
+          <SkeletonPage 
+            hasHeader={true}
+            hasNavigation={true}
+            contentType="cards"
+            itemCount={8}
+            className="max-w-7xl mx-auto"
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

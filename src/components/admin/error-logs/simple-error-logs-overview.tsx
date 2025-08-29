@@ -35,10 +35,21 @@ export const SimpleErrorLogsOverview: React.FC<SimpleErrorLogsOverviewProps> = (
     return (
       <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse"></div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-700 px-4 py-4 sm:px-6">
           <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-4"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-32"></div>
           </div>
         </div>
       </div>
