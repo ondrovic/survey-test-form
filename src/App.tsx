@@ -6,6 +6,7 @@ import { DynamicForm, PaginatedSurveyForm } from '@/components/form';
 import { SurveyConfirmation } from '@/components/survey';
 import { databaseHelpers, getDatabaseProviderInfo, initializeDatabase } from '@/config/database';
 import { useSurveySession } from '@/hooks/use-survey-session';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -83,6 +84,7 @@ const AppContent = () => {
                     title: config.title
                 })),
                 timestamp: new Date().toISOString()
+                //timestamp: new Date().toLocaleString()
             });
 
             // Start the database session manager for reliable session tracking
@@ -92,11 +94,39 @@ const AppContent = () => {
                 console.log('📊 Database session manager started');
             } catch (error) {
                 console.error('❌ Failed to start session manager:', error);
+                await ErrorLoggingService.logError({
+                    severity: 'high',
+                    errorMessage: 'Database session manager startup failed',
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'App',
+                    functionName: 'initializeFramework',
+                    userAction: 'System initialization',
+                    additionalContext: {
+                        databaseProviderInfo: getDatabaseProviderInfo(),
+                        timestamp: getCurrentTimestamp()
+                    },
+                    tags: ['session_manager', 'initialization', 'database']
+                });
             }
 
             setIsMigrating(false);
         } catch (error) {
             console.error('Error initializing framework:', error);
+            await ErrorLoggingService.logError({
+                severity: 'critical',
+                errorMessage: 'Framework initialization failed',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'App',
+                functionName: 'initializeFramework',
+                userAction: 'System initialization',
+                additionalContext: {
+                    databaseProviderInfo: getDatabaseProviderInfo(),
+                    isAuthenticated,
+                    timestamp: getCurrentTimestamp(),
+                    allSurveyInstancesCount: allSurveyInstances.length
+                },
+                tags: ['framework_init', 'critical_failure', 'database', 'system']
+            });
             setIsMigrating(false);
         }
     }, []);
@@ -236,6 +266,21 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             }
         } catch (err) {
             console.error('Error loading survey config:', err);
+            await ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Survey configuration loading failed',
+                stackTrace: err instanceof Error ? err.stack : String(err),
+                componentName: 'App',
+                functionName: 'loadSurveyConfig',
+                userAction: 'Loading survey configuration',
+                additionalContext: {
+                    instanceId: instance?.id,
+                    configId: instance?.configId,
+                    surveyTitle: instance?.title,
+                    timestamp: getCurrentTimestamp()
+                },
+                tags: ['config_loading', 'survey', 'database']
+            });
             setError('Failed to load survey');
         } finally {
             setLoading(false);
@@ -337,6 +382,22 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 console.log('Database connectivity test passed');
             } catch (connError) {
                 console.error('Database connectivity test failed:', connError);
+                await ErrorLoggingService.logError({
+                    severity: 'critical',
+                    errorMessage: 'Database connectivity test failed during survey submission',
+                    stackTrace: connError instanceof Error ? connError.stack : String(connError),
+                    componentName: 'App',
+                    functionName: 'handleSubmit',
+                    userAction: 'Submitting survey response',
+                    additionalContext: {
+                        instanceId: instance.id,
+                        configId: surveyConfig.id,
+                        isOnline: navigator.onLine,
+                        connectionType: (navigator as any).connection?.effectiveType || 'unknown',
+                        timestamp: getCurrentTimestamp()
+                    },
+                    tags: ['database', 'connectivity', 'submission', 'critical']
+                });
                 throw new Error(`Database connection failed: ${connError instanceof Error ? connError.message : 'Unknown error'}`);
             }
             
@@ -354,6 +415,24 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 console.log('✅ Database submission completed successfully');
             } catch (submissionError) {
                 console.error('❌ Database submission error:', submissionError);
+                await ErrorLoggingService.logError({
+                    severity: 'critical',
+                    errorMessage: 'Survey response database submission failed',
+                    stackTrace: submissionError instanceof Error ? submissionError.stack : String(submissionError),
+                    componentName: 'App',
+                    functionName: 'handleSubmit',
+                    userAction: 'Submitting survey response',
+                    additionalContext: {
+                        responseId: surveyResponse.id,
+                        sessionId: surveyResponse.sessionId,
+                        instanceId: instance.id,
+                        configId: surveyConfig.id,
+                        responseCount: Object.keys(responses).length,
+                        isOnline: navigator.onLine,
+                        timestamp: getCurrentTimestamp()
+                    },
+                    tags: ['submission', 'database', 'critical', 'survey_response']
+                });
                 throw submissionError;
             }
             
@@ -361,8 +440,25 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             
             // Add window error handler to catch any silent errors
             const originalHandler = window.onerror;
-            window.onerror = (message, source, lineno, colno, error) => {
+            window.onerror = async (message, source, lineno, colno, error) => {
                 console.error('🚨 CAUGHT SILENT ERROR:', { message, source, lineno, colno, error });
+                await ErrorLoggingService.logError({
+                    severity: 'high',
+                    errorMessage: `Silent error caught during survey submission: ${message}`,
+                    stackTrace: error?.stack || `${source}:${lineno}:${colno}`,
+                    componentName: 'App',
+                    functionName: 'handleSubmit',
+                    userAction: 'Survey submission process',
+                    additionalContext: {
+                        source,
+                        lineno,
+                        colno,
+                        instanceId: instance?.id,
+                        configId: surveyConfig?.id,
+                        timestamp: getCurrentTimestamp()
+                    },
+                    tags: ['silent_error', 'window_error', 'submission']
+                });
                 if (originalHandler) originalHandler(message, source, lineno, colno, error);
                 return true;
             };
@@ -387,6 +483,22 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 }
             } catch (sessionError) {
                 console.error('❌ Session completion error:', sessionError);
+                await ErrorLoggingService.logError({
+                    severity: 'high',
+                    errorMessage: 'Survey session completion failed',
+                    stackTrace: sessionError instanceof Error ? sessionError.stack : String(sessionError),
+                    componentName: 'App',
+                    functionName: 'handleSubmit',
+                    userAction: 'Completing survey session',
+                    additionalContext: {
+                        sessionId: surveySession?.session?.sessionId,
+                        instanceId: instance.id,
+                        surveyTitle: surveyConfig.title,
+                        sessionStatus: surveySession?.session?.status,
+                        timestamp: getCurrentTimestamp()
+                    },
+                    tags: ['session', 'completion', 'survey', 'tracking']
+                });
                 // Don't throw - continue with success message even if session completion fails
             }
             
@@ -403,6 +515,21 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 navigate(`/survey-confirmation/${urlParam}`);
             } catch (navError) {
                 console.warn('React Router navigation failed, using window.location:', navError);
+                await ErrorLoggingService.logError({
+                    severity: 'low',
+                    errorMessage: 'React Router navigation failed, fallback to window.location',
+                    stackTrace: navError instanceof Error ? navError.stack : String(navError),
+                    componentName: 'App',
+                    functionName: 'handleSubmit',
+                    userAction: 'Navigating to confirmation page',
+                    additionalContext: {
+                        confirmationUrl,
+                        urlParam,
+                        instanceId: instance.id,
+                        timestamp: getCurrentTimestamp()
+                    },
+                    tags: ['navigation', 'router', 'fallback']
+                });
                 window.location.href = confirmationUrl;
             }
         } catch (err) {
@@ -410,15 +537,20 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             
             // Provide more specific error messages
             let errorMessage = 'Failed to submit survey. Please try again.';
+            let errorType = 'general';
             if (err instanceof Error) {
                 if (err.message.includes('No internet connection')) {
                     errorMessage = 'No internet connection. Please check your connection and try again.';
+                    errorType = 'network';
                 } else if (err.message.includes('Database connection failed')) {
                     errorMessage = 'Cannot connect to server. Please ensure you can access the application and try again.';
+                    errorType = 'database';
                 } else if (err.message.includes('network') || err.message.includes('fetch') || err.message.includes('NetworkError')) {
                     errorMessage = 'Network error. Please check your connection and try again.';
+                    errorType = 'network';
                 } else if (err.message.includes('timeout')) {
                     errorMessage = 'Request timed out. Please try again.';
+                    errorType = 'timeout';
                 }
                 console.error('Detailed error:', {
                     name: err.name,
@@ -429,6 +561,27 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                     online: navigator.onLine
                 });
             }
+            
+            await ErrorLoggingService.logError({
+                severity: 'critical',
+                errorMessage: `Main survey submission error: ${err instanceof Error ? err.message : String(err)}`,
+                stackTrace: err instanceof Error ? err.stack : String(err),
+                componentName: 'App',
+                functionName: 'handleSubmit',
+                userAction: 'Submitting survey',
+                additionalContext: {
+                    errorType,
+                    instanceId: instance?.id,
+                    configId: surveyConfig?.id,
+                    responseCount: Object.keys(responses).length,
+                    isOnline: navigator.onLine,
+                    connectionType: (navigator as any).connection?.effectiveType || 'unknown',
+                    userAgent: navigator.userAgent,
+                    location: window.location.href,
+                    timestamp: getCurrentTimestamp()
+                },
+                tags: ['submission', 'critical', 'survey', errorType]
+            });
             
             showError(errorMessage);
             throw err; // Re-throw the error so DynamicForm can catch it

@@ -1,5 +1,5 @@
-import React from 'react';
-import { routes } from '@/routes';
+import React from "react";
+import { routes } from "@/routes";
 
 interface NotFoundPageProps {
   title?: string;
@@ -11,14 +11,13 @@ interface NotFoundPageProps {
 }
 
 export const NotFoundPage: React.FC<NotFoundPageProps> = ({
-  title = 'Resource Not Found',
+  title = "Resource Not Found",
   message = "The resource you're looking for doesn't exist.",
   showHomeButton = true,
-  homeButtonText = 'Go to Home',
+  homeButtonText = "Go to Home",
   homeButtonPath = routes.admin,
-  className = 'min-h-screen bg-amber-50/30 flex items-center justify-center px-4 py-8'
+  className = "min-h-screen bg-blue-50/30 flex items-center justify-center px-4 py-8",
 }) => {
-  
   return (
     <div className={className}>
       <div className="text-center">
@@ -28,7 +27,9 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
           <button
             onClick={() => {
               // Use absolute navigation to prevent relative path issues
-              window.location.href = `${window.location.origin}/${homeButtonPath.replace(/^\/+/, '')}`;
+              window.location.href = `${
+                window.location.origin
+              }/${homeButtonPath.replace(/^\/+/, "")}`;
             }}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >

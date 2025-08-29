@@ -4,7 +4,7 @@
  * Sets up global error handlers and initializes error logging system
  */
 
-import { setupGlobalErrorHandlers } from '@/services/error-logging.service';
+import { setupGlobalErrorHandlers, ErrorLoggingService } from '@/services/error-logging.service';
 
 let isSetup = false;
 
@@ -85,8 +85,24 @@ const setupPerformanceMonitoring = () => {
       const url = args[0]?.toString() || 'unknown';
       console.error('🌐 Network Error:', { url, error });
       
-      // You could log this as a network error
-      // LogApiError(url, 'GET', 0, error.message);
+      // Log the error using ErrorLoggingService if available
+      try {
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: error instanceof Error ? error.message : 'Network request failed',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'ErrorSetupUtils',
+          functionName: 'enhancedFetch',
+          userAction: 'Making network request',
+          additionalContext: {
+            url,
+            errorType: 'network_error'
+          },
+          tags: ['utils', 'error-setup', 'network']
+        });
+      } catch {
+        // Silently fail if error logging is not available
+      }
       
       throw error;
     }

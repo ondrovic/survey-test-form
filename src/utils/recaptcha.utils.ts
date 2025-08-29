@@ -1,4 +1,5 @@
 import { ReCaptchaVerificationResponse } from '@/types';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 /**
  * reCAPTCHA utility functions for token verification
@@ -34,6 +35,23 @@ export async function verifyReCaptchaToken(
         "reCAPTCHA verification request failed:",
         response.statusText
       );
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: `reCAPTCHA verification request failed: ${response.statusText}`,
+        stackTrace: `HTTP ${response.status}: ${response.statusText}`,
+        componentName: 'ReCaptchaUtils',
+        functionName: 'verifyReCaptchaToken',
+        userAction: 'Verifying reCAPTCHA token',
+        additionalContext: {
+          statusCode: response.status,
+          statusText: response.statusText,
+          errorType: 'recaptcha_verification_request'
+        },
+        tags: ['utils', 'recaptcha', 'security']
+      });
+      
       return false;
     }
 
@@ -41,12 +59,45 @@ export async function verifyReCaptchaToken(
 
     if (!data.success) {
       console.error("reCAPTCHA verification failed:", data["error-codes"]);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: `reCAPTCHA verification failed: ${data["error-codes"]?.join(', ') || 'Unknown error'}`,
+        stackTrace: JSON.stringify(data),
+        componentName: 'ReCaptchaUtils',
+        functionName: 'verifyReCaptchaToken',
+        userAction: 'Verifying reCAPTCHA token',
+        additionalContext: {
+          errorCodes: data["error-codes"],
+          errorType: 'recaptcha_verification_failed'
+        },
+        tags: ['utils', 'recaptcha', 'security']
+      });
+      
       return false;
     }
 
     return true;
   } catch (error) {
     console.error("Error verifying reCAPTCHA token:", error);
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'medium',
+      errorMessage: error instanceof Error ? error.message : 'Error verifying reCAPTCHA token',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'ReCaptchaUtils',
+      functionName: 'verifyReCaptchaToken',
+      userAction: 'Verifying reCAPTCHA token',
+      additionalContext: {
+        errorType: 'recaptcha_verification_exception',
+        hasSecretKey: !!secretKey,
+        hasToken: !!token
+      },
+      tags: ['utils', 'recaptcha', 'security']
+    });
+    
     return false;
   }
 }
@@ -65,12 +116,45 @@ export async function verifyReCaptchaTokenClientSide(
   // using Supabase Edge Functions or similar server-side solution
   if (!token || token.trim() === '') {
     console.error("reCAPTCHA token is empty");
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'medium',
+      errorMessage: 'reCAPTCHA token is empty',
+      stackTrace: 'Empty token validation',
+      componentName: 'ReCaptchaUtils',
+      functionName: 'verifyReCaptchaTokenClientSide',
+      userAction: 'Client-side reCAPTCHA token validation',
+      additionalContext: {
+        errorType: 'recaptcha_empty_token',
+        tokenProvided: !!token
+      },
+      tags: ['utils', 'recaptcha', 'security', 'client-side']
+    });
+    
     return false;
   }
   
   // Basic token format validation
   if (token.length < 20) {
     console.error("reCAPTCHA token appears to be invalid");
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'medium',
+      errorMessage: 'reCAPTCHA token appears to be invalid (too short)',
+      stackTrace: 'Token format validation',
+      componentName: 'ReCaptchaUtils',
+      functionName: 'verifyReCaptchaTokenClientSide',
+      userAction: 'Client-side reCAPTCHA token validation',
+      additionalContext: {
+        errorType: 'recaptcha_invalid_token_format',
+        tokenLength: token.length,
+        expectedMinLength: 20
+      },
+      tags: ['utils', 'recaptcha', 'security', 'client-side']
+    });
+    
     return false;
   }
   

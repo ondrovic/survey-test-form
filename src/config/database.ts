@@ -4,6 +4,7 @@ import {
   validateDatabaseConfig,
 } from "./database.config";
 import type { AuthHelpers, DatabaseHelpers } from "../types/database.types";
+import { ErrorLoggingService } from "../services/error-logging.service";
 
 /**
  * Database initialization state management
@@ -196,6 +197,22 @@ class DatabaseHelperProxy {
             helperObject = getHelperObject();
           } catch (error) {
             console.error("Error getting helper object:", error);
+            
+            // Log the error using ErrorLoggingService
+            ErrorLoggingService.logError({
+              severity: 'medium',
+              errorMessage: error instanceof Error ? error.message : 'Error getting helper object',
+              stackTrace: error instanceof Error ? error.stack : String(error),
+              componentName: 'DatabaseConfig',
+              functionName: 'DatabaseHelperProxy.get',
+              userAction: 'Getting database helper object',
+              additionalContext: {
+                property: String(prop),
+                errorType: 'helper_object_access'
+              },
+              tags: ['config', 'database', 'helpers']
+            });
+            
             throw new Error("Database service helpers are not available");
           }
 

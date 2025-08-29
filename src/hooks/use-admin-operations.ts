@@ -6,6 +6,7 @@ import {
   downloadFrameworkResponsesAsExcel,
 } from "@/utils/excel.utils";
 import { useCallback } from "react";
+import { ErrorLoggingService } from "@/services/error-logging.service";
 
 export const useAdminOperations = () => {
   const { showSuccess, showError } = useToast();
@@ -37,6 +38,19 @@ export const useAdminOperations = () => {
         console.error("Error in deleteSurveyConfig:", error);
         const itemName = configName || "Survey configuration";
         showError(`Failed to delete survey configuration "${itemName}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to delete survey configuration: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'deleteSurveyConfig',
+          userAction: 'deleting survey configuration',
+          additionalContext: {
+            configId,
+            configName,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'config', 'delete']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -82,6 +96,19 @@ export const useAdminOperations = () => {
         console.error("Error in permanentlyDeleteSurveyInstance:", error);
         const itemName = instanceName || "Survey instance";
         showError(`Failed to delete survey instance "${itemName}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to permanently delete survey instance: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'permanentlyDeleteSurveyInstance',
+          userAction: 'permanently deleting survey instance',
+          additionalContext: {
+            instanceId,
+            instanceName,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'instance', 'delete']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -97,6 +124,19 @@ export const useAdminOperations = () => {
       } catch (error) {
         const itemName = scaleName || "Unnamed Rating Scale";
         showError(`Failed to delete rating scale "${itemName}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to delete rating scale: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'deleteRatingScale',
+          userAction: 'deleting rating scale',
+          additionalContext: {
+            scaleId,
+            scaleName,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'rating-scale', 'delete']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -144,6 +184,20 @@ export const useAdminOperations = () => {
             isActive ? "activate" : "deactivate"
           } survey instance "${itemName}"`
         );
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to ${isActive ? 'activate' : 'deactivate'} survey instance: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'toggleInstanceActive',
+          userAction: `${isActive ? 'activating' : 'deactivating'} survey instance`,
+          additionalContext: {
+            instanceId,
+            instanceName,
+            isActive,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'instance', 'toggle-active']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -184,6 +238,20 @@ export const useAdminOperations = () => {
         showError(
           `Failed to update date range for survey instance "${itemName}"`
         );
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to update date range for survey instance: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'updateInstanceDateRange',
+          userAction: 'updating survey instance date range',
+          additionalContext: {
+            instanceId,
+            instanceName,
+            dateRange,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'instance', 'date-range']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -243,6 +311,18 @@ export const useAdminOperations = () => {
                 `Failed to get responses for instance ${instance.id}:`,
                 error
               );
+              ErrorLoggingService.logError({
+                severity: 'low',
+                errorMessage: `Failed to get responses for instance ${instance.id}`,
+                componentName: 'useAdminOperations',
+                functionName: 'downloadFrameworkData',
+                userAction: 'downloading framework data for all instances',
+                additionalContext: {
+                  instanceId: instance.id,
+                  error: error instanceof Error ? error.message : String(error)
+                },
+                tags: ['admin', 'download', 'responses']
+              });
             }
           }
 
@@ -265,6 +345,18 @@ export const useAdminOperations = () => {
         }
       } catch (error) {
         showError("Failed to download framework survey data");
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: 'Failed to download framework survey data',
+          componentName: 'useAdminOperations',
+          functionName: 'downloadFrameworkData',
+          userAction: 'downloading framework survey data',
+          additionalContext: {
+            instanceId,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'download', 'data']
+        });
       }
     },
     [showSuccess, showError]
@@ -303,6 +395,17 @@ export const useAdminOperations = () => {
       }
     } catch (error) {
       showError("Failed to clean up duplicate rating scales");
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to clean up duplicate rating scales',
+        componentName: 'useAdminOperations',
+        functionName: 'cleanupDuplicateRatingScales',
+        userAction: 'cleaning up duplicate rating scales',
+        additionalContext: {
+          error: error instanceof Error ? error.message : String(error)
+        },
+        tags: ['admin', 'rating-scales', 'cleanup']
+      });
     }
   }, [showSuccess, showError, refreshAll]);
 
@@ -322,6 +425,19 @@ export const useAdminOperations = () => {
         console.error("Error in deleteRadioOptionSet:", error);
         const itemName = optionSetName || "Unnamed Radio Option Set";
         showError(`Failed to delete radio option set "${itemName}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to delete radio option set: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'deleteRadioOptionSet',
+          userAction: 'deleting radio option set',
+          additionalContext: {
+            optionSetId,
+            optionSetName,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'option-set', 'radio', 'delete']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -342,6 +458,19 @@ export const useAdminOperations = () => {
         console.error("Error in deleteMultiSelectOptionSet:", error);
         const itemName = optionSetName || "Unnamed Multi-Select Option Set";
         showError(`Failed to delete multi-select option set "${itemName}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to delete multi-select option set: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'deleteMultiSelectOptionSet',
+          userAction: 'deleting multi-select option set',
+          additionalContext: {
+            optionSetId,
+            optionSetName,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'option-set', 'multi-select', 'delete']
+        });
       }
     },
     [showSuccess, showError, refreshAll]
@@ -362,6 +491,19 @@ export const useAdminOperations = () => {
         console.error("Error in deleteSelectOptionSet:", error);
         const itemName = optionSetName || "Unnamed Select Option Set";
         showError(`Failed to delete select option set "${itemName}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to delete select option set: ${itemName}`,
+          componentName: 'useAdminOperations',
+          functionName: 'deleteSelectOptionSet',
+          userAction: 'deleting select option set',
+          additionalContext: {
+            optionSetId,
+            optionSetName,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['admin', 'option-set', 'select', 'delete']
+        });
       }
     },
     [showSuccess, showError, refreshAll]

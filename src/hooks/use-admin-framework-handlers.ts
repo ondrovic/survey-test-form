@@ -1,6 +1,7 @@
 import { useGenericImportExport, useSurveyOperations } from "@/hooks";
 import { routes } from "@/routes";
 import { DateRange, SurveyConfig, SurveyInstance } from "@/types";
+import { ErrorLoggingService } from "@/services/error-logging.service";
 
 export interface AdminFrameworkOperations {
   onCreateNewSurvey: () => void;
@@ -190,6 +191,21 @@ export const useAdminFrameworkHandlers = (
       modalActions.settingsModal.close();
     } catch (error) {
       // Error handling is done in the individual functions
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to save instance settings',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useAdminFrameworkHandlers',
+        functionName: 'handleSaveInstanceSettings',
+        userAction: 'saving survey instance settings',
+        additionalContext: {
+          instanceId: settingsModalData?.id,
+          instanceTitle: settingsModalData?.title,
+          updates,
+          error: error instanceof Error ? error.message : String(error)
+        },
+        tags: ['admin', 'framework', 'instance-settings']
+      });
     }
   };
 

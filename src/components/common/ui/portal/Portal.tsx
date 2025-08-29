@@ -7,7 +7,7 @@ interface PortalProps {
 }
 
 export const Portal: React.FC<PortalProps> = ({ children, container }) => {
-  const defaultContainer = useRef<HTMLDivElement>();
+  const defaultContainer = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!container) {

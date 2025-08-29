@@ -16,8 +16,13 @@ export const getFieldRenderer = (
       // These types don't have additional fields
       return undefined;
       
-    case 'multi-select':
-      return MultiSelectFields;
+    case 'multi-select': {
+      const MultiSelectRenderer = (fieldProps: { data: any; setField: (field: string, value: any) => void }) => {
+        return <MultiSelectFields {...fieldProps} />;
+      };
+      MultiSelectRenderer.displayName = 'MultiSelectRenderer';
+      return MultiSelectRenderer;
+    }
       
     case 'select': {
       // Pass filterMultiple prop to SelectFields if available

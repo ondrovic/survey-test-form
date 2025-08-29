@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/auth-context';
 import { databaseHelpers, getDatabaseProviderInfo } from '@/config/database';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 import { useCallback, useEffect, useState } from 'react';
 import { ConnectionStatus } from '@/types';
 
@@ -38,6 +39,23 @@ export const useConnectionStatus = (): ConnectionStatus => {
       setError(null);
     } catch (err) {
       console.error('Database connection test failed:', err);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: err instanceof Error ? err.message : 'Connection failed',
+        stackTrace: err instanceof Error ? err.stack : String(err),
+        componentName: 'useConnectionStatus',
+        functionName: 'checkConnection',
+        userAction: 'Testing database connection',
+        additionalContext: {
+          errorType: 'connection_test_failed',
+          isAuthenticated,
+          authLoading
+        },
+        tags: ['hooks', 'connection', 'network']
+      });
+      
       setConnected(false);
       setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {

@@ -73,12 +73,12 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
     return allCharts.reduce((acc, chart) => {
       acc[chart.series.fieldId] = React.createRef<ReactECharts>();
       return acc;
-    }, {} as Record<string, React.RefObject<ReactECharts>>);
+    }, {} as Record<string, React.RefObject<ReactECharts | null>>);
   }, [allCharts]);
 
   if (allCharts.length === 0) return null;
 
-  const renderChart = (chartItem: ChartModalData, chartRef: React.RefObject<ReactECharts>) => {
+  const renderChart = (chartItem: ChartModalData, chartRef: React.RefObject<ReactECharts | null>) => {
     const chartType = preferences.perFieldChartType[chartItem.series.fieldId] || preferences.defaultChartType;
     const commonProps = {
       counts: chartItem.series.counts,

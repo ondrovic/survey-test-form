@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { SurveyConfig, SurveyResponse } from "../types/framework.types";
+import { ErrorLoggingService } from "../services/error-logging.service";
 
 export interface ExcelExportOptions {
   filename?: string;
@@ -240,6 +241,25 @@ export const downloadFrameworkResponsesAsExcel = (
     );
   } catch (error) {
     console.error("Error generating Excel file:", error);
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'medium',
+      errorMessage: error instanceof Error ? error.message : 'Failed to generate Excel file',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'ExcelUtils',
+      functionName: 'downloadFrameworkResponsesAsExcel',
+      userAction: 'Downloading survey responses as Excel file',
+      additionalContext: {
+        responsesCount: responses.length,
+        filename,
+        sheetName,
+        hasSurveyConfig: !!surveyConfig,
+        errorType: 'excel_generation'
+      },
+      tags: ['utils', 'excel', 'export']
+    });
+    
     throw new Error("Failed to generate Excel file");
   }
 }

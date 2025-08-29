@@ -5,6 +5,8 @@
  * and menu item configurations.
  */
 
+import { ReactElement } from 'react';
+
 /**
  * Drawer page identifiers for admin navigation
  */
@@ -21,7 +23,7 @@ export type AdminPage = 'overview' | 'framework' | 'legacy' | 'option-sets' | 'e
 export interface NavigationItem {
   id: DrawerPage;
   label: string;
-  icon: JSX.Element;
+  icon: ReactElement;
 }
 
 /**

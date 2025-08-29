@@ -18,9 +18,7 @@ export interface BaseMetadata {
 /**
  * Options for creating new metadata
  */
-export interface CreateMetadataOptions extends Partial<Pick<BaseMetadata, 'createdBy' | 'ip'>> {
-  // Create-specific options can be added here in the future
-}
+export type CreateMetadataOptions = Partial<Pick<BaseMetadata, 'createdBy' | 'ip'>>;
 
 /**
  * Options for updating existing metadata

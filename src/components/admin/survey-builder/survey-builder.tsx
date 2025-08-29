@@ -24,6 +24,7 @@ import { SurveyPreview } from './components/preview';
 import { SectionList, SurveyDetails } from './components/sidebar';
 import { FieldDragProvider, FieldMoveData, SortableListMoveData } from './drag-and-drop';
 import { SurveyBuilderProps } from './survey-builder.types';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 // Wrapper component that provides the context
 export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
@@ -517,7 +518,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                 showSuccess(`Survey configuration "${updatedConfig.title}" updated!`);
             } else {
                 // Remove the empty ID when creating new config
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { id: _unusedId, ...configWithoutId } = updatedConfig;
                 await databaseHelpers.addSurveyConfig(configWithoutId);
                 showSuccess(`Survey configuration "${updatedConfig.title}" created!`);
@@ -533,6 +533,22 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             onClose();
         } catch (error) {
             const configTitle = state.config.title || 'Survey configuration';
+            ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: `Failed to save survey configuration "${configTitle}"`,
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyBuilderInner',
+                functionName: 'handleSave',
+                userAction: 'save_survey_config',
+                additionalContext: {
+                    configTitle: configTitle,
+                    isEditing: !!editingConfig,
+                    configId: editingConfig?.id,
+                    sectionsCount: state.config.sections?.length || 0,
+                    error: error instanceof Error ? error.message : String(error)
+                },
+                tags: ['survey-builder', 'config-save', 'survey-config']
+            });
             showError(`Failed to save survey configuration "${configTitle}"`);
         } finally {
             setLoading(false);

@@ -3,6 +3,7 @@ import { useModal } from "@/contexts/modal-context";
 import { useCallback, useRef } from "react";
 import { useConfigValidation } from "./use-config-validation";
 import { useSurveyOperations } from "./use-survey-operations";
+import { ErrorLoggingService } from "@/services/error-logging.service";
 
 // Global flag to track if an import operation is in progress
 let isImportOperationInProgress = false;
@@ -31,6 +32,18 @@ export const useAutomaticValidation = (updateValidationStatus: (results: any) =>
     if (process.env.NODE_ENV === 'development') {
       console.log('⚠️ Validation context not available in useAutomaticValidation (expected when used at framework level)');
     }
+    ErrorLoggingService.logError({
+      severity: 'low',
+      errorMessage: 'Validation context not available in useAutomaticValidation',
+      componentName: 'useAutomaticValidation',
+      functionName: 'initialization',
+      userAction: 'accessing validation context',
+      additionalContext: {
+        nodeEnv: process.env.NODE_ENV,
+        error: error instanceof Error ? error.message : String(error)
+      },
+      tags: ['validation', 'context', 'initialization']
+    });
   }
 
   // Store current validation results to avoid recreating the modal

@@ -1,4 +1,5 @@
 import { SurveyConfig } from '@/types';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 /**
  * Exports a survey config as a downloadable JSON file
@@ -126,6 +127,21 @@ export const parseJsonFile = (file: File): Promise<any> => {
         const data = JSON.parse(text);
         resolve(data);
       } catch (error) {
+        ErrorLoggingService.logError({
+          severity: 'low',
+          errorMessage: 'Failed to parse JSON file during config import',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'configImportExportUtils',
+          functionName: 'parseJsonFile',
+          userAction: 'import_survey_config',
+          additionalContext: {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['config-import', 'json-parse', 'file-handling']
+        });
         reject(new Error('Invalid JSON file'));
       }
     };

@@ -3,6 +3,7 @@ import { databaseHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context';
 import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types/framework.types';
 import { routes } from '@/routes';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 import { BarChart3, Calendar, Clock, Filter, Users } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -166,6 +167,25 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             setAnalyticsData(data);
         } catch (err) {
             console.error('❌ Error loading analytics data:', err);
+            
+            // Log the error using ErrorLoggingService
+            ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: err instanceof Error ? err.message : 'Failed to load analytics data',
+                stackTrace: err instanceof Error ? err.stack : String(err),
+                componentName: 'Analytics',
+                functionName: 'loadAnalyticsData',
+                userAction: 'Loading analytics data',
+                additionalContext: {
+                    selectedInstanceId,
+                    dateRange,
+                    groupBy,
+                    errorType: 'analytics_data_loading',
+                    instancesCount: surveyInstances.length
+                },
+                tags: ['analytics', 'admin', 'data-loading']
+            });
+            
             setError(err instanceof Error ? err.message : 'Failed to load analytics data');
         } finally {
             setLoading(false);
@@ -502,7 +522,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {instance ? `${instance.title} - Analytics` : 'Survey Analytics'}
                     </h2>
                     <p className="text-gray-600">
@@ -510,10 +530,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                     </p>
                     {instance && (
                         <>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-100">
                             {instance?.description}
                         </p>
-                        <p className="text-sm text-blue-500 mb-1">
+                        <p className="text-sm text-blue-500 dark:text-blue-100 mb-1">
                             {instance.id}
                         </p>
                         </>

@@ -3,6 +3,7 @@
  */
 
 import { SupabaseClientService } from '@/services/supabase-client.service';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 export interface CurrentUser {
   id: string;
@@ -25,6 +26,21 @@ export const getCurrentUser = async (): Promise<CurrentUser | null> => {
     };
   } catch (error) {
     console.error('Failed to get current user:', error);
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'low',
+      errorMessage: error instanceof Error ? error.message : 'Failed to get current user',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'UserUtils',
+      functionName: 'getCurrentUser',
+      userAction: 'Getting current authenticated user',
+      additionalContext: {
+        errorType: 'user_retrieval'
+      },
+      tags: ['utils', 'user', 'authentication']
+    });
+    
     return null;
   }
 };

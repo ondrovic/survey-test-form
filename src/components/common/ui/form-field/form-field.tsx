@@ -215,28 +215,32 @@ const FormFieldControl = forwardRef<HTMLDivElement, FormFieldControlProps>(({
 }, ref) => {
   const { fieldId, errorId, error, disabled, required } = useFormField();
 
+  // Type-safe access to children props
+  const childProps = children.props as Record<string, unknown>;
+
   // Clone the child element and pass the necessary props including mobile optimizations
-  const childWithProps = React.cloneElement(children, {
+  const enhancedProps = {
     id: fieldId,
     'aria-describedby': error ? errorId : undefined,
     'aria-invalid': error ? 'true' : 'false',
     'aria-required': required,
-    disabled: disabled || children.props.disabled,
+    disabled: disabled || (childProps.disabled as boolean),
     // Mobile-friendly enhancements
     style: {
       // Prevent iOS zoom on focus by ensuring font-size is at least 16px
       fontSize: window?.innerWidth <= 768 ? '16px' : undefined,
-      ...children.props.style,
+      ...(childProps.style as React.CSSProperties || {}),
     },
     className: clsx(
       // Add mobile touch target enhancements if it's an input-like element
       typeof children.type === 'string' && ['input', 'textarea', 'select'].includes(children.type) && inputTokens.mobile.touchTarget,
       typeof children.type === 'string' && ['input', 'textarea', 'select'].includes(children.type) && inputTokens.mobile.textSize,
       typeof children.type === 'string' && ['input', 'textarea', 'select'].includes(children.type) && inputTokens.mobile.spacing,
-      children.props.className
+      childProps.className as string
     ),
-    ...children.props, // Preserve existing props
-  });
+  };
+
+  const childWithProps = React.cloneElement(children, enhancedProps);
 
   return (
     <div 

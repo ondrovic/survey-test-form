@@ -9,7 +9,7 @@ import type ReactECharts from 'echarts-for-react';
  * @param backgroundColor - Background color for the exported image
  */
 export const saveChartAsImage = (
-  chartRef: React.RefObject<ReactECharts>,
+  chartRef: React.RefObject<ReactECharts | null>,
   filename: string = 'chart',
   format: 'png' | 'jpeg' | 'svg' = 'png',
   pixelRatio: number = 2,

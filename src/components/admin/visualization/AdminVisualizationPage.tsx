@@ -94,7 +94,9 @@ const VisualizationContent: React.FC = React.memo(() => {
   // Handle analytics button click
   const handleAnalytics = useCallback(() => {
     if (instanceId) {
-      const url = `${window.location.origin}/${routes.adminAnalytics(instanceId)}`;
+      const url = `${window.location.origin}/${routes.adminAnalytics(
+        instanceId
+      )}`;
       window.open(url, "_blank");
     }
   }, [instanceId]);
@@ -103,7 +105,7 @@ const VisualizationContent: React.FC = React.memo(() => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col bg-amber-50/30">
+      <div className="min-h-screen flex flex-col bg-blue-50/30">
         <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -111,7 +113,9 @@ const VisualizationContent: React.FC = React.memo(() => {
               <Button
                 variant="outline"
                 size="form"
-                onClick={() => window.location.href = `${window.location.origin}/${routes.admin}`}
+                onClick={() =>
+                  (window.location.href = `${window.location.origin}/${routes.admin}`)
+                }
               >
                 Back to Admin
               </Button>
@@ -132,7 +136,7 @@ const VisualizationContent: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-amber-50/30">
+    <div className="min-h-screen flex flex-col bg-blue-50/30">
       <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -140,7 +144,9 @@ const VisualizationContent: React.FC = React.memo(() => {
             <Button
               variant="outline"
               size="form"
-              onClick={() => window.location.href = `${window.location.origin}/${routes.admin}`}
+              onClick={() =>
+                (window.location.href = `${window.location.origin}/${routes.admin}`)
+              }
             >
               Back to Admin
             </Button>

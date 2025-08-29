@@ -106,7 +106,7 @@ export const COLOR_OPTIONS: ColorOption[] = [
   {
     value: "amber",
     label: "Amber",
-    bgClass: "bg-amber-50",
+    bgClass: "bg-blue-50",
     textClass: "text-amber-700",
     borderClass: "border-amber-300",
   },
@@ -289,7 +289,7 @@ export const COLOR_OPTIONS: ColorOption[] = [
   {
     value: "bronze",
     label: "Bronze",
-    bgClass: "bg-amber-75",
+    bgClass: "bg-blue-75",
     textClass: "text-amber-800",
     borderClass: "border-amber-400",
   },
@@ -321,7 +321,7 @@ export const COLOR_OPTIONS: ColorOption[] = [
   {
     value: "brown",
     label: "Brown",
-    bgClass: "bg-amber-100",
+    bgClass: "bg-blue-100",
     textClass: "text-amber-900",
     borderClass: "border-amber-400",
   },

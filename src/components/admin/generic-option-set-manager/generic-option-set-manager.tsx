@@ -1,14 +1,21 @@
-import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import { Check, Edit, Plus, Trash2, Upload } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useConfirmation, useModal } from '../../../contexts/modal-context';
-import { BaseOptionSet, OptionSetConfig, useOptionSetCrud } from '../../../contexts/option-set-crud-context';
-import { useSurveyData } from '../../../contexts/survey-data-context';
-import { useGenericImportExport } from '../../../hooks';
-import { ExportableDataType } from '../../../utils/generic-import-export.utils';
-import { Button, GenericImportModal } from '../../common';
-import { LegacyModal as Modal } from '../../common/ui/modal/Modal';
-import { OptionSetForm, OptionSetFormData } from '../option-set-shared/option-set-form';
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { Check, Edit, Plus, Trash2, Upload } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useConfirmation, useModal } from "../../../contexts/modal-context";
+import {
+  BaseOptionSet,
+  OptionSetConfig,
+  useOptionSetCrud,
+} from "../../../contexts/option-set-crud-context";
+import { useSurveyData } from "../../../contexts/survey-data-context";
+import { useGenericImportExport } from "../../../hooks";
+import { ExportableDataType } from "../../../utils/generic-import-export.utils";
+import { Button, GenericImportModal } from "../../common";
+import { LegacyModal as Modal } from "../../common/ui/modal/Modal";
+import {
+  OptionSetForm,
+  OptionSetFormData,
+} from "../option-set-shared/option-set-form";
 
 interface GenericOptionSetManagerProps<T extends BaseOptionSet> {
   isVisible: boolean;
@@ -32,7 +39,8 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   isCreating: propIsCreating,
   renderAdditionalFields,
 }: GenericOptionSetManagerProps<T>) => {
-  const { loadItems, createItem, updateItem, deleteItem, isLoading } = useOptionSetCrud();
+  const { loadItems, createItem, updateItem, deleteItem, isLoading } =
+    useOptionSetCrud();
   const { refreshAll } = useSurveyData();
   const { exportItem, importItem } = useGenericImportExport();
   const showConfirmation = useConfirmation();
@@ -45,21 +53,43 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
 
   // Define loadItemsData function before using it in useEffect
   const loadItemsData = useCallback(async () => {
-    console.log('🔄 Loading items for:', config.displayName, 'in selection mode:', selectionMode);
+    console.log(
+      "🔄 Loading items for:",
+      config.displayName,
+      "in selection mode:",
+      selectionMode
+    );
     const loadedItems = await loadItems(config);
-    console.log('📊 Loaded items:', loadedItems.length, 'items for', config.displayName);
+    console.log(
+      "📊 Loaded items:",
+      loadedItems.length,
+      "items for",
+      config.displayName
+    );
     setItems(loadedItems);
   }, [selectionMode, loadItems]);
 
   // Load items when component becomes visible, but only in selection mode
   // In creation mode, we don't need to load existing items
   useEffect(() => {
-    console.log('🔍 Rating scale manager effect:', { isVisible, selectionMode, displayName: config.displayName });
+    console.log("🔍 Rating scale manager effect:", {
+      isVisible,
+      selectionMode,
+      displayName: config.displayName,
+    });
     if (isVisible && selectionMode) {
-      console.log('✅ Triggering loadItemsData for', config.displayName);
+      console.log("✅ Triggering loadItemsData for", config.displayName);
       loadItemsData();
     } else {
-      console.log('❌ Not loading items:', { isVisible, selectionMode, reason: !isVisible ? 'not visible' : !selectionMode ? 'not in selection mode' : 'unknown' });
+      console.log("❌ Not loading items:", {
+        isVisible,
+        selectionMode,
+        reason: !isVisible
+          ? "not visible"
+          : !selectionMode
+          ? "not in selection mode"
+          : "unknown",
+      });
     }
   }, [isVisible, selectionMode, loadItemsData]);
 
@@ -117,39 +147,52 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
 
   const handleDelete = (item: T) => {
     showConfirmation({
-      title: 'Delete Item',
-      message: `Are you sure you want to delete '${item.name || `Unnamed ${config.displayName}`}'? This action cannot be undone.`,
-      variant: 'danger',
+      title: "Delete Item",
+      message: `Are you sure you want to delete '${
+        item.name || `Unnamed ${config.displayName}`
+      }'? This action cannot be undone.`,
+      variant: "danger",
       onConfirm: async () => {
-        const success = await deleteItem(config, item.id, item.name || `Unnamed ${config.displayName}`);
+        const success = await deleteItem(
+          config,
+          item.id,
+          item.name || `Unnamed ${config.displayName}`
+        );
         if (success) {
           // Update local state
-          setItems(prev => prev.filter(prevItem => prevItem.id !== item.id));
+          setItems((prev) =>
+            prev.filter((prevItem) => prevItem.id !== item.id)
+          );
         }
-      }
+      },
     });
   };
 
   const handleSave = async () => {
     if (!editingItem) return;
 
-    const isCreating = propIsCreating !== undefined ? propIsCreating : !editingItem.id;
+    const isCreating =
+      propIsCreating !== undefined ? propIsCreating : !editingItem.id;
     let success = false;
 
     if (isCreating) {
-      const newItem = await createItem(config, editingItem as Omit<T, 'id'>);
+      const newItem = await createItem(config, editingItem as Omit<T, "id">);
       if (newItem) {
         // Update local state
-        setItems(prev => [...prev, newItem]);
+        setItems((prev) => [...prev, newItem]);
         success = true;
       }
     } else {
       success = await updateItem(config, editingItem.id!, editingItem);
       if (success) {
         // Update local state
-        setItems(prev => prev.map(item =>
-          item.id === editingItem.id ? { ...item, ...editingItem } as T : item
-        ));
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === editingItem.id
+              ? ({ ...item, ...editingItem } as T)
+              : item
+          )
+        );
       }
     }
 
@@ -174,18 +217,17 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     onClose();
   };
 
-
   // Map config type to export data type
   const getExportDataType = (): ExportableDataType => {
     switch (config.type) {
-      case 'rating-scale':
-        return 'rating-scale';
-      case 'radio':
-        return 'radio-option-set';
-      case 'multi-select':
-        return 'multi-select-option-set';
-      case 'select':
-        return 'select-option-set';
+      case "rating-scale":
+        return "rating-scale";
+      case "radio":
+        return "radio-option-set";
+      case "multi-select":
+        return "multi-select-option-set";
+      case "select":
+        return "select-option-set";
       default:
         throw new Error(`Unknown option set type: ${config.type}`);
     }
@@ -199,10 +241,10 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const handleImport = () => {
     const dataType = getExportDataType();
     openModal(
-      'import-modal',
+      "import-modal",
       <GenericImportModal
         isOpen={true}
-        onClose={() => closeModal('import-modal')}
+        onClose={() => closeModal("import-modal")}
         onImport={handleImportFile}
         dataType={dataType}
         title={`Import ${config.displayName}`}
@@ -212,11 +254,13 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
 
   const handleImportFile = async (file: File) => {
     const dataType = getExportDataType();
-    const success = await importItem(file, dataType, () => closeModal('import-modal'));
+    const success = await importItem(file, dataType, () =>
+      closeModal("import-modal")
+    );
     if (success) {
       // Refresh local items
       await loadItemsData();
-      closeModal('import-modal');
+      closeModal("import-modal");
     }
     return success;
   };
@@ -224,13 +268,17 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const handleDragEnd = (result: DropResult) => {
     // This is a no-op handler for the DragDropContext
     // The actual reordering is handled by the SortableList component
-    console.log('Drag ended:', result);
+    console.log("Drag ended:", result);
   };
 
   // Prepare current editing data for form
-  const currentEditingData = editingItem || (propEditingOptionSet ? {
-    ...propEditingOptionSet,
-  } : null);
+  const currentEditingData =
+    editingItem ||
+    (propEditingOptionSet
+      ? {
+          ...propEditingOptionSet,
+        }
+      : null);
 
   if (!isVisible) return null;
 
@@ -244,31 +292,48 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
         className="max-h-[90vh]"
       >
         <div className="p-6">
-
-          {(!selectionMode) ? (
+          {!selectionMode ? (
             <OptionSetForm
               title={config.displayName}
               loading={isLoading}
-              isCreating={propIsCreating !== undefined ? propIsCreating : !editingItem?.id}
-              data={(currentEditingData || config.defaultItem()) as unknown as OptionSetFormData<any>}
+              isCreating={
+                propIsCreating !== undefined ? propIsCreating : !editingItem?.id
+              }
+              data={
+                (currentEditingData ||
+                  config.defaultItem()) as unknown as OptionSetFormData<any>
+              }
               onChange={(updated) => setEditingItem(updated as any)}
               onSave={handleSave}
               onCancel={handleCancel}
-              showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio' || config.type === 'select' || config.type === 'multi-select'}
+              showDefaultToggle={
+                config.type === "rating-scale" ||
+                config.type === "radio" ||
+                config.type === "select" ||
+                config.type === "multi-select"
+              }
               showColor={true}
               optionSetType={config.type}
               renderAdditionalFields={renderAdditionalFields}
             />
-          ) : (editingItem || currentEditingData) ? (
+          ) : editingItem || currentEditingData ? (
             <OptionSetForm
               title={config.displayName}
               loading={isLoading}
               isCreating={!editingItem?.id}
-              data={(editingItem || currentEditingData) as unknown as OptionSetFormData<any>}
+              data={
+                (editingItem ||
+                  currentEditingData) as unknown as OptionSetFormData<any>
+              }
               onChange={(updated) => setEditingItem(updated as any)}
               onSave={handleSave}
               onCancel={handleCancel}
-              showDefaultToggle={config.type === 'rating-scale' || config.type === 'radio' || config.type === 'select' || config.type === 'multi-select'}
+              showDefaultToggle={
+                config.type === "rating-scale" ||
+                config.type === "radio" ||
+                config.type === "select" ||
+                config.type === "multi-select"
+              }
               showColor={true}
               optionSetType={config.type}
               renderAdditionalFields={renderAdditionalFields}
@@ -277,20 +342,15 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
             // Items List
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">{config.displayName}s</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  {config.displayName}s
+                </h3>
                 <div className="flex items-center gap-2">
-                  <Button
-                    onClick={handleImport}
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button onClick={handleImport} variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
                     Import {config.displayName}
                   </Button>
-                  <Button
-                    onClick={handleCreateNew}
-                    variant="primary"
-                  >
+                  <Button onClick={handleCreateNew} variant="primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Create New {config.displayName}
                   </Button>
@@ -303,28 +363,40 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                 </div>
               ) : items.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  No {config.displayName.toLowerCase()}s found. Create your first one!
+                  No {config.displayName.toLowerCase()}s found. Create your
+                  first one!
                 </div>
               ) : (
                 <div className="pt-6 space-y-3">
                   {items.map((item) => (
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                    <div
+                      key={item.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h4 className="font-medium text-gray-900">{item.name}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {item.name}
+                          </h4>
                           {item.description && (
-                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                          )}
-                          {/* Multi-select specific info */}
-                          {config.type === 'multi-select' && (item as any).minSelections && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Min: {(item as any).minSelections}, Max: {(item as any).maxSelections || 'Unlimited'}
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.description}
                             </p>
                           )}
+                          {/* Multi-select specific info */}
+                          {config.type === "multi-select" &&
+                            (item as any).minSelections && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Min: {(item as any).minSelections}, Max:{" "}
+                                {(item as any).maxSelections || "Unlimited"}
+                              </p>
+                            )}
                           {/* Select specific info */}
-                          {config.type === 'select' && (
+                          {config.type === "select" && (
                             <p className="text-xs text-gray-500 mt-1">
-                              {(item as any).allowMultiple ? 'Multiple selections allowed' : 'Single selection only'}
+                              {(item as any).allowMultiple
+                                ? "Multiple selections allowed"
+                                : "Single selection only"}
                             </p>
                           )}
                         </div>
@@ -370,13 +442,14 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                         {item.options.map((option: any, index: number) => (
                           <span
                             key={index}
-                            className={`px-2 py-1 rounded text-xs font-medium ${option.isDefault
-                              ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                              : 'bg-gray-100 text-gray-700 border border-gray-200'
-                              }`}
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              option.isDefault
+                                ? "bg-blue-100 text-amber-800 border border-amber-200"
+                                : "bg-gray-100 text-gray-700 border border-gray-200"
+                            }`}
                           >
                             {option.label}
-                            {option.isDefault && ' (Default)'}
+                            {option.isDefault && " (Default)"}
                           </span>
                         ))}
                       </div>

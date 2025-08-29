@@ -71,6 +71,7 @@ export const ErrorLogsPage: React.FC<ErrorLogsPageProps> = () => {
         assigned_to: assignedTo || prev.assigned_to,
         resolution_notes: notes || prev.resolution_notes,
         updated_at: new Date().toISOString()
+        // updated_at: new Date().toLocaleString()
       } : null);
     }
     return success;

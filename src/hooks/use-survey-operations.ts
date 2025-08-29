@@ -14,6 +14,7 @@ import { downloadFrameworkResponsesAsExcel } from "@/utils/excel.utils";
 import { createMetadata } from "@/utils/metadata.utils";
 import { generateUniqueSlug } from "@/utils/slug.utils";
 import { useCallback } from "react";
+import { ErrorLoggingService } from "@/services/error-logging.service";
 
 export const useSurveyOperations = () => {
   const surveyDataContext = useSurveyData();
@@ -47,6 +48,20 @@ export const useSurveyOperations = () => {
         await refreshAll();
       } catch (error) {
         showError(`Failed to create survey instance for "${config.title}"`);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: `Failed to create survey instance for: ${config.title}`,
+          componentName: 'useSurveyOperations',
+          functionName: 'createSurveyInstance',
+          userAction: 'creating survey instance',
+          additionalContext: {
+            configId: config.id,
+            configTitle: config.title,
+            activeDateRange,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['survey', 'instance', 'create']
+        });
       }
     },
     [surveyInstances, refreshAll, showSuccess, showError]
@@ -99,6 +114,18 @@ export const useSurveyOperations = () => {
                 `Failed to get responses for instance ${instance.id}:`,
                 error
               );
+              ErrorLoggingService.logError({
+                severity: 'low',
+                errorMessage: `Failed to get responses for instance ${instance.id}`,
+                componentName: 'useSurveyOperations',
+                functionName: 'downloadSurveyData',
+                userAction: 'downloading survey data for all instances',
+                additionalContext: {
+                  instanceId: instance.id,
+                  error: error instanceof Error ? error.message : String(error)
+                },
+                tags: ['survey', 'download', 'responses']
+              });
             }
           }
 
@@ -118,6 +145,18 @@ export const useSurveyOperations = () => {
         }
       } catch (error) {
         showError("Failed to download framework survey data");
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: 'Failed to download framework survey data',
+          componentName: 'useSurveyOperations',
+          functionName: 'downloadSurveyData',
+          userAction: 'downloading survey data',
+          additionalContext: {
+            instanceId,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['survey', 'download', 'data']
+        });
       }
     },
     [surveyInstances, showSuccess, showError]
@@ -352,6 +391,19 @@ export const useSurveyOperations = () => {
                   `❌ Failed to update instance "${instance.title}":`,
                   error
                 );
+                ErrorLoggingService.logError({
+                  severity: 'medium',
+                  errorMessage: `Failed to update instance during validation: ${instance.title}`,
+                  componentName: 'useSurveyOperations',
+                  functionName: 'verifyConfig',
+                  userAction: 'validating and updating survey instance',
+                  additionalContext: {
+                    instanceId: instance.id,
+                    instanceTitle: instance.title,
+                    error: error instanceof Error ? error.message : String(error)
+                  },
+                  tags: ['survey', 'validation', 'instance-update']
+                });
               }
             }
           } else {
@@ -428,6 +480,19 @@ export const useSurveyOperations = () => {
                         error instanceof Error ? error.message : "Unknown error"
                       }`
                     );
+                    ErrorLoggingService.logError({
+                      severity: 'high',
+                      errorMessage: `Failed to deactivate instance during validation: ${instance.title}`,
+                      componentName: 'useSurveyOperations',
+                      functionName: 'verifyConfig',
+                      userAction: 'deactivating instance due to invalid configuration',
+                      additionalContext: {
+                        instanceId: instance.id,
+                        instanceTitle: instance.title,
+                        error: error instanceof Error ? error.message : String(error)
+                      },
+                      tags: ['survey', 'validation', 'instance-deactivation', 'critical']
+                    });
                   }
                 } else {
                   // Also mark inactive instances with invalid configs as config_valid=false
@@ -465,6 +530,19 @@ export const useSurveyOperations = () => {
                       `❌ Failed to mark instance "${instance.title}" as invalid:`,
                       error
                     );
+                    ErrorLoggingService.logError({
+                      severity: 'medium',
+                      errorMessage: `Failed to mark instance as invalid during validation: ${instance.title}`,
+                      componentName: 'useSurveyOperations',
+                      functionName: 'verifyConfig',
+                      userAction: 'marking instance as invalid due to configuration errors',
+                      additionalContext: {
+                        instanceId: instance.id,
+                        instanceTitle: instance.title,
+                        error: error instanceof Error ? error.message : String(error)
+                      },
+                      tags: ['survey', 'validation', 'instance-marking']
+                    });
                   }
                 }
               }
@@ -502,6 +580,18 @@ export const useSurveyOperations = () => {
           showError("Failed to verify configurations");
         }
         console.error("Configuration verification error:", error);
+        ErrorLoggingService.logError({
+          severity: 'high',
+          errorMessage: 'Configuration verification failed',
+          componentName: 'useSurveyOperations',
+          functionName: 'verifyConfig',
+          userAction: 'verifying survey configurations',
+          additionalContext: {
+            silent,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['survey', 'validation', 'verification', 'critical']
+        });
         throw error;
       }
     },

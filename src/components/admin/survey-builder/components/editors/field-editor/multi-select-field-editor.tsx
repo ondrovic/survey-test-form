@@ -9,6 +9,7 @@ import { Button, Input } from '../../../../../common';
 import { RatingScaleManager } from '../../../../option-set-manager';
 import { Modal } from '../../../../../common';
 import { RATING_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, MULTISELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 interface MultiSelectFieldEditorProps {
     config: SurveyConfig;
@@ -52,6 +53,18 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                 const scales = await databaseHelpers.getRatingScales();
                 setRatingScales(scales);
             } catch (error) {
+                ErrorLoggingService.logError({
+                    severity: 'low',
+                    errorMessage: 'Failed to load rating scales',
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'MultiSelectFieldEditor',
+                    functionName: 'loadRatingScales',
+                    userAction: 'load_rating_scales',
+                    additionalContext: {
+                        error: error instanceof Error ? error.message : String(error)
+                    },
+                    tags: ['rating-scales', 'multi-select', 'field-editor']
+                });
                 console.error('Error loading rating scales:', error);
             }
         };
@@ -192,6 +205,20 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
             setSelectedFields([]);
             setBulkUpdateOptions({});
         } catch (error) {
+            ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed to bulk update multi-select fields',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'MultiSelectFieldEditor',
+                functionName: 'handleBulkUpdate',
+                userAction: 'bulk_update_fields',
+                additionalContext: {
+                    selectedFieldsCount: selectedFields.length,
+                    bulkUpdateOptions: bulkUpdateOptions,
+                    error: error instanceof Error ? error.message : String(error)
+                },
+                tags: ['bulk-update', 'multi-select', 'field-editor']
+            });
             showError('Failed to update fields');
         } finally {
             setLoading(false);

@@ -12,6 +12,7 @@ import {
   MULTISELECT_OPTION_SET_NAME,
   SELECT_OPTION_SET_NAME,
 } from "@/constants/options-sets.constants";
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 // Define supported data types
 export type ExportableDataType =
@@ -492,6 +493,21 @@ export const parseJsonFile = (file: File): Promise<any> => {
         const data = JSON.parse(text);
         resolve(data);
       } catch (error) {
+        ErrorLoggingService.logError({
+          severity: 'low',
+          errorMessage: 'Failed to parse JSON file during generic import',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'genericImportExportUtils',
+          functionName: 'parseJsonFile',
+          userAction: 'import_data_file',
+          additionalContext: {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['generic-import', 'json-parse', 'file-handling']
+        });
         reject(new Error("Invalid JSON file"));
       }
     };

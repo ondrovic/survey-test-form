@@ -1,4 +1,5 @@
 import { databaseHelpers } from '@/config/database';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 /**
  * Service for cleaning up old/expired survey sessions
@@ -98,6 +99,22 @@ export class SessionCleanupService {
       console.log(`✅ Session cleanup completed: ${totalProcessed} sessions marked as expired`);
     } catch (error) {
       console.error('❌ Session cleanup failed:', error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: error instanceof Error ? error.message : 'Session cleanup failed',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'SessionCleanupService',
+        functionName: 'performCleanup',
+        userAction: 'Performing automatic session cleanup',
+        additionalContext: {
+          sessionTimeoutMs: this.SESSION_TIMEOUT_MS,
+          maxSessionsPerCleanup: this.MAX_SESSIONS_PER_CLEANUP,
+          errorType: 'session_cleanup'
+        },
+        tags: ['service', 'session', 'cleanup', 'background']
+      });
     }
   }
 
@@ -121,6 +138,22 @@ export class SessionCleanupService {
       });
     } catch (error) {
       console.error('❌ Failed to get expired sessions:', error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: error instanceof Error ? error.message : 'Failed to get expired sessions',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'SessionCleanupService',
+        functionName: 'getExpiredSessions',
+        userAction: 'Retrieving expired sessions for cleanup',
+        additionalContext: {
+          cutoffISO,
+          errorType: 'session_retrieval'
+        },
+        tags: ['service', 'session', 'cleanup', 'database']
+      });
+      
       return [];
     }
   }
@@ -156,6 +189,22 @@ export class SessionCleanupService {
       console.log(`⏰ Session ${sessionId} marked as expired (was: ${session.status})`);
     } catch (error) {
       console.error(`❌ Failed to mark session ${sessionId} as expired:`, error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: error instanceof Error ? error.message : `Failed to mark session ${sessionId} as expired`,
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'SessionCleanupService',
+        functionName: 'markSessionAsExpired',
+        userAction: 'Marking individual session as expired',
+        additionalContext: {
+          sessionId,
+          previousStatus: session.status,
+          errorType: 'session_update'
+        },
+        tags: ['service', 'session', 'cleanup', 'database']
+      });
     }
   }
 

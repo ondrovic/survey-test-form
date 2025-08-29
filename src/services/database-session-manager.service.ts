@@ -1,4 +1,5 @@
 import { databaseHelpers } from '@/config/database';
+import { ErrorLoggingService } from './error-logging.service';
 
 /**
  * Database-driven session manager that works in conjunction with database triggers
@@ -40,6 +41,22 @@ export class DatabaseSessionManagerService {
     this.checkInterval = setInterval(() => {
       this.performLightCleanup().catch(error => {
         console.error('❌ Light session cleanup failed:', error);
+        
+        // Log the error using ErrorLoggingService
+        ErrorLoggingService.logError({
+          severity: 'high',
+          errorMessage: error instanceof Error ? error.message : 'Light session cleanup failed',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'DatabaseSessionManagerService',
+          functionName: 'start.checkInterval',
+          userAction: 'Automatic session cleanup',
+          additionalContext: {
+            cleanupType: 'light',
+            interval: this.CLEANUP_CHECK_INTERVAL,
+            errorType: 'session_cleanup_failure'
+          },
+          tags: ['database', 'session-manager', 'service', 'cleanup']
+        });
       });
     }, this.CLEANUP_CHECK_INTERVAL);
 
@@ -47,12 +64,43 @@ export class DatabaseSessionManagerService {
     this.forceCleanupInterval = setInterval(() => {
       this.performFullCleanup().catch(error => {
         console.error('❌ Full session cleanup failed:', error);
+        
+        // Log the error using ErrorLoggingService
+        ErrorLoggingService.logError({
+          severity: 'high',
+          errorMessage: error instanceof Error ? error.message : 'Full session cleanup failed',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'DatabaseSessionManagerService',
+          functionName: 'start.forceCleanupInterval',
+          userAction: 'Automatic full session cleanup',
+          additionalContext: {
+            cleanupType: 'full',
+            interval: this.FORCE_CLEANUP_INTERVAL,
+            errorType: 'session_cleanup_failure'
+          },
+          tags: ['database', 'session-manager', 'service', 'cleanup']
+        });
       });
     }, this.FORCE_CLEANUP_INTERVAL);
 
     // Run initial light cleanup
     this.performLightCleanup().catch(error => {
       console.error('❌ Initial session cleanup failed:', error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'high',
+        errorMessage: error instanceof Error ? error.message : 'Initial session cleanup failed',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'DatabaseSessionManagerService',
+        functionName: 'start.initialCleanup',
+        userAction: 'Initial session manager startup cleanup',
+        additionalContext: {
+          cleanupType: 'initial',
+          errorType: 'session_cleanup_failure'
+        },
+        tags: ['database', 'session-manager', 'service', 'startup']
+      });
     });
 
     console.log('📊 Database session manager started');
@@ -98,6 +146,21 @@ export class DatabaseSessionManagerService {
       }
     } catch (error) {
       console.error('❌ Light cleanup failed:', error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'high',
+        errorMessage: error instanceof Error ? error.message : 'Light cleanup failed',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'DatabaseSessionManagerService',
+        functionName: 'performLightCleanup',
+        userAction: 'Performing light session cleanup',
+        additionalContext: {
+          cleanupType: 'light',
+          errorType: 'session_cleanup_execution'
+        },
+        tags: ['database', 'session-manager', 'service', 'cleanup']
+      });
     }
   }
 
@@ -137,6 +200,23 @@ export class DatabaseSessionManagerService {
       }
     } catch (error) {
       console.error('❌ Full cleanup failed, attempting fallback:', error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'high',
+        errorMessage: error instanceof Error ? error.message : 'Full cleanup failed',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'DatabaseSessionManagerService',
+        functionName: 'performFullCleanup',
+        userAction: 'Performing full session cleanup',
+        additionalContext: {
+          cleanupType: 'full',
+          errorType: 'session_cleanup_execution',
+          fallbackAttempted: true
+        },
+        tags: ['database', 'session-manager', 'service', 'cleanup']
+      });
+      
       // Fall back to light cleanup
       await this.performLightCleanup();
     }
@@ -152,6 +232,22 @@ export class DatabaseSessionManagerService {
       return await this.executeCleanupDirectly();
     } catch (error) {
       console.error('❌ Database cleanup function failed:', error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'high',
+        errorMessage: error instanceof Error ? error.message : 'Database cleanup function failed',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'DatabaseSessionManagerService',
+        functionName: 'callCleanupFunction',
+        userAction: 'Calling database cleanup function',
+        additionalContext: {
+          errorType: 'database_function_call',
+          cleanupType: 'database'
+        },
+        tags: ['database', 'session-manager', 'service']
+      });
+      
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }

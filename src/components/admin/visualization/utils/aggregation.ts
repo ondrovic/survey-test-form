@@ -2,6 +2,7 @@ import { createDescriptiveFieldId } from '@/components/form/utils/transform.util
 import { SurveyConfig, SurveyResponse } from '@/types';
 import { AggregatedSeries, OptionSets } from '../types';
 import { FREE_TEXT_FIELD_TYPES, FREE_TEXT_PATTERNS } from './constants';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 /**
  * Normalizes a key for consistent comparison
@@ -95,8 +96,22 @@ const buildFieldMetadata = (config: SurveyConfig | undefined) => {
 
     try { 
       fieldIdToDescriptiveId[field.id] = createDescriptiveFieldId(section as any, field as any); 
-    } catch (e) { 
-      /* Ignore error */ 
+    } catch (error) { 
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: 'Failed to create descriptive field ID in buildFieldMetadata',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'aggregationUtils',
+        functionName: 'buildFieldMetadata.processField',
+        userAction: 'building_field_metadata',
+        additionalContext: {
+          fieldId: field.id,
+          fieldLabel: field.label,
+          sectionTitle: section.title,
+          error: error instanceof Error ? error.message : String(error)
+        },
+        tags: ['visualization', 'field-metadata', 'aggregation']
+      });
     }
 
     const possible: string[] = [field.id];
@@ -104,8 +119,22 @@ const buildFieldMetadata = (config: SurveyConfig | undefined) => {
     // Slug-based descriptive id (current)
     try { 
       possible.push(createDescriptiveFieldId(section as any, field as any)); 
-    } catch (e) { 
-      /* Ignore error */ 
+    } catch (error) { 
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: 'Failed to create descriptive field ID for possible keys',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'aggregationUtils',
+        functionName: 'buildFieldMetadata.processField',
+        userAction: 'building_field_possible_keys',
+        additionalContext: {
+          fieldId: field.id,
+          fieldLabel: field.label,
+          sectionTitle: section.title,
+          error: error instanceof Error ? error.message : String(error)
+        },
+        tags: ['visualization', 'field-metadata', 'aggregation']
+      });
     }
     
     // Pretty label forms often used in exports or earlier versions
@@ -128,8 +157,23 @@ const buildFieldMetadata = (config: SurveyConfig | undefined) => {
           possible.push(prettySpaceH, prettyDashH);
           const fieldSlugH = h.label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
           possible.push(`${sectionSlug}_${fieldSlugH}`, `${sectionSlug}-${fieldSlugH}`, `${sectionSlug} ${fieldSlugH}`);
-        } catch (e) { 
-          /* Ignore error */ 
+        } catch (error) { 
+          ErrorLoggingService.logError({
+            severity: 'low',
+            errorMessage: 'Failed to process field label history for possible keys',
+            stackTrace: error instanceof Error ? error.stack : String(error),
+            componentName: 'aggregationUtils',
+            functionName: 'buildFieldMetadata.processField',
+            userAction: 'building_field_label_history_keys',
+            additionalContext: {
+              fieldId: field.id,
+              fieldLabel: field.label,
+              historyLabel: h.label,
+              sectionTitle: section.title,
+              error: error instanceof Error ? error.message : String(error)
+            },
+            tags: ['visualization', 'field-metadata', 'label-history', 'aggregation']
+          });
         }
       }
     }

@@ -4,6 +4,7 @@ import { SurveyConfig, SurveyResponse } from "@/types";
 import { useEffect, useMemo, useState } from "react";
 import { AggregatedSeries, OptionSets } from "../types";
 import { computeAggregations } from "../utils";
+import { ErrorLoggingService } from "@/services/error-logging.service";
 
 export const useVisualizationData = (instanceId?: string) => {
   const [loading, setLoading] = useState(true);
@@ -94,8 +95,21 @@ export const useVisualizationData = (instanceId?: string) => {
         setResponses(responses);
         setConfig(cfg || undefined);
         setInstance(instanceData);
-      } catch (e) {
+      } catch (error) {
         if (!isMounted) return;
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: 'Failed to load visualization data',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'useVisualizationData',
+          functionName: 'loadData',
+          userAction: 'load_visualization_data',
+          additionalContext: {
+            instanceId: instanceId,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          tags: ['visualization', 'data-loading', 'hook']
+        });
         setError("Failed to load data");
       } finally {
         if (isMounted) setLoading(false);

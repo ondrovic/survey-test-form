@@ -19,8 +19,8 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
   
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const sessionTokenRef = useRef<string | null>(null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
-  const activityDebounceRef = useRef<NodeJS.Timeout>();
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const activityDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const sessionTracker = SessionCreationTracker.getInstance();
 
   // Generate a unique session token

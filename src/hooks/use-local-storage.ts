@@ -1,4 +1,5 @@
 import { UseLocalStorageReturn } from "@/types";
+import { ErrorLoggingService } from "@/services/error-logging.service";
 import { useCallback, useEffect, useState } from "react";
 
 export const useLocalStorage = <T>(
@@ -11,6 +12,23 @@ export const useLocalStorage = <T>(
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: error instanceof Error ? error.message : 'Error reading localStorage',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useLocalStorage',
+        functionName: 'useState.initializer',
+        userAction: 'Reading localStorage value',
+        additionalContext: {
+          key,
+          errorType: 'localstorage_read',
+          hasDefaultValue: defaultValue !== undefined
+        },
+        tags: ['hooks', 'local-storage', 'browser']
+      });
+      
       return defaultValue;
     }
   });
@@ -24,6 +42,22 @@ export const useLocalStorage = <T>(
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       } catch (error) {
         console.error(`Error setting localStorage key "${key}":`, error);
+        
+        // Log the error using ErrorLoggingService
+        ErrorLoggingService.logError({
+          severity: 'low',
+          errorMessage: error instanceof Error ? error.message : 'Error setting localStorage',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'useLocalStorage',
+          functionName: 'setStoredValue',
+          userAction: 'Setting localStorage value',
+          additionalContext: {
+            key,
+            errorType: 'localstorage_write',
+            valueType: typeof newValue
+          },
+          tags: ['hooks', 'local-storage', 'browser']
+        });
       }
     },
     [key, value]
@@ -35,6 +69,21 @@ export const useLocalStorage = <T>(
       window.localStorage.removeItem(key);
     } catch (error) {
       console.error(`Error removing localStorage key "${key}":`, error);
+      
+      // Log the error using ErrorLoggingService
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: error instanceof Error ? error.message : 'Error removing localStorage',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useLocalStorage',
+        functionName: 'removeValue',
+        userAction: 'Removing localStorage value',
+        additionalContext: {
+          key,
+          errorType: 'localstorage_remove'
+        },
+        tags: ['hooks', 'local-storage', 'browser']
+      });
     }
   }, [key, defaultValue]);
 
@@ -48,6 +97,22 @@ export const useLocalStorage = <T>(
             `Error parsing localStorage value for key "${key}":`,
             error
           );
+          
+          // Log the error using ErrorLoggingService
+          ErrorLoggingService.logError({
+            severity: 'low',
+            errorMessage: error instanceof Error ? error.message : 'Error parsing localStorage value',
+            stackTrace: error instanceof Error ? error.stack : String(error),
+            componentName: 'useLocalStorage',
+            functionName: 'handleStorageChange',
+            userAction: 'Parsing localStorage change event',
+            additionalContext: {
+              key,
+              newValue: e.newValue,
+              errorType: 'localstorage_parse'
+            },
+            tags: ['hooks', 'local-storage', 'browser']
+          });
         }
       }
     };

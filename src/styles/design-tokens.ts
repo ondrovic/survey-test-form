@@ -6,337 +6,354 @@
 export const colors = {
   // Primary colors
   primary: {
-    50: 'amber-50',
-    100: 'amber-100',
-    200: 'amber-200',
-    300: 'amber-300',
-    400: 'amber-400',
-    500: 'amber-500',
-    600: 'amber-600',
-    700: 'amber-700',
-    800: 'amber-800',
-    900: 'amber-900',
+    50: "amber-50",
+    100: "amber-100",
+    200: "amber-200",
+    300: "amber-300",
+    400: "amber-400",
+    500: "amber-500",
+    600: "amber-600",
+    700: "amber-700",
+    800: "amber-800",
+    900: "amber-900",
   },
-  
+
   // Semantic colors
   success: {
-    50: 'green-50',
-    200: 'green-200',
-    400: 'green-400',
-    600: 'green-600',
-    800: 'green-800',
+    50: "green-50",
+    200: "green-200",
+    400: "green-400",
+    600: "green-600",
+    800: "green-800",
   },
-  
+
   error: {
-    50: 'red-50',
-    200: 'red-200',
-    300: 'red-300',
-    400: 'red-400',
-    500: 'red-500',
-    600: 'red-600',
-    800: 'red-800',
-    900: 'red-900',
+    50: "red-50",
+    200: "red-200",
+    300: "red-300",
+    400: "red-400",
+    500: "red-500",
+    600: "red-600",
+    800: "red-800",
+    900: "red-900",
   },
-  
+
   warning: {
-    50: 'yellow-50',
-    200: 'yellow-200',
-    300: 'yellow-300',
-    400: 'yellow-400',
-    500: 'yellow-500',
-    600: 'yellow-600',
-    700: 'yellow-700',
-    800: 'yellow-800',
+    50: "yellow-50",
+    200: "yellow-200",
+    300: "yellow-300",
+    400: "yellow-400",
+    500: "yellow-500",
+    600: "yellow-600",
+    700: "yellow-700",
+    800: "yellow-800",
   },
-  
+
   info: {
-    50: 'blue-50',
-    200: 'blue-200',
-    400: 'blue-400',
-    500: 'blue-500',
-    600: 'blue-600',
-    700: 'blue-700',
-    800: 'blue-800',
+    50: "blue-50",
+    200: "blue-200",
+    400: "blue-400",
+    500: "blue-500",
+    600: "blue-600",
+    700: "blue-700",
+    800: "blue-800",
   },
-  
+
   // Neutral colors
   gray: {
-    50: 'gray-50',
-    100: 'gray-100',
-    200: 'gray-200',
-    300: 'gray-300',
-    400: 'gray-400',
-    500: 'gray-500',
-    600: 'gray-600',
-    700: 'gray-700',
-    800: 'gray-800',
-    900: 'gray-900',
+    50: "gray-50",
+    100: "gray-100",
+    200: "gray-200",
+    300: "gray-300",
+    400: "gray-400",
+    500: "gray-500",
+    600: "gray-600",
+    700: "gray-700",
+    800: "gray-800",
+    900: "gray-900",
   },
 } as const;
 
 export const spacing = {
-  xs: 'px-1 py-0.5',
-  sm: 'px-3 py-1.5',
-  md: 'px-4 py-2',
-  lg: 'px-6 py-3',
-  xl: 'px-8 py-4',
+  xs: "px-1 py-0.5",
+  sm: "px-3 py-1.5",
+  md: "px-4 py-2",
+  lg: "px-6 py-3",
+  xl: "px-8 py-4",
 } as const;
 
 export const borderRadius = {
-  sm: 'rounded-sm',
-  md: 'rounded-md',
-  lg: 'rounded-lg',
-  xl: 'rounded-xl',
-  full: 'rounded-full',
+  sm: "rounded-sm",
+  md: "rounded-md",
+  lg: "rounded-lg",
+  xl: "rounded-xl",
+  full: "rounded-full",
 } as const;
 
 export const shadows = {
-  sm: 'shadow-sm',
-  md: 'shadow-md',
-  lg: 'shadow-lg',
-  xl: 'shadow-xl',
-  none: 'shadow-none',
+  sm: "shadow-sm",
+  md: "shadow-md",
+  lg: "shadow-lg",
+  xl: "shadow-xl",
+  none: "shadow-none",
 } as const;
 
 export const transitions = {
-  fast: 'transition-all duration-150',
-  default: 'transition-all duration-200',
-  slow: 'transition-all duration-300',
+  fast: "transition-all duration-150",
+  default: "transition-all duration-200",
+  slow: "transition-all duration-300",
 } as const;
 
 export const focusRing = {
-  primary: 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500',
-  error: 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500',
-  success: 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500',
-  info: 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+  primary:
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
+  error:
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500",
+  success:
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
+  info: "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
 } as const;
 
 export const typography = {
   // Font sizes
   text: {
-    xs: 'text-xs',
-    sm: 'text-sm',
-    base: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl',
-    '2xl': 'text-2xl',
+    xs: "text-xs",
+    sm: "text-sm",
+    base: "text-base",
+    lg: "text-lg",
+    xl: "text-xl",
+    "2xl": "text-2xl",
   },
-  
+
   // Font weights
   weight: {
-    normal: 'font-normal',
-    medium: 'font-medium',
-    semibold: 'font-semibold',
-    bold: 'font-bold',
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
   },
-  
+
   // Line heights
   leading: {
-    tight: 'leading-tight',
-    normal: 'leading-normal',
-    relaxed: 'leading-relaxed',
+    tight: "leading-tight",
+    normal: "leading-normal",
+    relaxed: "leading-relaxed",
   },
 } as const;
 
 // Component-specific design tokens
 export const button = {
-  base: 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
-  
+  base: "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+
   variants: {
-    primary: 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 shadow-sm active:bg-amber-800',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-sm active:bg-gray-800',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-amber-500 active:bg-gray-100',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 active:bg-gray-200',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm active:bg-red-800',
+    primary:
+      "bg-blue-600 text-white hover:bg-blue-700 focus:ring-amber-500 shadow-sm active:bg-blue-800",
+    secondary:
+      "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-sm active:bg-gray-800",
+    outline:
+      "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-amber-500 active:bg-gray-100",
+    ghost:
+      "text-gray-700 hover:bg-gray-100 focus:ring-gray-500 active:bg-gray-200",
+    danger:
+      "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm active:bg-red-800",
   },
-  
+
   sizes: {
     // Mobile-first sizing with minimum 44px touch targets
-    sm: 'px-3 py-2 text-sm min-h-[40px]',
-    md: 'px-4 py-2 text-sm min-h-[44px]',
-    lg: 'px-6 py-3 text-base min-h-[48px]',
-    form: 'px-3 py-2 text-sm min-h-[44px]',
-    fixed: 'px-4 py-2 text-sm min-h-[44px] w-20 text-center',
+    sm: "px-3 py-2 text-sm min-h-[40px]",
+    md: "px-4 py-2 text-sm min-h-[44px]",
+    lg: "px-6 py-3 text-base min-h-[48px]",
+    form: "px-3 py-2 text-sm min-h-[44px]",
+    fixed: "px-4 py-2 text-sm min-h-[44px] w-20 text-center",
   },
-  
+
   // Mobile-specific enhancements
   mobile: {
-    touchTarget: 'min-h-[44px] min-w-[44px]', // WCAG AAA compliance
-    touchFeedback: 'active:scale-95 transition-transform duration-150',
-    tapHighlight: '[&:active]:bg-opacity-80',
+    touchTarget: "min-h-[44px] min-w-[44px]", // WCAG AAA compliance
+    touchFeedback: "active:scale-95 transition-transform duration-150",
+    tapHighlight: "[&:active]:bg-opacity-80",
   },
 } as const;
 
 export const input = {
-  base: 'block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed',
-  
+  base: "block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed",
+
   states: {
-    default: 'border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-500 focus:border-amber-500',
-    error: 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500',
+    default:
+      "border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-500 focus:border-amber-500",
+    error:
+      "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500",
   },
-  
+
   // Mobile-first sizing and interaction
   sizes: {
-    sm: 'text-sm min-h-[40px] px-3 py-2',
-    md: 'text-base min-h-[44px] px-3 py-2 sm:text-sm',
-    lg: 'text-base min-h-[48px] px-4 py-3',
+    sm: "text-sm min-h-[40px] px-3 py-2",
+    md: "text-base min-h-[44px] px-3 py-2 sm:text-sm",
+    lg: "text-base min-h-[48px] px-4 py-3",
   },
-  
+
   // Mobile enhancements
   mobile: {
-    touchTarget: 'min-h-[44px]', // WCAG AAA compliance
-    textSize: 'text-base sm:text-sm', // Prevent zoom on iOS
-    spacing: 'px-3 py-3 sm:py-2', // Larger tap area on mobile
+    touchTarget: "min-h-[44px]", // WCAG AAA compliance
+    textSize: "text-base sm:text-sm", // Prevent zoom on iOS
+    spacing: "px-3 py-3 sm:py-2", // Larger tap area on mobile
   },
 } as const;
 
 export const alert = {
-  base: 'border rounded-lg p-4 relative',
-  
+  base: "border rounded-lg p-4 relative",
+
   variants: {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
+    success: "bg-green-50 border-green-200 text-green-800",
+    error: "bg-red-50 border-red-200 text-red-800",
+    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
+    info: "bg-blue-50 border-blue-200 text-blue-800",
   },
-  
+
   icons: {
-    success: 'text-green-400',
-    error: 'text-red-400',
-    warning: 'text-yellow-400',
-    info: 'text-blue-400',
+    success: "text-green-400",
+    error: "text-red-400",
+    warning: "text-yellow-400",
+    info: "text-blue-400",
   },
 } as const;
 
 export const modal = {
-  base: 'fixed inset-0 z-50',
+  base: "fixed inset-0 z-50",
   backdrop: `bg-black bg-opacity-50 ${transitions.default}`,
-  container: 'flex items-center justify-center min-h-full p-2 sm:p-4',
+  container: "flex items-center justify-center min-h-full p-2 sm:p-4",
   content: `bg-white rounded-lg shadow-xl overflow-hidden flex flex-col ${transitions.default}`,
-  
+
   sizes: {
-    sm: 'w-full max-w-md mx-2 sm:mx-0',
-    md: 'w-full max-w-xl mx-2 md:max-w-2xl lg:mx-0',
-    lg: 'w-full max-w-2xl mx-2 lg:max-w-4xl lg:mx-0',
-    xl: 'w-full max-w-4xl mx-2 lg:max-w-6xl lg:mx-0',
-    full: 'w-full max-w-[95vw] max-h-[95vh] mx-1 sm:mx-0',
+    sm: "w-full max-w-md mx-2 sm:mx-0",
+    md: "w-full max-w-xl mx-2 md:max-w-2xl lg:mx-0",
+    lg: "w-full max-w-2xl mx-2 lg:max-w-4xl lg:mx-0",
+    xl: "w-full max-w-4xl mx-2 lg:max-w-6xl lg:mx-0",
+    full: "w-full max-w-[95vw] max-h-[95vh] mx-1 sm:mx-0",
   },
-  
+
   variants: {
-    default: '',
-    confirmation: 'max-w-md mx-2 sm:mx-0',
-    form: 'max-w-2xl mx-2 sm:mx-0',
-    fullscreen: 'w-full h-full max-w-none max-h-none m-0 rounded-none',
+    default: "",
+    confirmation: "max-w-md mx-2 sm:mx-0",
+    form: "max-w-2xl mx-2 sm:mx-0",
+    fullscreen: "w-full h-full max-w-none max-h-none m-0 rounded-none",
   },
-  
+
   // Mobile-first responsive variants
   mobile: {
-    fullscreen: 'w-full h-full max-w-none max-h-none m-0 rounded-none lg:w-auto lg:h-auto lg:max-w-2xl lg:max-h-[90vh] lg:rounded-lg lg:m-4',
-    adaptive: 'w-full h-full max-h-[90vh] max-w-none m-2 rounded-lg lg:w-auto lg:h-auto lg:max-w-2xl lg:m-4',
+    fullscreen:
+      "w-full h-full max-w-none max-h-none m-0 rounded-none lg:w-auto lg:h-auto lg:max-w-2xl lg:max-h-[90vh] lg:rounded-lg lg:m-4",
+    adaptive:
+      "w-full h-full max-h-[90vh] max-w-none m-2 rounded-lg lg:w-auto lg:h-auto lg:max-w-2xl lg:m-4",
   },
-  
-  header: 'flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0',
-  title: 'text-lg sm:text-xl font-semibold text-gray-900 truncate pr-2',
-  closeButton: 'flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 transition-all duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 min-h-[44px] min-w-[44px] flex items-center justify-center',
-  body: 'flex-1 overflow-y-auto p-4 sm:p-6',
-  footer: 'flex-shrink-0 p-4 sm:p-6 border-t border-gray-200 bg-gray-50',
+
+  header:
+    "flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0",
+  title: "text-lg sm:text-xl font-semibold text-gray-900 truncate pr-2",
+  closeButton:
+    "flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 transition-all duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 min-h-[44px] min-w-[44px] flex items-center justify-center",
+  body: "flex-1 overflow-y-auto p-4 sm:p-6",
+  footer: "flex-shrink-0 p-4 sm:p-6 border-t border-gray-200 bg-gray-50",
 } as const;
 
 export const loadingSpinner = {
-  base: 'inline-block rounded-full animate-spin',
-  container: 'flex flex-col items-center justify-center',
-  
+  base: "inline-block rounded-full animate-spin",
+  container: "flex flex-col items-center justify-center",
+
   sizes: {
-    xs: 'h-3 w-3',
-    sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-8 w-8',
-    xl: 'h-12 w-12',
+    xs: "h-3 w-3",
+    sm: "h-4 w-4",
+    md: "h-6 w-6",
+    lg: "h-8 w-8",
+    xl: "h-12 w-12",
   },
-  
+
   variants: {
-    spinner: 'border-2 border-transparent border-t-current',
-    ring: 'border-2 border-current border-t-transparent',
-    dots: 'relative',
-    pulse: 'bg-current rounded-full',
+    spinner: "border-2 border-transparent border-t-current",
+    ring: "border-2 border-current border-t-transparent",
+    dots: "relative",
+    pulse: "bg-current rounded-full",
   },
-  
+
   colors: {
-    primary: 'text-amber-600',
-    secondary: 'text-gray-600',
-    success: 'text-green-600',
-    error: 'text-red-600',
-    warning: 'text-yellow-600',
-    info: 'text-blue-600',
+    primary: "text-amber-600",
+    secondary: "text-gray-600",
+    success: "text-green-600",
+    error: "text-red-600",
+    warning: "text-yellow-600",
+    info: "text-blue-600",
   },
-  
-  text: 'text-gray-600 mt-2',
-  overlay: 'fixed inset-0 bg-white bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50',
-  fullscreen: 'min-h-screen bg-gray-50 flex items-center justify-center',
+
+  text: "text-gray-600 mt-2",
+  overlay:
+    "fixed inset-0 bg-white bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50",
+  fullscreen: "min-h-screen bg-gray-50 flex items-center justify-center",
 } as const;
 
 export const pagination = {
-  container: 'flex items-center justify-center gap-1',
-  
+  container: "flex items-center justify-center gap-1",
+
   // Mobile-first responsive container
   responsive: {
-    mobile: 'flex items-center justify-between gap-2 px-4 py-3',
-    desktop: 'flex items-center justify-center gap-1',
+    mobile: "flex items-center justify-between gap-2 px-4 py-3",
+    desktop: "flex items-center justify-center gap-1",
   },
-  
+
   // Button base styles
   button: {
-    base: 'inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500',
+    base: "inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
     sizes: {
-      sm: 'px-2 py-1 text-sm min-w-[32px] h-8',
-      md: 'px-3 py-2 text-sm min-w-[40px] h-10',
-      lg: 'px-4 py-2 text-base min-w-[44px] h-11',
+      sm: "px-2 py-1 text-sm min-w-[32px] h-8",
+      md: "px-3 py-2 text-sm min-w-[40px] h-10",
+      lg: "px-4 py-2 text-base min-w-[44px] h-11",
     },
   },
-  
+
   // Navigation buttons (prev/next)
   nav: {
-    enabled: 'border border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700',
-    disabled: 'border border-gray-200 text-gray-300 cursor-not-allowed',
+    enabled:
+      "border border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700",
+    disabled: "border border-gray-200 text-gray-300 cursor-not-allowed",
   },
-  
+
   // Page number buttons
   page: {
-    default: 'border border-gray-300 text-gray-700 hover:bg-gray-50',
-    active: 'border border-amber-600 bg-amber-600 text-white',
-    ellipsis: 'border-transparent text-gray-400 cursor-default hover:bg-transparent',
+    default: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+    active: "border border-amber-600 bg-blue-600 text-white",
+    ellipsis:
+      "border-transparent text-gray-400 cursor-default hover:bg-transparent",
   },
-  
+
   // Info text styles
   info: {
-    text: 'text-gray-700',
-    muted: 'text-gray-500',
+    text: "text-gray-700",
+    muted: "text-gray-500",
   },
-  
+
   // Variants
   variants: {
-    default: '',
-    simple: 'gap-3',
-    compact: 'gap-0.5',
+    default: "",
+    simple: "gap-3",
+    compact: "gap-0.5",
   },
 } as const;
 
 export const collapsible = {
-  container: 'overflow-hidden',
-  
+  container: "overflow-hidden",
+
   // Trigger button styles - mobile-first responsive
   trigger: {
-    base: 'flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 gap-2',
+    base: "flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 gap-2",
     variants: {
-      default: 'p-4 hover:bg-gray-50',
-      minimal: 'py-2 hover:bg-gray-25',
-      card: 'p-6 border-b border-gray-200 hover:bg-gray-50',
+      default: "p-4 hover:bg-gray-50",
+      minimal: "py-2 hover:bg-gray-25",
+      card: "p-6 border-b border-gray-200 hover:bg-gray-50",
     },
   },
-  
+
   // Title styles
   title: {
-    base: 'font-medium text-gray-900',
+    base: "font-medium text-gray-900",
     sizes: {
       sm: typography.text.sm,
       md: typography.text.base,
@@ -344,39 +361,39 @@ export const collapsible = {
       xl: typography.text.xl,
     },
   },
-  
+
   // Icon styles
   icon: {
-    base: 'flex-shrink-0 transition-all duration-200 text-gray-500',
+    base: "flex-shrink-0 transition-all duration-200 text-gray-500",
     sizes: {
-      sm: 'w-4 h-4',
-      md: 'w-5 h-5',
-      lg: 'w-6 h-6',
+      sm: "w-4 h-4",
+      md: "w-5 h-5",
+      lg: "w-6 h-6",
     },
-    expanded: 'rotate-180',
+    expanded: "rotate-180",
   },
-  
+
   // Content area styles
   content: {
-    base: 'overflow-hidden transition-all duration-300',
+    base: "overflow-hidden transition-all duration-300",
     variants: {
-      default: 'px-4 pb-4 pt-2',
-      minimal: 'py-2',
-      card: 'p-6 pt-4',
+      default: "px-4 pb-4 pt-2",
+      minimal: "py-2",
+      card: "p-6 pt-4",
     },
   },
-  
+
   // Wrapper variants
   variants: {
-    default: '',
-    card: 'bg-white rounded-lg shadow-sm border border-gray-200',
-    bordered: 'border border-gray-200 rounded-md',
+    default: "",
+    card: "bg-white rounded-lg shadow-sm border border-gray-200",
+    bordered: "border border-gray-200 rounded-md",
   },
-  
+
   // Badge/counter styles
   badge: {
-    base: 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-    default: 'bg-gray-100 text-gray-700',
-    primary: 'bg-amber-100 text-amber-700',
+    base: "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+    default: "bg-gray-100 text-gray-700",
+    primary: "bg-blue-100 text-amber-700",
   },
 } as const;

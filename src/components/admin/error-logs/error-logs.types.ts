@@ -108,9 +108,7 @@ export interface ErrorLogStatusBadgeProps {
   showSeverity?: boolean;
 }
 
-export interface ErrorLogsPageProps {
-  // No props needed - fully self-contained
-}
+export type ErrorLogsPageProps = Record<string, never>;
 
 export interface ErrorLogOverviewCardProps {
   onNavigateToErrorLogs: () => void;

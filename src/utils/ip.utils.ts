@@ -2,6 +2,8 @@
  * Utility functions for IP address detection
  */
 
+import { ErrorLoggingService } from '@/services/error-logging.service';
+
 /**
  * Get the client's IP address using a third-party service
  * @returns Promise<string> - The client's IP address
@@ -33,6 +35,23 @@ export async function getClientIPAddress(): Promise<string | null> {
     return data.ip || null;
   } catch (error) {
     console.warn("Error getting IP address:", error);
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'low',
+      errorMessage: error instanceof Error ? error.message : 'Error getting IP address',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'IpUtils',
+      functionName: 'getClientIPAddress',
+      userAction: 'Getting client IP address from external service',
+      additionalContext: {
+        errorType: 'ip_detection',
+        primaryService: 'ipify.org',
+        fallbackService: 'api64.ipify.org'
+      },
+      tags: ['utils', 'ip', 'network']
+    });
+    
     return null;
   }
 }
@@ -56,6 +75,22 @@ export async function getClientIPAddressWithTimeout(
     return result;
   } catch (error) {
     console.warn("Error getting IP address with timeout:", error);
+    
+    // Log the error using ErrorLoggingService
+    ErrorLoggingService.logError({
+      severity: 'low',
+      errorMessage: error instanceof Error ? error.message : 'Error getting IP address with timeout',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'IpUtils',
+      functionName: 'getClientIPAddressWithTimeout',
+      userAction: 'Getting client IP address with timeout',
+      additionalContext: {
+        timeout,
+        errorType: 'ip_detection_timeout'
+      },
+      tags: ['utils', 'ip', 'network', 'timeout']
+    });
+    
     return null;
   }
 }

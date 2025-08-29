@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
 import { useToast } from '../toast-context';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 
 // Generic base interface for all option sets
 export interface BaseOptionSet {
@@ -102,6 +103,20 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
       // return items;
     } catch (err) {
       const errorMsg = `Failed to load ${config.displayName.toLowerCase()}s`;
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: errorMsg,
+        stackTrace: err instanceof Error ? err.stack : String(err),
+        componentName: 'OptionSetCrudProvider',
+        functionName: 'loadItems',
+        userAction: `load_${config.type}_items`,
+        additionalContext: {
+          optionSetType: config.type,
+          displayName: config.displayName,
+          error: err instanceof Error ? err.message : String(err)
+        },
+        tags: ['option-sets', 'crud', config.type]
+      });
       setError(errorMsg);
       showError(errorMsg);
       return [];
@@ -147,6 +162,22 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
       return newItem;
     } catch (err) {
       const errorMsg = `Failed to create ${config.displayName.toLowerCase()} "${data.name}"`;
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: errorMsg,
+        stackTrace: err instanceof Error ? err.stack : String(err),
+        componentName: 'OptionSetCrudProvider',
+        functionName: 'createItem',
+        userAction: `create_${config.type}_item`,
+        additionalContext: {
+          optionSetType: config.type,
+          displayName: config.displayName,
+          itemName: data.name,
+          optionsCount: data.options?.length || 0,
+          error: err instanceof Error ? err.message : String(err)
+        },
+        tags: ['option-sets', 'crud', 'create', config.type]
+      });
       setError(errorMsg);
       showError(errorMsg);
       return null;
@@ -197,6 +228,23 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
       return true;
     } catch (err) {
       const errorMsg = `Failed to update ${config.displayName.toLowerCase()} "${data.name || 'item'}"`;
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: errorMsg,
+        stackTrace: err instanceof Error ? err.stack : String(err),
+        componentName: 'OptionSetCrudProvider',
+        functionName: 'updateItem',
+        userAction: `update_${config.type}_item`,
+        additionalContext: {
+          optionSetType: config.type,
+          displayName: config.displayName,
+          itemName: data.name || 'item',
+          itemId: id,
+          updateKeysCount: Object.keys(data).length,
+          error: err instanceof Error ? err.message : String(err)
+        },
+        tags: ['option-sets', 'crud', 'update', config.type]
+      });
       setError(errorMsg);
       showError(errorMsg);
       return false;
@@ -219,6 +267,22 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
       return true;
     } catch (err) {
       const errorMsg = `Failed to delete ${config.displayName.toLowerCase()} "${name}"`;
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: errorMsg,
+        stackTrace: err instanceof Error ? err.stack : String(err),
+        componentName: 'OptionSetCrudProvider',
+        functionName: 'deleteItem',
+        userAction: `delete_${config.type}_item`,
+        additionalContext: {
+          optionSetType: config.type,
+          displayName: config.displayName,
+          itemName: name,
+          itemId: id,
+          error: err instanceof Error ? err.message : String(err)
+        },
+        tags: ['option-sets', 'crud', 'delete', config.type]
+      });
       setError(errorMsg);
       showError(errorMsg);
       return false;

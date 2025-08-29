@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer, useRef } from 'react';
 import { useAuth } from '../auth-context';
 import { databaseHelpers, getDatabaseProviderInfo } from '../../config/database';
+import { ErrorLoggingService } from '../../services/error-logging.service';
 import {
     MultiSelectOptionSet,
     RadioOptionSet,
@@ -73,6 +74,26 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
                 console.log(`✅ Updated survey "${instance.title}": ${instance.isActive} → ${shouldBeActive}`);
             } catch (error) {
                 console.error(`❌ Failed to update survey "${instance.title}":`, error);
+                
+                // Log to database
+                await ErrorLoggingService.logError({
+                    severity: 'high',
+                    errorMessage: `Failed to update survey instance "${instance.title}" status`,
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'SurveyDataContext',
+                    functionName: 'checkAndUpdateSurveyInstanceStatuses',
+                    userAction: `Automatically updating survey instance status for "${instance.title}"`,
+                    additionalContext: {
+                        surveyId: instance.id,
+                        surveyTitle: instance.title,
+                        currentStatus: instance.isActive,
+                        targetStatus: shouldBeActive,
+                        activeDateRange: instance.activeDateRange,
+                        configValid: instance.config_valid
+                    },
+                    tags: ['survey-data', 'context', 'status-update', 'automatic-validation']
+                });
+                
                 updatedInstances.push(instance); // Keep original if update fails
             }
         } else {
@@ -371,6 +392,21 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         } catch (error) {
             console.error("Error loading framework data:", error);
             setError("Failed to load framework data");
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'critical',
+                errorMessage: 'Failed to load framework data (survey configs and instances)',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'loadFrameworkData',
+                userAction: 'Loading survey framework data',
+                additionalContext: {
+                    databaseProviderInfo: getDatabaseProviderInfo(),
+                    autoLoad: true
+                },
+                tags: ['survey-data', 'context', 'framework-loading', 'critical-failure']
+            });
         } finally {
             setLoading(false);
         }
@@ -388,6 +424,20 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'SET_RATING_SCALES', payload: scales });
         } catch (error) {
             console.error("Error loading rating scales:", error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed to load rating scales data',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'loadRatingScales',
+                userAction: 'Loading rating scales data',
+                additionalContext: {
+                    databaseProviderInfo: getDatabaseProviderInfo()
+                },
+                tags: ['survey-data', 'context', 'rating-scales', 'data-loading']
+            });
         }
     }, []);
 
@@ -407,6 +457,20 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'SET_RADIO_OPTION_SETS', payload: optionSets });
         } catch (error) {
             console.error("❌ Error loading radio option sets:", error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed to load radio option sets data',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'loadRadioOptionSets',
+                userAction: 'Loading radio option sets data',
+                additionalContext: {
+                    databaseProviderInfo: getDatabaseProviderInfo()
+                },
+                tags: ['survey-data', 'context', 'radio-option-sets', 'data-loading']
+            });
         }
     }, []);
 
@@ -426,6 +490,20 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'SET_MULTI_SELECT_OPTION_SETS', payload: optionSets });
         } catch (error) {
             console.error("❌ Error loading multi-select option sets:", error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed to load multi-select option sets data',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'loadMultiSelectOptionSets',
+                userAction: 'Loading multi-select option sets data',
+                additionalContext: {
+                    databaseProviderInfo: getDatabaseProviderInfo()
+                },
+                tags: ['survey-data', 'context', 'multi-select-option-sets', 'data-loading']
+            });
         }
     }, []);
 
@@ -445,6 +523,20 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'SET_SELECT_OPTION_SETS', payload: optionSets });
         } catch (error) {
             console.error("❌ Error loading select option sets:", error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed to load select option sets data',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'loadSelectOptionSets',
+                userAction: 'Loading select option sets data',
+                additionalContext: {
+                    databaseProviderInfo: getDatabaseProviderInfo()
+                },
+                tags: ['survey-data', 'context', 'select-option-sets', 'data-loading']
+            });
         }
     }, []);
 
@@ -496,6 +588,28 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             console.log("✅ Manual survey instance status validation completed");
         } catch (error) {
             console.error("❌ Error during manual survey instance status validation:", error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed during manual survey instance status validation',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'validateSurveyInstanceStatuses',
+                userAction: 'Manually validating survey instance statuses',
+                additionalContext: {
+                    instanceCount: state.surveyInstances.length,
+                    databaseProviderInfo: getDatabaseProviderInfo(),
+                    instances: state.surveyInstances.map(instance => ({
+                        id: instance.id,
+                        title: instance.title,
+                        isActive: instance.isActive,
+                        configValid: instance.config_valid,
+                        activeDateRange: instance.activeDateRange
+                    }))
+                },
+                tags: ['survey-data', 'context', 'status-validation', 'manual-validation']
+            });
         }
     }, [state.surveyInstances]);
 
@@ -530,6 +644,27 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'ADD_RATING_SCALE', payload: scale });
         } catch (error) {
             console.error('Failed to add rating scale:', error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'high',
+                errorMessage: 'Failed to add rating scale to database',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'addRatingScale',
+                userAction: 'Adding new rating scale',
+                additionalContext: {
+                    ratingScale: {
+                        id: scale.id,
+                        name: scale.name,
+                        description: scale.description,
+                        optionsCount: scale.options?.length || 0,
+                        isActive: scale.isActive
+                    }
+                },
+                tags: ['survey-data', 'context', 'rating-scale', 'crud-create']
+            });
+            
             throw error;
         }
     }, []);
@@ -548,6 +683,25 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'ADD_RADIO_OPTION_SET', payload: optionSet });
         } catch (error) {
             console.error('Failed to add radio option set:', error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'high',
+                errorMessage: 'Failed to add radio option set to database',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'addRadioOptionSet',
+                userAction: 'Adding new radio option set',
+                additionalContext: {
+                    radioOptionSet: {
+                        id: optionSet.id,
+                        name: optionSet.name,
+                        optionsCount: optionSet.options?.length || 0
+                    }
+                },
+                tags: ['survey-data', 'context', 'radio-option-set', 'crud-create']
+            });
+            
             throw error;
         }
     }, []);
@@ -566,6 +720,25 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'ADD_MULTI_SELECT_OPTION_SET', payload: optionSet });
         } catch (error) {
             console.error('Failed to add multi-select option set:', error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'high',
+                errorMessage: 'Failed to add multi-select option set to database',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'addMultiSelectOptionSet',
+                userAction: 'Adding new multi-select option set',
+                additionalContext: {
+                    multiSelectOptionSet: {
+                        id: optionSet.id,
+                        name: optionSet.name,
+                        optionsCount: optionSet.options?.length || 0
+                    }
+                },
+                tags: ['survey-data', 'context', 'multi-select-option-set', 'crud-create']
+            });
+            
             throw error;
         }
     }, []);
@@ -584,6 +757,25 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'ADD_SELECT_OPTION_SET', payload: optionSet });
         } catch (error) {
             console.error('Failed to add select option set:', error);
+            
+            // Log to database
+            await ErrorLoggingService.logError({
+                severity: 'high',
+                errorMessage: 'Failed to add select option set to database',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'SurveyDataContext',
+                functionName: 'addSelectOptionSet',
+                userAction: 'Adding new select option set',
+                additionalContext: {
+                    selectOptionSet: {
+                        id: optionSet.id,
+                        name: optionSet.name,
+                        optionsCount: optionSet.options?.length || 0
+                    }
+                },
+                tags: ['survey-data', 'context', 'select-option-set', 'crud-create']
+            });
+            
             throw error;
         }
     }, []);
