@@ -63,7 +63,7 @@ const VisualizationContent: React.FC = React.memo(() => {
   // Memoize the chart grid content to prevent unnecessary re-renders
   const chartGridContent = useMemo(() => {
     if (series.length === 0) {
-      return <p className="text-gray-500">No aggregations available yet.</p>;
+      return <p className="text-gray-500 dark:text-gray-400">No aggregations available yet.</p>;
     }
 
     return (
@@ -105,7 +105,7 @@ const VisualizationContent: React.FC = React.memo(() => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col bg-blue-50/30">
+      <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900">
         <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -122,12 +122,12 @@ const VisualizationContent: React.FC = React.memo(() => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Survey Data Visualization
               </h2>
-              <p className="text-gray-700">{error}</p>
+              <p className="text-gray-700 dark:text-gray-300">{error}</p>
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@ const VisualizationContent: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-blue-50/30">
+    <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900">
       <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -153,14 +153,14 @@ const VisualizationContent: React.FC = React.memo(() => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex-1 flex flex-col min-h-0 w-full">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Survey Data Visualization
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Interactive charts and insights from your survey data
               </p>
             </div>

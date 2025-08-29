@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import type ReactECharts from 'echarts-for-react';
 import { Button } from '@/components/common';
-import { 
+import type ReactECharts from 'echarts-for-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
   AdaptiveBarChart as BarChart,
-  AdaptiveDonutChart as DonutChart, 
-  AdaptiveVerticalBarChart as VerticalBarChart,
-  AdaptiveHistogram as Histogram 
+  AdaptiveDonutChart as DonutChart,
+  AdaptiveHistogram as Histogram,
+  AdaptiveVerticalBarChart as VerticalBarChart
 } from '../charts';
 import { useVisualization } from '../context';
 import { hashSaltFrom } from '../utils';
-import { saveChartAsImage, generateChartFilename } from '../utils/chart-export';
+import { generateChartFilename, saveChartAsImage } from '../utils/chart-export';
 
 export const ChartModal: React.FC = () => {
   const { state, filters, preferences, closeChartModal } = useVisualization();
@@ -44,7 +44,7 @@ export const ChartModal: React.FC = () => {
 
   const handleSaveModalImage = () => {
     if (!selectedChart) return;
-    
+
     const filename = generateChartFilename(
       selectedChart.sectionTitle,
       selectedChart.subsectionTitle,
@@ -94,7 +94,7 @@ export const ChartModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center"
+      className="fixed inset-0 bg-black dark:bg-black bg-opacity-20 dark:bg-opacity-20 backdrop-blur-sm flex items-center justify-center"
       style={{ zIndex: 9999, top: '-100px', height: 'calc(100vh + 100px)' }}
       role="presentation"
     >
@@ -108,8 +108,8 @@ export const ChartModal: React.FC = () => {
         <div className="flex items-center justify-between p-4 sm:p-6" style={{ margin: 0, paddingTop: '1rem' }}>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-semibold text-gray-800 truncate">
-              {selectedChart.subsectionTitle 
-                ? `${selectedChart.subsectionTitle} • ${selectedChart.series.label}` 
+              {selectedChart.subsectionTitle
+                ? `${selectedChart.subsectionTitle} • ${selectedChart.series.label}`
                 : selectedChart.series.label
               }
             </h2>
@@ -121,9 +121,9 @@ export const ChartModal: React.FC = () => {
             {(() => {
               const chartType = preferences.perFieldChartType[selectedChart.series.fieldId] || preferences.defaultChartType;
               const supportsLegend = chartType === 'donut';
-              
+
               console.log('ChartModal Debug:', { chartType, supportsLegend, showLegend });
-              
+
               return supportsLegend ? (
                 <Button
                   variant="outline"

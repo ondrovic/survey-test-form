@@ -50,7 +50,7 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
           <span className={clsx(
             typography.text.sm,
             typography.weight.medium,
-            `text-${colors.gray[600]}`
+            `text-${colors.gray[600]} dark:text-${colors.gray[400]}`
           )}>
             Progress: {progressPercentage}% ({currentIndex + 1} of {totalSections})
           </span>
@@ -61,13 +61,13 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
       {showProgressBar && (
         <div className={clsx(
           'w-full h-2 mb-6',
-          `bg-${colors.gray[200]}`,
+          `bg-${colors.gray[200]} dark:bg-gray-700`,
           borderRadius.full
         )}>
           <div
             className={clsx(
               'h-2',
-              `bg-${colors.primary[600]}`,
+              `bg-${colors.primary[600]} dark:bg-${colors.primary[500]}`,
               borderRadius.full,
               transitions.slow
             )}
@@ -85,13 +85,13 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
           {/* Connecting Line */}
           <div className={clsx(
             'absolute top-4 h-0.5 -z-10',
-            `bg-${colors.gray[200]}`,
+            `bg-${colors.gray[200]} dark:bg-gray-700`,
             totalSections <= 4 ? 'left-0 w-full' : 'left-4 right-4'
           )}>
             <div
               className={clsx(
                 'h-full',
-                `bg-${colors.primary[600]}`,
+                `bg-${colors.primary[600]} dark:bg-${colors.primary[500]}`,
                 transitions.slow
               )}
               style={{
@@ -124,9 +124,9 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
                     typography.weight.medium,
                     transitions.default,
                     {
-                      [`bg-${colors.primary[600]} border-${colors.primary[600]} text-white`]: status === 'completed',
-                      [`bg-white border-${colors.primary[600]} text-${colors.primary[600]} ring-4 ring-${colors.primary[100]}`]: status === 'current',
-                      [`bg-white border-${colors.gray[300]} text-${colors.gray[400]}`]: status === 'upcoming',
+                      [`bg-${colors.primary[600]} border-${colors.primary[600]} text-white dark:bg-${colors.primary[500]} dark:border-${colors.primary[500]}`]: status === 'completed',
+                      [`bg-white dark:bg-gray-800 border-${colors.primary[600]} dark:border-${colors.primary[500]} text-${colors.primary[600]} dark:text-${colors.primary[400]} ring-4 ring-${colors.primary[100]} dark:ring-${colors.primary[900]}/50`]: status === 'current',
+                      [`bg-white dark:bg-gray-800 border-${colors.gray[300]} dark:border-gray-600 text-${colors.gray[400]} dark:text-gray-500`]: status === 'upcoming',
                       'cursor-pointer hover:scale-110': clickable,
                       'cursor-default': !clickable,
                     }
@@ -153,9 +153,9 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
                         typography.leading.tight,
                         'block break-words hyphens-auto',
                         {
-                          [`text-${colors.primary[600]}`]: status === 'current',
-                          [`text-${colors.gray[700]}`]: status === 'completed',
-                          [`text-${colors.gray[400]}`]: status === 'upcoming',
+                          [`text-${colors.primary[600]} dark:text-${colors.primary[400]}`]: status === 'current',
+                          [`text-${colors.gray[700]} dark:text-gray-300`]: status === 'completed',
+                          [`text-${colors.gray[400]} dark:text-gray-500`]: status === 'upcoming',
                         }
                       )}
                       title={section.title}
@@ -177,7 +177,7 @@ export const SectionStepIndicator: React.FC<SectionStepIndicatorProps> = ({
           <div className={clsx(
             'flex justify-between items-center',
             typography.text.sm,
-            `text-${colors.gray[600]}`
+            `text-${colors.gray[600]} dark:text-${colors.gray[400]}`
           )}>
             <span>Step {currentIndex + 1}</span>
             <span className="truncate mx-2" title={sections[currentIndex]?.title}>

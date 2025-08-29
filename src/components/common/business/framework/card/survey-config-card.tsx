@@ -50,15 +50,15 @@ export const SurveyConfigCard: React.FC<SurveyConfigCardProps> = ({
   };
 
   return (
-    <div className="border rounded-lg p-4">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1">
-          <h4 className="font-semibold">{config.title}</h4>
-          <p className="text-sm text-gray-600">{config.description}</p>
-          <span className="text-sm font-normal text-blue-600">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100">{config.title}</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-300">{config.description}</p>
+          <span className="text-sm font-normal text-blue-600 dark:text-blue-400">
             {config.id}
           </span>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {formatStats()} • {instanceCount} instances
           </p>
         </div>

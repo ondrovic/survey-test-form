@@ -478,9 +478,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   closeOnBackdrop = true,
 }) => {
   const variantStyles = {
-    danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
-    warning: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
-    info: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+    danger: 'bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 focus:ring-red-500',
+    warning: 'bg-yellow-600 dark:bg-yellow-700 hover:bg-yellow-700 dark:hover:bg-yellow-800 focus:ring-yellow-500',
+    info: 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 focus:ring-blue-500',
   };
 
   return (
@@ -496,7 +496,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <ModalTitle>{title}</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <div className="text-gray-700 space-y-2">
+        <div className="text-gray-700 dark:text-gray-300 space-y-2">
           {message.split('\n').map((line, index) => (
             line.trim() ? (
               <p key={index}>{line}</p>
@@ -511,14 +511,14 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <>
             <button
               onClick={onAlternative}
-              className="px-4 py-2 text-yellow-700 bg-yellow-50 border border-yellow-300 hover:bg-yellow-100 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+              className="px-4 py-2 text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-800 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-800"
             >
               {alternativeText}
             </button>
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors"
               >
                 {cancelText}
               </button>
@@ -534,7 +534,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors"
             >
               {cancelText}
             </button>

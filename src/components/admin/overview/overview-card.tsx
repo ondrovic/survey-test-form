@@ -21,7 +21,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({
 }) => {
     return (
         <div
-            className={`bg-white dark:bg-gray-900 p-6 rounded-lg shadow flex flex-col h-full ${className}`}
+            className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow flex flex-col h-full ${className}`}
         >
             <div className="flex-grow flex flex-col">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
@@ -37,7 +37,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({
                             <span className="font-medium text-gray-700 dark:text-gray-300">
                                 {stat.label}:
                             </span>
-                            <span className="text-gray-900 z">{stat.value}</span>
+                            <span className="text-gray-900 dark:text-gray-100">{stat.value}</span>
                         </div>
                     ))}
                 </div>

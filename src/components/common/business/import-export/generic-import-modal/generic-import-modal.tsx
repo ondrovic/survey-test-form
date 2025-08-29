@@ -1,10 +1,9 @@
-import { Button } from '@/components/common';
-import { Modal } from '@/components/common';
+import { Button, Modal } from '@/components/common';
+import { IMPORT_CANCELLED_MESSAGE } from '@/constants/import-export.constants';
 import { useToast } from '@/contexts/toast-context';
 import { ExportableDataType, getDataTypeDisplayName } from '@/utils/generic-import-export.utils';
 import { AlertCircle, FileText, Upload } from 'lucide-react';
-import React, { useCallback, useState, useEffect } from 'react';
-import { IMPORT_CANCELLED_MESSAGE } from '@/constants/import-export.constants';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface GenericImportModalProps {
   isOpen: boolean;
@@ -140,15 +139,15 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
       <Modal.Body>
 
         <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-3">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
             Upload a JSON file exported from this system to import {dataType ? `a ${displayName.toLowerCase()}` : 'data'}.
           </p>
 
           {/* File Drop Zone */}
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragging
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
+              ? 'border-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
               }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -156,9 +155,9 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
           >
             {selectedFile ? (
               <div className="flex items-center justify-center flex-col">
-                <FileText className="w-8 h-8 text-green-500 mb-2" />
-                <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                <p className="text-xs text-gray-500">
+                <FileText className="w-8 h-8 text-green-500 dark:text-green-400 mb-2" />
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedFile.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </p>
                 <Button
@@ -176,8 +175,8 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
               </div>
             ) : (
               <div>
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-2">
+                <Upload className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   Drop a JSON file here or click to browse
                 </p>
                 <input
@@ -190,7 +189,7 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
                 />
                 <label
                   htmlFor="generic-file-input"
-                  className={`inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer ${isImporting ? 'opacity-50 cursor-not-allowed' : ''
+                  className={`inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer ${isImporting ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                 >
                   Browse Files
@@ -201,10 +200,10 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
         </div>
 
         {/* Info Section */}
-        <div className="mb-6 p-3 bg-blue-50 rounded-lg">
+        <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <div className="flex items-start">
-            <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-            <div className="text-sm text-blue-800">
+            <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <div className="text-sm text-blue-800 dark:text-blue-200">
               <p className="font-medium mb-1">Import Notes:</p>
               <ul className="text-xs space-y-1 space-x-1">
                 <li>• All data will be preserved exactly as exported (no renaming or modifications)</li>

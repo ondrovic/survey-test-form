@@ -56,12 +56,12 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-blue-50/30 flex items-center justify-center">
+        <div className="min-h-screen bg-blue-50/30 dark:bg-gray-900 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Something went wrong
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               An unexpected error occurred. Please try refreshing the page.
             </p>
             <Button

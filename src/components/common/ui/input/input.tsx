@@ -117,10 +117,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
                         {label}
-                        {required && <span className="text-red-500 ml-1">*</span>}
+                        {required && <span className="text-red-600 dark:text-red-400 ml-1">*</span>}
                     </label>
                 )}
 
@@ -146,7 +146,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
                 {error && (
                     <p
                         id={errorId}
-                        className="text-sm text-red-600"
+                        className="text-sm text-red-600 dark:text-red-400"
                         role="alert"
                     >
                         {error}
@@ -162,10 +162,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             {label && (
                 <label
                     htmlFor={inputId}
-                    className="block text-sm font-semibold text-gray-800 mb-2"
+                    className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2"
                 >
                     {label}
-                    {required && <span className="text-red-500 ml-1">*</span>}
+                    {required && <span className="text-red-600 dark:text-red-400 ml-1">*</span>}
                 </label>
             )}
 
@@ -195,7 +195,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             {error && (
                 <p
                     id={errorId}
-                    className="text-sm text-red-600"
+                    className="text-sm text-red-600 dark:text-red-400"
                     role="alert"
                 >
                     {error}

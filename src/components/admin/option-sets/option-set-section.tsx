@@ -71,12 +71,12 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
         return success;
     };
     const renderItem = (item: T) => (
-        <div key={item.id} className="border rounded-lg p-4">
+        <div key={item.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-1">
-                    <h4 className="font-semibold">{item.name}</h4>
-                    <p className="text-sm text-gray-600">{item.description || 'No description'}</p>
-                    <p className="text-xs text-gray-500">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{item.name}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{item.description || 'No description'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                         {item.options.length} options,
                         {item.options.filter(opt => opt.isDefault).length} default
                         {renderItemDetails && renderItemDetails(item)}
@@ -87,7 +87,7 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                         size="sm"
                         variant="outline"
                         onClick={() => onEdit(item)}
-                        className="w-full sm:w-auto justify-start"
+                        className="w-full sm:w-auto justify-start hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
@@ -96,7 +96,7 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                         size="sm"
                         variant="outline"
                         onClick={() => handleExport(item)}
-                        className="w-full sm:w-auto justify-start"
+                        className="w-full sm:w-auto justify-start hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                         <Upload className="w-4 h-4 mr-1" />
                         Export
@@ -105,7 +105,7 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
                         size="sm"
                         variant="outline"
                         onClick={() => onDelete(item)}
-                        className="w-full sm:w-auto justify-start"
+                        className="w-full sm:w-auto justify-start hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete
@@ -117,11 +117,11 @@ export const OptionSetSection = <T extends BaseOptionSetItem = BaseOptionSetItem
 
     const headerActions = (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <Button onClick={handleImport} size="sm" variant="outline" className="w-full sm:w-auto">
+            <Button onClick={handleImport} size="sm" variant="outline" className="w-full sm:w-auto hover:bg-gray-50 dark:hover:bg-gray-700">
                 <Upload className="w-4 h-4 mr-2" />
                 Import
             </Button>
-            <Button onClick={onCreateNew} size="sm" className="w-full sm:w-32">
+            <Button onClick={onCreateNew} size="sm" className="w-full sm:w-32 hover:bg-blue-600 dark:hover:bg-blue-500">
                 <Plus className="w-4 h-4 mr-2" />
                 {createButtonLabel}
             </Button>

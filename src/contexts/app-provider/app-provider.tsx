@@ -7,6 +7,7 @@ import { OptionSetCrudProvider } from '../option-set-crud-context';
 import { SurveyBuilderProvider } from '../survey-builder-context';
 import { SurveyDataProvider } from '../survey-data-context';
 import { ToastProvider } from '../toast-context';
+import { ValidationStatusProvider } from '../validation-status-context';
 import { useSessionCleanup } from '../../hooks/use-session-cleanup';
 
 interface AppProviderProps {
@@ -24,13 +25,15 @@ const AppProviderWithCleanup: React.FC<{ children: ReactNode; initialConfig?: an
                 <OptionSetCrudProvider>
                     <SurveyDataProvider>
                         <AdminPageProvider>
-                            <FormProvider>
-                                <ModalProvider>
-                                    <SurveyBuilderProvider initialConfig={initialConfig}>
-                                        {children}
-                                    </SurveyBuilderProvider>
-                                </ModalProvider>
-                            </FormProvider>
+                            <ValidationStatusProvider>
+                                <FormProvider>
+                                    <ModalProvider>
+                                        <SurveyBuilderProvider initialConfig={initialConfig}>
+                                            {children}
+                                        </SurveyBuilderProvider>
+                                    </ModalProvider>
+                                </FormProvider>
+                            </ValidationStatusProvider>
                         </AdminPageProvider>
                     </SurveyDataProvider>
                 </OptionSetCrudProvider>

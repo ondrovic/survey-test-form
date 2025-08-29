@@ -139,9 +139,9 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
     };
 
     return (
-        <div className="bg-gray-50 border rounded-lg p-4 ml-4">
+        <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 ml-4">
             <div className="mb-4">
-                <h4 className="text-md font-semibold mb-3 text-gray-800">Subsection: {subsection.title}</h4>
+                <h4 className="text-md font-semibold mb-3 text-gray-800 dark:text-gray-200">Subsection: {subsection.title}</h4>
                 <div className="grid grid-cols-1 gap-3">
                     <div>
                         <Input
@@ -154,7 +154,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                         />
                     </div>
                     <div>
-                        <label htmlFor="subsection-description" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="subsection-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Description (optional)
                         </label>
                         <textarea
@@ -164,7 +164,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                             onChange={(e) => handleDescriptionChange(e.target.value)}
                             placeholder="Enter subsection description (optional, max 300 characters)"
                             rows={2}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${descriptionError ? 'border-red-500' : 'border-gray-300'
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${descriptionError ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                                 }`}
                         />
                         {descriptionError && (
@@ -177,8 +177,8 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
             <div className="mb-4">
                 <div className="flex items-center justify-between mb-3">
                     <div>
-                        <h5 className="font-medium text-sm">Fields</h5>
-                        <p className="text-xs text-gray-500 mt-1">Click on a field to select it, then use the edit button to modify</p>
+                        <h5 className="font-medium text-sm text-gray-900 dark:text-gray-100">Fields</h5>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Click on a field to select it, then use the edit button to modify</p>
                     </div>
                     <Button
                         size="sm"
@@ -204,14 +204,14 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                             fieldId={field.id}
                             index={index}
                         >
-                            <div className="p-3 border rounded-lg bg-white hover:shadow-sm transition-shadow">
+                            <div className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-800">{field.label}</span>
-                                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{field.type}</span>
-                                        <span className="text-xs text-gray-400">{getOptionCount(field)}</span>
+                                        <span className="font-medium text-gray-800 dark:text-gray-200">{field.label}</span>
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{field.type}</span>
+                                        <span className="text-xs text-gray-400 dark:text-gray-500">{getOptionCount(field)}</span>
                                         {field.required && (
-                                            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                            <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">
                                                 Required
                                             </span>
                                         )}
@@ -221,7 +221,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                                             size="sm"
                                             variant="ghost"
                                             onClick={() => onOpenFieldEditor(field.id)}
-                                            className="text-blue-600 hover:text-blue-700"
+                                            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                                         >
                                             Edit
                                         </Button>
@@ -229,7 +229,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                                             size="sm"
                                             variant="ghost"
                                             onClick={() => onDeleteField(sectionId, field.id, subsection.id)}
-                                            className="text-red-600 hover:text-red-700"
+                                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                                         >
                                             Delete
                                         </Button>

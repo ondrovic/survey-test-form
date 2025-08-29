@@ -11,9 +11,9 @@ export const AdminAnalyticsPage: React.FC = () => {
 
   if (!instanceId) {
     return (
-      <div className="min-h-screen flex flex-col bg-blue-50/30">
+      <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900">
         <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
-          <div className="text-center text-red-600">
+          <div className="text-center text-red-600 dark:text-red-400">
             <h1 className="text-2xl font-bold mb-4">Error</h1>
             <p>No survey instance ID provided</p>
             <Button
@@ -33,7 +33,7 @@ export const AdminAnalyticsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-blue-50/30">
+    <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900">
       <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

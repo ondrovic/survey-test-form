@@ -132,16 +132,16 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
                                     </Button>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1 text-sm rounded border bg-yellow-100 text-yellow-700 border-yellow-200">
+                                    <span className="px-3 py-1 text-sm rounded border bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700">
                                         High (Default)
                                     </span>
-                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
                                         Medium
                                     </span>
-                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
                                         Low
                                     </span>
-                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
                                         Not Important
                                     </span>
                                 </div>

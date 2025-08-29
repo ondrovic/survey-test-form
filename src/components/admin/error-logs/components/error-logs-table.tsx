@@ -80,8 +80,15 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      date: date.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short", 
+        day: "numeric"
+      }),
+      time: date.toLocaleString(undefined, { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
     };
   };
 
@@ -125,14 +132,14 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-8 text-center">
           <div className="inline-flex items-center">
             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-            Loading error logs...
+            <span className="text-gray-900 dark:text-white">Loading error logs...</span>
           </div>
         </div>
       </div>
@@ -141,13 +148,13 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
 
   if (errors.length === 0) {
     return (
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-8 text-center">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No error logs found</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No error logs found</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {filters.search || filters.severity.length > 0 || filters.status.length > 0
               ? 'Try adjusting your filters to see more results.'
               : 'No errors have been logged yet.'}
@@ -158,20 +165,20 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200 w-full min-w-0">
+    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 w-full min-w-0">
       {/* Bulk Actions Bar */}
       {selectedErrors.length > 0 && (
-        <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <span className="text-sm text-blue-700">
+              <span className="text-sm text-blue-700 dark:text-blue-300">
                 {selectedErrors.length} error{selectedErrors.length === 1 ? '' : 's'} selected
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <select
                 onChange={(e) => handleBulkStatusUpdate(e.target.value)}
-                className="text-sm border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="text-sm border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:ring-blue-500 focus:border-blue-500"
                 defaultValue=""
               >
                 <option value="" disabled>Update Status</option>
@@ -181,7 +188,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
               </select>
               <button
                 onClick={() => onSelectionChange([])}
-                className="text-sm text-blue-600 hover:text-blue-700"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 Clear Selection
               </button>
@@ -193,8 +200,8 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
       {/* Desktop Table */}
       <div className="hidden md:block overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 {/* Select All Checkbox */}
                 <th className="px-4 py-3 text-left">
@@ -219,7 +226,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                   <th
                     key={column.key}
                     className={clsx(
-                      "px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100",
+                      "px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600",
                       column.className
                     )}
                     onClick={() => handleSort(column.key)}
@@ -257,7 +264,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                 ))}
 
                 {/* Actions Column */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -369,14 +376,14 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
 
                     {/* Expanded Row Details */}
                     {isExpanded && (
-                      <tr className="bg-gray-100">
+                      <tr className="bg-gray-100 dark:bg-gray-700">
                         <td colSpan={8} className="px-4 py-4">
                           <div className="space-y-3">
                             {/* Full Error Message */}
                             {error.error_message.length > 100 && (
                               <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">Full Error Message:</h4>
-                                <div className="bg-red-50 border border-red-200 rounded p-2 text-sm font-mono text-red-800">
+                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Error Message:</h4>
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 text-sm font-mono text-red-800 dark:text-red-300">
                                   {error.error_message}
                                 </div>
                               </div>
@@ -395,8 +402,8 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                                 { label: 'Error Code', value: error.error_code }
                               ].filter(item => item.value).map((item, idx) => (
                                 <div key={idx}>
-                                  <dt className="font-medium text-gray-600">{item.label}:</dt>
-                                  <dd className="text-gray-900 break-all">{item.value}</dd>
+                                  <dt className="font-medium text-gray-600 dark:text-gray-400">{item.label}:</dt>
+                                  <dd className="text-gray-900 dark:text-white break-all">{item.value}</dd>
                                 </div>
                               ))}
                             </div>
@@ -404,12 +411,12 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                             {/* Tags */}
                             {error.tags && error.tags.length > 0 && (
                               <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">Tags:</h4>
+                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags:</h4>
                                 <div className="flex flex-wrap gap-1">
                                   {error.tags.map((tag, tagIdx) => (
                                     <span
                                       key={tagIdx}
-                                      className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                                      className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
                                     >
                                       {tag}
                                     </span>
@@ -421,8 +428,8 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                             {/* Resolution Notes */}
                             {error.resolution_notes && (
                               <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">Resolution Notes:</h4>
-                                <div className="bg-white border border-gray-200 rounded p-2 text-sm text-gray-700">
+                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Resolution Notes:</h4>
+                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-700 dark:text-gray-300">
                                   {error.resolution_notes}
                                 </div>
                               </div>
@@ -451,8 +458,8 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
             <div
               key={error.id}
               className={clsx(
-                "bg-white border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden",
-                isSelected ? "border-blue-300 bg-blue-50" : "border-gray-200"
+                "bg-white dark:bg-gray-800 border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden",
+                isSelected ? "border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700"
               )}
               style={{maxWidth: '100%', boxSizing: 'border-box', width: '100%'}}
             >
@@ -472,7 +479,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                         {error.severity}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 truncate">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
                       {formatted.date} at {formatted.time}
                     </div>
                   </div>
@@ -494,8 +501,8 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
 
               {/* Error Message */}
               <div className="mb-3">
-                <h4 className="text-sm font-medium text-gray-900 mb-1">Error Message</h4>
-                <p className="text-sm text-gray-700 break-words">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Error Message</h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
                   {isExpanded ? error.error_message : truncateMessage(error.error_message, 100)}
                 </p>
               </div>
@@ -503,21 +510,21 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
               {/* Component and File Path */}
               {(error.component_name || error.file_path) && (
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Component/File</h4>
-                  <div className="text-sm text-gray-600">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Component/File</h4>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     {error.component_name && (
-                      <div className="font-medium">{error.component_name}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{error.component_name}</div>
                     )}
                     {error.file_path && (
-                      <div className="text-xs text-gray-400 font-mono break-all w-full" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>{error.file_path}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 font-mono break-all w-full" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>{error.file_path}</div>
                     )}
                   </div>
                 </div>
               )}
 
               {/* User and Actions Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100">
-                <div className="text-sm text-gray-600 min-w-0 flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="text-sm text-gray-600 dark:text-gray-400 min-w-0 flex-1">
                   {error.user_email ? (
                     <span className="truncate">User: {error.user_email}</span>
                   ) : (
@@ -527,7 +534,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                 <div className="flex items-center space-x-2 flex-shrink-0">
                   <button
                     onClick={() => onSelectError(error)}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
                   >
                     View Details
                   </button>
@@ -535,7 +542,7 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                     <select
                       value={error.status}
                       onChange={(e) => onUpdateStatus(error.id, e.target.value as ErrorStatus)}
-                      className="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                      className="text-xs border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded focus:ring-blue-500 focus:border-blue-500 min-w-0"
                     >
                       <option value="open">Open</option>
                       <option value="investigating">Investigating</option>
@@ -548,11 +555,11 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
 
               {/* Expanded Content */}
               {isExpanded && (
-                <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
                   {error.stack_trace && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Stack Trace</h4>
-                      <pre className="text-xs bg-gray-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Stack Trace</h4>
+                      <pre className="text-xs bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-300 p-3 rounded border border-gray-200 dark:border-gray-700 overflow-x-auto whitespace-pre-wrap">
                         {error.stack_trace}
                       </pre>
                     </div>
@@ -560,14 +567,14 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
                   
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-900">Error ID:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">Error ID:</span>
                       <br />
-                      <span className="text-gray-600 font-mono text-xs">{error.id}</span>
+                      <span className="text-gray-600 dark:text-gray-400 font-mono text-xs">{error.id}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-900">Occurred:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">Occurred:</span>
                       <br />
-                      <span className="text-gray-600">{new Date(error.occurred_at).toLocaleString()}</span>
+                      <span className="text-gray-600 dark:text-gray-400">{new Date(error.occurred_at).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -578,23 +585,23 @@ export const ErrorLogsTable: React.FC<ErrorLogTableProps> = ({
       </div>
 
       {/* Pagination */}
-      <div className="bg-white px-2 sm:px-4 md:px-6 py-3 border-t border-gray-200">
+      <div className="bg-white dark:bg-gray-800 px-2 sm:px-4 md:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
           {/* Results Info */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0">
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               <span className="sm:hidden font-medium">{startItem}-{endItem} / {totalCount}</span>
               <span className="hidden sm:inline">Showing <span className="font-medium">{startItem}</span> to <span className="font-medium">{endItem}</span> of <span className="font-medium">{totalCount}</span> results</span>
             </p>
             <div className="sm:ml-4 flex items-center space-x-2">
-              <label htmlFor="pageSize" className="text-sm text-gray-700">
+              <label htmlFor="pageSize" className="text-sm text-gray-700 dark:text-gray-300">
                 Show:
               </label>
               <select
                 id="pageSize"
                 value={pageSize}
                 onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 {ITEMS_PER_PAGE_OPTIONS.map((size) => (
                   <option key={size} value={size}>

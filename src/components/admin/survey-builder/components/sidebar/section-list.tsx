@@ -26,7 +26,7 @@ export const SectionList: React.FC<SectionListProps> = ({
     return (
         <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Sections</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Sections</h3>
                 <Button
                     size="sm"
                     onClick={onAddSection}
@@ -46,10 +46,10 @@ export const SectionList: React.FC<SectionListProps> = ({
                     return (
                         <div
                             className={`p-3 ${selectedSectionId === section.id
-                                ? 'border-blue-500 bg-blue-50'
+                                ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
                                 : validation.isValid
-                                    ? 'border-gray-200 hover:border-gray-300'
-                                    : 'border-red-200 bg-red-50 hover:border-red-300'
+                                    ? 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
+                                    : 'border-red-200 dark:border-red-600 bg-red-50 dark:bg-red-900/20 hover:border-red-300 dark:hover:border-red-500'
                                 }`}
                             onClick={() => onSelectSection(section.id)}
                             onKeyDown={(e) => {
@@ -63,9 +63,9 @@ export const SectionList: React.FC<SectionListProps> = ({
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-medium">{section.title}</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{section.title}</span>
                                     {!validation.isValid && (
-                                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                                        <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />
                                     )}
                                 </div>
                                 <Button
@@ -79,7 +79,7 @@ export const SectionList: React.FC<SectionListProps> = ({
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </div>
-                            <div className="text-sm text-gray-500 mt-1">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 {(() => {
                                     const sectionData = section as SurveySection;
                                     const stats = getSectionStats(sectionData);
@@ -104,7 +104,7 @@ export const SectionList: React.FC<SectionListProps> = ({
                                     return parts.join(' • ');
                                 })()}
                                 {!validation.isValid && (
-                                    <span className="text-red-600 ml-2">• {validation.errors.length} issue{validation.errors.length !== 1 ? 's' : ''}</span>
+                                    <span className="text-red-600 dark:text-red-400 ml-2">• {validation.errors.length} issue{validation.errors.length !== 1 ? 's' : ''}</span>
                                 )}
                             </div>
                         </div>

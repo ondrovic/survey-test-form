@@ -10,54 +10,54 @@ import { ErrorLogStatusBadgeProps, ErrorSeverity, ErrorStatus } from '../error-l
 
 const severityConfig = {
   critical: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-200',
-    dot: 'bg-red-500'
+    bg: 'bg-red-100 dark:bg-red-900/20',
+    text: 'text-red-800 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
+    dot: 'bg-red-500 dark:bg-red-400'
   },
   high: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-800',
-    border: 'border-orange-200',
-    dot: 'bg-orange-500'
+    bg: 'bg-orange-100 dark:bg-orange-900/20',
+    text: 'text-orange-800 dark:text-orange-300',
+    border: 'border-orange-200 dark:border-orange-800',
+    dot: 'bg-orange-500 dark:bg-orange-400'
   },
   medium: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-800',
-    border: 'border-yellow-200',
-    dot: 'bg-yellow-500'
+    bg: 'bg-yellow-100 dark:bg-yellow-900/20',
+    text: 'text-yellow-800 dark:text-yellow-300',
+    border: 'border-yellow-200 dark:border-yellow-800',
+    dot: 'bg-yellow-500 dark:bg-yellow-400'
   },
   low: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-800',
-    border: 'border-blue-200',
-    dot: 'bg-blue-500'
+    bg: 'bg-blue-100 dark:bg-blue-900/20',
+    text: 'text-blue-800 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
+    dot: 'bg-blue-500 dark:bg-blue-400'
   }
 } as const;
 
 const statusConfig = {
   open: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-200',
+    bg: 'bg-red-100 dark:bg-red-900/20',
+    text: 'text-red-800 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
     label: 'Open'
   },
   investigating: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-800',
-    border: 'border-yellow-200',
+    bg: 'bg-yellow-100 dark:bg-yellow-900/20',
+    text: 'text-yellow-800 dark:text-yellow-300',
+    border: 'border-yellow-200 dark:border-yellow-800',
     label: 'Investigating'
   },
   resolved: {
-    bg: 'bg-green-100',
-    text: 'text-green-800',
-    border: 'border-green-200',
+    bg: 'bg-green-100 dark:bg-green-900/20',
+    text: 'text-green-800 dark:text-green-300',
+    border: 'border-green-200 dark:border-green-800',
     label: 'Resolved'
   },
   ignored: {
-    bg: 'bg-gray-100',
-    text: 'text-gray-800',
-    border: 'border-gray-200',
+    bg: 'bg-gray-100 dark:bg-gray-700',
+    text: 'text-gray-800 dark:text-gray-300',
+    border: 'border-gray-200 dark:border-gray-600',
     label: 'Ignored'
   }
 } as const;

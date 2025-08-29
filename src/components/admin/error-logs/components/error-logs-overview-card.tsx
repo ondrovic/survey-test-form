@@ -111,7 +111,7 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -123,8 +123,8 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
               </div>
             </div>
             <div className="ml-3">
-              <h3 className="text-lg font-medium text-gray-900">Error Logs</h3>
-              <p className="text-sm text-gray-500">Loading error statistics...</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Error Logs</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Loading error statistics...</p>
             </div>
           </div>
         </div>
@@ -134,7 +134,7 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
 
   if (error) {
     return (
-      <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -145,14 +145,14 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
               </div>
             </div>
             <div className="ml-3">
-              <h3 className="text-lg font-medium text-gray-900">Error Logs</h3>
-              <p className="text-sm text-red-600">{error}</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Error Logs</h3>
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </div>
           </div>
           <div className="mt-4">
             <button
               onClick={onNavigateToErrorLogs}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               View Error Logs
             </button>
@@ -163,19 +163,19 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
   }
 
   return (
-    <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center ${
               hasCriticalErrors 
-                ? 'bg-red-100' 
+                ? 'bg-red-100 dark:bg-red-900/20' 
                 : hasUnresolvedErrors 
-                  ? 'bg-yellow-100' 
+                  ? 'bg-yellow-100 dark:bg-yellow-900/20' 
                   : hasErrors 
-                    ? 'bg-blue-100' 
-                    : 'bg-green-100'
+                    ? 'bg-blue-100 dark:bg-blue-900/20' 
+                    : 'bg-green-100 dark:bg-green-900/20'
             }`}>
               {hasCriticalErrors ? (
                 <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,8 +196,8 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
               )}
             </div>
             <div className="ml-3">
-              <h3 className="text-lg font-medium text-gray-900">Error Logs</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Error Logs</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Application error monitoring and tracking
               </p>
             </div>
@@ -206,7 +206,7 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
           {/* Status Indicator */}
           {hasCriticalErrors && (
             <div className="flex-shrink-0">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300">
                 <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse" />
                 Critical
               </span>
@@ -221,21 +221,21 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
               <svg className="mx-auto h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="mt-2 text-sm font-medium text-green-600">No errors detected</p>
-              <p className="text-xs text-gray-500">System running smoothly</p>
+              <p className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">No errors detected</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">System running smoothly</p>
             </div>
           ) : (
             <>
               {/* Total Errors */}
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
-                  <p className="text-sm text-gray-500">Total Errors (24h)</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.total}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Errors (24h)</p>
                 </div>
                 {hasUnresolvedErrors && (
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-red-600">{stats.unresolved}</p>
-                    <p className="text-xs text-red-500">Unresolved</p>
+                    <p className="text-lg font-semibold text-red-600 dark:text-red-400">{stats.unresolved}</p>
+                    <p className="text-xs text-red-500 dark:text-red-400">Unresolved</p>
                   </div>
                 )}
               </div>
@@ -246,10 +246,10 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
                   <div key={stat.label} className="flex items-center">
                     <div className={`w-3 h-3 rounded-full mr-2 ${stat.colors.dot}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {stat.label}
                       </p>
-                      <p className="text-xs text-gray-500">{stat.value} errors</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{stat.value} errors</p>
                     </div>
                   </div>
                 ))}
@@ -257,13 +257,13 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
 
               {/* Priority Alert */}
               {hasCriticalErrors && (
-                <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-3">
+                <div className="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
                   <div className="flex">
                     <svg className="flex-shrink-0 h-4 w-4 text-red-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                     <div className="ml-2">
-                      <p className="text-xs font-medium text-red-800">
+                      <p className="text-xs font-medium text-red-800 dark:text-red-300">
                         Critical errors detected - immediate attention required
                       </p>
                     </div>
@@ -314,8 +314,12 @@ export const ErrorLogsOverviewCard: React.FC<ErrorLogOverviewCardProps> = ({
 
         {/* Last Updated */}
         <div className="mt-3 text-center">
-          <p className="text-xs text-gray-400">
-            Last updated: {new Date().toLocaleTimeString()}
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            Last updated: {new Date().toLocaleString(undefined, { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              second: '2-digit'
+            })}
           </p>
         </div>
       </div>

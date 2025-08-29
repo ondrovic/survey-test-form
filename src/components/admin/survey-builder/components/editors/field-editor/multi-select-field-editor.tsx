@@ -1,3 +1,5 @@
+import { MULTISELECT_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, RATING_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
+import { ErrorLoggingService } from '@/services/error-logging.service';
 import { clsx } from 'clsx';
 import { CheckSquare, Square, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -5,11 +7,8 @@ import { databaseHelpers } from '../../../../../../config/database';
 import { useToast } from '../../../../../../contexts/toast-context/index';
 import { RatingScale, SurveyConfig, SurveyField, SurveySection } from '../../../../../../types/framework.types';
 import { updateMetadata } from '../../../../../../utils/metadata.utils';
-import { Button, Input } from '../../../../../common';
+import { Button, Input, Modal } from '../../../../../common';
 import { RatingScaleManager } from '../../../../option-set-manager';
-import { Modal } from '../../../../../common';
-import { RATING_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, MULTISELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
-import { ErrorLoggingService } from '@/services/error-logging.service';
 
 interface MultiSelectFieldEditorProps {
     config: SurveyConfig;
@@ -422,115 +421,115 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                 <Modal.Body padding={false}>
                     <div className="flex-1 flex overflow-hidden h-full">
 
-                    {/* Left Panel - Field Selection */}
-                    <div className="w-1/2 border-r p-6 overflow-y-auto">
-                        <div className="mb-6">
-                            <h3 className="font-semibold mb-4">Select Fields to Update</h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Click on fields to select/deselect them for bulk updates
-                            </p>
-                            <div className="text-sm text-blue-600 mb-4">
-                                Selected: {selectedFields.length} field(s)
-                                {selectedFields.length > 0 && (
-                                    <span className="ml-2 text-gray-500">
-                                        Types: {getSelectedFieldTypes().map(type => getFieldTypeLabel(type)).join(', ')}
-                                    </span>
-                                )}
+                        {/* Left Panel - Field Selection */}
+                        <div className="w-1/2 border-r p-6 overflow-y-auto">
+                            <div className="mb-6">
+                                <h3 className="font-semibold mb-4">Select Fields to Update</h3>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Click on fields to select/deselect them for bulk updates
+                                </p>
+                                <div className="text-sm text-blue-600 mb-4">
+                                    Selected: {selectedFields.length} field(s)
+                                    {selectedFields.length > 0 && (
+                                        <span className="ml-2 text-gray-500">
+                                            Types: {getSelectedFieldTypes().map(type => getFieldTypeLabel(type)).join(', ')}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {config.sections.map(section => (
+                                    <div key={section.id} className="border rounded-lg p-4">
+                                        <h4 className="font-medium text-gray-900 mb-3">{section.title}</h4>
+                                        <div className="space-y-2">
+                                            {section.fields.map(field => (
+                                                <div
+                                                    key={field.id}
+                                                    className={clsx(
+                                                        "flex items-center p-3 rounded border cursor-pointer transition-colors",
+                                                        isFieldSelected(section.id, field.id)
+                                                            ? "border-blue-500 bg-blue-50"
+                                                            : "border-gray-200 hover:border-gray-300"
+                                                    )}
+                                                    onClick={() => toggleFieldSelection(section.id, field.id, field, section)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' || e.key === ' ') {
+                                                            e.preventDefault();
+                                                            toggleFieldSelection(section.id, field.id, field, section);
+                                                        }
+                                                    }}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                >
+                                                    <div className="flex items-center mr-3">
+                                                        {isFieldSelected(section.id, field.id) ? (
+                                                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                                                        ) : (
+                                                            <Square className="w-4 h-4 text-gray-400" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-sm">{field.label}</div>
+                                                        <div className="text-xs text-gray-500">
+                                                            Type: {getFieldTypeLabel(field.type)}
+                                                            {field.ratingScaleId && (
+                                                                <span className="ml-2 text-green-600">
+                                                                    Uses scale: {field.ratingScaleName}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            {config.sections.map(section => (
-                                <div key={section.id} className="border rounded-lg p-4">
-                                    <h4 className="font-medium text-gray-900 mb-3">{section.title}</h4>
-                                    <div className="space-y-2">
-                                        {section.fields.map(field => (
-                                            <div
-                                                key={field.id}
-                                                className={clsx(
-                                                    "flex items-center p-3 rounded border cursor-pointer transition-colors",
-                                                    isFieldSelected(section.id, field.id)
-                                                        ? "border-blue-500 bg-blue-50"
-                                                        : "border-gray-200 hover:border-gray-300"
-                                                )}
-                                                onClick={() => toggleFieldSelection(section.id, field.id, field, section)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                        e.preventDefault();
-                                                        toggleFieldSelection(section.id, field.id, field, section);
-                                                    }
-                                                }}
-                                                role="button"
-                                                tabIndex={0}
-                                            >
-                                                <div className="flex items-center mr-3">
-                                                    {isFieldSelected(section.id, field.id) ? (
-                                                        <CheckSquare className="w-4 h-4 text-blue-600" />
-                                                    ) : (
-                                                        <Square className="w-4 h-4 text-gray-400" />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-sm">{field.label}</div>
-                                                    <div className="text-xs text-gray-500">
-                                                        Type: {getFieldTypeLabel(field.type)}
-                                                        {field.ratingScaleId && (
-                                                            <span className="ml-2 text-green-600">
-                                                                Uses scale: {field.ratingScaleName}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                        {/* Right Panel - Bulk Update Options */}
+                        <div className="w-1/2 p-6 overflow-y-auto">
+                            <div className="mb-6">
+                                <h3 className="font-semibold mb-4">Bulk Update Options</h3>
+                                {selectedFields.length === 0 ? (
+                                    <p className="text-gray-500">Select fields from the left panel to configure bulk updates</p>
+                                ) : (
+                                    <>
+                                        {/* Field Type Summary */}
+                                        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                                            <h4 className="font-medium mb-2">Selected Field Types</h4>
+                                            <div className="text-sm text-gray-600">
+                                                {getSelectedFieldTypes().map(type => (
+                                                    <span key={type} className="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded mr-2 mb-1">
+                                                        {getFieldTypeLabel(type)}
+                                                    </span>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Right Panel - Bulk Update Options */}
-                    <div className="w-1/2 p-6 overflow-y-auto">
-                        <div className="mb-6">
-                            <h3 className="font-semibold mb-4">Bulk Update Options</h3>
-                            {selectedFields.length === 0 ? (
-                                <p className="text-gray-500">Select fields from the left panel to configure bulk updates</p>
-                            ) : (
-                                <>
-                                    {/* Field Type Summary */}
-                                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                                        <h4 className="font-medium mb-2">Selected Field Types</h4>
-                                        <div className="text-sm text-gray-600">
-                                            {getSelectedFieldTypes().map(type => (
-                                                <span key={type} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-1">
-                                                    {getFieldTypeLabel(type)}
-                                                </span>
-                                            ))}
+                                            {!areAllFieldsSameType() && (
+                                                <div className="text-xs text-orange-600 mt-2">
+                                                    ⚠️ Mixed field types selected - only common properties will be shown
+                                                </div>
+                                            )}
                                         </div>
-                                        {!areAllFieldsSameType() && (
-                                            <div className="text-xs text-orange-600 mt-2">
-                                                ⚠️ Mixed field types selected - only common properties will be shown
-                                            </div>
-                                        )}
-                                    </div>
 
-                                    {renderFieldTypeOptions()}
+                                        {renderFieldTypeOptions()}
 
-                                    {/* Apply Updates Button */}
-                                    <div className="border-t pt-4 mt-6">
-                                        <Button
-                                            onClick={handleBulkUpdate}
-                                            loading={loading}
-                                            disabled={selectedFields.length === 0}
-                                            className="w-full"
-                                        >
-                                            Apply Updates to {selectedFields.length} Field(s)
-                                        </Button>
-                                    </div>
-                                </>
-                            )}
+                                        {/* Apply Updates Button */}
+                                        <div className="border-t pt-4 mt-6">
+                                            <Button
+                                                onClick={handleBulkUpdate}
+                                                loading={loading}
+                                                disabled={selectedFields.length === 0}
+                                                className="w-full"
+                                            >
+                                                Apply Updates to {selectedFields.length} Field(s)
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </div>
                     </div>
                 </Modal.Body>
             </Modal>

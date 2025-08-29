@@ -276,7 +276,7 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
           
           <button
             onClick={handleToggle}
-            className="p-1 hover:bg-gray-100 rounded-md transition-colors bg-transparent border-none flex-shrink-0 sm:hidden"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors bg-transparent border-none flex-shrink-0 sm:hidden"
             aria-expanded={isExpanded}
             aria-controls={contentId}
             disabled={disabled}
@@ -297,7 +297,7 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(({
           
           <button
             onClick={handleToggle}
-            className="hidden sm:block p-1 hover:bg-gray-100 rounded-md transition-colors bg-transparent border-none flex-shrink-0"
+            className="hidden sm:block p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors bg-transparent border-none flex-shrink-0"
             aria-expanded={isExpanded}
             aria-controls={contentId}
             disabled={disabled}

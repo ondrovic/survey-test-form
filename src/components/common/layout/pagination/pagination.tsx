@@ -343,7 +343,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(({
 
       {/* Mobile page jump helper */}
       <div className="sm:hidden">
-        <div className="flex items-center justify-between text-xs text-gray-500 px-2">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-2">
           <span>Swipe pagination to navigate</span>
           {totalPages > 10 && (
             <span>Page {currentPage}/{totalPages}</span>

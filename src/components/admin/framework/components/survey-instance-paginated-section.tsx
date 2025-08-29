@@ -1,8 +1,8 @@
-import { Button, CollapsibleSection, PaginatedList, GenericImportModal, SurveyInstanceCard } from '@/components/common';
+import { Button, CollapsibleSection, GenericImportModal, PaginatedList, SurveyInstanceCard } from '@/components/common';
+import { useGenericImportExport, useSurveyOperations, useSurveyUrls } from '@/hooks';
+import { SurveyConfig, SurveyInstance } from '@/types/framework.types';
 import { Upload } from 'lucide-react';
 import React, { useState } from 'react';
-import { useGenericImportExport, useSurveyUrls, useSurveyOperations } from '@/hooks';
-import { SurveyInstance, SurveyConfig } from '@/types/framework.types';
 
 interface SurveyInstanceSectionProps {
     title: string;
@@ -35,7 +35,7 @@ export const SurveyInstancePaginatedSection: React.FC<SurveyInstanceSectionProps
     const { exportItem, importItem } = useGenericImportExport();
     const { generateSurveyUrl, copySurveyUrl, openSurveyInNewTab } = useSurveyUrls();
     const { downloadSurveyData } = useSurveyOperations();
-    
+
     // Start collapsed by default to show counts before expanding
     const actualDefaultExpanded = defaultExpanded;
 
@@ -61,7 +61,7 @@ export const SurveyInstancePaginatedSection: React.FC<SurveyInstanceSectionProps
     const renderItem = (instance: SurveyInstance) => {
         const config = getInstanceConfig?.(instance);
         const surveyUrl = generateSurveyUrl(instance);
-        
+
         return (
             <SurveyInstanceCard
                 key={instance.id}
@@ -82,8 +82,8 @@ export const SurveyInstancePaginatedSection: React.FC<SurveyInstanceSectionProps
     };
 
     const headerActions = (
-        <div className="flex items-center gap-2">
-            <Button onClick={handleImport} size="sm" variant="outline">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Button onClick={handleImport} size="sm" variant="outline" className="hover:bg-gray-50 dark:hover:bg-gray-700 w-full sm:w-auto">
                 <Upload className="w-4 h-4 mr-2" />
                 Import
             </Button>
@@ -92,33 +92,33 @@ export const SurveyInstancePaginatedSection: React.FC<SurveyInstanceSectionProps
 
     return (
         <>
-        <CollapsibleSection
-            title={title}
-            count={instances.length}
-            defaultExpanded={actualDefaultExpanded}
-            headerAction={headerActions}
-        >
-            <div className="space-y-4">
-                <PaginatedList
-                    items={instances}
-                    itemsPerPage={itemsPerPage}
-                    renderItem={renderItem}
-                    emptyMessage={emptyMessage}
-                    searchable={true}
-                    searchPlaceholder={`Search ${title.toLowerCase()}...`}
-                    searchFields={searchFields}
-                />
-            </div>
-        </CollapsibleSection>
-        
-        {/* Import Modal */}
-        <GenericImportModal
-            isOpen={isImportModalOpen}
-            onClose={() => setIsImportModalOpen(false)}
-            onImport={handleImportFile}
-            dataType="instance"
-            title={`Import ${title}`}
-        />
+            <CollapsibleSection
+                title={title}
+                count={instances.length}
+                defaultExpanded={actualDefaultExpanded}
+                headerAction={headerActions}
+            >
+                <div className="space-y-4">
+                    <PaginatedList
+                        items={instances}
+                        itemsPerPage={itemsPerPage}
+                        renderItem={renderItem}
+                        emptyMessage={emptyMessage}
+                        searchable={true}
+                        searchPlaceholder={`Search ${title.toLowerCase()}...`}
+                        searchFields={searchFields}
+                    />
+                </div>
+            </CollapsibleSection>
+
+            {/* Import Modal */}
+            <GenericImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={handleImportFile}
+                dataType="instance"
+                title={`Import ${title}`}
+            />
         </>
     );
 };

@@ -5,10 +5,10 @@
  * date range, and component filtering capabilities
  */
 
-import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { clsx } from 'clsx';
 import { ErrorLogFiltersProps, ErrorSeverity, ErrorStatus, FilterFormData } from '@/types';
+import { clsx } from 'clsx';
+import React, { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
 const severityOptions: { value: ErrorSeverity; label: string; color: string }[] = [
   { value: 'critical', label: 'Critical', color: 'text-red-600' },
@@ -33,7 +33,7 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
   availableTags: _availableTags
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const { control, handleSubmit, reset } = useForm<FilterFormData>({
     defaultValues: {
       search: filters.search,
@@ -87,12 +87,14 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
     { label: 'Critical Only', filters: { severity: ['critical'] as ErrorSeverity[] } },
     { label: 'High & Critical', filters: { severity: ['critical', 'high'] as ErrorSeverity[] } },
     { label: 'Unresolved', filters: { status: ['open', 'investigating'] as ErrorStatus[] } },
-    { label: 'Recent (24h)', filters: { 
-      dateRange: { 
-        start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
-        end: new Date().toISOString().split('T')[0] 
+    {
+      label: 'Recent (24h)', filters: {
+        dateRange: {
+          start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          end: new Date().toISOString().split('T')[0]
+        }
       }
-    }}
+    }
   ];
 
   const activeFiltersCount = [
@@ -126,8 +128,8 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
                     {...field}
                     type="text"
                     placeholder="Search error messages, components, or file paths..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%' }}
                     onChange={(e) => {
                       field.onChange(e);
                       handleQuickSearch(e.target.value);
@@ -144,8 +146,8 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className={clsx(
-                "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-                isExpanded ? "text-blue-600 border-blue-300" : "text-gray-700"
+                "inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                isExpanded ? "text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-500" : "text-gray-700 dark:text-gray-300"
               )}
             >
               <svg className={clsx("mr-2 h-4 w-4 transition-transform", isExpanded ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -163,7 +165,7 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
               type="button"
               onClick={handleReset}
               disabled={activeFiltersCount === 0}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reset
             </button>
@@ -177,7 +179,7 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
               key={index}
               type="button"
               onClick={() => onFiltersChange(quickFilter.filters)}
-              className="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               {quickFilter.label}
             </button>
@@ -187,41 +189,41 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
 
       {/* Expanded Filters */}
       {isExpanded && (
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 space-y-4 bg-gray-50">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 space-y-4 bg-gray-50 dark:bg-gray-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Severity Filter */}
             <div>
               <fieldset>
-                <legend className="block text-sm font-medium text-gray-700 mb-2">
+                <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Severity Level
                 </legend>
-              <Controller
-                name="severity"
-                control={control}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                    {severityOptions.map((option) => (
-                      <label key={option.value} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={field.value.includes(option.value)}
-                          onChange={(e) => {
-                            const newValue = e.target.checked
-                              ? [...field.value, option.value]
-                              : field.value.filter(v => v !== option.value);
-                            field.onChange(newValue);
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className={clsx("ml-2 text-sm", option.color)}>
-                          {option.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              />
+                <Controller
+                  name="severity"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      {severityOptions.map((option) => (
+                        <label key={option.value} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={option.value}
+                            checked={field.value.includes(option.value)}
+                            onChange={(e) => {
+                              const newValue = e.target.checked
+                                ? [...field.value, option.value]
+                                : field.value.filter(v => v !== option.value);
+                              field.onChange(newValue);
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className={clsx("ml-2 text-sm", option.color)}>
+                            {option.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                />
               </fieldset>
             </div>
 
@@ -231,33 +233,33 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
                 <legend className="block text-sm font-medium text-gray-700 mb-2">
                   Status
                 </legend>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                    {statusOptions.map((option) => (
-                      <label key={option.value} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={field.value.includes(option.value)}
-                          onChange={(e) => {
-                            const newValue = e.target.checked
-                              ? [...field.value, option.value]
-                              : field.value.filter(v => v !== option.value);
-                            field.onChange(newValue);
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className={clsx("ml-2 text-sm", option.color)}>
-                          {option.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              />
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      {statusOptions.map((option) => (
+                        <label key={option.value} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={option.value}
+                            checked={field.value.includes(option.value)}
+                            onChange={(e) => {
+                              const newValue = e.target.checked
+                                ? [...field.value, option.value]
+                                : field.value.filter(v => v !== option.value);
+                              field.onChange(newValue);
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className={clsx("ml-2 text-sm", option.color)}>
+                            {option.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                />
               </fieldset>
             </div>
 
@@ -317,30 +319,30 @@ export const ErrorLogFilters: React.FC<ErrorLogFiltersProps> = ({
                 <legend className="block text-sm font-medium text-gray-700 mb-2">
                   Date Range
                 </legend>
-              <div className="grid grid-cols-2 gap-2">
-                <Controller
-                  name="dateStart"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="date"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  )}
-                />
-                <Controller
-                  name="dateEnd"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="date"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  )}
-                />
-              </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Controller
+                    name="dateStart"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="date"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="dateEnd"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="date"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    )}
+                  />
+                </div>
               </fieldset>
             </div>
 

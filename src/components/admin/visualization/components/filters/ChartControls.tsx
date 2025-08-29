@@ -1,5 +1,5 @@
 import { Button } from '@/components/common';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useVisualization } from '../../context';
 import { ChartType } from '../../types';
 
@@ -31,7 +31,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-    
+
     return undefined;
   }, [isDropdownOpen]);
 
@@ -40,12 +40,12 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
   return (
     <div className="ml-auto flex items-end gap-2">
       <div>
-        <label htmlFor="default-chart" className="block text-sm text-gray-700 mb-1">
+        <label htmlFor="default-chart" className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
           Default chart
         </label>
         <select
           id="default-chart"
-          className="px-3 py-2 border border-gray-300 rounded-md"
+          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           value={preferences.defaultChartType}
           onChange={(e) => preferences.setDefaultChartType(e.target.value as ChartType)}
         >
@@ -54,11 +54,11 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
           <option value="donut">Donut</option>
         </select>
       </div>
-      
+
       {availableFields.length > 0 && (
         <div className="relative" ref={dropdownRef}>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">
+            <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
               Fields ({visibleCount}/{availableFields.length})
             </label>
             <Button
@@ -78,14 +78,14 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
           </div>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 top-full mt-1 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
-              <div className="p-3 border-b border-gray-100">
+            <div className="absolute right-0 top-full mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg dark:shadow-gray-900/50 z-50 max-h-96 overflow-y-auto">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-600">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-gray-700">Field Visibility</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-white">Field Visibility</span>
                   <div className="flex gap-2">
                     <button
                       onClick={showAllFields}
-                      className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                     >
                       Show All
                     </button>
@@ -121,10 +121,10 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
                 {availableFields.map((field) => {
                   const fieldId = field.fieldId;
                   const isVisible = !state.hiddenFields.has(fieldId);
-                  const fullTitle = field.subsectionTitle 
+                  const fullTitle = field.subsectionTitle
                     ? `${field.subsectionTitle} • ${field.label}`
                     : field.label;
-                  
+
                   return (
                     <div
                       key={field.fieldId}
@@ -150,11 +150,10 @@ export const ChartControls: React.FC<ChartControlsProps> = ({ availableFields })
                           </div>
                         </div>
                       </label>
-                      <div className={`text-xs px-2 py-0.5 rounded-full ${
-                        isVisible 
-                          ? 'bg-green-100 text-green-700' 
+                      <div className={`text-xs px-2 py-0.5 rounded-full ${isVisible
+                          ? 'bg-green-100 text-green-700'
                           : 'bg-gray-100 text-gray-500'
-                      }`}>
+                        }`}>
                         {isVisible ? 'Visible' : 'Hidden'}
                       </div>
                     </div>

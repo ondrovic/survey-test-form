@@ -30,6 +30,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
 
+
+
   // Get page title based on active page
   const getPageTitle = (page: DrawerPage): string => {
     switch (page) {
@@ -224,12 +226,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
 
   // Authentication screen
   if (!isAuthenticated) {
-    return <AdminAuth onAuthenticated={() => {}} />;
+    return <AdminAuth onAuthenticated={() => { }} />;
   }
 
   return (
     <ValidationStatusProvider>
-      <div className="min-h-screen bg-blue-50/30 flex">
+      <div className="min-h-screen bg-blue-50/30 dark:bg-gray-900 flex">
         {/* App Drawer */}
         <AppDrawer
           activePage={activePage as DrawerPage}
@@ -244,12 +246,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col">
           {/* Header with page title and mobile menu button */}
-          <div className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+          <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
               <div className="flex items-center">
                 <button
                   onClick={toggleDrawer}
-                  className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 lg:hidden mr-2"
+                  className="p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden mr-2"
                   aria-label="Open navigation drawer"
                 >
                   <svg
@@ -266,7 +268,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
                     />
                   </svg>
                 </button>
-                <h1 className="text-xl font-semibold text-gray-900">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {getPageTitle(activePage as DrawerPage)}
                 </h1>
               </div>
@@ -274,7 +276,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
           </div>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto bg-blue-50/30">
+          <main className="flex-1 overflow-y-auto bg-blue-50/30 dark:bg-gray-900">
             <div className="max-w-7xl mx-auto px-1 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-8 w-full min-w-0">
               {activePage === "overview" && (
                 <AdminOverview

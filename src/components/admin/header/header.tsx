@@ -21,12 +21,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     };
 
     return (
-        <header className="bg-white shadow-sm border-b relative">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 relative">
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14 md:h-16">
                     {/* Left side - Title */}
                     <div className="flex items-center flex-1 min-w-0">
-                        <h1 className="text-lg md:text-xl font-semibold text-gray-900 truncate pr-4">
+                        <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white truncate pr-4">
                             {title}
                         </h1>
                     </div>
@@ -54,7 +54,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     <div className="md:hidden">
                         <button
                             onClick={toggleMobileMenu}
-                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                            className="p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
                             aria-label="Toggle mobile menu"
                         >
                             {isMobileMenuOpen ? (
@@ -68,11 +68,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
                 {/* Mobile Menu Panel */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg z-50">
+                    <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg z-50">
                         <div className="px-3 py-4 space-y-4">
                             {/* Mobile Connection Status */}
-                            <div className="border-b border-gray-200 pb-4">
-                                <div className="text-sm font-medium text-gray-700 mb-2">Connection Status</div>
+                            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Connection Status</div>
                                 <ConnectionStatus 
                                     connected={connected}
                                     loading={loading}
@@ -104,7 +104,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             {/* Backdrop for mobile menu */}
             {isMobileMenuOpen && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden"
+                    className="fixed inset-0 bg-black bg-opacity-25 dark:bg-opacity-50 z-40 md:hidden"
                     onClick={() => setIsMobileMenuOpen(false)}
                     aria-hidden="true"
                 />

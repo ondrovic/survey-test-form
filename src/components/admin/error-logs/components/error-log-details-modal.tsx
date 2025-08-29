@@ -5,9 +5,9 @@
  * assigning errors, and adding resolution notes
  */
 
-import React, { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { clsx } from 'clsx';
+import React, { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { ErrorLogDetailsModalProps, ErrorStatus } from '../error-logs.types';
 import { ErrorLogStatusBadge } from './error-log-status-badge';
 
@@ -49,7 +49,7 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
 
   const handleStatusUpdate = async (data: StatusUpdateFormData) => {
     if (!error) return;
-    
+
     setIsUpdating(true);
     try {
       await onUpdateStatus(error.id, data.status, data.assignedTo || undefined, data.resolutionNotes || undefined);
@@ -82,8 +82,8 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
-        <div 
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           aria-hidden="true"
           onClick={onClose}
         />
@@ -92,7 +92,7 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+        <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
           {/* Header */}
           <div className="flex items-start justify-between pb-4 border-b border-gray-200">
             <div className="flex-1">
@@ -100,8 +100,8 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
                 <h3 className="text-lg font-medium text-gray-900" id="modal-title">
                   Error Details
                 </h3>
-                <ErrorLogStatusBadge 
-                  status={error.status} 
+                <ErrorLogStatusBadge
+                  status={error.status}
                   severity={error.severity}
                   showSeverity={true}
                 />
@@ -112,7 +112,7 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
             </div>
             <button
               type="button"
-              className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="bg-white dark:bg-gray-700 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               onClick={onClose}
             >
               <span className="sr-only">Close</span>
@@ -200,7 +200,7 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
                       {error.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
                         >
                           {tag}
                         </span>
@@ -407,8 +407,8 @@ export const ErrorLogDetailsModal: React.FC<ErrorLogDetailsModalProps> = ({
                       {isUpdating ? (
                         <>
                           <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
                           Updating...
                         </>

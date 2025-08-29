@@ -1,7 +1,7 @@
+import { formatDate } from '@/utils/date.utils';
 import { clsx } from 'clsx';
 import { AlertCircle, ChevronDown, Loader2, RefreshCw, UserX, Wifi, WifiOff } from 'lucide-react';
-import React, { useRef, useState, useEffect } from 'react';
-import { formatDate } from '@/utils/date.utils';
+import React, { useEffect, useRef, useState } from 'react';
 import { ConnectionStatusProps } from './connection-status.types';
 
 /**
@@ -47,45 +47,45 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     // Theme configurations for different states
     const themes = {
         blue: {
-            color: 'text-blue-700',
-            bgColor: 'bg-blue-50',
-            borderColor: 'border-blue-300',
-            hoverBg: 'hover:bg-blue-100',
-            focusRing: 'focus:ring-blue-500'
+            color: 'text-blue-700 dark:text-blue-300',
+            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+            borderColor: 'border-blue-300 dark:border-blue-600',
+            hoverBg: 'hover:bg-blue-100 dark:hover:bg-blue-900/30',
+            focusRing: 'focus:ring-blue-500 dark:focus:ring-blue-400'
         },
         orange: {
-            color: 'text-orange-700',
-            bgColor: 'bg-orange-50',
-            borderColor: 'border-orange-300',
-            hoverBg: 'hover:bg-orange-100',
-            focusRing: 'focus:ring-orange-500'
+            color: 'text-orange-700 dark:text-orange-300',
+            bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+            borderColor: 'border-orange-300 dark:border-orange-600',
+            hoverBg: 'hover:bg-orange-100 dark:hover:bg-orange-900/30',
+            focusRing: 'focus:ring-orange-500 dark:focus:ring-orange-400'
         },
         green: {
-            color: 'text-green-700',
-            bgColor: 'bg-green-50',
-            borderColor: 'border-green-300',
-            hoverBg: 'hover:bg-green-100',
-            focusRing: 'focus:ring-green-500'
+            color: 'text-green-700 dark:text-green-300',
+            bgColor: 'bg-green-50 dark:bg-green-900/20',
+            borderColor: 'border-green-300 dark:border-green-600',
+            hoverBg: 'hover:bg-green-100 dark:hover:bg-green-900/30',
+            focusRing: 'focus:ring-green-500 dark:focus:ring-green-400'
         },
         red: {
-            color: 'text-red-700',
-            bgColor: 'bg-red-50',
-            borderColor: 'border-red-300',
-            hoverBg: 'hover:bg-red-100',
-            focusRing: 'focus:ring-red-500'
+            color: 'text-red-700 dark:text-red-300',
+            bgColor: 'bg-red-50 dark:bg-red-900/20',
+            borderColor: 'border-red-300 dark:border-red-600',
+            hoverBg: 'hover:bg-red-100 dark:hover:bg-red-900/30',
+            focusRing: 'focus:ring-red-500 dark:focus:ring-red-400'
         },
         gray: {
-            color: 'text-gray-700',
-            bgColor: 'bg-gray-50',
-            borderColor: 'border-gray-300',
-            hoverBg: 'hover:bg-gray-100',
-            focusRing: 'focus:ring-gray-500'
+            color: 'text-gray-700 dark:text-gray-300',
+            bgColor: 'bg-gray-50 dark:bg-gray-700',
+            borderColor: 'border-gray-300 dark:border-gray-600',
+            hoverBg: 'hover:bg-gray-100 dark:hover:bg-gray-600',
+            focusRing: 'focus:ring-gray-500 dark:focus:ring-gray-400'
         }
     };
 
     const getStatusInfo = () => {
         const baseText = 'Database';
-        
+
         // Determine current state
         let statusKey: keyof typeof statusConfigs;
         if (loading) statusKey = 'loading';
@@ -129,7 +129,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         };
 
         const config = statusConfigs[statusKey];
-        
+
         return {
             icon: config.icon,
             text: baseText,
@@ -214,9 +214,9 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-                <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute bottom-full mb-2 left-0 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-600 z-50">
                     {/* Status Header */}
-                    <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-600">
                         <div className="flex items-center">
                             <Icon
                                 className={clsx(
@@ -226,7 +226,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                                 )}
                             />
                             <div>
-                                <p className="text-sm font-medium text-gray-900">{statusInfo.text}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{statusInfo.text}</p>
                                 <p className={clsx("text-xs", statusInfo.color)}>{statusInfo.status}</p>
                             </div>
                         </div>
@@ -241,8 +241,8 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                                 disabled={loading}
                                 className={clsx(
                                     'w-full flex items-center px-4 py-2 text-sm transition-colors duration-200',
-                                    'hover:bg-gray-50 focus:bg-gray-50 focus:outline-none',
-                                    loading ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'
+                                    'hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 focus:outline-none',
+                                    loading ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'text-gray-700 dark:text-gray-200'
                                 )}
                             >
                                 <RefreshCw className={clsx(
@@ -256,15 +256,15 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 
                     {/* Error Details */}
                     {error && (
-                        <div className="px-4 py-3 border-t border-gray-100 bg-red-50">
-                            <p className="text-xs font-medium text-red-800 mb-1">Error Details:</p>
-                            <p className="text-xs text-red-600 break-words">{error}</p>
+                        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-600 bg-red-50 dark:bg-red-900/20">
+                            <p className="text-xs font-medium text-red-800 dark:text-red-200 mb-1">Error Details:</p>
+                            <p className="text-xs text-red-600 dark:text-red-400 break-words">{error}</p>
                         </div>
                     )}
 
                     {/* Connection Info */}
-                    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
-                        <p className="text-xs text-gray-600">
+                    <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                        <p className="text-xs text-gray-600 dark:text-gray-300">
                             {connected ? (
                                 lastCheckedAt ? `Checked: ${formatDate(lastCheckedAt)}` : 'Last checked: —'
                             ) : 'Status: Not connected'}

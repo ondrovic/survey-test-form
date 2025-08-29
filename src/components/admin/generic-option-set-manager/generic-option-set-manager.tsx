@@ -87,8 +87,8 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
         reason: !isVisible
           ? "not visible"
           : !selectionMode
-          ? "not in selection mode"
-          : "unknown",
+            ? "not in selection mode"
+            : "unknown",
       });
     }
   }, [isVisible, selectionMode, loadItemsData]);
@@ -148,9 +148,8 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const handleDelete = (item: T) => {
     showConfirmation({
       title: "Delete Item",
-      message: `Are you sure you want to delete '${
-        item.name || `Unnamed ${config.displayName}`
-      }'? This action cannot be undone.`,
+      message: `Are you sure you want to delete '${item.name || `Unnamed ${config.displayName}`
+        }'? This action cannot be undone.`,
       variant: "danger",
       onConfirm: async () => {
         const success = await deleteItem(
@@ -276,8 +275,8 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     editingItem ||
     (propEditingOptionSet
       ? {
-          ...propEditingOptionSet,
-        }
+        ...propEditingOptionSet,
+      }
       : null);
 
   if (!isVisible) return null;
@@ -342,7 +341,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
             // Items List
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                   {config.displayName}s
                 </h3>
                 <div className="flex items-center gap-2">
@@ -362,7 +361,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
                 </div>
               ) : items.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   No {config.displayName.toLowerCase()}s found. Create your
                   first one!
                 </div>
@@ -371,29 +370,29 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="border border-gray-200 rounded-lg p-4"
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="font-medium text-gray-900 dark:text-white">
                             {item.name}
                           </h4>
                           {item.description && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                               {item.description}
                             </p>
                           )}
                           {/* Multi-select specific info */}
                           {config.type === "multi-select" &&
                             (item as any).minSelections && (
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Min: {(item as any).minSelections}, Max:{" "}
                                 {(item as any).maxSelections || "Unlimited"}
                               </p>
                             )}
                           {/* Select specific info */}
                           {config.type === "select" && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {(item as any).allowMultiple
                                 ? "Multiple selections allowed"
                                 : "Single selection only"}
@@ -442,11 +441,10 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
                         {item.options.map((option: any, index: number) => (
                           <span
                             key={index}
-                            className={`px-2 py-1 rounded text-xs font-medium ${
-                              option.isDefault
-                                ? "bg-blue-100 text-amber-800 border border-amber-200"
-                                : "bg-gray-100 text-gray-700 border border-gray-200"
-                            }`}
+                            className={`px-2 py-1 rounded text-xs font-medium ${option.isDefault
+                                ? "bg-blue-100 dark:bg-blue-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+                              }`}
                           >
                             {option.label}
                             {option.isDefault && " (Default)"}

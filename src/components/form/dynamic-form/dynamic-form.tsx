@@ -700,11 +700,11 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
       return (
         <div key={section.id} className="mb-8">
           <div className="mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
               {section.title}
             </h3>
             {section.description && (
-              <p className="text-gray-600 text-lg">{section.description}</p>
+              <p className="text-gray-600 dark:text-gray-300 text-lg">{section.description}</p>
             )}
           </div>
 
@@ -716,14 +716,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 return (
                   <div
                     key={subsection.id}
-                    className="bg-gray-50/50 border border-gray-200 rounded-xl p-8"
+                    className="bg-gray-50/50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-xl p-8"
                   >
                     <div className="mb-8">
-                      <h4 className="text-xl font-semibold text-gray-800 mb-3">
+                      <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
                         {subsection.title}
                       </h4>
                       {subsection.description && (
-                        <p className="text-gray-600 leading-relaxed">
+                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                           {subsection.description}
                         </p>
                       )}
@@ -747,17 +747,17 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   );
 
   return (
-    <div className={clsx("h-screen bg-blue-50/30 flex flex-col", className)}>
+    <div className={clsx("h-screen bg-blue-50/30 dark:bg-gray-900 flex flex-col", className)}>
       <main className="flex-1 py-8 flex min-h-0">
-        <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md flex flex-col w-full h-full">
+        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/20 flex flex-col w-full h-full">
           {/* Fixed Header Section */}
           <div className="px-8 pt-8 pb-4 flex-shrink-0">
             <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
                 {config.title}
               </h1>
               {config.description && (
-                <p className="text-lg text-gray-600">{config.description}</p>
+                <p className="text-lg text-gray-600 dark:text-gray-300">{config.description}</p>
               )}
             </div>
           </div>
@@ -791,7 +791,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           </div>
 
           {/* Fixed Submit Button */}
-          <div className="px-8 pb-8 pt-6 border-t flex-shrink-0">
+          <div className="px-8 pb-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex justify-center max-w-4xl mx-auto">
               <Button
                 type="submit"

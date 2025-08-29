@@ -3,12 +3,12 @@
  * Professional error monitoring and logging interface
  */
 
-import React, { useState, useEffect } from 'react';
-import { useToast } from '@/contexts/toast-context';
 import { Modal } from '@/components/common/ui/modal';
+import { useToast } from '@/contexts/toast-context';
 import { ErrorLoggingService } from '@/services/error-logging.service';
-import { SimpleErrorLog } from '@/types';
 import { SupabaseClientService } from '@/services/supabase-client.service';
+import { SimpleErrorLog } from '@/types';
+import React, { useEffect, useState } from 'react';
 
 type SortField = 'occurred_at' | 'severity' | 'error_message' | 'component_name' | 'user_email';
 type SortDirection = 'asc' | 'desc';
@@ -61,40 +61,40 @@ export const SimpleErrorLogsPage: React.FC = () => {
     // Subscribe to all changes on error_logs table
     const subscription = client
       .channel('error-logs-changes')
-      .on('postgres_changes', { 
+      .on('postgres_changes', {
         event: '*', // Listen to ALL events (INSERT, UPDATE, DELETE)
-        schema: 'public', 
-        table: 'error_logs' 
+        schema: 'public',
+        table: 'error_logs'
       }, (payload) => {
         console.log('🔔 ERROR LOG EVENT:', payload.eventType, payload);
-        
+
         if (payload.eventType === 'INSERT') {
           console.log('🔔 NEW ERROR LOG DETECTED:', payload.new);
-          
+
           // Add the new error to the beginning of the list (since we sort by date desc)
           const newError = payload.new as SimpleErrorLog;
           setAllErrors(prevErrors => [newError, ...prevErrors]);
-          
+
           // Show toast notification for critical errors
           if (newError.severity === 'critical') {
             showError(`New critical error: ${newError.error_message}`);
           }
         } else if (payload.eventType === 'UPDATE') {
           console.log('🔄 ERROR LOG UPDATED:', payload.new);
-          
+
           // Update the specific error in the list
           const updatedError = payload.new as SimpleErrorLog;
-          setAllErrors(prevErrors => 
-            prevErrors.map(error => 
+          setAllErrors(prevErrors =>
+            prevErrors.map(error =>
               error.id === updatedError.id ? updatedError : error
             )
           );
         } else if (payload.eventType === 'DELETE') {
           console.log('🗑️ ERROR LOG DELETED:', payload.old);
-          
+
           // Remove the deleted error from the list
           const deletedError = payload.old as SimpleErrorLog;
-          setAllErrors(prevErrors => 
+          setAllErrors(prevErrors =>
             prevErrors.filter(error => error.id !== deletedError.id)
           );
         }
@@ -121,15 +121,15 @@ export const SimpleErrorLogsPage: React.FC = () => {
   // Sort comparison function
   const sortErrors = (a: SimpleErrorLog, b: SimpleErrorLog): number => {
     let comparison = 0;
-    
+
     switch (sortField) {
       case 'occurred_at':
         comparison = new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime();
         break;
       case 'severity': {
         const severityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
-        comparison = (severityOrder[a.severity as keyof typeof severityOrder] || 0) - 
-                    (severityOrder[b.severity as keyof typeof severityOrder] || 0);
+        comparison = (severityOrder[a.severity as keyof typeof severityOrder] || 0) -
+          (severityOrder[b.severity as keyof typeof severityOrder] || 0);
         break;
       }
       case 'error_message':
@@ -144,7 +144,7 @@ export const SimpleErrorLogsPage: React.FC = () => {
       default:
         comparison = 0;
     }
-    
+
     return sortDirection === 'desc' ? -comparison : comparison;
   };
 
@@ -154,7 +154,7 @@ export const SimpleErrorLogsPage: React.FC = () => {
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           error.error_message?.toLowerCase().includes(searchLower) ||
           error.component_name?.toLowerCase().includes(searchLower) ||
           error.file_path?.toLowerCase().includes(searchLower);
@@ -201,18 +201,18 @@ export const SimpleErrorLogsPage: React.FC = () => {
     const newSeverityFilter = severityFilter.includes(severity)
       ? severityFilter.filter(s => s !== severity)
       : [...severityFilter, severity];
-    
+
     setSeverityFilter(newSeverityFilter);
     setPage(1);
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'critical': return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300';
+      case 'high': return 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300';
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300';
+      case 'low': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -246,10 +246,10 @@ export const SimpleErrorLogsPage: React.FC = () => {
   // Actually clear the logs
   const handleConfirmClearLogs = async () => {
     setShowClearConfirm(false);
-    
+
     try {
       const success = await ErrorLoggingService.clearAllErrorLogs();
-      
+
       if (success) {
         setAllErrors([]);
         showSuccess('All error logs have been cleared');
@@ -284,8 +284,8 @@ export const SimpleErrorLogsPage: React.FC = () => {
       {/* Title and description removed - displayed in top navigation bar */}
 
       {/* Search and Filter Controls */}
-      <div className="mb-4 sm:mb-6 space-y-4 w-full max-w-full overflow-hidden" style={{boxSizing: 'border-box'}}>
-        
+      <div className="mb-4 sm:mb-6 space-y-4 w-full max-w-full overflow-hidden" style={{ boxSizing: 'border-box' }}>
+
 
         {/* Search */}
         <div className="flex flex-col space-y-4 w-full">
@@ -300,20 +300,20 @@ export const SimpleErrorLogsPage: React.FC = () => {
               placeholder="Search error messages, components, or file paths..."
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%' }}
             />
           </div>
-          
+
           {/* Page Size Selector and Clear Logs Button */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-2">
-              <label htmlFor="pageSize" className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
+              <label htmlFor="pageSize" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Show:</label>
               <select
                 id="pageSize"
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -324,7 +324,7 @@ export const SimpleErrorLogsPage: React.FC = () => {
             </div>
             <button
               onClick={handleClearLogsClick}
-              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+              className="px-4 py-2 bg-red-600 dark:bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
               disabled={loading || allErrors.length === 0}
             >
               Clear All Logs
@@ -334,17 +334,16 @@ export const SimpleErrorLogsPage: React.FC = () => {
 
         {/* Severity Filter */}
         <div className="flex flex-col space-y-2 w-full">
-          <span className="text-sm font-medium text-gray-700 text-center sm:text-left">Filter by severity:</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center sm:text-left">Filter by severity:</span>
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {['critical', 'high', 'medium', 'low'].map((severity) => (
               <button
                 key={severity}
                 onClick={() => handleSeverityFilterChange(severity)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border-2 ${
-                  severityFilter.includes(severity)
-                    ? `${getSeverityColor(severity)} border-gray-800`
-                    : `${getSeverityColor(severity)} border-transparent`
-                }`}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border-2 ${severityFilter.includes(severity)
+                  ? `${getSeverityColor(severity)} border-gray-800`
+                  : `${getSeverityColor(severity)} border-transparent`
+                  }`}
               >
                 {severity}
               </button>
@@ -355,7 +354,7 @@ export const SimpleErrorLogsPage: React.FC = () => {
                   setSeverityFilter([]);
                   setPage(1);
                 }}
-                className="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+                className="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 Clear filters
               </button>
@@ -367,43 +366,41 @@ export const SimpleErrorLogsPage: React.FC = () => {
       {loading ? (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="ml-3 text-gray-600">Loading error logs...</p>
+          <p className="ml-3 text-gray-600 dark:text-gray-400">Loading error logs...</p>
         </div>
       ) : errors.length === 0 ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-800">No error logs found. This is good! 🎉</p>
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <p className="text-green-800 dark:text-green-200">No error logs found. This is good! 🎉</p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg w-full min-w-0" style={{boxSizing: 'border-box'}}>
+        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg w-full min-w-0" style={{ boxSizing: 'border-box' }}>
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => handleSort('occurred_at')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Date/Time</span>
                       <div className="flex flex-col">
                         <svg
-                          className={`h-3 w-3 -mb-1 ${
-                            sortField === 'occurred_at' && sortDirection === 'asc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 -mb-1 ${sortField === 'occurred_at' && sortDirection === 'asc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
                           <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         <svg
-                          className={`h-3 w-3 ${
-                            sortField === 'occurred_at' && sortDirection === 'desc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 ${sortField === 'occurred_at' && sortDirection === 'desc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -412,30 +409,28 @@ export const SimpleErrorLogsPage: React.FC = () => {
                       </div>
                     </div>
                   </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => handleSort('severity')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Severity</span>
                       <div className="flex flex-col">
                         <svg
-                          className={`h-3 w-3 -mb-1 ${
-                            sortField === 'severity' && sortDirection === 'asc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 -mb-1 ${sortField === 'severity' && sortDirection === 'asc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
                           <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         <svg
-                          className={`h-3 w-3 ${
-                            sortField === 'severity' && sortDirection === 'desc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 ${sortField === 'severity' && sortDirection === 'desc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -444,30 +439,28 @@ export const SimpleErrorLogsPage: React.FC = () => {
                       </div>
                     </div>
                   </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => handleSort('error_message')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Message</span>
                       <div className="flex flex-col">
                         <svg
-                          className={`h-3 w-3 -mb-1 ${
-                            sortField === 'error_message' && sortDirection === 'asc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 -mb-1 ${sortField === 'error_message' && sortDirection === 'asc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
                           <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         <svg
-                          className={`h-3 w-3 ${
-                            sortField === 'error_message' && sortDirection === 'desc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 ${sortField === 'error_message' && sortDirection === 'desc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -476,30 +469,28 @@ export const SimpleErrorLogsPage: React.FC = () => {
                       </div>
                     </div>
                   </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => handleSort('component_name')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Component/File</span>
                       <div className="flex flex-col">
                         <svg
-                          className={`h-3 w-3 -mb-1 ${
-                            sortField === 'component_name' && sortDirection === 'asc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 -mb-1 ${sortField === 'component_name' && sortDirection === 'asc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
                           <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         <svg
-                          className={`h-3 w-3 ${
-                            sortField === 'component_name' && sortDirection === 'desc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 ${sortField === 'component_name' && sortDirection === 'desc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -508,30 +499,28 @@ export const SimpleErrorLogsPage: React.FC = () => {
                       </div>
                     </div>
                   </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => handleSort('user_email')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>User</span>
                       <div className="flex flex-col">
                         <svg
-                          className={`h-3 w-3 -mb-1 ${
-                            sortField === 'user_email' && sortDirection === 'asc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 -mb-1 ${sortField === 'user_email' && sortDirection === 'asc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
                           <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         <svg
-                          className={`h-3 w-3 ${
-                            sortField === 'user_email' && sortDirection === 'desc'
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
+                          className={`h-3 w-3 ${sortField === 'user_email' && sortDirection === 'desc'
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -545,10 +534,10 @@ export const SimpleErrorLogsPage: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {errors.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {new Date(log.occurred_at).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -556,23 +545,23 @@ export const SimpleErrorLogsPage: React.FC = () => {
                         {log.severity}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white max-w-md">
                       <div className="truncate" title={log.error_message}>
                         {log.error_message}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
                       <div className="truncate">
                         {log.component_name && <div className="font-medium">{log.component_name}</div>}
-                        {log.file_path && <div className="text-xs text-gray-400">{log.file_path}</div>}
+                        {log.file_path && <div className="text-xs text-gray-400 dark:text-gray-500">{log.file_path}</div>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {log.user_email || 'Anonymous'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {log.stack_trace ? (
-                        <button 
+                        <button
                           onClick={() => handleViewStack(log)}
                           className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                           title="Click to view stack trace details"
@@ -590,21 +579,21 @@ export const SimpleErrorLogsPage: React.FC = () => {
           </div>
 
           {/* Mobile Cards */}
-          <div className="md:hidden space-y-3 p-2 w-full min-w-0" style={{boxSizing: 'border-box', width: '100%', maxWidth: '100%'}}>
+          <div className="md:hidden space-y-3 p-2 w-full min-w-0" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%' }}>
             {errors.map((log) => (
-              <div key={log.id} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden" style={{maxWidth: '100%', boxSizing: 'border-box', width: '100%'}}>
+              <div key={log.id} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow w-full overflow-hidden" style={{ maxWidth: '100%', boxSizing: 'border-box', width: '100%' }}>
                 {/* Card Header */}
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="flex items-center space-x-2 min-w-0 flex-1">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityColor(log.severity)}`}>
                       {log.severity}
                     </span>
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {new Date(log.occurred_at).toLocaleString()}
                     </div>
                   </div>
                   {log.stack_trace && (
-                    <button 
+                    <button
                       onClick={() => handleViewStack(log)}
                       className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 border border-blue-300 rounded flex-shrink-0"
                       title="Click to view stack trace details"
@@ -616,8 +605,8 @@ export const SimpleErrorLogsPage: React.FC = () => {
 
                 {/* Error Message */}
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Error Message</h4>
-                  <p className="text-sm text-gray-700 break-words">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Error Message</h4>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
                     {log.error_message}
                   </p>
                 </div>
@@ -625,45 +614,45 @@ export const SimpleErrorLogsPage: React.FC = () => {
                 {/* Component and File Path */}
                 {(log.component_name || log.file_path) && (
                   <div className="mb-3">
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Component/File</h4>
-                    <div className="text-sm text-gray-600">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Component/File</h4>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       {log.component_name && (
                         <div className="font-medium">{log.component_name}</div>
                       )}
                       {log.file_path && (
-                        <div className="text-xs text-gray-400 font-mono break-all w-full" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>{log.file_path}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 font-mono break-all w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{log.file_path}</div>
                       )}
                     </div>
                   </div>
                 )}
 
                 {/* User */}
-                <div className="text-sm text-gray-600 pt-3 border-t border-gray-100">
+                <div className="text-sm text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700">
                   <span className="font-medium">User:</span> {log.user_email || 'Anonymous'}
                 </div>
               </div>
             ))}
           </div>
-          
+
           {/* Pagination Controls */}
-          <div className="bg-gray-50 px-2 sm:px-6 py-3 flex items-center justify-between">
+          <div className="bg-gray-50 px-2 sm:px-6 py-3 flex items-center justify-between dark:bg-gray-600">
             <div className="flex items-center">
               <p className="text-sm text-gray-600">
                 <span className="sm:hidden">{((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, totalCount)} / {totalCount}</span>
-                <span className="hidden sm:inline">Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalCount)} of {totalCount} error logs</span>
+                <span className="hidden sm:inline dark:text-white">Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalCount)} of {totalCount} error logs</span>
               </p>
             </div>
-            
+
             {totalPages > 1 && (
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handlePreviousPage}
                   disabled={page === 1}
-                  className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+                  className="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
                 >
                   Previous
                 </button>
-                
+
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const pageNum = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
@@ -671,22 +660,21 @@ export const SimpleErrorLogsPage: React.FC = () => {
                       <button
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
-                        className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
-                          pageNum === page
-                            ? 'border-blue-500 bg-blue-50 text-blue-600'
-                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
+                        className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${pageNum === page
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
                       >
                         {pageNum}
                       </button>
                     );
                   })}
                 </div>
-                
+
                 <button
                   onClick={handleNextPage}
                   disabled={page === totalPages}
-                  className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+                  className="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
                 >
                   Next
                 </button>
@@ -709,34 +697,34 @@ export const SimpleErrorLogsPage: React.FC = () => {
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityColor(selectedError.severity)}`}>
                     {selectedError.severity}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
                     {new Date(selectedError.occurred_at).toLocaleString()}
                   </span>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
                   {selectedError.error_message}
                 </h3>
                 {selectedError.component_name && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Component: <span className="font-medium">{selectedError.component_name}</span>
                   </p>
                 )}
                 {selectedError.file_path && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     File: <span className="font-mono text-xs">{selectedError.file_path}</span>
                   </p>
                 )}
                 {selectedError.user_email && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     User: <span className="font-medium">{selectedError.user_email}</span>
                   </p>
                 )}
               </div>
-              
+
               {selectedError.stack_trace && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Stack Trace:</h4>
-                  <pre className="bg-gray-50 border rounded-md p-3 text-xs overflow-x-auto text-gray-700 whitespace-pre-wrap font-mono">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Stack Trace:</h4>
+                  <pre className="bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 rounded-md p-3 text-xs overflow-x-auto text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
                     {selectedError.stack_trace}
                   </pre>
                 </div>
@@ -747,7 +735,7 @@ export const SimpleErrorLogsPage: React.FC = () => {
         <Modal.Footer>
           <button
             onClick={handleCloseModal}
-            className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors"
           >
             Close
           </button>
@@ -768,10 +756,10 @@ export const SimpleErrorLogsPage: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                   Delete All Error Logs
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   Are you sure you want to clear all error logs? This action cannot be undone and will permanently delete <strong>{allErrors.length}</strong> error log{allErrors.length === 1 ? '' : 's'}.
                 </p>
               </div>
@@ -782,13 +770,13 @@ export const SimpleErrorLogsPage: React.FC = () => {
           <div className="flex space-x-3">
             <button
               onClick={handleCancelClearLogs}
-              className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmClearLogs}
-              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-md transition-colors"
+              className="px-4 py-2 bg-red-600 dark:bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-700 rounded-md transition-colors"
             >
               Clear All Logs
             </button>

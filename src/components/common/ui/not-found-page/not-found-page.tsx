@@ -16,13 +16,13 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
   showHomeButton = true,
   homeButtonText = "Go to Home",
   homeButtonPath = routes.admin,
-  className = "min-h-screen bg-blue-50/30 flex items-center justify-center px-4 py-8",
+  className = "min-h-screen bg-blue-50/30 dark:bg-gray-900 flex items-center justify-center px-4 py-8",
 }) => {
   return (
     <div className={className}>
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">{title}</h1>
-        <p className="text-gray-600 mb-6">{message}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{title}</h1>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">{message}</p>
         {showHomeButton && (
           <button
             onClick={() => {
@@ -31,7 +31,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
                 window.location.origin
               }/${homeButtonPath.replace(/^\/+/, "")}`;
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
             {homeButtonText}
           </button>

@@ -33,7 +33,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
     const activeInstances = surveyInstances.filter(i => i.isActive).length;
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 bg-gray-50 dark:bg-gray-900 min-h-screen p-6">
             <OverviewCard
                 title="Survey Framework"
                 description="Manage survey configurations and instances"

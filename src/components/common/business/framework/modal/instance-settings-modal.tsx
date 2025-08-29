@@ -41,14 +41,14 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-gray-900/20">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Survey Instance Settings</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Survey Instance Settings</h3>
           <Button
             variant="ghost"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             ×
           </Button>
@@ -56,33 +56,33 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
 
         <div className="space-y-4">
           <div>
-            <h4 className="font-medium mb-2">{instance.title}</h4>
-            <p className="text-sm text-gray-600">{instance.description}</p>
+            <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-100">{instance.title}</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{instance.description}</p>
           </div>
 
-          <div className="border-t pt-4">
-            <h5 className="font-medium mb-3">Active Status</h5>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <h5 className="font-medium mb-3 text-gray-900 dark:text-gray-100">Active Status</h5>
             <div className="flex items-center gap-3">
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="mr-2"
+                  className="mr-2 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-500 focus:ring-amber-500 dark:focus:ring-amber-400"
                 />
-                Active
+                <span className="text-gray-900 dark:text-gray-100">Active</span>
               </label>
               <span className={`px-2 py-1 text-xs rounded-full ${isActive
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
                 }`}>
                 {isActive ? 'Will be Active' : 'Will be Inactive'}
               </span>
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <h5 className="font-medium mb-3 text-gray-900 dark:text-gray-100">Active Date Range (Optional)</h5>
             <DateRangeSelector
               idPrefix="settings"
               initialDateRange={instance.activeDateRange}

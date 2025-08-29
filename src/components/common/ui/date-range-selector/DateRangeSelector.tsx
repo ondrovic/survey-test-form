@@ -61,7 +61,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
 
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <label htmlFor={`${idPrefix}-start-date`} className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={`${idPrefix}-start-date`} className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
             {startLabel}
           </label>
           <input
@@ -69,12 +69,12 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
           />
         </div>
 
         <div>
-          <label htmlFor={`${idPrefix}-end-date`} className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={`${idPrefix}-end-date`} className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
             {endLabel}
           </label>
           <input
@@ -82,7 +82,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
           />
         </div>
       </div>

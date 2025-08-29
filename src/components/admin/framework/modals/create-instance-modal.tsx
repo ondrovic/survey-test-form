@@ -45,24 +45,24 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
       <Modal.Body>
 
           <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
               You&apos;re about to create a new instance of:
             </p>
-            <p className="font-medium text-gray-900">{config.title}</p>
+            <p className="font-medium text-gray-900 dark:text-white">{config.title}</p>
           </div>
 
           {existingInstances.length > 0 && (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
                 Existing Instances ({existingInstances.length}):
               </h4>
               <div className="space-y-1 space-x-1 max-h-32 overflow-y-auto">
                 {existingInstances.map((instance) => (
-                  <div key={instance.id} className="text-xs text-blue-800 flex items-center justify-between">
+                  <div key={instance.id} className="text-xs text-blue-800 dark:text-blue-300 flex items-center justify-between">
                     <span>{instance.id}</span>
                     <span className={`px-1 py-0.5 rounded text-xs ${instance.isActive
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-600'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300'
                       }`}>
                       {instance.isActive ? 'Active' : 'Inactive'}
                     </span>
@@ -72,25 +72,25 @@ export const CreateInstanceModal: React.FC<CreateInstanceModalProps> = ({
             </div>
           )}
 
-          <div className="mb-4 p-3 bg-green-50 rounded-lg">
-            <div className="text-sm text-green-800">
+          <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="text-sm text-green-800 dark:text-green-300">
               <p className="mb-2">
                 <strong>New instance ID:</strong><br />
-                <code className="text-xs bg-green-100 px-2 py-1 rounded font-mono">
+                <code className="text-xs bg-green-100 dark:bg-green-900/40 px-2 py-1 rounded font-mono">
                   {generateInstanceId()}
                 </code>
               </p>
               <p>
                 <strong>Survey URL will be:</strong><br />
-                <code className="text-xs bg-green-100 px-2 py-1 rounded font-mono whitespace-nowrap overflow-x-auto block">
+                <code className="text-xs bg-green-100 dark:bg-green-900/40 px-2 py-1 rounded font-mono whitespace-nowrap overflow-x-auto block">
                   {generateInstanceUrl()}
                 </code>
               </p>
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <h5 className="font-medium mb-3">Active Date Range (Optional)</h5>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <h5 className="font-medium text-gray-900 dark:text-white mb-3">Active Date Range (Optional)</h5>
             <DateRangeSelector
               idPrefix="create"
               onChange={setActiveDateRange}

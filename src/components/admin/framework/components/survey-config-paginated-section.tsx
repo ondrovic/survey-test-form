@@ -1,9 +1,9 @@
-import { Button, CollapsibleSection, PaginatedList, GenericImportModal, SurveyConfigCard } from '@/components/common';
-import { Plus, Upload, AlertTriangle, X } from 'lucide-react';
-import React, { useState } from 'react';
+import { Button, CollapsibleSection, GenericImportModal, PaginatedList, SurveyConfigCard } from '@/components/common';
+import { PAGINATION_DEFAULTS } from '@/constants/pagination.constants';
 import { useGenericImportExport } from '@/hooks';
 import { SurveyConfig } from '@/types/framework.types';
-import { PAGINATION_DEFAULTS } from '@/constants/pagination.constants';
+import { AlertTriangle, Plus, Upload, X } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface SurveyConfigSectionProps {
     title: string;
@@ -40,7 +40,7 @@ export const SurveyConfigPaginatedSection: React.FC<SurveyConfigSectionProps> = 
 }) => {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const { exportItem, importItem } = useGenericImportExport();
-    
+
     // Start collapsed by default to show counts before expanding
     const actualDefaultExpanded = defaultExpanded;
 
@@ -79,15 +79,15 @@ export const SurveyConfigPaginatedSection: React.FC<SurveyConfigSectionProps> = 
     // Validation messages for header
     const validationMessages = configs.length > 0 && validationStatus ? (
         validationStatus.hasErrors ? (
-            <div className="flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
                 <AlertTriangle className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-700 font-medium">
+                <span className="text-sm text-red-700 dark:text-red-300 font-medium">
                     {validationStatus.errorCount} Validation Error{validationStatus.errorCount !== 1 ? 's' : ''}
                 </span>
             </div>
         ) : validationStatus.lastChecked ? (
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
-                <span className="text-sm text-green-700 font-medium">✅ All Configurations Valid</span>
+            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                <span className="text-sm text-green-700 dark:text-green-300 font-medium">✅ All Configurations Valid</span>
             </div>
         ) : null
     ) : null;
@@ -100,7 +100,7 @@ export const SurveyConfigPaginatedSection: React.FC<SurveyConfigSectionProps> = 
                     variant="outline"
                     size="sm"
                     onClick={onClearValidationErrors}
-                    className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                    className="text-gray-600 dark:text-gray-300 border-gray-600 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
                     title="Clear validation error badges (troubleshooting)"
                 >
                     <X className="w-4 h-4 mr-1" />
@@ -114,8 +114,8 @@ export const SurveyConfigPaginatedSection: React.FC<SurveyConfigSectionProps> = 
                     onClick={onVerifyConfig}
                     disabled={configs.length === 0}
                     className={validationStatus?.hasErrors
-                        ? "text-red-600 border-red-600 hover:bg-red-50"
-                        : "text-green-600 border-green-600 hover:bg-green-50"
+                        ? "text-red-600 dark:text-red-400 border-red-600 dark:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        : "text-green-600 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
                     }
                 >
                     {validationStatus?.hasErrors ? (
@@ -146,42 +146,46 @@ export const SurveyConfigPaginatedSection: React.FC<SurveyConfigSectionProps> = 
     );
 
     const headerActions = (
-        <div className="flex items-center gap-2">
-            {validationButtons}
-            {actionButtons}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+                {validationButtons}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+                {actionButtons}
+            </div>
         </div>
     );
 
     return (
         <>
-        <CollapsibleSection
-            title={title}
-            count={configs.length}
-            defaultExpanded={actualDefaultExpanded}
-            headerContent={validationMessages}
-            headerAction={headerActions}
-        >
-            <div className="space-y-4">
-                <PaginatedList
-                    items={configs}
-                    itemsPerPage={itemsPerPage}
-                    renderItem={renderItem}
-                    emptyMessage={emptyMessage}
-                    searchable={true}
-                    searchPlaceholder={`Search ${title.toLowerCase()}...`}
-                    searchFields={searchFields}
-                />
-            </div>
-        </CollapsibleSection>
-        
-        {/* Import Modal */}
-        <GenericImportModal
-            isOpen={isImportModalOpen}
-            onClose={() => setIsImportModalOpen(false)}
-            onImport={handleImportFile}
-            dataType="config"
-            title={`Import ${title}`}
-        />
+            <CollapsibleSection
+                title={title}
+                count={configs.length}
+                defaultExpanded={actualDefaultExpanded}
+                headerContent={validationMessages}
+                headerAction={headerActions}
+            >
+                <div className="space-y-4">
+                    <PaginatedList
+                        items={configs}
+                        itemsPerPage={itemsPerPage}
+                        renderItem={renderItem}
+                        emptyMessage={emptyMessage}
+                        searchable={true}
+                        searchPlaceholder={`Search ${title.toLowerCase()}...`}
+                        searchFields={searchFields}
+                    />
+                </div>
+            </CollapsibleSection>
+
+            {/* Import Modal */}
+            <GenericImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={handleImportFile}
+                dataType="config"
+                title={`Import ${title}`}
+            />
         </>
     );
 };

@@ -9,10 +9,10 @@ interface ValidationError {
   fieldId: string;
   fieldType: string;
   missingItemType:
-    | "rating-scale"
-    | "radio-option-set"
-    | "multi-select-option-set"
-    | "select-option-set";
+  | "rating-scale"
+  | "radio-option-set"
+  | "multi-select-option-set"
+  | "select-option-set";
   missingItemId: string;
   missingItemName?: string;
 }
@@ -279,16 +279,16 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-[95vw] sm:max-w-2xl md:max-w-4xl mx-2 sm:mx-4 max-h-[95vh] overflow-hidden border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Configuration Validation Results
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
                 {hasErrors
                   ? "Issues found that need to be resolved"
                   : "All configurations are valid"}
@@ -298,7 +298,7 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 sm:p-3"
             >
               ✕
             </Button>
@@ -306,42 +306,42 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
         </div>
 
         {/* Summary Stats */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {validationResults.totalConfigs}
               </div>
-              <div className="text-sm text-gray-600">Total Configs</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Total Configs</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
                 {validationResults.validConfigs}
               </div>
-              <div className="text-sm text-gray-600">Valid</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Valid</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
                 {validationResults.invalidConfigs}
               </div>
-              <div className="text-sm text-gray-600">Invalid</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Invalid</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {validationResults.deactivatedInstances}
               </div>
-              <div className="text-sm text-gray-600">Deactivated</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Deactivated</div>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 p-4 sm:p-6">
           {hasErrors ? (
             <div className="space-y-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                 <div className="flex items-center">
-                  <div className="text-red-400 mr-3">
+                  <div className="text-red-400 dark:text-red-500 mr-3">
                     <svg
                       className="w-5 h-5"
                       fill="currentColor"
@@ -355,10 +355,10 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-red-800 font-medium">
+                    <h4 className="text-red-800 dark:text-red-200 font-medium">
                       Configuration Issues Detected
                     </h4>
-                    <p className="text-red-700 text-sm mt-1">
+                    <p className="text-red-700 dark:text-red-300 text-sm mt-1">
                       {validationResults.invalidConfigs} configuration(s) have
                       validation errors.
                       {validationResults.deactivatedInstances > 0 &&
@@ -368,12 +368,12 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
                 </div>
               </div>
 
-              {/* Detailed Error List */}
+              {/* Detailed Error List - Scrollable Container */}
               <div>
-                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-4">
                   Validation Issues
                 </h4>
-                <div className="space-y-3">
+                <div className="h-80 overflow-y-auto space-y-3 pr-2 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/20">
                   {validationErrors.map((error, index) => {
                     const canCreate =
                       (error.missingItemId &&
@@ -389,9 +389,10 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
                     return (
                       <div
                         key={index}
-                        className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                        className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4"
                       >
-                        <div className="flex items-start justify-between">
+                        {/* Desktop Layout */}
+                        <div className="hidden md:flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center mb-2">
                               <span className="text-2xl mr-3">
@@ -400,43 +401,38 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
                                   : getMissingItemIcon(error.missingItemType)}
                               </span>
                               <div>
-                                <h5 className="font-medium text-gray-900">
+                                <h5 className="font-medium text-gray-900 dark:text-white">
                                   {isStructuralError
                                     ? "Configuration Issue"
                                     : isConfigurationError
-                                    ? "Field Configuration Required"
-                                    : `Missing ${getMissingItemDisplayName(
+                                      ? "Field Configuration Required"
+                                      : `Missing ${getMissingItemDisplayName(
                                         error.missingItemType
                                       )}`}
                                 </h5>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-600 dark:text-gray-300">
                                   {isStructuralError
                                     ? `${error.configTitle} > ${error.sectionTitle}: ${error.fieldLabel}`
                                     : isConfigurationError
-                                    ? `Field "${error.fieldLabel}" in ${
-                                        error.configTitle
-                                      } > ${error.sectionTitle}${
-                                        error.subsectionTitle
-                                          ? ` > ${error.subsectionTitle}`
-                                          : ""
+                                      ? `Field "${error.fieldLabel}" in ${error.configTitle
+                                      } > ${error.sectionTitle}${error.subsectionTitle
+                                        ? ` > ${error.subsectionTitle}`
+                                        : ""
                                       } needs to be configured with a ${getMissingItemDisplayName(
                                         error.missingItemType
                                       ).toLowerCase()}`
-                                    : `Referenced by field "${
-                                        error.fieldLabel
-                                      }" in ${error.configTitle} > ${
-                                        error.sectionTitle
-                                      }${
-                                        error.subsectionTitle
-                                          ? ` > ${error.subsectionTitle}`
-                                          : ""
+                                      : `Referenced by field "${error.fieldLabel
+                                      }" in ${error.configTitle} > ${error.sectionTitle
+                                      }${error.subsectionTitle
+                                        ? ` > ${error.subsectionTitle}`
+                                        : ""
                                       }`}
                                 </p>
                               </div>
                             </div>
                             {error.missingItemId && (
                               <div className="ml-11">
-                                <div className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">
+                                <div className="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
                                   ID: {error.missingItemId}
                                 </div>
                               </div>
@@ -471,53 +467,141 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
                               </Button>
                             )}
                           {(isStructuralError || isConfigurationError) && (
-                            <div className="ml-4 text-sm text-amber-600 bg-blue-50 px-3 py-1 rounded">
+                            <div className="ml-4 text-sm text-amber-600 dark:text-amber-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded">
                               Manual fix required
                             </div>
                           )}
+                        </div>
+
+                        {/* Mobile Layout - Stacked */}
+                        <div className="md:hidden space-y-3">
+                          <div className="flex items-center">
+                            <span className="text-2xl mr-3">
+                              {isStructuralError || isConfigurationError
+                                ? "⚠️"
+                                : getMissingItemIcon(error.missingItemType)}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <h5 className="font-medium text-gray-900 dark:text-white">
+                                {isStructuralError
+                                  ? "Configuration Issue"
+                                  : isConfigurationError
+                                    ? "Field Configuration Required"
+                                    : `Missing ${getMissingItemDisplayName(
+                                      error.missingItemType
+                                    )}`}
+                              </h5>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
+                                {isStructuralError
+                                  ? `${error.configTitle} > ${error.sectionTitle}: ${error.fieldLabel}`
+                                  : isConfigurationError
+                                    ? `Field "${error.fieldLabel}" in ${error.configTitle
+                                    } > ${error.sectionTitle}${error.subsectionTitle
+                                      ? ` > ${error.subsectionTitle}`
+                                      : ""
+                                    } needs to be configured with a ${getMissingItemDisplayName(
+                                      error.missingItemType
+                                    ).toLowerCase()}`
+                                    : `Referenced by field "${error.fieldLabel
+                                    }" in ${error.configTitle} > ${error.sectionTitle
+                                    }${error.subsectionTitle
+                                      ? ` > ${error.subsectionTitle}`
+                                      : ""
+                                    }`}
+                              </p>
+                            </div>
+                          </div>
+
+                          {error.missingItemId && (
+                            <div className="ml-11">
+                              <div className="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
+                                ID: {error.missingItemId}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Mobile Action Buttons - Stacked */}
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            {canCreate &&
+                              !isStructuralError &&
+                              !isConfigurationError && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCreateMissingItem(error)}
+                                  disabled={
+                                    isCreating ||
+                                    createdItems.has(error.missingItemId)
+                                  }
+                                  className="w-full sm:w-auto"
+                                >
+                                  {createdItems.has(error.missingItemId) ? (
+                                    <>✅ Created</>
+                                  ) : isCreating &&
+                                    creatingItem === error.missingItemId ? (
+                                    <>⏳ Creating...</>
+                                  ) : (
+                                    <>
+                                      Create{" "}
+                                      {getMissingItemDisplayName(
+                                        error.missingItemType
+                                      )}
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            {(isStructuralError || isConfigurationError) && (
+                              <div className="text-sm text-amber-600 dark:text-amber-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded text-center">
+                                Manual fix required
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <Button variant="outline" onClick={onClose}>
-                  Close
-                </Button>
-                {validationErrors.some(
-                  (error) =>
-                    error.missingItemId &&
-                    error.fieldType !== "Section Configuration" &&
-                    !error.fieldType?.includes("field configuration")
-                ) && (
-                  <Button
-                    variant="primary"
-                    onClick={handleCreateAllMissingItems}
-                    disabled={isCreating}
-                  >
-                    {isCreating
-                      ? "⏳ Creating All Items..."
-                      : "Create All Missing Items"}
-                  </Button>
-                )}
-              </div>
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="text-green-400 text-6xl mb-4">✅</div>
-              <h4 className="text-xl font-medium text-gray-900 mb-2">
+              <div className="text-green-400 dark:text-green-500 text-6xl mb-4">✅</div>
+              <h4 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
                 All Configurations Valid!
               </h4>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Your survey configurations are properly configured and ready to
                 use.
               </p>
               <Button variant="primary" onClick={onClose} className="mt-4">
                 Continue
               </Button>
+            </div>
+          )}
+
+          {/* Action Buttons - Always visible outside scrollable area */}
+          {hasErrors && (
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                Close
+              </Button>
+              {validationErrors.some(
+                (error) =>
+                  error.missingItemId &&
+                  error.fieldType !== "Section Configuration" &&
+                  !error.fieldType?.includes("field configuration")
+              ) && (
+                  <Button
+                    variant="primary"
+                    onClick={handleCreateAllMissingItems}
+                    disabled={isCreating}
+                    className="w-full sm:w-auto"
+                  >
+                    {isCreating
+                      ? "⏳ Creating All Items..."
+                      : "Create All Missing Items"}
+                  </Button>
+                )}
             </div>
           )}
         </div>

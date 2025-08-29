@@ -49,7 +49,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     const handleDropdownOpen = useCallback((fieldId: string) => {
         const newOpenDropdown = openDropdown === fieldId ? null : fieldId;
         setOpenDropdown(newOpenDropdown);
-        
+
         if (newOpenDropdown && triggerRefs.current[fieldId]) {
             // Calculate position relative to viewport
             setTimeout(() => {
@@ -60,22 +60,22 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     const viewportWidth = window.innerWidth;
                     const dropdownHeight = 200;
                     const isMobile = viewportWidth <= 768;
-                    
+
                     // Check if there's enough space below
                     const spaceBelow = viewportHeight - triggerRect.bottom;
                     const spaceAbove = triggerRect.top;
-                    
+
                     let top: number;
                     let left: number;
                     let width: string | undefined;
                     let maxHeight: string;
-                    
+
                     // Mobile-first calculations
                     if (isMobile) {
                         // On mobile, use more viewport space and better positioning
                         const mobileMaxHeight = Math.max(150, Math.min(spaceBelow, spaceAbove, viewportHeight * 0.4));
                         maxHeight = `${mobileMaxHeight}px`;
-                        
+
                         if (spaceBelow >= 120) {
                             top = triggerRect.bottom + 4;
                         } else if (spaceAbove >= 120) {
@@ -90,7 +90,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 maxHeight = `${Math.max(120, spaceAbove - 20)}px`;
                             }
                         }
-                        
+
                         // Mobile positioning: always use full trigger width, positioned at trigger left
                         left = Math.max(8, Math.min(triggerRect.left, viewportWidth - triggerRect.width - 8));
                         width = `${Math.min(triggerRect.width, viewportWidth - 16)}px`;
@@ -111,13 +111,13 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 maxHeight = `${triggerRect.top - 20}px`;
                             }
                         }
-                        
+
                         // Desktop positioning
                         const isMultiSelect = field.type === 'multiselectdropdown';
                         left = isMultiSelect ? triggerRect.left : triggerRect.right - 120;
                         width = isMultiSelect ? `${triggerRect.width}px` : undefined;
                     }
-                    
+
                     setDropdownStyle({
                         position: 'fixed',
                         top: `${top}px`,
@@ -221,7 +221,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         case 'textarea':
             return (
                 <div className="mb-6">
-                    <label htmlFor={`${field.id}-textarea`} className="block text-base font-medium text-gray-700 mb-2">
+                    <label htmlFor={`${field.id}-textarea`} className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {field.label}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
@@ -232,12 +232,12 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-y",
-                            error ? "border-red-500" : "border-gray-300"
+                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-y bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400",
+                            error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
                         )}
                         rows={4}
                     />
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
                 </div>
             );
 
@@ -263,18 +263,18 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             if (isSelectLoading) {
                 return (
                     <div className="mb-6">
-                        <label className="block text-base font-medium text-gray-700 mb-2">
+                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="text-gray-500 text-sm px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">Loading options...</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-sm px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">Loading options...</div>
                     </div>
                 );
             }
 
             return (
                 <div className="mb-6">
-                    <label htmlFor={`${field.id}-select`} className="block text-base font-medium text-gray-700 mb-2">
+                    <label htmlFor={`${field.id}-select`} className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {field.label}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
@@ -284,8 +284,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         value={value || ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500",
-                            error ? "border-red-500" : "border-gray-300"
+                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
+                            error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
                         )}
                     >
                         <option value="">{field.placeholder || 'Select an option...'}</option>
@@ -295,7 +295,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                             </option>
                         ))}
                     </select>
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
                 </div>
             );
         }
@@ -322,11 +322,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             if (isRadioLoading) {
                 return (
                     <div className="mb-4">
-                        <label className="block text-base font-medium text-gray-700 mb-2">
+                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="text-gray-500 text-sm">Loading options...</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
                     </div>
                 );
             }
@@ -366,11 +366,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             if (isMultiSelectLoading) {
                 return (
                     <div className="mb-4">
-                        <label className="block text-base font-medium text-gray-700 mb-2">
+                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="text-gray-500 text-sm">Loading options...</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
                     </div>
                 );
             }
@@ -429,8 +429,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
 
             return (
                 <div className="mb-6">
-                    <div className="flex items-center justify-between p-4 border border-green-200 rounded-lg bg-white shadow-sm">
-                        <div className="text-gray-700 font-medium">
+                    <div className="flex items-center justify-between p-4 border border-green-200 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20">
+                        <div className="text-gray-700 dark:text-gray-300 font-medium">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </div>
@@ -462,8 +462,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                             {openDropdown === field.id && !isLoading && (
                                 isMobile ? (
                                     <Portal>
-                                        <div 
-                                            className="bg-white border border-gray-300 rounded-md shadow-xl overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                        <div
+                                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
                                             style={dropdownStyle}
                                         >
                                             {ratingOptions.map((option) => (
@@ -478,21 +478,21 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                         setOpenDropdown(null);
                                                     }}
                                                     className={clsx(
-                                                        'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 transition-colors duration-200 rounded touch-manipulation',
-                                                        value === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                                        'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 rounded touch-manipulation',
+                                                        value === option.value ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'
                                                     )}
                                                 >
                                                     {option.label}
                                                     {option.isDefault && value !== option.value && (
-                                                        <span className="ml-1 text-xs text-gray-500">(Default)</span>
+                                                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(Default)</span>
                                                     )}
                                                 </button>
                                             ))}
                                         </div>
                                     </Portal>
                                 ) : (
-                                    <div 
-                                        className="bg-white border border-gray-300 rounded-md shadow-xl overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                    <div
+                                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
                                         style={dropdownStyle}
                                     >
                                         {ratingOptions.map((option) => (
@@ -507,13 +507,13 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                     setOpenDropdown(null);
                                                 }}
                                                 className={clsx(
-                                                    'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 transition-colors duration-200 rounded touch-manipulation',
-                                                    value === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                                    'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 rounded touch-manipulation',
+                                                    value === option.value ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'
                                                 )}
                                             >
                                                 {option.label}
                                                 {option.isDefault && value !== option.value && (
-                                                    <span className="ml-1 text-xs text-gray-500">(Default)</span>
+                                                    <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(Default)</span>
                                                 )}
                                             </button>
                                         ))}
@@ -549,11 +549,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             if (isMultiDropdownLoading) {
                 return (
                     <div className="mb-4">
-                        <label className="block text-base font-medium text-gray-700 mb-2">
+                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="text-gray-500 text-sm">Loading options...</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
                     </div>
                 );
             }
@@ -565,7 +565,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
 
             return (
                 <div className="mb-6">
-                    <label className="block text-base font-medium text-gray-700 mb-3">
+                    <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
                         {field.label}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
@@ -581,8 +581,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 handleDropdownOpen(field.id);
                             }}
                             className={clsx(
-                                "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-left flex items-center justify-between transition-all duration-200",
-                                error ? "border-red-500" : "border-gray-300"
+                                "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-left flex items-center justify-between transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
+                                error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
                             )}
                         >
                             <span className="truncate">
@@ -594,7 +594,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 }
                             </span>
                             <ChevronDown className={clsx(
-                                "w-4 h-4 text-gray-400 transition-transform duration-200",
+                                "w-4 h-4 text-gray-400 dark:text-gray-300 transition-transform duration-200",
                                 openDropdown === field.id ? "rotate-180" : ""
                             )} />
                         </button>
@@ -602,8 +602,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         {openDropdown === field.id && (
                             isMobile ? (
                                 <Portal>
-                                    <div 
-                                        className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                    <div
+                                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
                                         style={dropdownStyle}
                                     >
                                         {multiDropdownOptions.map((option) => {
@@ -611,7 +611,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                             return (
                                                 <label
                                                     key={option.value}
-                                                    className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 cursor-pointer touch-manipulation"
+                                                    className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer touch-manipulation"
                                                 >
                                                     <input
                                                         type="checkbox"
@@ -625,15 +625,15 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                         }}
                                                         className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                                                     />
-                                                    <span className="ml-3 text-gray-900">{option.label}</span>
+                                                    <span className="ml-3 text-gray-900 dark:text-gray-100">{option.label}</span>
                                                 </label>
                                             );
                                         })}
                                     </div>
                                 </Portal>
                             ) : (
-                                <div 
-                                    className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                <div
+                                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
                                     style={dropdownStyle}
                                 >
                                     {multiDropdownOptions.map((option) => {
@@ -641,7 +641,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                         return (
                                             <label
                                                 key={option.value}
-                                                className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 cursor-pointer touch-manipulation"
+                                                className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer touch-manipulation"
                                             >
                                                 <input
                                                     type="checkbox"
@@ -655,7 +655,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                     }}
                                                     className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                                                 />
-                                                <span className="ml-3 text-gray-900">{option.label}</span>
+                                                <span className="ml-3 text-gray-900 dark:text-gray-100">{option.label}</span>
                                             </label>
                                         );
                                     })}
@@ -663,7 +663,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                             )
                         )}
                     </div>
-                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{error}</p>}
                 </div>
             );
         }
@@ -671,7 +671,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         default:
             return (
                 <div className="mb-4">
-                    <p className="text-red-500">Unsupported field type: {field.type}</p>
+                    <p className="text-red-500 dark:text-red-400">Unsupported field type: {field.type}</p>
                 </div>
             );
     }

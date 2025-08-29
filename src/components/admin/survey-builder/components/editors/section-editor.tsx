@@ -230,7 +230,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
     return (
         <div data-section-id={section.id}>
             <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">Section: {section.title}</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Section: {section.title}</h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Input
@@ -243,7 +243,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                         />
                     </div>
                     <div>
-                        <label htmlFor="section-type" className="block text-sm font-semibold text-gray-800 mb-2">
+                        <label htmlFor="section-type" className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
                             Section Type (Auto-generated) *
                         </label>
                         <input
@@ -251,16 +251,16 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                             type="text"
                             value={section.type || ''}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-not-allowed"
                             placeholder={section.title ? generateSectionType(section.title) : 'Enter title to generate type'}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Auto-generated from title in kebab-case format
                         </p>
                     </div>
                 </div>
                 <div className="mt-4">
-                    <label htmlFor="section-description" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="section-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Description (optional)
                     </label>
                     <textarea
@@ -270,7 +270,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                         onChange={(e) => handleDescriptionChange(e.target.value)}
                         placeholder="Enter section description (optional, max 300 characters)"
                         rows={3}
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${descriptionError ? 'border-red-500' : 'border-gray-300'
+                        className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${descriptionError ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                             }`}
                     />
                     {descriptionError && (
@@ -283,8 +283,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h4 className="font-semibold">Section Content</h4>
-                        <p className="text-xs text-gray-500 mt-1">Fields and subsections will be rendered in the order shown below</p>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">Section Content</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Fields and subsections will be rendered in the order shown below</p>
                     </div>
                     <div className="flex gap-2">
                         <Button
@@ -314,7 +314,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                 {/* Content Layout Preview */}
                 {onReorderSectionContent && getOrderedSectionContent(section).length > 0 && (
                     <div className="mb-6">
-                        <h5 className="font-medium text-sm text-gray-700 mb-2">Content Order Preview</h5>
+                        <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Content Order Preview</h5>
                         <SortableList
                             items={getOrderedSectionContent(section).map(item => ({ ...item, id: item.contentId }))}
                             onReorder={(oldIndex, newIndex) => onReorderSectionContent(section.id, oldIndex, newIndex)}
@@ -326,21 +326,21 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                 if (contentItem.type === 'subsection') {
                                     const subsectionData = contentItem.data as SurveySubsection;
                                     return (
-                                        <div className="p-3 bg-green-50 border-green-200">
+                                        <div className="p-3 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-green-700 text-sm">📁 {subsectionData.title}</span>
+                                                    <span className="font-medium text-green-700 dark:text-green-300 text-sm">📁 {subsectionData.title}</span>
                                                 </div>
-                                                <span className="text-xs text-gray-500">({subsectionData.fields.length} fields)</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">({subsectionData.fields.length} fields)</span>
                                             </div>
                                         </div>
                                     );
                                 } else if (contentItem.type === 'field') {
                                     const field = contentItem.data as any;
                                     return (
-                                        <div className="p-3 bg-blue-50 border-blue-200">
+                                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-blue-700 text-sm">🔷 {field.label}</span>
+                                                <span className="font-medium text-blue-700 dark:text-blue-300 text-sm">🔷 {field.label}</span>
                                             </div>
                                         </div>
                                     );
@@ -356,7 +356,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                     {/* Subsections */}
                     {section.subsections && section.subsections.length > 0 && (
                         <div>
-                            <h5 className="font-medium text-sm text-gray-700 mb-3">Subsections</h5>
+                            <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-3">Subsections</h5>
                             <SortableList
                                 items={section.subsections}
                                 onReorder={(oldIndex, newIndex) => onReorderSubsections(section.id, oldIndex, newIndex)}
@@ -376,8 +376,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                             key={subsection.id}
                                             data-subsection-id={subsection.id}
                                             className={`${isSelected
-                                                ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                                                : "border-gray-200 hover:border-gray-300"
+                                                ? "border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20 ring-2 ring-green-200 dark:ring-green-700"
+                                                : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800"
                                                 } border rounded-lg transition-all duration-200`}
                                         >
                                             {/* Subsection Header - Always Visible */}
@@ -386,13 +386,13 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                     <div className="flex items-center gap-2 flex-1">
                                                         <button
                                                             onClick={() => toggleSubsection(subsection.id)}
-                                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                                                             title={isExpanded ? "Collapse subsection" : "Expand subsection"}
                                                         >
                                                             {isExpanded ? (
-                                                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                                                                <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                                             ) : (
-                                                                <ChevronRight className="w-4 h-4 text-gray-600" />
+                                                                <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                                             )}
                                                         </button>
                                                         <div
@@ -407,10 +407,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                             role="button"
                                                             tabIndex={0}
                                                         >
-                                                            <span className="font-medium text-green-700">📁 {subsection.title}</span>
-                                                            <span className="text-xs text-gray-500">({subsection.fields.length} fields)</span>
+                                                            <span className="font-medium text-green-700 dark:text-green-300">📁 {subsection.title}</span>
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400">({subsection.fields.length} fields)</span>
                                                             {(isSelected || hasSelectedField) && (
-                                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                                <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
                                                                     Active
                                                                 </span>
                                                             )}
@@ -431,9 +431,9 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
 
                                                 {/* Subsection Content - Collapsible */}
                                                 {isExpanded && (
-                                                    <div className="bg-gray-50 border rounded-lg p-4 ml-4">
+                                                    <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 ml-4">
                                                         <div className="mb-4">
-                                                            <h4 className="text-md font-semibold mb-3 text-gray-800">Subsection: {subsection.title}</h4>
+                                                            <h4 className="text-md font-semibold mb-3 text-gray-800 dark:text-gray-200">Subsection: {subsection.title}</h4>
                                                             <div className="grid grid-cols-1 gap-3">
                                                                 <div>
                                                                     <Input
@@ -447,7 +447,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                     />
                                                                 </div>
                                                                 <div>
-                                                                    <label htmlFor="subsection-description" className="block text-sm font-medium text-gray-700 mb-1">
+                                                                    <label htmlFor="subsection-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                         Description (optional)
                                                                     </label>
                                                                     <textarea
@@ -459,7 +459,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                         }}
                                                                         placeholder="Enter subsection description (optional, max 300 characters)"
                                                                         rows={2}
-                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -468,8 +468,8 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                         <div className="mb-4">
                                                             <div className="flex items-center justify-between mb-3">
                                                                 <div>
-                                                                    <h5 className="font-medium text-sm">Fields</h5>
-                                                                    <p className="text-xs text-gray-500 mt-1">Click on a field to select it, then use the edit button to modify</p>
+                                                                    <h5 className="font-medium text-sm text-gray-900 dark:text-gray-100">Fields</h5>
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Click on a field to select it, then use the edit button to modify</p>
                                                                 </div>
                                                                 <Button
                                                                     size="sm"
@@ -495,14 +495,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                         fieldId={field.id}
                                                                         index={index}
                                                                     >
-                                                                        <div className="p-3 border rounded-lg bg-white hover:shadow-sm transition-shadow">
+                                                                        <div className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow">
                                                                             <div className="flex items-center justify-between">
                                                                                 <div className="flex items-center gap-2">
-                                                                                    <span className="font-medium text-gray-800">{field.label}</span>
-                                                                                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{field.type}</span>
-                                                                                    <span className="text-xs text-gray-400">{getOptionCount(field)}</span>
+                                                                                    <span className="font-medium text-gray-800 dark:text-gray-200">{field.label}</span>
+                                                                                    <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{field.type}</span>
+                                                                                    <span className="text-xs text-gray-400 dark:text-gray-500">{getOptionCount(field)}</span>
                                                                                     {field.required && (
-                                                                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                                                                        <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">
                                                                                             Required
                                                                                         </span>
                                                                                     )}
@@ -545,7 +545,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
 
                     {/* Section Fields */}
                     <div>
-                        <h5 className="font-medium text-sm text-gray-700 mb-3">Section Fields</h5>
+                        <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-3">Section Fields</h5>
                         <FieldDropZone
                             containerId={`section-${section.id}`}
                             className="space-y-4 min-h-[120px] p-4"
@@ -557,14 +557,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                     fieldId={field.id}
                                     index={index}
                                 >
-                                    <div className="p-4 border rounded-lg bg-white hover:shadow-sm transition-shadow">
+                                    <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-800">{field.label}</span>
-                                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{field.type}</span>
-                                                <span className="text-xs text-gray-400">{getOptionCount(field)}</span>
+                                                <span className="font-medium text-gray-800 dark:text-gray-200">{field.label}</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{field.type}</span>
+                                                <span className="text-xs text-gray-400 dark:text-gray-500">{getOptionCount(field)}</span>
                                                 {field.required && (
-                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                                    <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">
                                                         Required
                                                     </span>
                                                 )}

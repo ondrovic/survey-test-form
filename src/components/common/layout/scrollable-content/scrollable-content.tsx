@@ -213,14 +213,14 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
     })(),
     // Custom scrollbar styling - only show when needed
     scrollbarWidth: 'thin',
-    scrollbarColor: '#CBD5E0 #EDF2F7'
+    scrollbarColor: 'var(--scrollbar-thumb-color, #CBD5E0) var(--scrollbar-track-color, #EDF2F7)'
   };
 
   return (
     <div className={containerClasses}>
       {/* Top scroll indicator */}
       {showScrollIndicators && scrollState.isScrollable && !scrollState.isNearTop && (
-        <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white via-white/80 to-transparent scroll-indicator pointer-events-none" />
+        <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white dark:from-gray-800 via-white/80 dark:via-gray-800/80 to-transparent scroll-indicator pointer-events-none" />
       )}
 
       {/* Scrollable content */}
@@ -237,12 +237,12 @@ export const ScrollableContent: React.FC<ScrollableContentProps> = ({
 
       {/* Bottom scroll indicator */}
       {showScrollIndicators && scrollState.isScrollable && !scrollState.isNearBottom && (
-        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white via-white/80 to-transparent scroll-indicator pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white dark:from-gray-800 via-white/80 dark:via-gray-800/80 to-transparent scroll-indicator pointer-events-none" />
       )}
 
       {/* Scroll hint for mobile */}
       {mobileOptimized && scrollState.isScrollable && scrollState.isNearTop && (
-        <div className="md:hidden absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white/90 px-2 py-1 rounded-full shadow-sm scroll-indicator pointer-events-none">
+        <div className="md:hidden absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400 bg-white/90 dark:bg-gray-800/90 px-2 py-1 rounded-full shadow-sm scroll-indicator pointer-events-none">
           Scroll for more content
         </div>
       )}

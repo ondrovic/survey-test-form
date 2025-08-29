@@ -1,9 +1,9 @@
 import { Button } from '@/components/common';
 import { databaseHelpers } from '@/config/database';
 import { useSurveyData } from '@/contexts/survey-data-context';
-import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types/framework.types';
 import { routes } from '@/routes';
 import { ErrorLoggingService } from '@/services/error-logging.service';
+import { SurveyConfig, SurveyInstance, SurveyResponse } from '@/types/framework.types';
 import { BarChart3, Calendar, Clock, Filter, Users } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -119,13 +119,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 // Try to find by ID first, then by slug (exactly like visualization does)
                 instance = freshInstances.find(i => i.id === selectedInstanceId || i.slug === selectedInstanceId);
                 console.log('🔍 Found instance:', instance);
-                
+
                 // Update instance state
                 setInstance(instance);
 
                 if (instance) {
                     console.log('🔍 Fetching responses and sessions for instance:', instance.id);
-                    
+
                     // Fetch both responses and sessions
                     const [responsesResult, sessionsResult] = await Promise.allSettled([
                         databaseHelpers.getSurveyResponsesFromCollection(instance.id).catch(() => {
@@ -167,7 +167,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             setAnalyticsData(data);
         } catch (err) {
             console.error('❌ Error loading analytics data:', err);
-            
+
             // Log the error using ErrorLoggingService
             ErrorLoggingService.logError({
                 severity: 'medium',
@@ -185,7 +185,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 },
                 tags: ['analytics', 'admin', 'data-loading']
             });
-            
+
             setError(err instanceof Error ? err.message : 'Failed to load analytics data');
         } finally {
             setLoading(false);
@@ -244,15 +244,15 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
         // Calculate real completion rate based on sessions (sessions completed / total sessions started)
         const completionRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
-        
+
         // Calculate abandonment rate
         const abandonmentRate = totalSessions > 0 ? Math.round((abandonedSessions / totalSessions) * 100) : 0;
 
         // Calculate average completion time from completion_time_seconds field
-        const responsesWithTime = filteredResponses.filter(r => 
+        const responsesWithTime = filteredResponses.filter(r =>
             r.completion_time_seconds && r.completion_time_seconds > 0
         );
-        const averageCompletionTime = responsesWithTime.length > 0 
+        const averageCompletionTime = responsesWithTime.length > 0
             ? Math.round(responsesWithTime.reduce((sum, r) => sum + (r.completion_time_seconds || 0), 0) / responsesWithTime.length)
             : 0;
 
@@ -335,7 +335,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             }
 
             periodData[period].started++;
-            
+
             if (session.status === 'completed') {
                 periodData[period].completed++;
             } else if (session.status === 'abandoned' || session.status === 'expired') {
@@ -450,8 +450,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             const responses = responsePeriod?.count || 0;
             const sessionsStarted = sessionPeriod?.started || 0;
             const sessionsCompleted = sessionPeriod?.completed || 0;
-            
-            const completionRate = sessionsStarted > 0 
+
+            const completionRate = sessionsStarted > 0
                 ? Math.round((sessionsCompleted / sessionsStarted) * 100)
                 : 0;
 
@@ -474,8 +474,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
     if (error) {
         return (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800">Error: {error}</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                <p className="text-red-800 dark:text-red-400">Error: {error}</p>
                 <Button onClick={loadAnalyticsData} className="mt-2">
                     Retry
                 </Button>
@@ -489,14 +489,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                             {selectedInstanceId ? 'Survey Analytics' : 'Survey Analytics'}
                         </h2>
-                        <p className="text-gray-600">Comprehensive insights into your survey performance</p>
+                        <p className="text-gray-600 dark:text-gray-300">Comprehensive insights into your survey performance</p>
                     </div>
                 </div>
 
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                     <p>No analytics data available.</p>
                     <p className="text-sm mt-2">Instance ID: {selectedInstanceId || 'None'}</p>
                     <p className="text-sm">Available instances: {surveyInstances.length}</p>
@@ -522,20 +522,20 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                         {instance ? `${instance.title} - Analytics` : 'Survey Analytics'}
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 dark:text-gray-300">
                         Comprehensive insights into your survey performance
                     </p>
                     {instance && (
                         <>
-                        <p className="text-sm text-gray-500 dark:text-gray-100">
-                            {instance?.description}
-                        </p>
-                        <p className="text-sm text-blue-500 dark:text-blue-100 mb-1">
-                            {instance.id}
-                        </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {instance?.description}
+                            </p>
+                            <p className="text-sm text-blue-500 dark:text-blue-400 mb-1">
+                                {instance.id}
+                            </p>
                         </>
                     )}
                 </div>
@@ -553,11 +553,11 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                     </Button>
 
                     <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                         <select
                             value={dateRange}
                             onChange={(e) => setDateRange(e.target.value as '7d' | '30d' | '90d')}
-                            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                             <option value="7d">Last 7 days</option>
                             <option value="30d">Last 30 days</option>
@@ -566,11 +566,11 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <Filter className="w-4 h-4 text-gray-500" />
+                        <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                         <select
                             value={groupBy}
                             onChange={(e) => setGroupBy(e.target.value as 'day' | 'week' | 'month')}
-                            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                             <option value="day">By Day</option>
                             <option value="week">By Week</option>
@@ -582,62 +582,62 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
             {/* Key Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Users className="w-6 h-6 text-blue-600" />
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Total Sessions</p>
-                            <p className="text-2xl font-bold text-gray-900">{analyticsData.totalSessions}</p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Sessions</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsData.totalSessions}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center">
-                        <div className="p-2 bg-indigo-100 rounded-lg">
-                            <BarChart3 className="w-6 h-6 text-indigo-600" />
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                            <BarChart3 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Total Responses</p>
-                            <p className="text-2xl font-bold text-gray-900">{analyticsData.totalResponses}</p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Responses</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsData.totalResponses}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <BarChart3 className="w-6 h-6 text-green-600" />
+                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                            <BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Completion Rate</p>
-                            <p className="text-2xl font-bold text-gray-900">{analyticsData.completionRate}%</p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Completion Rate</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsData.completionRate}%</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center">
-                        <div className="p-2 bg-red-100 rounded-lg">
-                            <BarChart3 className="w-6 h-6 text-red-600" />
+                        <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <BarChart3 className="w-6 h-6 text-red-600 dark:text-red-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Abandonment Rate</p>
-                            <p className="text-2xl font-bold text-gray-900">{analyticsData.abandonmentRate}%</p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Abandonment Rate</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsData.abandonmentRate}%</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                            <Clock className="w-6 h-6 text-purple-600" />
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                            <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Avg. Completion Time</p>
-                            <p className="text-2xl font-bold text-gray-900">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Avg. Completion Time</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {analyticsData.averageCompletionTime > 0
                                     ? formatCompletionTime(analyticsData.averageCompletionTime)
                                     : 'N/A'}
@@ -648,28 +648,28 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             </div>
 
             {/* Session Status Breakdown */}
-            <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Session Status Breakdown</h3>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Session Status Breakdown</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">{analyticsData.sessionsByStatus.started}</div>
-                        <div className="text-sm text-gray-500">Started</div>
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{analyticsData.sessionsByStatus.started}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Started</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-yellow-600">{analyticsData.sessionsByStatus.in_progress}</div>
-                        <div className="text-sm text-gray-500">In Progress</div>
+                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{analyticsData.sessionsByStatus.in_progress}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">In Progress</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">{analyticsData.sessionsByStatus.completed}</div>
-                        <div className="text-sm text-gray-500">Completed</div>
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">{analyticsData.sessionsByStatus.completed}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Completed</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-red-600">{analyticsData.sessionsByStatus.abandoned}</div>
-                        <div className="text-sm text-gray-500">Abandoned</div>
+                        <div className="text-2xl font-bold text-red-600 dark:text-red-400">{analyticsData.sessionsByStatus.abandoned}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Abandoned</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-600">{analyticsData.sessionsByStatus.expired}</div>
-                        <div className="text-sm text-gray-500">Expired</div>
+                        <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{analyticsData.sessionsByStatus.expired}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Expired</div>
                     </div>
                 </div>
             </div>
@@ -677,34 +677,34 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Session & Response Trends */}
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold mb-4">Session & Response Trends</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Session & Response Trends</h3>
                     <div className="h-64 flex items-end justify-between space-x-2 overflow-hidden px-2">
                         {analyticsData.trends.map((trend) => {
                             const maxSessions = Math.max(...analyticsData.trends.map(t => t.sessions));
                             const maxResponses = Math.max(...analyticsData.trends.map(t => t.responses));
                             const maxValue = Math.max(maxSessions, maxResponses, 1);
-                            
+
                             // Calculate available height for bars (leave room for labels)
                             const availableHeight = 180;
-                            
+
                             const sessionHeight = Math.max(8, (trend.sessions / maxValue) * availableHeight);
                             const responseHeight = Math.max(8, (trend.responses / maxValue) * availableHeight);
-                            
+
                             return (
                                 <div key={trend.date} className="flex-1 flex flex-col items-center justify-end h-full max-w-[120px]">
                                     {/* Chart bars side by side */}
                                     <div className="flex items-end justify-center space-x-1 mb-2 w-full">
                                         <div className="flex flex-col items-center">
                                             <div
-                                                className="w-6 bg-blue-500 rounded-t"
+                                                className="w-6 bg-blue-500 dark:bg-blue-500 rounded-t"
                                                 style={{ height: `${sessionHeight}px` }}
                                                 title={`Sessions: ${trend.sessions}`}
                                             ></div>
                                         </div>
                                         <div className="flex flex-col items-center">
                                             <div
-                                                className="w-6 bg-green-500 rounded-t"
+                                                className="w-6 bg-green-500 dark:bg-green-500 rounded-t"
                                                 style={{ height: `${responseHeight}px` }}
                                                 title={`Responses: ${trend.responses}`}
                                             ></div>
@@ -712,10 +712,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                                     </div>
                                     {/* Labels */}
                                     <div className="flex flex-col items-center space-y-1 flex-shrink-0">
-                                        <span className="text-xs text-gray-500 text-center truncate w-full">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 text-center truncate w-full">
                                             {trend.date}
                                         </span>
-                                        <span className="text-xs text-gray-400 text-center">
+                                        <span className="text-xs text-gray-400 dark:text-gray-500 text-center">
                                             {trend.completionRate}%
                                         </span>
                                     </div>
@@ -726,31 +726,31 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                     <div className="flex justify-center mt-4 space-x-4">
                         <div className="flex items-center">
                             <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-                            <span className="text-sm text-gray-600">Sessions Started</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Sessions Started</span>
                         </div>
                         <div className="flex items-center">
                             <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
-                            <span className="text-sm text-gray-600">Responses Completed</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Responses Completed</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Field Analysis */}
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold mb-4">Field Analysis</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Field Analysis</h3>
                     <div className="space-y-4 max-h-64 overflow-y-auto pr-4">
                         {analyticsData.fieldAnalysis.slice(0, 5).map((field) => (
-                            <div key={field.fieldKey} className="border-b border-gray-100 pb-2 last:border-b-0">
+                            <div key={field.fieldKey} className="border-b border-gray-100 dark:border-gray-700 pb-2 last:border-b-0">
                                 <div className="flex justify-between items-center mb-1">
                                     <div className="flex-1 min-w-0">
-                                        <span className="text-sm font-medium text-gray-700 block truncate">{field.label}</span>
-                                        <span className="text-xs text-gray-500 block truncate">{field.section}</span>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block truncate">{field.label}</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 block truncate">{field.section}</span>
                                     </div>
-                                    <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{field.responseCount} responses</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">{field.responseCount} responses</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                     <div
-                                        className="bg-blue-600 h-2 rounded-full"
+                                        className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full"
                                         style={{ width: `${(field.responseCount / analyticsData.totalResponses) * 100}%` }}
                                     ></div>
                                 </div>
@@ -762,42 +762,42 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
             {/* Detailed Field Analysis */}
             {analyticsData.fieldAnalysis.length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold mb-4">Detailed Field Analysis</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Detailed Field Analysis</h3>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Field
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Type
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Response Count
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Top Values
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 {analyticsData.fieldAnalysis.map((field) => (
                                     <tr key={field.fieldKey}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                             <div>
                                                 <div>{field.label}</div>
-                                                <div className="text-xs text-gray-500">{field.section}</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">{field.section}</div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {field.fieldType}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {field.responseCount}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             <div className="flex flex-wrap gap-1">
                                                 {Object.entries(field.valueDistribution)
                                                     .sort(([, a], [, b]) => b - a)
@@ -805,7 +805,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                                                     .map(([value, count]) => (
                                                         <span
                                                             key={value}
-                                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
                                                         >
                                                             {value}: {count}
                                                         </span>

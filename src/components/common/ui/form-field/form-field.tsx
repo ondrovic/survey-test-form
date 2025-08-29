@@ -95,7 +95,7 @@ const FormFieldLabel = forwardRef<HTMLLabelElement, FormFieldLabelProps>(({
       ref={ref}
       htmlFor={htmlFor || fieldId}
       className={clsx(
-        'block font-medium text-gray-700',
+        'block font-medium text-gray-700 dark:text-gray-300',
         // Mobile-friendly label sizing
         'text-base sm:text-sm',
         typography.weight.medium,
@@ -110,7 +110,7 @@ const FormFieldLabel = forwardRef<HTMLLabelElement, FormFieldLabelProps>(({
       {children}
       {required && (
         <span 
-          className="text-red-500 ml-1 text-base sm:text-sm" 
+          className="text-red-600 dark:text-red-400 ml-1 text-base sm:text-sm" 
           aria-label="required"
         >
           *
@@ -140,7 +140,7 @@ const FormFieldDescription = forwardRef<HTMLParagraphElement, FormFieldDescripti
     <p
       ref={ref}
       className={clsx(
-        'text-gray-600',
+        'text-gray-600 dark:text-gray-400',
         // Mobile-friendly description text
         'text-sm',
         // Better spacing on mobile
@@ -183,13 +183,13 @@ const FormFieldError = forwardRef<HTMLParagraphElement, FormFieldErrorProps>(({
       role="alert"
       aria-live="polite"
       className={clsx(
-        'text-red-600',
+        'text-red-600 dark:text-red-400',
         // Mobile-friendly error text
         'text-sm',
         // Better visibility on mobile
         'font-medium leading-relaxed',
         // Add a subtle background for better contrast on mobile
-        'sm:bg-transparent bg-red-50 sm:p-0 px-3 py-1 rounded-md',
+        'sm:bg-transparent bg-red-50 dark:bg-red-900/20 sm:p-0 px-3 py-1 rounded-md',
         transitions.default,
         className
       )}

@@ -782,17 +782,17 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
   );
 
   return (
-    <div className={clsx("h-screen bg-blue-50/30 flex flex-col", className)}>
+    <div className={clsx("h-screen bg-blue-50/30 dark:bg-gray-900 flex flex-col", className)}>
       <main className="flex-1 py-8 flex min-h-0">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md flex flex-col w-full h-full">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col w-full h-full">
           {/* Fixed Header Section */}
           <div className="px-8 pt-8 pb-4 flex-shrink-0">
             <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
                 {config.title}
               </h1>
               {config.description && (
-                <p className="text-lg text-gray-600">{config.description}</p>
+                <p className="text-lg text-gray-600 dark:text-gray-300">{config.description}</p>
               )}
             </div>
 
@@ -857,7 +857,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
           </div>
 
           {/* Fixed Navigation Controls */}
-          <div className="px-8 pb-8 pt-4 border-t flex-shrink-0">
+          <div className="px-8 pb-8 pt-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="max-w-3xl mx-auto">
               <FormNavigationControls
                 isFirstSection={paginationState.isFirstSection}

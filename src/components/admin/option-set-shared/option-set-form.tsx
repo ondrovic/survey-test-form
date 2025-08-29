@@ -1,35 +1,35 @@
+import {
+    ADD_OPTION_BUTTON_LABEL,
+    CANCEL_BUTTON_LABEL,
+    COLOR_FIELD_LABEL,
+    CREATE_NEW_PREFIX,
+    DEFAULT_FIELD_LABEL,
+    DEFAULT_OPTIONS_LABEL,
+    DELETE_OPTION_TOOLTIP,
+    DESCRIPTION_FIELD_LABEL,
+    DESCRIPTION_FIELD_PLACEHOLDER,
+    EDIT_PREFIX,
+    LABEL_FIELD_LABEL,
+    LABEL_FIELD_PLACEHOLDER,
+    LIVE_PREVIEW_BADGE,
+    NAME_FIELD_LABEL,
+    NAME_FIELD_PLACEHOLDER,
+    NO_OPTIONS_PREVIEW_SUBTITLE,
+    NO_OPTIONS_PREVIEW_TITLE,
+    OPTION_COUNT_PLURAL,
+    OPTION_COUNT_SINGLE,
+    OPTIONS_SECTION_TITLE,
+    PREVIEW_SECTION_TITLE,
+    SAVE_BUTTON_LABEL,
+    SAVING_BUTTON_LABEL,
+    TOTAL_OPTIONS_LABEL,
+    VALUE_FIELD_LABEL,
+    VALUE_FIELD_PLACEHOLDER
+} from '@/constants/options-sets.constants';
 import { Plus, Save, Trash2, X } from 'lucide-react';
 import React from 'react';
 import { Button, ColorSelector, Input, SortableList } from '../../common';
 import { MultiSelectPreview, RadioSelectPreview, RatingScalePreview, SelectPreview } from './previews';
-import {
-    SAVE_BUTTON_LABEL,
-    SAVING_BUTTON_LABEL,
-    CANCEL_BUTTON_LABEL,
-    ADD_OPTION_BUTTON_LABEL,
-    CREATE_NEW_PREFIX,
-    EDIT_PREFIX,
-    OPTIONS_SECTION_TITLE,
-    PREVIEW_SECTION_TITLE,
-    LIVE_PREVIEW_BADGE,
-    NAME_FIELD_LABEL,
-    DESCRIPTION_FIELD_LABEL,
-    VALUE_FIELD_LABEL,
-    LABEL_FIELD_LABEL,
-    COLOR_FIELD_LABEL,
-    DEFAULT_FIELD_LABEL,
-    NAME_FIELD_PLACEHOLDER,
-    DESCRIPTION_FIELD_PLACEHOLDER,
-    VALUE_FIELD_PLACEHOLDER,
-    LABEL_FIELD_PLACEHOLDER,
-    NO_OPTIONS_PREVIEW_TITLE,
-    NO_OPTIONS_PREVIEW_SUBTITLE,
-    OPTION_COUNT_SINGLE,
-    OPTION_COUNT_PLURAL,
-    TOTAL_OPTIONS_LABEL,
-    DEFAULT_OPTIONS_LABEL,
-    DELETE_OPTION_TOOLTIP
-} from '@/constants/options-sets.constants';
 
 export type OptionLike = {
     value: string;
@@ -133,7 +133,7 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                     {isCreating ? `${CREATE_NEW_PREFIX} ${title}` : `${EDIT_PREFIX} ${title}`}
                 </h3>
                 <div className="flex space-x-2">
@@ -148,7 +148,7 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                     name="optionSetName"
                     label={NAME_FIELD_LABEL}
@@ -167,20 +167,20 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
             </div>
 
             {renderAdditionalFields && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {renderAdditionalFields({ data, setField })}
                 </div>
             )}
 
             <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div className="flex items-center space-x-2">
-                        <h4 className="font-medium text-gray-900">{OPTIONS_SECTION_TITLE}</h4>
-                        <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                        <h4 className="font-medium text-gray-900 dark:text-white">{OPTIONS_SECTION_TITLE}</h4>
+                        <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
                             {data.options.length} {data.options.length === 1 ? OPTION_COUNT_SINGLE : OPTION_COUNT_PLURAL}
                         </span>
                     </div>
-                    <Button onClick={addOption} variant="secondary" size="sm">
+                    <Button onClick={addOption} variant="secondary" size="sm" className="w-full sm:w-auto">
                         <Plus className="h-4 w-4 mr-2" />
                         {ADD_OPTION_BUTTON_LABEL}
                     </Button>
@@ -194,9 +194,9 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                         const index = data.options.findIndex((_, i) => i === parseInt(option.id.split('-')[1]));
 
                         return (
-                            <div className={`p-3 border border-gray-200 rounded-lg bg-white ${isDragging ? 'shadow-lg' : ''}`}>
-                                <div className="flex items-center justify-between">
-                                    <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-4' : 'grid-cols-3'} gap-3`}>
+                            <div className={`p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 ${isDragging ? 'shadow-lg' : ''}`}>
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                                    <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'} gap-3`}>
                                         <Input
                                             name={`option-${index}-value`}
                                             label={VALUE_FIELD_LABEL}
@@ -215,7 +215,7 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                                         />
                                         {showColor && (
                                             <div className="space-y-1 space-x-1">
-                                                <span className="block text-sm font-semibold text-gray-800 mb-2">{COLOR_FIELD_LABEL}</span>
+                                                <span className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">{COLOR_FIELD_LABEL}</span>
                                                 <ColorSelector
                                                     value={option.color || 'transparent'}
                                                     onChange={(value) => updateOption(index, { color: String(value) } as Partial<TOption>)}
@@ -231,16 +231,16 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                                                         onChange={(e) => updateOption(index, { isDefault: e.target.checked } as Partial<TOption>)}
                                                         className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                                                     />
-                                                    <span className="ml-2 text-sm text-gray-700">{DEFAULT_FIELD_LABEL}</span>
+                                                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{DEFAULT_FIELD_LABEL}</span>
                                                 </label>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="ml-3">
+                                    <div className="flex justify-end lg:ml-3">
                                         <button
                                             onClick={() => removeOption(index)}
                                             disabled={data.options.length <= 1}
-                                            className="p-2 text-red-400 hover:text-red-600 disabled:opacity-50 hover:bg-red-50 rounded"
+                                            className="p-2 text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                                             title={DELETE_OPTION_TOOLTIP}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -256,16 +256,16 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
 
             {/* Preview Section */}
             <div className="border-t pt-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">{PREVIEW_SECTION_TITLE}</h4>
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white">{PREVIEW_SECTION_TITLE}</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full self-start">
                         {LIVE_PREVIEW_BADGE}
                     </span>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                     {data.options.length === 0 ? (
-                        <div className="text-center text-gray-500 py-8">
+                        <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                             <p className="text-sm">{NO_OPTIONS_PREVIEW_TITLE}</p>
                             <p className="text-xs mt-1">{NO_OPTIONS_PREVIEW_SUBTITLE}</p>
                         </div>
@@ -306,8 +306,8 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                             )}
 
                             {/* Summary */}
-                            <div className="pt-3 border-t border-gray-200">
-                                <div className="flex items-center justify-between text-sm text-gray-600">
+                            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     <span>{TOTAL_OPTIONS_LABEL} {data.options.length}</span>
                                     <span>{DEFAULT_OPTIONS_LABEL} {data.options.filter(opt => opt.isDefault).length}</span>
                                 </div>

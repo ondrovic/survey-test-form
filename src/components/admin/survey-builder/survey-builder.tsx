@@ -14,6 +14,7 @@ import {
     SelectOptionSetManager
 } from '../option-set-manager';
 // Organized imports from new structure
+import { ErrorLoggingService } from '@/services/error-logging.service';
 import {
     FieldEditorModal,
     MultiSelectFieldEditor,
@@ -24,7 +25,6 @@ import { SurveyPreview } from './components/preview';
 import { SectionList, SurveyDetails } from './components/sidebar';
 import { FieldDragProvider, FieldMoveData, SortableListMoveData } from './drag-and-drop';
 import { SurveyBuilderProps } from './survey-builder.types';
-import { ErrorLoggingService } from '@/services/error-logging.service';
 
 // Wrapper component that provides the context
 export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ onClose, editingConfig }) => {
@@ -349,7 +349,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             } else if (containerId.startsWith('subsection-')) {
                 const subsectionId = containerId.replace('subsection-', '');
                 // Find which section contains this subsection
-                const section = sections.find(section => 
+                const section = sections.find(section =>
                     section.subsections?.some(subsection => subsection.id === subsectionId)
                 );
                 if (section) {
@@ -397,7 +397,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         const currentSections = state.config.sections; // Get current state
         let fieldToMove: SurveyField | undefined;
         const sourceSection = currentSections.find(section => section.id === sourceContainer.sectionId);
-        
+
         if (!sourceSection) {
             console.error('Source section not found:', sourceContainer.sectionId);
             return;
@@ -459,9 +459,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
     const handleSortableListMove = useCallback((moveData: SortableListMoveData) => {
         console.log('📋 Sortable list move:', moveData);
-        
+
         const { droppableId, oldIndex, newIndex } = moveData;
-        
+
         // Route to the appropriate reorder function based on droppableId
         if (droppableId === 'sections-list') {
             reorderSections(oldIndex, newIndex);
@@ -678,8 +678,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     const handleCloseSelectOptionSetManager = useCallback(() => showSelectOptionSetManager(false), [showSelectOptionSetManager]);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full h-full md:max-w-6xl md:max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black dark:bg-black bg-opacity-50 dark:bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full h-full md:max-w-6xl md:max-h-[90vh] flex flex-col">
                 <SurveyHeader
                     isEditing={!!editingConfig}
                     isPreviewMode={state.isPreviewMode}
@@ -691,13 +691,13 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     onClose={onClose}
                 />
 
-                <FieldDragProvider 
+                <FieldDragProvider
                     onFieldMove={handleMoveField}
                     onSortableListMove={handleSortableListMove}
                 >
                     <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                         {/* Mobile-first responsive sidebar with better intermediate sizing */}
-                        <div className="w-full md:w-96 lg:w-80 xl:w-96 border-b md:border-b-0 md:border-r bg-gray-50 p-3 md:p-4 overflow-y-auto max-h-48 md:max-h-none">
+                        <div className="w-full md:w-96 lg:w-80 xl:w-96 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-3 md:p-4 overflow-y-auto max-h-48 md:max-h-none">
                             <SurveyDetails
                                 title={state.config.title}
                                 description={state.config.description || ''}
@@ -719,7 +719,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                         </div>
 
                         {/* Main Content - Mobile-optimized */}
-                        <div className="flex-1 p-3 md:p-6 overflow-y-auto">
+                        <div className="flex-1 p-3 md:p-6 overflow-y-auto bg-white dark:bg-gray-800">
                             {state.isPreviewMode ? (
                                 <SurveyPreview config={state.config} />
                             ) : selectedSection ? (
@@ -742,9 +742,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                     />
                                 </div>
                             ) : (
-                                <div className="text-center text-gray-500 mt-8 p-4">
-                                    <div className="text-base md:text-lg">Select a section to edit its configuration</div>
-                                    <div className="text-sm mt-2 text-gray-400">Choose from the sections above on mobile or the sidebar on larger screens</div>
+                                <div className="text-center text-gray-500 dark:text-gray-400 mt-8 p-4">
+                                    <div className="text-base md:text-lg text-gray-900 dark:text-gray-100">Select a section to edit its configuration</div>
+                                    <div className="text-sm mt-2 text-gray-400 dark:text-gray-500">Choose from the sections above on mobile or the sidebar on larger screens</div>
                                 </div>
                             )}
                         </div>

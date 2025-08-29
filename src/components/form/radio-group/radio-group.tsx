@@ -1,6 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
-import { colors, focusRing, transitions, typography } from '@/styles/design-tokens';
+import { colors, transitions, typography } from '@/styles/design-tokens';
 import { getSmartLayoutClasses } from '@/utils/layout.utils';
 import { FormField } from '@/components/common/ui';
 import { RadioGroupProps as BaseRadioGroupProps } from './radio-group.types';
@@ -38,14 +38,14 @@ const RadioOption = <T extends string | number = string>({
         htmlFor={optionId}
         className={clsx(
           // Base styles with design tokens
-          'flex items-center px-3 py-2 border rounded-lg bg-white w-full min-h-[44px]',
-          `border-${colors.gray[300]}`,
+          'flex items-center px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 w-full min-h-[44px]',
+          `border-${colors.gray[300]} dark:border-gray-600`,
           transitions.default,
           // States
           {
-            [`border-${colors.info[400]} bg-${colors.info[50]}`]: isChecked,
+            [`border-${colors.info[400]} dark:border-blue-400 bg-${colors.info[50]} dark:bg-blue-900/20`]: isChecked,
             'opacity-50 cursor-not-allowed': isDisabled,
-            [`cursor-pointer hover:border-${colors.gray[400]} hover:bg-${colors.gray[50]}`]: !isDisabled,
+            [`cursor-pointer hover:border-${colors.gray[400]} dark:hover:border-gray-500 hover:bg-${colors.gray[50]} dark:hover:bg-gray-600`]: !isDisabled,
           }
         )}
       >
@@ -59,8 +59,8 @@ const RadioOption = <T extends string | number = string>({
           disabled={isDisabled}
           className={clsx(
             'h-4 w-4 mr-3 flex-shrink-0',
-            `text-${colors.info[600]} border-${colors.gray[300]}`,
-            focusRing.info
+            `text-${colors.info[600]} dark:text-blue-400 border-${colors.gray[300]} dark:border-gray-600`,
+            'focus:ring-blue-500 dark:focus:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800'
           )}
         />
         <span
@@ -68,8 +68,8 @@ const RadioOption = <T extends string | number = string>({
             typography.text.sm,
             'leading-tight break-words',
             {
-              [`text-${colors.gray[400]}`]: isDisabled,
-              [`text-${colors.gray[700]}`]: !isDisabled,
+              [`text-${colors.gray[400]} dark:text-gray-500`]: isDisabled,
+              [`text-${colors.gray[700]} dark:text-gray-200`]: !isDisabled,
             }
           )}
           style={{ wordBreak: 'break-word' }}

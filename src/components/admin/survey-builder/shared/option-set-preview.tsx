@@ -1,7 +1,7 @@
+import { MULTISELECT_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, RATING_OPTION_BUTTON_NAME, SELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 import React, { useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../config/database';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '../../../../types/framework.types';
-import { RATING_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, MULTISELECT_OPTION_BUTTON_NAME, SELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
 
 interface OptionSetPreviewProps {
     type: 'rating' | 'radio' | 'multiselect' | 'select';
@@ -105,13 +105,13 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
 
     const renderOptions = () => {
         if (isLoading) {
-            return <div className="text-sm text-gray-500">Loading options...</div>;
+            return <div className="text-sm text-gray-500 dark:text-gray-400">Loading options...</div>;
         }
 
         switch (type) {
             case 'rating':
                 if (!ratingScale) {
-                    return <div className="text-sm text-gray-500">Failed to load options</div>;
+                    return <div className="text-sm text-gray-500 dark:text-gray-400">Failed to load options</div>;
                 }
                 return (
                     <div className="flex flex-wrap gap-2">
@@ -119,8 +119,8 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
                             <span
                                 key={index}
                                 className={`px-2 py-1 text-xs rounded border ${option.isDefault
-                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'
                                     }`}
                             >
                                 {option.label}
@@ -131,7 +131,7 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
 
             case 'radio':
                 if (!radioOptionSet) {
-                    return <div className="text-sm text-gray-500">Failed to load options</div>;
+                    return <div className="text-sm text-gray-500 dark:text-gray-400">Failed to load options</div>;
                 }
                 return (
                     <div className="flex flex-wrap gap-2">
@@ -139,8 +139,8 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
                             <span
                                 key={index}
                                 className={`px-2 py-1 text-xs rounded border ${option.isDefault
-                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'
                                     }`}
                             >
                                 {option.label}
@@ -151,7 +151,7 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
 
             case 'multiselect':
                 if (!multiSelectOptionSet) {
-                    return <div className="text-sm text-gray-500">Failed to load options</div>;
+                    return <div className="text-sm text-gray-500 dark:text-gray-400">Failed to load options</div>;
                 }
                 return (
                     <div className="flex flex-wrap gap-2">
@@ -159,8 +159,8 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
                             <span
                                 key={index}
                                 className={`px-2 py-1 text-xs rounded border ${option.isDefault
-                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'
                                     }`}
                             >
                                 {option.label}
@@ -171,12 +171,12 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
 
             case 'select':
                 if (!selectOptionSet) {
-                    return <div className="text-sm text-gray-500">Failed to load options</div>;
+                    return <div className="text-sm text-gray-500 dark:text-gray-400">Failed to load options</div>;
                 }
                 return (
                     <select
                         disabled
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                         <option value="">Select an option...</option>
                         {selectOptionSet.options.map((option, index) => (
@@ -189,14 +189,14 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
                 );
 
             default:
-                return <div className="text-sm text-gray-500">Unknown option set type</div>;
+                return <div className="text-sm text-gray-500 dark:text-gray-400">Unknown option set type</div>;
         }
     };
 
     return (
         <div className={`mt-3 ${className}`}>
             {!hideLabel && (
-                <div className="text-xs text-green-600 mb-2">{getTypeLabel()}</div>
+                <div className="text-xs text-green-600 dark:text-green-400 mb-2">{getTypeLabel()}</div>
             )}
             {renderOptions()}
         </div>

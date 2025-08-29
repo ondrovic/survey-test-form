@@ -1,13 +1,13 @@
-import React, { forwardRef } from 'react';
 import type ReactECharts from 'echarts-for-react';
-import type { BaseChartProps, ChartType } from '../types';
+import React, { forwardRef } from 'react';
+import { SimpleEChartsBar } from '../charts/basic/SimpleEChartsBar';
+import { SimpleEChartsPie } from '../charts/basic/SimpleEChartsPie';
 import { BarChart as LegacyBarChart } from '../components/charts/BarChart';
 import { DonutChart as LegacyDonutChart } from '../components/charts/DonutChart';
 import { Histogram as LegacyHistogram } from '../components/charts/Histogram';
-import { VerticalBarChart as LegacyVerticalBarChart } from '../components/charts/VerticalBarChart';
 import { Sparkline as LegacySparkline } from '../components/charts/Sparkline';
-import { SimpleEChartsBar } from '../charts/basic/SimpleEChartsBar';
-import { SimpleEChartsPie } from '../charts/basic/SimpleEChartsPie';
+import { VerticalBarChart as LegacyVerticalBarChart } from '../components/charts/VerticalBarChart';
+import type { BaseChartProps, ChartType } from '../types';
 
 /**
  * Feature flag to control ECharts migration
@@ -102,13 +102,13 @@ export const AdaptiveSparkline: React.FC<(BaseChartProps & { fieldName?: string 
     // Direct sparkline data
     return <LegacySparkline data={props.data} />;
   }
-  
+
   // Convert BaseChartProps to sparkline format
   const sparklineData = Object.entries(props.counts).map(([key, value]) => ({
     x: key,
     y: value
   }));
-  
+
   return <LegacySparkline data={sparklineData} />;
 };
 
@@ -124,7 +124,7 @@ export const EChartsFeatureConfig: React.FC<{
       ...ECHARTS_FEATURE_FLAGS,
       [flag]: !ECHARTS_FEATURE_FLAGS[flag]
     };
-    
+
     // Update the flags (in a real app, this would persist to storage)
     Object.assign(ECHARTS_FEATURE_FLAGS, newConfig);
     onConfigChange?.(newConfig);
@@ -168,11 +168,9 @@ export const useEChartsFeatures = () => {
 
 // Export all adaptive components as default chart components
 export {
-  AdaptiveBarChart as BarChart,
-  AdaptiveVerticalBarChart as VerticalBarChart,
-  AdaptiveDonutChart as DonutChart,
+  AdaptiveBarChart as BarChart, AdaptiveDonutChart as DonutChart,
   AdaptiveHistogram as Histogram,
-  AdaptiveSparkline as Sparkline
+  AdaptiveSparkline as Sparkline, AdaptiveVerticalBarChart as VerticalBarChart
 };
 
 // Development utilities
@@ -180,7 +178,7 @@ export const EChartsDebugInfo: React.FC = () => {
   if (process.env.NODE_ENV !== 'development') return null;
 
   return (
-    <div className="fixed top-4 right-4 bg-blue-50 border border-blue-200 rounded p-2 text-xs">
+    <div className="fixed top-4 right-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded p-2 text-xs text-blue-800 dark:text-blue-200">
       <div className="font-bold">ECharts Status</div>
       <div>Bar: {ECHARTS_FEATURE_FLAGS.enableBarChart ? '🚀' : '📊'}</div>
       <div>Analytics: {ECHARTS_FEATURE_FLAGS.enableAnalytics ? '📈' : '📊'}</div>

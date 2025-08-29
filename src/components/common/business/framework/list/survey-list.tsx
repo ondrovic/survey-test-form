@@ -16,10 +16,10 @@ export const SurveyList: React.FC<SurveyListProps> = ({
   const hasItems = React.Children.count(children) > 0;
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="px-6 py-4 border-b">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/10 border border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
           {headerActions && (
             <div>{headerActions}</div>
           )}
@@ -27,7 +27,7 @@ export const SurveyList: React.FC<SurveyListProps> = ({
       </div>
       <div className="p-6">
         {!hasItems ? (
-          <p className="text-gray-500 text-center py-8">{emptyMessage}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">{emptyMessage}</p>
         ) : (
           <div className="space-y-4">
             {children}

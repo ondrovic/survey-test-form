@@ -9,7 +9,7 @@ export const formatDate = (date: Date | string): string => {
       throw new Error(`Invalid date: ${date}`);
     }
     
-    return dateObj.toLocaleDateString("en-US", {
+    return dateObj.toLocaleString(undefined, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -47,10 +47,10 @@ export const formatDateShort = (date: Date | string): string => {
       throw new Error(`Invalid date: ${date}`);
     }
     
-    return dateObj.toLocaleDateString("en-US", {
+    return dateObj.toLocaleString(undefined, {
+      year: "numeric",
       month: "short",
       day: "numeric",
-      year: "numeric",
     });
   } catch (error) {
     // Log the error using ErrorLoggingService
@@ -243,26 +243,31 @@ export const getDisplayDate = (isoString: string): string => {
     // First try to normalize the existing date
     const normalizedDate = normalizeExistingDate(isoString);
 
-    // Split manually if it's in yyyy-mm-dd format
+    // Create a Date object from the normalized date
+    let date: Date;
+    
+    // If it's in yyyy-mm-dd format, parse it carefully to avoid timezone issues
     const parts = normalizedDate.split("-");
     if (parts.length === 3) {
       const [year, month, day] = parts.map(Number);
-
-      // Construct the display format mm/dd/yyyy without timezone shifting
-      return `${String(month).padStart(2, "0")}/${String(day).padStart(
-        2,
-        "0"
-      )}/${year}`;
+      // Create date at noon local time to avoid timezone shifting issues
+      date = new Date(year, month - 1, day, 12, 0, 0);
+    } else {
+      // Otherwise, fallback to Date parsing (for full ISO timestamps)
+      date = new Date(normalizedDate);
     }
 
-    // Otherwise, fallback to Date parsing (for full ISO timestamps)
-    const date = new Date(normalizedDate);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid date created from: ${normalizedDate}`);
+    }
 
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const year = date.getFullYear();
-
-    return `${month}/${day}/${year}`;
+    // Use toLocaleString for proper locale formatting
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
   } catch (error) {
     console.error(
       "Error getting display date:",

@@ -66,14 +66,14 @@ export const FormNavigationControls: React.FC<FormNavigationControlsProps> = ({
       {/* Center content with validation feedback */}
       <div className="flex-1 text-center">
         {hasValidationErrors && !isLastSection && (
-          <div className="text-sm text-red-600 flex items-center justify-center gap-1">
+          <div className="text-sm text-red-600 dark:text-red-400 flex items-center justify-center gap-1">
             <AlertTriangle className="w-4 h-4" />
             <span className="hidden sm:inline">Please fix errors to continue</span>
             <span className="sm:hidden">Fix errors to continue</span>
           </div>
         )}
         {!hasValidationErrors && (
-          <div className="text-sm text-gray-500 hidden sm:block">
+          <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
             Use arrow keys to navigate
           </div>
         )}
@@ -89,7 +89,7 @@ export const FormNavigationControls: React.FC<FormNavigationControlsProps> = ({
               loading={loading}
               className={`flex items-center gap-2 ${
                 hasValidationErrors 
-                  ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                  ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed dark:bg-gray-600 dark:hover:bg-gray-600' 
                   : ''
               }`}
               aria-label="Submit survey"
@@ -104,7 +104,7 @@ export const FormNavigationControls: React.FC<FormNavigationControlsProps> = ({
             disabled={disabled || loading || hasValidationErrors}
             className={`flex items-center gap-2 ${
               hasValidationErrors 
-                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed dark:bg-gray-600 dark:hover:bg-gray-600' 
                 : ''
             }`}
             aria-label="Go to next section"

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { Modal, ModalProps } from '../../components/common';
 import { ConfirmationModal } from '../../components/common/ui/modal/Modal';
 
@@ -19,7 +19,7 @@ interface ModalContextType {
   closeModal: (id: string) => void;
   closeAllModals: () => void;
   isModalOpen: (id: string) => boolean;
-  
+
   // Convenience methods
   showConfirmation: (options: {
     id?: string;
@@ -35,7 +35,7 @@ interface ModalContextType {
     alternativeText?: string;
     onAlternative?: () => void;
   }) => void;
-  
+
   showAlert: (options: {
     id?: string;
     title: string;
@@ -73,10 +73,10 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setModals(prev => {
       // Remove existing modal with same ID
       const filtered = prev.filter(modal => modal.id !== id);
-      return [...filtered, { 
-        id, 
-        component: renderFunction(), 
-        props, 
+      return [...filtered, {
+        id,
+        component: renderFunction(),
+        props,
         renderFunction,
         forceUpdate: 0
       }];
@@ -86,7 +86,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const updateModal = (id: string, component: ReactNode, props: Partial<ModalProps> = {}) => {
     setModals(prev => {
       const existingModalIndex = prev.findIndex(modal => modal.id === id);
-      
+
       if (existingModalIndex === -1) {
         // Modal doesn't exist, treat as openModal
         return [...prev, { id, component, props }];
@@ -101,21 +101,21 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const forceUpdateModal = (id: string) => {
     setModals(prev => {
       const existingModalIndex = prev.findIndex(modal => modal.id === id);
-      
+
       if (existingModalIndex === -1 || !prev[existingModalIndex].renderFunction) {
         return prev; // Modal doesn't exist or isn't reactive
       }
-      
+
       // Re-render the modal by calling its render function
       const updated = [...prev];
       const modal = updated[existingModalIndex];
-      
+
       updated[existingModalIndex] = {
         ...modal,
         component: modal.renderFunction!(),
         forceUpdate: (modal.forceUpdate || 0) + 1
       };
-      
+
       return updated;
     });
   };
@@ -201,12 +201,12 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
           <Modal.Title>{title}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p className="text-gray-700">{message}</p>
+          <p className="text-gray-700 dark:text-gray-200">{message}</p>
         </Modal.Body>
         <Modal.Footer>
           <button
             onClick={handleClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"
           >
             OK
           </button>
@@ -230,7 +230,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   return (
     <ModalContext.Provider value={contextValue}>
       {children}
-      
+
       {/* Render all active modals */}
       {modals.map((modal) => (
         <div key={`${modal.id}-${modal.forceUpdate || 0}`}>
@@ -244,7 +244,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
 // Hook for common modal patterns
 export const useConfirmation = () => {
   const { showConfirmation } = useModal();
-  
+
   return (options: Parameters<ModalContextType['showConfirmation']>[0]) => {
     return new Promise<boolean>((resolve) => {
       showConfirmation({
@@ -264,7 +264,7 @@ export const useConfirmation = () => {
 
 export const useAlert = () => {
   const { showAlert } = useModal();
-  
+
   return (options: Parameters<ModalContextType['showAlert']>[0]) => {
     return new Promise<void>((resolve) => {
       showAlert({

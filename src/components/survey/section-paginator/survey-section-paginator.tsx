@@ -105,7 +105,7 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
       <div className={clsx('text-center py-12', className)}>
         <p className={clsx(
           typography.text.lg,
-          `text-${colors.gray[500]}`
+          `text-${colors.gray[500]} dark:text-${colors.gray[400]}`
         )}>
           No sections to display
         </p>
@@ -151,8 +151,8 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
       {/* Navigation Controls */}
       <div className={clsx(
         'sticky bottom-0 p-4 mt-8',
-        'bg-white',
-        `border-t border-${colors.gray[200]}`,
+        'bg-white dark:bg-gray-800',
+        `border-t border-${colors.gray[200]} dark:border-gray-700`,
         shadows.sm
       )}>
         <SectionNavigationControls

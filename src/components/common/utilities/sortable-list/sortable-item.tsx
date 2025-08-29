@@ -1,6 +1,6 @@
-import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { GripVertical } from 'lucide-react';
+import React from 'react';
 
 interface SortableItemProps {
     id: string;
@@ -44,12 +44,12 @@ export const SortableItem: React.FC<SortableItemProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             {...provided.dragHandleProps}
-                            className="p-2 hover:bg-gray-100 hover:text-gray-600 rounded-md cursor-grab active:cursor-grabbing transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1"
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 rounded-md cursor-grab active:cursor-grabbing transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:ring-offset-1 dark:focus:ring-offset-gray-800"
                             type="button"
                             title="Drag to reorder"
                             aria-label="Drag to reorder"
                         >
-                            <GripVertical className="w-4 h-4 text-gray-400" />
+                            <GripVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                         </button>
                         <div className="flex-1">
                             {children}

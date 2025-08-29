@@ -53,7 +53,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     const [placeholderError, setPlaceholderError] = useState<string>('');
     const [optionsError, setOptionsError] = useState<string>('');
     const [showLabelHistory, setShowLabelHistory] = useState(false);
-    
+
     // Track the original label when the modal opens to detect actual changes
     const [originalLabel, setOriginalLabel] = useState<string>('');
 
@@ -107,7 +107,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             } else {
                 console.log('🔍 No onSaveFieldChanges function provided');
             }
-            
+
             onSave();
             onClose();
         }
@@ -225,7 +225,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
                 {/* Basic Field Configuration */}
                 <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2">
                         Basic Configuration
                     </h3>
 
@@ -239,14 +239,14 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             error={labelError}
                         />
                         <div>
-                            <label htmlFor="field-type" className="block text-sm font-semibold text-gray-800 mb-2">
+                            <label htmlFor="field-type" className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
                                 Field Type
                             </label>
                             <select
                                 id="field-type"
                                 value={field.type}
                                 onChange={(e) => onUpdateField(sectionId, field.id, { type: e.target.value as FieldType })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
                                 {FIELD_TYPES.map((type) => (
                                     <option key={type.value} value={type.value}>
@@ -258,12 +258,12 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <label className="flex items-center">
+                        <label className="flex items-center text-gray-900 dark:text-gray-100">
                             <input
                                 type="checkbox"
                                 checked={field.required}
                                 onChange={(e) => onUpdateField(sectionId, field.id, { required: e.target.checked })}
-                                className="mr-2"
+                                className="mr-2 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
                             />
                             Required field
                         </label>
@@ -280,9 +280,9 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
 
                     {/* Min/Max Selection Configuration for Multiselect */}
                     {((field.type === 'multiselect' && !field.multiSelectOptionSetId) || (field.type === 'multiselectdropdown' && !field.selectOptionSetId)) && (
-                        <div className="space-y-4 p-4 border rounded-lg bg-blue-50 border-blue-200">
-                            <h4 className="font-medium text-blue-900">Selection Constraints</h4>
-                            <p className="text-sm text-blue-700">
+                        <div className="space-y-4 p-4 border border-blue-200 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                            <h4 className="font-medium text-blue-900 dark:text-blue-100">Selection Constraints</h4>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
                                 Set minimum and maximum number of options users can select. Leave empty for no limits.
                             </p>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -323,14 +323,14 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                 {field.labelHistory && field.labelHistory.length > 1 && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2 flex-1">
                                 Label History
                             </h3>
                             <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setShowLabelHistory(!showLabelHistory)}
-                                className="ml-4 text-gray-500 hover:text-gray-700"
+                                className="ml-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                             >
                                 {showLabelHistory ? (
                                     <ChevronDown className="w-4 h-4" />
@@ -344,8 +344,8 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         </div>
 
                         {showLabelHistory && (
-                            <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div className="flex items-center text-blue-700 mb-3">
+                            <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                                <div className="flex items-center text-blue-700 dark:text-blue-300 mb-3">
                                     <Clock className="w-4 h-4 mr-2" />
                                     <span className="text-sm font-medium">
                                         Track of all label changes for data export and migration purposes
@@ -358,13 +358,13 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         .map((entry, index) => (
                                             <div
                                                 key={index}
-                                                className="flex items-start justify-between p-3 bg-white rounded border border-blue-100"
+                                                className="flex items-start justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-100 dark:border-blue-700"
                                             >
                                                 <div className="flex-1">
-                                                    <div className="font-medium text-gray-900 text-sm">
+                                                    <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
                                                         &ldquo;{entry.label}&rdquo;
                                                     </div>
-                                                    <div className="text-xs text-gray-500 mt-1">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                         {new Date(entry.changedAt).toLocaleString()}
                                                         {entry.changedBy && (
                                                             <span className="ml-2">by {entry.changedBy}</span>
@@ -372,7 +372,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                     </div>
                                                 </div>
                                                 {index === 0 && (
-                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                                    <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
                                                         Current
                                                     </span>
                                                 )}
@@ -387,13 +387,13 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                 {/* Field Options Configuration */}
                 {FIELD_TYPES.find(t => t.value === field.type)?.hasOptions && (
                     <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2">
                             Field Options
                         </h3>
 
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
                                     Configure the options that users can select from.
                                     {field.type === 'radio' && ' Users can select only one option.'}
                                     {field.type === 'select' && ' Users can select one option from dropdown.'}
@@ -402,7 +402,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                     {field.type === 'rating' && ' Users can select one rating option.'}
                                 </p>
                                 {optionsError && (
-                                    <p className="text-sm text-red-600 mt-1">{optionsError}</p>
+                                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{optionsError}</p>
                                 )}
                             </div>
                             <div className="flex space-x-2">
@@ -411,7 +411,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         size="sm"
                                         variant="secondary"
                                         onClick={onShowRatingScaleManager}
-                                        className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                        className="bg-gray-600 dark:bg-gray-600 hover:bg-gray-700 dark:hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
                                     >
                                         <Star className="w-4 h-4 mr-1" />
                                         Use Rating Scale
@@ -422,7 +422,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         size="sm"
                                         variant="secondary"
                                         onClick={onShowRadioOptionSetManager}
-                                        className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                        className="bg-gray-600 dark:bg-gray-600 hover:bg-gray-700 dark:hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
                                     >
                                         <List className="w-4 h-4 mr-1" />
                                         Use Radio Option Set
@@ -433,7 +433,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         size="sm"
                                         variant="secondary"
                                         onClick={onShowSelectOptionSetManager}
-                                        className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                        className="bg-gray-600 dark:bg-gray-600 hover:bg-gray-700 dark:hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
                                     >
                                         <ChevronDown className="w-4 h-4 mr-1" />
                                         Use Select Option Set
@@ -444,7 +444,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         size="sm"
                                         variant="secondary"
                                         onClick={onShowMultiSelectOptionSetManager}
-                                        className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                        className="bg-gray-600 dark:bg-gray-600 hover:bg-gray-700 dark:hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
                                     >
                                         <CheckSquare className="w-4 h-4 mr-1" />
                                         Use Multi-Select Option Set
@@ -466,11 +466,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         <div className="space-y-4">
                             {field.ratingScaleId ? (
                                 // Show rating scale options dynamically
-                                <div className="p-4 border rounded-md bg-gray-50">
+                                <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <h6 className="font-medium text-gray-900">Rating Option Set {field.ratingScaleId}</h6>
-                                            <p className="text-xs text-gray-500">
+                                            <h6 className="font-medium text-gray-900 dark:text-gray-100">Rating Option Set {field.ratingScaleId}</h6>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
                                                 {isLoadingOptionSets ? 'Loading...' : loadedRatingScale ? loadedRatingScale.description || loadedRatingScale.name : 'Loading rating scale...'}
                                             </p>
                                         </div>
@@ -482,14 +482,14 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 ratingScaleName: undefined,
                                                 options: []
                                             })}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-md transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {isLoadingOptionSets ? (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Loading options...
                                             </span>
                                         ) : loadedRatingScale ? (
@@ -497,8 +497,8 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 <span
                                                     key={index}
                                                     className={`px-3 py-1 text-sm rounded border ${option.isDefault
-                                                        ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                        ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-600'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500'
                                                         }`}
                                                 >
                                                     {option.label}
@@ -506,7 +506,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 </span>
                                             ))
                                         ) : (
-                                            <span className="px-3 py-1 text-sm rounded border bg-red-100 text-red-700 border-red-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-600">
                                                 Failed to load rating scale
                                             </span>
                                         )}
@@ -535,7 +535,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {isLoadingOptionSets ? (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Loading options...
                                             </span>
                                         ) : loadedRadioOptionSet ? (
@@ -543,15 +543,15 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 <span
                                                     key={index}
                                                     className={`px-3 py-1 text-sm rounded border ${option.isDefault
-                                                        ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-600'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500'
                                                         }`}
                                                 >
                                                     {option.label}
                                                 </span>
                                             ))
                                         ) : (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Failed to load options
                                             </span>
                                         )}
@@ -580,7 +580,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {isLoadingOptionSets ? (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Loading options...
                                             </span>
                                         ) : loadedMultiSelectOptionSet ? (
@@ -588,15 +588,15 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 <span
                                                     key={index}
                                                     className={`px-3 py-1 text-sm rounded border ${option.isDefault
-                                                        ? 'bg-green-100 text-green-700 border-green-200'
-                                                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                        ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-600'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500'
                                                         }`}
                                                 >
                                                     {option.label}
                                                 </span>
                                             ))
                                         ) : (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Failed to load options
                                             </span>
                                         )}
@@ -625,7 +625,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {isLoadingOptionSets ? (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Loading options...
                                             </span>
                                         ) : loadedSelectOptionSet ? (
@@ -633,15 +633,15 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 <span
                                                     key={index}
                                                     className={`px-3 py-1 text-sm rounded border ${option.isDefault
-                                                        ? 'bg-purple-100 text-purple-700 border-purple-200'
-                                                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-600'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500'
                                                         }`}
                                                 >
                                                     {option.label}
                                                 </span>
                                             ))
                                         ) : (
-                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                            <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                                 Failed to load options
                                             </span>
                                         )}
@@ -659,10 +659,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                             : { isValid: false, error: 'Value is required' };
 
                                         return (
-                                            <div key={index} className="flex items-center space-x-3 p-4 border rounded-md bg-gray-50">
+                                            <div key={index} className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
                                                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label htmlFor={`option-label-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
+                                                        <label htmlFor={`option-label-${index}`} className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                             Label *
                                                         </label>
                                                         <input
@@ -673,18 +673,18 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                                 onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value });
                                                                 setTimeout(validateOptions, 100); // Re-validate after update
                                                             }}
-                                                            className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${labelValidation.isValid
-                                                                ? 'border-gray-300 focus:ring-blue-500'
-                                                                : 'border-red-300 focus:ring-red-500'
+                                                            className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${labelValidation.isValid
+                                                                ? 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                                                                : 'border-red-300 dark:border-red-500 focus:ring-red-500'
                                                                 }`}
                                                             placeholder="Option label (required)"
                                                         />
                                                         {!labelValidation.isValid && (
-                                                            <p className="text-xs text-red-600 mt-1">{labelValidation.error}</p>
+                                                            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{labelValidation.error}</p>
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <label htmlFor={`option-value-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
+                                                        <label htmlFor={`option-value-${index}`} className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                             Value *
                                                         </label>
                                                         <input
@@ -695,14 +695,14 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                                 onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value });
                                                                 setTimeout(validateOptions, 100); // Re-validate after update
                                                             }}
-                                                            className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 ${valueValidation.isValid
-                                                                ? 'border-gray-300 focus:ring-blue-500'
-                                                                : 'border-red-300 focus:ring-red-500'
+                                                            className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${valueValidation.isValid
+                                                                ? 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                                                                : 'border-red-300 dark:border-red-500 focus:ring-red-500'
                                                                 }`}
                                                             placeholder="option_value (letters, numbers, _, -)"
                                                         />
                                                         {!valueValidation.isValid && (
-                                                            <p className="text-xs text-red-600 mt-1">{valueValidation.error}</p>
+                                                            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{valueValidation.error}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -713,7 +713,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                         onDeleteFieldOption(sectionId, field.id, index);
                                                         setTimeout(validateOptions, 100); // Re-validate after deletion
                                                     }}
-                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                                    className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-md transition-colors"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -721,7 +721,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         );
                                     })}
                                     {(field.options || []).length === 0 && (
-                                        <div className="text-center text-gray-500 text-sm py-4 border-2 border-dashed border-gray-300 rounded-md">
+                                        <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md">
                                             <p>No options configured.</p>
                                             <p className="text-xs mt-1">Add options to enable selection.</p>
                                         </div>
@@ -734,26 +734,26 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
 
                 {/* Field Preview */}
                 <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2">
                         Preview
                     </h3>
-                    <div className="p-3 border rounded-md bg-gray-50">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="p-3 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                            {field.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                         </label>
                         {field.type === 'text' && (
                             <input
                                 type="text"
                                 placeholder={field.placeholder || 'Enter text...'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 disabled
                             />
                         )}
                         {field.type === 'textarea' && (
                             <textarea
                                 placeholder={field.placeholder || 'Enter text...'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 rows={3}
                                 disabled
                             />
@@ -762,7 +762,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             <input
                                 type="email"
                                 placeholder={field.placeholder || 'Enter email...'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 disabled
                             />
                         )}
@@ -770,7 +770,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                             <input
                                 type="number"
                                 placeholder={field.placeholder || 'Enter number...'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 disabled
                             />
                         )}
@@ -789,10 +789,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         <input
                                             type="radio"
                                             name="preview-radio"
-                                            className="mr-2"
+                                            className="mr-2 text-blue-600 dark:bg-gray-700 dark:border-gray-600"
                                             disabled
                                         />
-                                        <span className="text-sm">{option.label}</span>
+                                        <span className="text-sm text-gray-900 dark:text-gray-100">{option.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -819,10 +819,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                     <label key={index} className="flex items-center">
                                         <input
                                             type="checkbox"
-                                            className="mr-2"
+                                            className="mr-2 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
                                             disabled
                                         />
-                                        <span className="text-sm">{option.label}</span>
+                                        <span className="text-sm text-gray-900 dark:text-gray-100">{option.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -837,7 +837,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         )}
                         {field.type === 'select' && !field.selectOptionSetId && field.options && field.options.length > 0 && (
                             <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 disabled
                             >
                                 <option value="">{field.placeholder || 'Select an option...'}</option>
@@ -859,7 +859,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         {field.type === 'rating' && !field.ratingScaleId && field.options && field.options.length > 0 && (
                             <div className="flex gap-2">
                                 {field.options.map((option, index) => (
-                                    <span key={index} className="px-3 py-1 text-sm rounded border bg-gray-100 text-gray-700 border-gray-200">
+                                    <span key={index} className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-500">
                                         {option.label}
                                     </span>
                                 ))}
@@ -869,7 +869,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-4 border-t sticky bottom-0 bg-white">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600 sticky bottom-0 bg-white dark:bg-gray-800">
                     <Button
                         variant="secondary"
                         onClick={handleCancel}

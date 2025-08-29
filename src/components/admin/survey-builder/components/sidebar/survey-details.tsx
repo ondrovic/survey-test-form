@@ -78,7 +78,7 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
 
     return (
         <div className="mb-6">
-            <h3 className="font-semibold mb-2">Survey Details</h3>
+            <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Survey Details</h3>
             <div className="space-y-3">
                 <div>
                     <Input
@@ -112,27 +112,27 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                 type="checkbox"
                                 checked={paginatorConfig.renderSectionsAsPages || false}
                                 onChange={(e) => handlePaginatorToggle('renderSectionsAsPages', e.target.checked)}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                             />
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Render sections as pages
                             </span>
                         </label>
-                        <p className="text-xs text-gray-500 ml-7">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 ml-7">
                             Enable to display each section on its own page with navigation
                         </p>
 
                         {paginatorConfig.renderSectionsAsPages && (
-                            <div className="ml-7 space-y-2 border-l-2 border-blue-100 pl-4">
+                            <div className="ml-7 space-y-2 border-l-2 border-blue-100 dark:border-blue-700 pl-4">
                                 <div>
                                     <label className="flex items-center gap-2">
                                         <input
                                             type="checkbox"
                                             checked={paginatorConfig.showStepIndicator !== false}
                                             onChange={(e) => handlePaginatorToggle('showStepIndicator', e.target.checked)}
-                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                         />
-                                        <span className="text-xs text-gray-600">Show step indicator</span>
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Show step indicator</span>
                                     </label>
 
                                     {/* Nested option - only available when step indicator is enabled */}
@@ -147,9 +147,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                                 checked={paginatorConfig.showStepIndicator !== false && paginatorConfig.showSectionTitles !== false}
                                                 onChange={(e) => handlePaginatorToggle('showSectionTitles', e.target.checked)}
                                                 disabled={paginatorConfig.showStepIndicator === false}
-                                                className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700"
                                             />
-                                            <span className="text-xs text-gray-600">Show section titles in indicator</span>
+                                            <span className="text-xs text-gray-600 dark:text-gray-400">Show section titles in indicator</span>
                                         </label>
                                     </div>
                                 </div>
@@ -159,9 +159,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                         type="checkbox"
                                         checked={paginatorConfig.allowBackNavigation !== false}
                                         onChange={(e) => handlePaginatorToggle('allowBackNavigation', e.target.checked)}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                     />
-                                    <span className="text-xs text-gray-600">Allow back navigation</span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">Allow back navigation</span>
                                 </label>
 
                                 <label className="flex items-center gap-2">
@@ -169,9 +169,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                         type="checkbox"
                                         checked={paginatorConfig.showProgressBar !== false}
                                         onChange={(e) => handlePaginatorToggle('showProgressBar', e.target.checked)}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                     />
-                                    <span className="text-xs text-gray-600">Show progress bar</span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">Show progress bar</span>
                                 </label>
 
                                 <label className="flex items-center gap-2">
@@ -179,9 +179,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                         type="checkbox"
                                         checked={paginatorConfig.showProgressText !== false}
                                         onChange={(e) => handlePaginatorToggle('showProgressText', e.target.checked)}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                     />
-                                    <span className="text-xs text-gray-600">Show progress text</span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">Show progress text</span>
                                 </label>
 
                                 <label className="flex items-center gap-2">
@@ -189,9 +189,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                         type="checkbox"
                                         checked={paginatorConfig.showSectionPagination !== false}
                                         onChange={(e) => handlePaginatorToggle('showSectionPagination', e.target.checked)}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                     />
-                                    <span className="text-xs text-gray-600">Show section pagination (Section x of xx)</span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">Show section pagination (Section x of xx)</span>
                                 </label>
                             </div>
                         )}
@@ -209,18 +209,18 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                 type="checkbox"
                                 checked={footerConfig.show !== false}
                                 onChange={(e) => handleFooterConfigChange({ show: e.target.checked })}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                             />
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Show footer
                             </span>
                         </label>
-                        <p className="text-xs text-gray-500 ml-7">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 ml-7">
                             Display footer at the bottom of the survey
                         </p>
 
                         {footerConfig.show !== false && (
-                            <div className="ml-7 space-y-3 border-l-2 border-blue-100 pl-4">
+                            <div className="ml-7 space-y-3 border-l-2 border-blue-100 dark:border-blue-700 pl-4">
                                 <div>
                                     <Input
                                         name="footerOrganization"
@@ -229,7 +229,7 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                         onChange={(value) => handleFooterConfigChange({ organizationName: value })}
                                         placeholder="Your Organization Name"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         Will be displayed with copyright if enabled
                                     </p>
                                 </div>
@@ -242,7 +242,7 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                         onChange={(value) => handleFooterConfigChange({ text: value })}
                                         placeholder="Custom footer text"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         Overrides Organization Name.
                                         <br/>Leave empty to use default text.
                                         <br/>Checkboxes below still apply.
@@ -255,9 +255,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                             type="checkbox"
                                             checked={footerConfig.includeCopyright !== false}
                                             onChange={(e) => handleFooterConfigChange({ includeCopyright: e.target.checked })}
-                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                         />
-                                        <span className="text-xs text-gray-600">Prepend copyright symbol and year to any text</span>
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Prepend copyright symbol and year to any text</span>
                                     </label>
 
                                     <label className="flex items-center gap-2">
@@ -265,9 +265,9 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                             type="checkbox"
                                             checked={footerConfig.autoUpdateYear !== false}
                                             onChange={(e) => handleFooterConfigChange({ autoUpdateYear: e.target.checked })}
-                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                         />
-                                        <span className="text-xs text-gray-600">Auto-update year (current: {new Date().getFullYear()})</span>
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Auto-update year (current: {new Date().getFullYear()})</span>
                                     </label>
 
                                     <label className="flex items-center gap-2">
@@ -275,11 +275,11 @@ export const SurveyDetails: React.FC<SurveyDetailsProps> = ({
                                             type="checkbox"
                                             checked={footerConfig.includeAllRightsReserved || false}
                                             onChange={(e) => handleFooterConfigChange({ includeAllRightsReserved: e.target.checked })}
-                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                                         />
-                                        <span className="text-xs text-gray-600">Include &ldquo;All rights reserved&rdquo;</span>
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Include &ldquo;All rights reserved&rdquo;</span>
                                     </label>
-                                    <p className="text-xs text-gray-400 ml-5">
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 ml-5">
                                         Appends &ldquo;. All rights reserved&rdquo; to any footer text (custom or generated)
                                     </p>
                                 </div>

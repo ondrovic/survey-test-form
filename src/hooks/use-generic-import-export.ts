@@ -19,25 +19,14 @@ import {
 } from "@/utils/generic-import-export.utils";
 import { createMetadata } from "@/utils/metadata.utils";
 import { useCallback } from "react";
-import { useAutomaticValidation } from "./use-automatic-validation";
-import { useConfirmation } from "@/contexts/modal-context";
+
 import { IMPORT_CANCELLED_MESSAGE } from "@/constants/import-export.constants";
+import { useConfirmation } from "@/contexts/modal-context";
 
 export const useGenericImportExport = () => {
   const { refreshAll } = useSurveyData();
   const { showSuccess, showError } = useToast();
   const showConfirmation = useConfirmation();
-
-  // Create a dummy updateValidationStatus function since this hook doesn't need to update UI state
-  const updateValidationStatus = useCallback((results: any) => {
-    // This is a no-op function since this hook doesn't manage validation UI state
-    // The validation results will be handled by the automatic validation system
-    console.log("📊 Validation status update (import/export):", results);
-  }, []);
-
-  const { runPostImportValidation } = useAutomaticValidation(
-    updateValidationStatus
-  );
 
   // Generic export function
   const exportItem = useCallback(
@@ -63,7 +52,11 @@ export const useGenericImportExport = () => {
 
   // Generic import function
   const importItem = useCallback(
-    async (file: File, dataType?: ExportableDataType, closeModalCallback?: () => void): Promise<boolean> => {
+    async (
+      file: File,
+      dataType?: ExportableDataType,
+      closeModalCallback?: () => void
+    ): Promise<boolean> => {
       try {
         // Parse the file
         const data = await parseJsonFile(file);
@@ -88,18 +81,20 @@ export const useGenericImportExport = () => {
             // Check if ID already exists for conflict detection
             const originalId = data.metadata?.originalId;
             if (originalId) {
-              const existing = await databaseHelpers.getSurveyConfig(originalId);
+              const existing = await databaseHelpers.getSurveyConfig(
+                originalId
+              );
               if (existing) {
                 // Close the import modal first
                 closeModalCallback?.();
-                
+
                 const shouldCreateNew = await showConfirmation({
                   id: "import-config-duplicate-confirmation",
                   title: "Survey Config Already Exists",
                   message: `A survey config with ID "${originalId}" already exists. Would you like to create a new one with a different ID?`,
                   confirmText: "Create New",
                   cancelText: "Cancel Import",
-                  variant: "warning"
+                  variant: "warning",
                 });
                 if (!shouldCreateNew) {
                   showError(IMPORT_CANCELLED_MESSAGE);
@@ -114,7 +109,10 @@ export const useGenericImportExport = () => {
             }
 
             // Process the data for import
-            const processedData = processImportedData(dataForProcessing, finalDataType);
+            const processedData = processImportedData(
+              dataForProcessing,
+              finalDataType
+            );
 
             const configWithMetadata = {
               ...processedData,
@@ -137,18 +135,20 @@ export const useGenericImportExport = () => {
             const originalId = data.metadata?.originalId;
             if (originalId) {
               const allInstances = await databaseHelpers.getSurveyInstances();
-              const existing = allInstances.find(instance => instance.id === originalId);
+              const existing = allInstances.find(
+                (instance) => instance.id === originalId
+              );
               if (existing) {
                 // Close the import modal first
                 closeModalCallback?.();
-                
+
                 const shouldCreateNew = await showConfirmation({
                   id: "import-instance-duplicate-confirmation",
                   title: "Survey Instance Already Exists",
                   message: `A survey instance with ID "${originalId}" already exists. Would you like to create a new one with a different ID?`,
                   confirmText: "Create New",
                   cancelText: "Cancel Import",
-                  variant: "warning"
+                  variant: "warning",
                 });
                 if (!shouldCreateNew) {
                   showError(IMPORT_CANCELLED_MESSAGE);
@@ -163,8 +163,11 @@ export const useGenericImportExport = () => {
             }
 
             // Process the data for import
-            const processedData = processImportedData(dataForProcessing, finalDataType);
-            
+            const processedData = processImportedData(
+              dataForProcessing,
+              finalDataType
+            );
+
             const instanceWithMetadata = {
               ...processedData,
               metadata: await createMetadata(),
@@ -181,14 +184,14 @@ export const useGenericImportExport = () => {
               if (existing) {
                 // Close the import modal first
                 closeModalCallback?.();
-                
+
                 const shouldCreateNew = await showConfirmation({
                   id: "import-rating-scale-duplicate-confirmation",
                   title: "Rating Scale Already Exists",
                   message: `A rating scale with ID "${originalId}" already exists. Would you like to create a new one with a different ID?`,
                   confirmText: "Create New",
                   cancelText: "Cancel Import",
-                  variant: "warning"
+                  variant: "warning",
                 });
                 if (!shouldCreateNew) {
                   showError(IMPORT_CANCELLED_MESSAGE);
@@ -203,7 +206,10 @@ export const useGenericImportExport = () => {
             }
 
             // Process the data for import
-            const processedData = processImportedData(dataForProcessing, finalDataType);
+            const processedData = processImportedData(
+              dataForProcessing,
+              finalDataType
+            );
 
             const ratingScaleWithMetadata = {
               ...processedData,
@@ -217,18 +223,20 @@ export const useGenericImportExport = () => {
             // Check if ID already exists for conflict detection
             const originalId = data.metadata?.originalId;
             if (originalId) {
-              const existing = await databaseHelpers.getRadioOptionSet(originalId);
+              const existing = await databaseHelpers.getRadioOptionSet(
+                originalId
+              );
               if (existing) {
                 // Close the import modal first
                 closeModalCallback?.();
-                
+
                 const shouldCreateNew = await showConfirmation({
                   id: "import-radio-option-set-duplicate-confirmation",
                   title: "Radio Option Set Already Exists",
                   message: `A radio option set with ID "${originalId}" already exists. Would you like to create a new one with a different ID?`,
                   confirmText: "Create New",
                   cancelText: "Cancel Import",
-                  variant: "warning"
+                  variant: "warning",
                 });
                 if (!shouldCreateNew) {
                   showError(IMPORT_CANCELLED_MESSAGE);
@@ -243,7 +251,10 @@ export const useGenericImportExport = () => {
             }
 
             // Process the data for import
-            const processedData = processImportedData(dataForProcessing, finalDataType);
+            const processedData = processImportedData(
+              dataForProcessing,
+              finalDataType
+            );
 
             const radioOptionSetWithMetadata = {
               ...processedData,
@@ -257,18 +268,20 @@ export const useGenericImportExport = () => {
             // Check if ID already exists for conflict detection
             const originalId = data.metadata?.originalId;
             if (originalId) {
-              const existing = await databaseHelpers.getMultiSelectOptionSet(originalId);
+              const existing = await databaseHelpers.getMultiSelectOptionSet(
+                originalId
+              );
               if (existing) {
                 // Close the import modal first
                 closeModalCallback?.();
-                
+
                 const shouldCreateNew = await showConfirmation({
                   id: "import-multi-select-option-set-duplicate-confirmation",
                   title: "Multi-Select Option Set Already Exists",
                   message: `A multi-select option set with ID "${originalId}" already exists. Would you like to create a new one with a different ID?`,
                   confirmText: "Create New",
                   cancelText: "Cancel Import",
-                  variant: "warning"
+                  variant: "warning",
                 });
                 if (!shouldCreateNew) {
                   showError(IMPORT_CANCELLED_MESSAGE);
@@ -283,7 +296,10 @@ export const useGenericImportExport = () => {
             }
 
             // Process the data for import
-            const processedData = processImportedData(dataForProcessing, finalDataType);
+            const processedData = processImportedData(
+              dataForProcessing,
+              finalDataType
+            );
 
             const multiSelectOptionSetWithMetadata = {
               ...processedData,
@@ -299,18 +315,20 @@ export const useGenericImportExport = () => {
             // Check if ID already exists for conflict detection
             const originalId = data.metadata?.originalId;
             if (originalId) {
-              const existing = await databaseHelpers.getSelectOptionSet(originalId);
+              const existing = await databaseHelpers.getSelectOptionSet(
+                originalId
+              );
               if (existing) {
                 // Close the import modal first
                 closeModalCallback?.();
-                
+
                 const shouldCreateNew = await showConfirmation({
                   id: "import-select-option-set-duplicate-confirmation",
                   title: "Select Option Set Already Exists",
                   message: `A select option set with ID "${originalId}" already exists. Would you like to create a new one with a different ID?`,
                   confirmText: "Create New",
                   cancelText: "Cancel Import",
-                  variant: "warning"
+                  variant: "warning",
                 });
                 if (!shouldCreateNew) {
                   showError(IMPORT_CANCELLED_MESSAGE);
@@ -325,7 +343,10 @@ export const useGenericImportExport = () => {
             }
 
             // Process the data for import
-            const processedData = processImportedData(dataForProcessing, finalDataType);
+            const processedData = processImportedData(
+              dataForProcessing,
+              finalDataType
+            );
 
             const selectOptionSetWithMetadata = {
               ...processedData,
@@ -346,11 +367,7 @@ export const useGenericImportExport = () => {
         await refreshAll();
         console.log(`✅ Data refresh completed after ${finalDataType} import`);
 
-        // Run automatic validation after config or instance import
-        if (finalDataType === "config" || finalDataType === "instance") {
-          console.log(`🔍 Running automatic validation after ${finalDataType} import...`);
-          await runPostImportValidation();
-        }
+        // Note: Automatic validation has been removed - validation will be handled by the validation context when needed
 
         // Show success toast for the import operation
         showSuccess(
@@ -362,19 +379,23 @@ export const useGenericImportExport = () => {
         return true;
       } catch (error) {
         console.error("Import failed:", error);
-        
+
         // Handle specific database constraint errors
-        if (error && typeof error === 'object' && 'code' in error) {
-          const dbError = error as { code: string; message?: string; details?: string };
-          
-          if (dbError.code === '23505') {
+        if (error && typeof error === "object" && "code" in error) {
+          const dbError = error as {
+            code: string;
+            message?: string;
+            details?: string;
+          };
+
+          if (dbError.code === "23505") {
             // Close the import modal first
             closeModalCallback?.();
-            
+
             // Duplicate key constraint violation
-            if (dbError.details?.includes('survey_instances_pkey')) {
+            if (dbError.details?.includes("survey_instances_pkey")) {
               showError("Import failed: Survey instance already exists");
-            } else if (dbError.details?.includes('survey_configs_pkey')) {
+            } else if (dbError.details?.includes("survey_configs_pkey")) {
               showError("Import failed: Survey config already exists");
             } else {
               showError("Import failed: Duplicate entry already exists");
@@ -382,7 +403,7 @@ export const useGenericImportExport = () => {
             return false;
           }
         }
-        
+
         // Fallback to generic error message
         showError(
           `Import failed: ${
@@ -444,7 +465,8 @@ export const useGenericImportExport = () => {
 
   // Import convenience functions
   const importConfig = useCallback(
-    (file: File, closeModalCallback?: () => void) => importItem(file, "config", closeModalCallback),
+    (file: File, closeModalCallback?: () => void) =>
+      importItem(file, "config", closeModalCallback),
     [importItem]
   );
   const importInstance = useCallback(

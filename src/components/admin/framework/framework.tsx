@@ -1,10 +1,10 @@
+import { PAGINATION_DEFAULTS } from '@/constants/pagination.constants';
 import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useValidationStatus } from '@/contexts/validation-status-context';
-import { useAdminFrameworkHandlers, useAdminFrameworkModals, useAutomaticValidation, useConfigValidation } from '@/hooks';
+import { useAdminFrameworkHandlers, useAdminFrameworkModals, useConfigValidation } from '@/hooks';
 import { SurveyConfig, SurveyInstance } from '@/types';
 import { getInstanceConfig, getInstanceCount } from '@/utils/admin-framework.utils';
-import { PAGINATION_DEFAULTS } from '@/constants/pagination.constants';
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   FrameworkHeader,
   SurveyConfigPaginatedSection,
@@ -33,16 +33,12 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
   } = useSurveyData();
 
   // Get validation status from context (single source of truth)
-  const { validationStatus, updateValidationStatus, clearValidationStatus } = useValidationStatus();
-  
+  const { validationStatus, clearValidationStatus } = useValidationStatus();
+
   // Get config validation operations
   const { handleVerifyConfig } = useConfigValidation();
 
-  // Automatic validation using the context
-  const { runOnPageLoad } = useAutomaticValidation(updateValidationStatus);
 
-  // Track if validation has already run to prevent loops
-  const hasRunValidation = useRef(false);
 
   // Modal management
   const { modalActions, setHandlers } = useAdminFrameworkModals();
@@ -65,17 +61,9 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     importExportActions
   } = useAdminFrameworkHandlers(operations, modalActions);
 
-  // Run automatic validation on component mount
-  React.useEffect(() => {
-    // Only run if we have data loaded and haven't run validation yet
-    if ((surveyConfigs.length > 0 || surveyInstances.length > 0) && !hasRunValidation.current) {
-      hasRunValidation.current = true;
-      console.log("🚀 Starting automatic validation on page load...");
-      runOnPageLoad();
-    }
-  }, [surveyConfigs.length, surveyInstances.length]); // Removed runOnPageLoad from dependencies
 
-  // Remove the problematic useEffect that was causing infinite loops
+
+  // All problematic code has been removed
 
   // Set handlers for the modal system
   React.useEffect(() => {
@@ -101,7 +89,7 @@ export const AdminFramework: React.FC<AdminFrameworkProps> = ({
     getInstanceCount(configId, surveyInstances);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <FrameworkHeader />
 

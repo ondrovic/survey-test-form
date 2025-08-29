@@ -90,7 +90,7 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
             {/* Title removed - displayed in top navigation bar */}
 
             {/* Rating Scales Section */}
