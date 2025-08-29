@@ -678,8 +678,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     const handleCloseSelectOptionSetManager = useCallback(() => showSelectOptionSetManager(false), [showSelectOptionSetManager]);
 
     return (
-        <div className="fixed inset-0 bg-black dark:bg-black bg-opacity-50 dark:bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full h-full md:max-w-6xl md:max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black dark:bg-black bg-opacity-50 dark:bg-opacity-50 z-50 overflow-hidden">
+            {/* Mobile-first full screen container - optimized for touch */}
+            <div className="h-full w-full bg-white dark:bg-gray-800 md:m-4 md:rounded-lg md:shadow-xl md:max-w-7xl md:max-h-[95vh] md:mx-auto flex flex-col touch-manipulation select-none">
                 <SurveyHeader
                     isEditing={!!editingConfig}
                     isPreviewMode={state.isPreviewMode}
@@ -695,145 +696,247 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     onFieldMove={handleMoveField}
                     onSortableListMove={handleSortableListMove}
                 >
-                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                        {/* Mobile-first responsive sidebar with better intermediate sizing */}
-                        <div className="w-full md:w-96 lg:w-80 xl:w-96 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-3 md:p-4 overflow-y-auto max-h-48 md:max-h-none">
-                            <SurveyDetails
-                                title={state.config.title}
-                                description={state.config.description || ''}
-                                paginatorConfig={state.config.paginatorConfig}
-                                footerConfig={state.config.footerConfig}
-                                onTitleChange={handleTitleChange}
-                                onDescriptionChange={handleDescriptionChange}
-                                onPaginatorConfigChange={(paginatorConfig) => updateConfig({ paginatorConfig })}
-                                onFooterConfigChange={(footerConfig) => updateConfig({ footerConfig })}
-                            />
-                            <SectionList
-                                sections={state.config.sections}
-                                selectedSectionId={state.selectedSection}
-                                onAddSection={handleAddSection}
-                                onSelectSection={selectSection}
-                                onDeleteSection={handleDeleteSection}
-                                onReorderSections={reorderSections}
-                            />
-                        </div>
-
-                        {/* Main Content - Mobile-optimized */}
-                        <div className="flex-1 p-3 md:p-6 overflow-y-auto bg-white dark:bg-gray-800">
-                            {state.isPreviewMode ? (
-                                <SurveyPreview config={state.config} />
-                            ) : selectedSection ? (
-                                <div>
-                                    <SectionEditor
-                                        section={selectedSection}
-                                        selectedFieldId={state.selectedField}
-                                        selectedSubsectionId={state.selectedSubsection}
-                                        onUpdateSection={handleUpdateSection}
-                                        onAddSubsection={handleAddSubsection}
-                                        onUpdateSubsection={handleUpdateSubsection}
-                                        onDeleteSubsection={handleDeleteSubsection}
-                                        onReorderSubsections={handleReorderSubsections}
-                                        onReorderSectionContent={reorderSectionContent}
-                                        onSelectSubsection={selectSubsection}
-                                        onAddField={handleAddField}
-                                        onOpenFieldEditor={handleOpenFieldEditor}
-                                        onDeleteField={handleDeleteField}
-                                        onReorderFields={handleReorderFields}
-                                    />
-                                </div>
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        {/* Mobile: Show either sidebar OR main content, not both */}
+                        <div className="md:hidden flex-1 flex flex-col overflow-hidden">
+                            {selectedSection ? (
+                                <>
+                                    {/* Mobile: Back to sections button */}
+                                    <div className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-3">
+                                        <button 
+                                            onClick={() => selectSection(null)}
+                                            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium text-sm hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left">
+                                                <path d="m12 19-7-7 7-7"/>
+                                                <path d="M19 12H5"/>
+                                            </svg>
+                                            Back to Sections
+                                        </button>
+                                    </div>
+                                    {/* Mobile: Main content - full height */}
+                                    <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800 touch-manipulation">
+                                        {state.isPreviewMode ? (
+                                            <div className="p-4">
+                                                <SurveyPreview config={state.config} />
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 pb-8">
+                                                <SectionEditor
+                                                    section={selectedSection}
+                                                    selectedFieldId={state.selectedField}
+                                                    selectedSubsectionId={state.selectedSubsection}
+                                                    onUpdateSection={handleUpdateSection}
+                                                    onAddSubsection={handleAddSubsection}
+                                                    onUpdateSubsection={handleUpdateSubsection}
+                                                    onDeleteSubsection={handleDeleteSubsection}
+                                                    onReorderSubsections={handleReorderSubsections}
+                                                    onReorderSectionContent={reorderSectionContent}
+                                                    onSelectSubsection={selectSubsection}
+                                                    onAddField={handleAddField}
+                                                    onOpenFieldEditor={handleOpenFieldEditor}
+                                                    onDeleteField={handleDeleteField}
+                                                    onReorderFields={handleReorderFields}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
                             ) : (
-                                <div className="text-center text-gray-500 dark:text-gray-400 mt-8 p-4">
-                                    <div className="text-base md:text-lg text-gray-900 dark:text-gray-100">Select a section to edit its configuration</div>
-                                    <div className="text-sm mt-2 text-gray-400 dark:text-gray-500">Choose from the sections above on mobile or the sidebar on larger screens</div>
+                                /* Mobile: Sidebar content - only when no section is selected */
+                                <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-700">
+                                    <div className="p-4 space-y-4 touch-manipulation">
+                                        <SurveyDetails
+                                            title={state.config.title}
+                                            description={state.config.description || ''}
+                                            paginatorConfig={state.config.paginatorConfig}
+                                            footerConfig={state.config.footerConfig}
+                                            onTitleChange={handleTitleChange}
+                                            onDescriptionChange={handleDescriptionChange}
+                                            onPaginatorConfigChange={(paginatorConfig) => updateConfig({ paginatorConfig })}
+                                            onFooterConfigChange={(footerConfig) => updateConfig({ footerConfig })}
+                                        />
+                                        <SectionList
+                                            sections={state.config.sections}
+                                            selectedSectionId={state.selectedSection}
+                                            onAddSection={handleAddSection}
+                                            onSelectSection={selectSection}
+                                            onDeleteSection={handleDeleteSection}
+                                            onReorderSections={reorderSections}
+                                        />
+                                    </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Desktop: Side-by-side layout */}
+                        <div className="flex-1 hidden md:flex overflow-hidden">
+                            {/* Desktop sidebar */}
+                            <div className="w-80 lg:w-96 border-r border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-6 overflow-y-auto">
+                                <SurveyDetails
+                                    title={state.config.title}
+                                    description={state.config.description || ''}
+                                    paginatorConfig={state.config.paginatorConfig}
+                                    footerConfig={state.config.footerConfig}
+                                    onTitleChange={handleTitleChange}
+                                    onDescriptionChange={handleDescriptionChange}
+                                    onPaginatorConfigChange={(paginatorConfig) => updateConfig({ paginatorConfig })}
+                                    onFooterConfigChange={(footerConfig) => updateConfig({ footerConfig })}
+                                />
+                                <SectionList
+                                    sections={state.config.sections}
+                                    selectedSectionId={state.selectedSection}
+                                    onAddSection={handleAddSection}
+                                    onSelectSection={selectSection}
+                                    onDeleteSection={handleDeleteSection}
+                                    onReorderSections={reorderSections}
+                                />
+                            </div>
+
+                            {/* Desktop main content */}
+                            <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-gray-800">
+                                {state.isPreviewMode ? (
+                                    <SurveyPreview config={state.config} />
+                                ) : selectedSection ? (
+                                    <div>
+                                        <SectionEditor
+                                            section={selectedSection}
+                                            selectedFieldId={state.selectedField}
+                                            selectedSubsectionId={state.selectedSubsection}
+                                            onUpdateSection={handleUpdateSection}
+                                            onAddSubsection={handleAddSubsection}
+                                            onUpdateSubsection={handleUpdateSubsection}
+                                            onDeleteSubsection={handleDeleteSubsection}
+                                            onReorderSubsections={handleReorderSubsections}
+                                            onReorderSectionContent={reorderSectionContent}
+                                            onSelectSubsection={selectSubsection}
+                                            onAddField={handleAddField}
+                                            onOpenFieldEditor={handleOpenFieldEditor}
+                                            onDeleteField={handleDeleteField}
+                                            onReorderFields={handleReorderFields}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-gray-500 dark:text-gray-400 mt-8 p-4">
+                                        <div className="text-lg text-gray-900 dark:text-gray-100">Select a section to edit its configuration</div>
+                                        <div className="text-sm mt-2 text-gray-400 dark:text-gray-500">Choose from the sections in the sidebar</div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </FieldDragProvider>
 
-                {/* Rating Scale Manager Modal */}
-                {state.showRatingScaleManager && (
-                    <RatingScaleManager
-                        isVisible={state.showRatingScaleManager}
-                        onClose={handleCloseRatingScaleManager}
-                        onScaleSelect={handleScaleSelect}
-                    />
-                )}
+                {/* Mobile-optimized modals */}
+                <div className="relative z-[60]">
+                    {/* Rating Scale Manager Modal */}
+                    {state.showRatingScaleManager && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                                <RatingScaleManager
+                                    isVisible={state.showRatingScaleManager}
+                                    onClose={handleCloseRatingScaleManager}
+                                    onScaleSelect={handleScaleSelect}
+                                />
+                            </div>
+                        </div>
+                    )}
 
-                {/* Multi-Select Field Editor Modal */}
-                {state.showMultiSelectEditor && (
-                    <MultiSelectFieldEditor
-                        config={state.config}
-                        onConfigUpdate={(updatedConfig) => {
-                            updateEntireConfig(updatedConfig);
-                        }}
-                        onClose={handleCloseMultiSelectEditor}
-                    />
-                )}
+                    {/* Multi-Select Field Editor Modal */}
+                    {state.showMultiSelectEditor && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-6xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                                <MultiSelectFieldEditor
+                                    config={state.config}
+                                    onConfigUpdate={(updatedConfig) => {
+                                        updateEntireConfig(updatedConfig);
+                                    }}
+                                    onClose={handleCloseMultiSelectEditor}
+                                />
+                            </div>
+                        </div>
+                    )}
 
-                {/* Radio Option Set Manager Modal */}
-                {state.showRadioOptionSetManager && (
-                    <RadioOptionSetManager
-                        isVisible={state.showRadioOptionSetManager}
-                        onClose={handleCloseRadioOptionSetManager}
-                        onOptionSetSelect={handleRadioOptionSetSelect}
-                    />
-                )}
+                    {/* Radio Option Set Manager Modal */}
+                    {state.showRadioOptionSetManager && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                                <RadioOptionSetManager
+                                    isVisible={state.showRadioOptionSetManager}
+                                    onClose={handleCloseRadioOptionSetManager}
+                                    onOptionSetSelect={handleRadioOptionSetSelect}
+                                />
+                            </div>
+                        </div>
+                    )}
 
-                {/* Multi-Select Option Set Manager Modal */}
-                {state.showMultiSelectOptionSetManager && (
-                    <MultiSelectOptionSetManager
-                        isVisible={state.showMultiSelectOptionSetManager}
-                        onClose={handleCloseMultiSelectOptionSetManager}
-                        onOptionSetSelect={handleMultiSelectOptionSetSelect}
-                    />
-                )}
+                    {/* Multi-Select Option Set Manager Modal */}
+                    {state.showMultiSelectOptionSetManager && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                                <MultiSelectOptionSetManager
+                                    isVisible={state.showMultiSelectOptionSetManager}
+                                    onClose={handleCloseMultiSelectOptionSetManager}
+                                    onOptionSetSelect={handleMultiSelectOptionSetSelect}
+                                />
+                            </div>
+                        </div>
+                    )}
 
-                {/* Select Option Set Manager Modal */}
-                {state.showSelectOptionSetManager && (
-                    <SelectOptionSetManager
-                        isVisible={state.showSelectOptionSetManager}
-                        onClose={handleCloseSelectOptionSetManager}
-                        filterMultiple={selectedField?.type === 'multiselectdropdown' ? true : selectedField?.type === 'select' ? false : undefined}
-                        onOptionSetSelect={handleSelectOptionSetSelect}
-                    />
-                )}
+                    {/* Select Option Set Manager Modal */}
+                    {state.showSelectOptionSetManager && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                                <SelectOptionSetManager
+                                    isVisible={state.showSelectOptionSetManager}
+                                    onClose={handleCloseSelectOptionSetManager}
+                                    filterMultiple={selectedField?.type === 'multiselectdropdown' ? true : selectedField?.type === 'select' ? false : undefined}
+                                    onOptionSetSelect={handleSelectOptionSetSelect}
+                                />
+                            </div>
+                        </div>
+                    )}
 
-                {/* Field Editor Modal */}
-                {state.showFieldEditorModal && selectedField && selectedSection && (
-                    <FieldEditorModal
-                        isOpen={state.showFieldEditorModal}
-                        onClose={handleCloseFieldEditorModal}
-                        onSave={() => {
-                            // Save is handled automatically as changes are applied in real-time
-                            handleCloseFieldEditorModal();
-                        }}
-                        field={selectedField}
-                        sectionId={selectedSection.id}
-                        subsectionId={selectedFieldSubsectionId}
-                        onUpdateField={(sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {
-                            console.log('🔧 Update wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
-                            handleUpdateField(sectionId, fieldId, updates, selectedFieldSubsectionId);
-                        }}
-                        onSaveFieldChanges={handleSaveFieldChanges}
-                        onAddFieldOption={(sectionId: string, fieldId: string) => {
-                            console.log('🔧 Add field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
-                            handleAddFieldOption(sectionId, fieldId, selectedFieldSubsectionId);
-                        }}
-                        onUpdateFieldOption={(sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => {
-                            console.log('🔧 Update field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
-                            handleUpdateFieldOption(sectionId, fieldId, optionIndex, updates, selectedFieldSubsectionId);
-                        }}
-                        onDeleteFieldOption={(sectionId: string, fieldId: string, optionIndex: number) => {
-                            console.log('🔧 Delete field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
-                            handleDeleteFieldOption(sectionId, fieldId, optionIndex, selectedFieldSubsectionId);
-                        }}
-                        onShowRatingScaleManager={() => showRatingScaleManager(true)}
-                        onShowRadioOptionSetManager={() => showRadioOptionSetManager(true)}
-                        onShowMultiSelectOptionSetManager={() => showMultiSelectOptionSetManager(true)}
-                        onShowSelectOptionSetManager={() => showSelectOptionSetManager(true)}
-                    />
-                )}
+                    {/* Field Editor Modal - Most important modal, gets special treatment */}
+                    {state.showFieldEditorModal && selectedField && selectedSection && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-5xl md:max-h-[95vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden flex flex-col">
+                                <FieldEditorModal
+                                    isOpen={state.showFieldEditorModal}
+                                    onClose={handleCloseFieldEditorModal}
+                                    onSave={() => {
+                                        // Save is handled automatically as changes are applied in real-time
+                                        handleCloseFieldEditorModal();
+                                    }}
+                                    field={selectedField}
+                                    sectionId={selectedSection.id}
+                                    subsectionId={selectedFieldSubsectionId}
+                                    onUpdateField={(sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {
+                                        console.log('🔧 Update wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
+                                        handleUpdateField(sectionId, fieldId, updates, selectedFieldSubsectionId);
+                                    }}
+                                    onSaveFieldChanges={handleSaveFieldChanges}
+                                    onAddFieldOption={(sectionId: string, fieldId: string) => {
+                                        console.log('🔧 Add field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
+                                        handleAddFieldOption(sectionId, fieldId, selectedFieldSubsectionId);
+                                    }}
+                                    onUpdateFieldOption={(sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => {
+                                        console.log('🔧 Update field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
+                                        handleUpdateFieldOption(sectionId, fieldId, optionIndex, updates, selectedFieldSubsectionId);
+                                    }}
+                                    onDeleteFieldOption={(sectionId: string, fieldId: string, optionIndex: number) => {
+                                        console.log('🔧 Delete field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
+                                        handleDeleteFieldOption(sectionId, fieldId, optionIndex, selectedFieldSubsectionId);
+                                    }}
+                                    onShowRatingScaleManager={() => showRatingScaleManager(true)}
+                                    onShowRadioOptionSetManager={() => showRadioOptionSetManager(true)}
+                                    onShowMultiSelectOptionSetManager={() => showMultiSelectOptionSetManager(true)}
+                                    onShowSelectOptionSetManager={() => showSelectOptionSetManager(true)}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -23,12 +23,12 @@ interface ModalContextValue {
 const ModalContext = createContext<ModalContextValue | null>(null);
 
 /**
- * Hook to access modal context
+ * Hook to access modal component context
  */
-export const useModal = () => {
+export const useModalComponent = () => {
   const context = useContext(ModalContext);
   if (!context) {
-    throw new Error('useModal must be used within a Modal component');
+    throw new Error('useModalComponent must be used within a Modal component');
   }
   return context;
 };
@@ -290,7 +290,7 @@ const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(({
   className,
   showCloseButton,
 }, ref) => {
-  const { closable, onClose } = useModal();
+  const { closable, onClose } = useModalComponent();
   const shouldShowCloseButton = showCloseButton !== undefined ? showCloseButton : closable;
 
   return (
@@ -331,7 +331,7 @@ const ModalTitle = forwardRef<HTMLElement, ModalTitleProps>(({
   className,
   as = 'h2',
 }, ref) => {
-  const { titleId } = useModal();
+  const { titleId } = useModalComponent();
   const Component = as as React.ElementType;
 
   return (
@@ -361,7 +361,7 @@ const ModalBody = forwardRef<HTMLDivElement, ModalBodyProps>(({
   className,
   padding = true,
 }, ref) => {
-  const { bodyId } = useModal();
+  const { bodyId } = useModalComponent();
 
   return (
     <div

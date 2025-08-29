@@ -231,7 +231,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
         <div data-section-id={section.id}>
             <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Section: {section.title}</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
                     <div>
                         <Input
                             name="sectionTitle"

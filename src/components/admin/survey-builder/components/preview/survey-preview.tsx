@@ -15,7 +15,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
     // If pagination is enabled, use the paginator component
     if (shouldUsePagination) {
         return (
-            <div className="survey-preview-paginated">
+            <div className="survey-preview-paginated bg-white dark:bg-gray-800">
                 <SurveySectionPaginator
                     sections={config.sections}
                     config={config.paginatorConfig}
@@ -27,7 +27,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
 
     // Otherwise, render the traditional single-page view
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{config.title}</h2>
             {config.description && (
                 <p className="text-gray-600 dark:text-gray-300 mb-6">{config.description}</p>
@@ -105,7 +105,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                         {field.type === 'select' && !field.selectOptionSetId && field.options && field.options.length > 0 && (
                                             <select
                                                 disabled
-                                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                                             >
                                                 <option value="">{field.placeholder || 'Select an option...'}</option>
                                                 {field.options.map((option, index) => (
@@ -141,7 +141,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                             disabled
                                                             className="mr-2"
                                                         />
-                                                        <span className="text-sm">{option.label}</span>
+                                                        <span className="text-sm text-gray-900 dark:text-white">{option.label}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -165,7 +165,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                             disabled
                                                             className="mr-2"
                                                         />
-                                                        <span className="text-sm">{option.label}</span>
+                                                        <span className="text-sm text-gray-900 dark:text-white">{option.label}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -180,7 +180,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                             disabled
                                                             className="mr-2"
                                                         />
-                                                        <span className="text-sm">{option.label}</span>
+                                                        <span className="text-sm text-gray-900 dark:text-white">{option.label}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -216,12 +216,12 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                     {section.fields.length > 0 && (
                         <div className="space-y-4">
                             {section.fields.map((field) => (
-                                <div key={field.id} className="p-4 border rounded">
-                                    <label className="block text-sm font-medium mb-2">
+                                <div key={field.id} className="p-4 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700">
+                                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
                                         {field.label}
                                         {field.required && <span className="text-red-500 ml-1">*</span>}
                                     </label>
-                                    <div className="text-gray-500 text-sm mb-2">
+                                    <div className="text-gray-500 dark:text-gray-400 text-sm mb-2">
                                         Type: {field.type}
                                     </div>
 
@@ -231,7 +231,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                             type="text"
                                             placeholder={field.placeholder || "Text input"}
                                             disabled
-                                            className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                                         />
                                     )}
 
@@ -240,7 +240,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                             placeholder={field.placeholder || "Text area"}
                                             disabled
                                             rows={3}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                                         />
                                     )}
 
@@ -249,7 +249,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                             type="email"
                                             placeholder={field.placeholder || "Enter your email address"}
                                             disabled
-                                            className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                                         />
                                     )}
 
@@ -258,7 +258,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                             type="number"
                                             placeholder={field.placeholder || "Enter a number"}
                                             disabled
-                                            className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                                         />
                                     )}
 
@@ -273,7 +273,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                     {field.type === 'select' && !field.selectOptionSetId && field.options && field.options.length > 0 && (
                                         <select
                                             disabled
-                                            className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                                         >
                                             <option value="">{field.placeholder || 'Select an option...'}</option>
                                             {field.options.map((option, index) => (
@@ -309,7 +309,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                         disabled
                                                         className="mr-2"
                                                     />
-                                                    <span className="text-sm">{option.label}</span>
+                                                    <span className="text-sm text-gray-900 dark:text-white">{option.label}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -333,7 +333,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                         disabled
                                                         className="mr-2"
                                                     />
-                                                    <span className="text-sm">{option.label}</span>
+                                                    <span className="text-sm text-gray-900 dark:text-white">{option.label}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -348,7 +348,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                         disabled
                                                         className="mr-2"
                                                     />
-                                                    <span className="text-sm">{option.label}</span>
+                                                    <span className="text-sm text-gray-900 dark:text-white">{option.label}</span>
                                                 </div>
                                             ))}
                                         </div>

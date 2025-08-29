@@ -2,7 +2,7 @@ export {
   default as Modal, 
   ConfirmationModal, 
   LegacyModal,
-  useModal
+  useModalComponent
 } from "./Modal";
 export type { 
   ModalProps, 

@@ -26,35 +26,79 @@ export const SurveyHeader: React.FC<SurveyHeaderProps> = ({
     onClose
 }) => {
     return (
-        <div className="border-b">
-            <div className="flex items-center justify-between p-6">
-                <div className="flex-1">
-                    <h2 className="text-xl font-semibold mb-2">
-                        {isEditing ? 'Edit Survey' : 'Survey Builder'}
-                    </h2>
+        <div className="border-b bg-white dark:bg-gray-800 sticky top-0 z-10 dark:text-white">
+            {/* Mobile Header */}
+            <div className="md:hidden">
+                <div className="flex items-center justify-between p-4">
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-semibold truncate">
+                            {isEditing ? 'Edit Survey' : 'Survey Builder'}
+                        </h2>
+                    </div>
+                    <div className="flex gap-1 ml-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onTogglePreview}
+                            className="px-3"
+                        >
+                            <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                            onClick={onSave} 
+                            loading={loading}
+                            size="sm"
+                            className="px-3"
+                        >
+                            Save
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            onClick={onClose}
+                            size="sm" 
+                            className="px-3"
+                        >
+                            Close
+                        </Button>
+                    </div>
+                </div>
+                {/* Mobile validation summary - only show when not editing a section to save space */}
+                <div className="px-4 pb-4 border-b border-gray-200 dark:border-gray-600">
                     <ValidationSummary config={config} />
                 </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={onShowMultiSelectEditor}
-                    >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Multi-Edit Fields
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={onTogglePreview}
-                    >
-                        <Eye className="w-4 h-4 mr-2" />
-                        {isPreviewMode ? 'Edit' : 'Preview'}
-                    </Button>
-                    <Button onClick={onSave} loading={loading}>
-                        {isEditing ? 'Update Survey' : 'Save Survey'}
-                    </Button>
-                    <Button variant="outline" onClick={onClose}>
-                        Close
-                    </Button>
+            </div>
+
+            {/* Desktop Header */}
+            <div className="hidden md:block">
+                <div className="flex items-center justify-between p-6">
+                    <div className="flex-1">
+                        <h2 className="text-xl font-semibold mb-2">
+                            {isEditing ? 'Edit Survey' : 'Survey Builder'}
+                        </h2>
+                        <ValidationSummary config={config} />
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={onShowMultiSelectEditor}
+                        >
+                            <Settings className="w-4 h-4 mr-2" />
+                            Multi-Edit Fields
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={onTogglePreview}
+                        >
+                            <Eye className="w-4 h-4 mr-2" />
+                            {isPreviewMode ? 'Edit' : 'Preview'}
+                        </Button>
+                        <Button onClick={onSave} loading={loading}>
+                            {isEditing ? 'Update Survey' : 'Save Survey'}
+                        </Button>
+                        <Button variant="outline" onClick={onClose}>
+                            Close
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
