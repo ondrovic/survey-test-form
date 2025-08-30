@@ -1,4 +1,16 @@
-import React, { useRef, useEffect, useMemo, useCallback } from 'react';
+import  React,{ useRef, useEffect, useMemo, useCallback } from 'react';
+
+// Simple dark mode detection for BaseEChartsComponent
+const getIsDarkMode = () => {
+  if (typeof window === 'undefined') return false;
+  
+  const hasClassDark = document.documentElement.classList.contains('dark');
+  const hasDataDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const bodyClassDark = document.body.classList.contains('dark');
+  
+  return hasClassDark || hasDataDark || bodyClassDark || systemPrefersDark;
+};
 import ReactECharts from 'echarts-for-react';
 import { EChartsInstance } from 'echarts-for-react/lib/types';
 import { ErrorLoggingService } from '../../../../../services/error-logging.service';
@@ -19,6 +31,7 @@ interface BaseEChartsComponentProps {
   option: AnalyticsEChartsOption;
   loading?: boolean;
   theme?: string;
+  isDarkMode?: boolean; // Optional dark mode state
   className?: string;
   style?: React.CSSProperties;
   onChartReady?: (chartInstance: EChartsInstance) => void;
@@ -37,7 +50,8 @@ interface BaseEChartsComponentProps {
 export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
   option,
   loading = false,
-  theme = 'surveyAnalytics',
+  theme,
+  isDarkMode: propIsDarkMode,
   className = '',
   style = { height: '400px', width: '100%' },
   onChartReady,
@@ -46,6 +60,8 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
   accessibility,
   export: exportConfig
 }) => {
+  const isDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : getIsDarkMode();
+  const effectiveTheme = theme || (isDarkMode ? 'dark' : 'light');
   const chartRef = useRef<ReactECharts>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
@@ -75,7 +91,11 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
       performance.virtualization?.enabled !== false
     );
 
+    // Add background color to match container if not already set
+    const backgroundColor = isDarkMode ? '#1f2937' : '#f9fafb'; // bg-gray-50/dark:bg-gray-800
+    
     const baseOption = {
+      backgroundColor: backgroundColor,
       ...option,
       ...animationConfig
     };
@@ -90,7 +110,7 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
     }
 
     return baseOption;
-  }, [option, dataSize, performance, accessibility]);
+  }, [option, dataSize, performance, accessibility, isDarkMode]);
 
   // Chart event handlers
   const handleChartReady = useCallback((chartInstance: EChartsInstance) => {
@@ -194,7 +214,7 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
       <ReactECharts
         ref={chartRef}
         option={enhancedOption}
-        theme={theme}
+        theme={effectiveTheme}
         notMerge={true}
         lazyUpdate={true}
         style={{ height: '100%', width: '100%' }}
@@ -202,8 +222,8 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
         loadingOption={{
           text: 'Loading...',
           color: '#5470c6',
-          textColor: '#333',
-          maskColor: 'rgba(255, 255, 255, 0.8)',
+          textColor: isDarkMode ? '#ffffff' : '#333',
+          maskColor: isDarkMode ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           zlevel: 0
         }}
         onChartReady={handleChartReady}
@@ -229,9 +249,10 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
             style={{
               padding: '4px 8px',
               fontSize: '12px',
-              border: '1px solid #ddd',
+              border: `1px solid ${isDarkMode ? '#4b5563' : '#ddd'}`,
               borderRadius: '4px',
-              background: 'white',
+              background: isDarkMode ? '#374151' : 'white',
+              color: isDarkMode ? '#ffffff' : '#374151',
               cursor: 'pointer'
             }}
             title="Export as PNG"
@@ -243,9 +264,10 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
             style={{
               padding: '4px 8px',
               fontSize: '12px',
-              border: '1px solid #ddd',
+              border: `1px solid ${isDarkMode ? '#4b5563' : '#ddd'}`,
               borderRadius: '4px',
-              background: 'white',
+              background: isDarkMode ? '#374151' : 'white',
+              color: isDarkMode ? '#ffffff' : '#374151',
               cursor: 'pointer'
             }}
             title="Export as SVG"

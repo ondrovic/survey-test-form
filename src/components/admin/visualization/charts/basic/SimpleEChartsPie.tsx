@@ -1,6 +1,7 @@
 import { useMemo, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { BaseChartProps } from '../../types';
+import { useVisualization } from '../../context';
 
 interface SimpleEChartsPieProps extends BaseChartProps {
   variant?: 'pie' | 'donut';
@@ -21,6 +22,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
   fieldName = 'Survey Data', // Default fallback
   showLegend = size === 'large' // Default: show legend on large modal, hide on small
 }, ref) => {
+  const { isDarkMode } = useVisualization();
   const isLarge = size === 'large';
   const isDonut = variant === 'donut';
 
@@ -40,23 +42,32 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         itemStyle: {
           color: colors?.[label] || undefined, // Let ECharts handle default colors if not specified
           borderRadius: 6, // Rounded corners for modern look
-          borderColor: '#fff',
+          borderColor: isDarkMode ? '#374151' : '#fff',
           borderWidth: 2
         }
         // Removed individual label config - using series-level labels instead
       };
     });
-  }, [counts, total, orderedValues, colors, showPercent]);
+  }, [counts, total, orderedValues, colors, showPercent, isDarkMode]);
 
   // Generate ECharts option matching the exact example you provided
   const option = useMemo(() => {
+    const emphasisColor = isDarkMode ? '#ffffff' : '#333';
+    const backgroundColor = isDarkMode ? '#1f2937' : '#f9fafb'; // Match container bg-gray-50/dark:bg-gray-800
+    
     return {
+      backgroundColor: backgroundColor,
       tooltip: {
         trigger: 'item',
         formatter: (params: any) => {
           const originalCount = Object.entries(counts).find(([key]) => key === params.name)?.[1] || 0;
           const pct = total > 0 ? ((originalCount / total) * 100).toFixed(1) : '0';
           return `${params.name}<br/>Count: ${originalCount}<br/>Percentage: ${pct}%`;
+        },
+        backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+        borderColor: isDarkMode ? '#4b5563' : '#e5e7eb',
+        textStyle: {
+          color: isDarkMode ? '#ffffff' : '#374151'
         }
       },
       ...(showLegend && {
@@ -65,7 +76,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
           left: 'center',
           textStyle: {
             fontSize: isLarge ? 12 : 10,
-            color: '#666'
+            color: isDarkMode ? '#ffffff' : '#666'
           },
           formatter: (name: string) => {
             const count = counts[name] || 0;
@@ -90,7 +101,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         // Label configuration - matching the example exactly
         label: {
           show: false, // Hidden by default like in the example
-          position: 'center'
+          position: 'center',
         },
         
         // Emphasis shows the label in center on hover - key feature from example
@@ -100,7 +111,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
             fontSize: isLarge ? 32 : 18, // Much larger text in modal: 32px vs 18px
             fontWeight: 'bold',
             formatter: '{b}', // Just show the name (response value like "Strongly Agree")
-            color: '#333'
+            color: emphasisColor
           }
         },
         
@@ -123,7 +134,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         '#d4a574', '#8d98b3', '#e5cf54', '#97b552', '#95706d'
       ]
     };
-  }, [chartData, isLarge, isDonut, padAngle, showPercent, showLegend, counts, total]);
+  }, [chartData, isLarge, isDonut, padAngle, showPercent, showLegend, counts, total, isDarkMode]);
 
   const containerStyle = {
     height: isLarge ? '650px' : '400px', // Optimized modal size: 650px vs 400px for grid
@@ -132,12 +143,14 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
 
   return (
     <ReactECharts
+      key={`pie-chart-${isDarkMode ? 'dark' : 'light'}`} // Force re-render on theme change
       ref={ref}
       option={option}
       style={containerStyle}
-      theme="light"
-      notMerge={true}
-      lazyUpdate={true}
+      theme={isDarkMode ? 'dark' : 'light'}
+      notMerge={false} // Allow merging to update colors
+      lazyUpdate={false} // Ensure immediate updates
+      opts={{ renderer: 'canvas' }} // Force canvas renderer
     />
   );
 });

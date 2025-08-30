@@ -105,7 +105,7 @@ export const SurveyFooter: React.FC<SurveyFooterProps> = ({
 
   return (
     <footer className={clsx(
-      'bg-white border-t flex-shrink-0',
+      'bg-white border-t flex-shrink-0 dark:bg-gray-800 dark:border-gray-700',
       mergedConfig.className,
       className
     )}>
@@ -113,7 +113,7 @@ export const SurveyFooter: React.FC<SurveyFooterProps> = ({
         <div className="flex flex-col items-center justify-center space-y-4">
           {/* Main footer text */}
           {footerText && (
-            <p className="text-sm text-gray-500 text-center">
+            <p className="text-sm text-gray-500 text-center dark:text-gray-400">
               {footerText}
             </p>
           )}
@@ -127,7 +127,7 @@ export const SurveyFooter: React.FC<SurveyFooterProps> = ({
                   href={link.url}
                   target={link.external ? '_blank' : undefined}
                   rel={link.external ? 'noopener noreferrer' : undefined}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300"
                 >
                   {link.text}
                 </a>

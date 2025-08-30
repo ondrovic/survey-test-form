@@ -62,7 +62,7 @@ const VisualizationContent: React.FC = React.memo(() => {
   // Memoize the chart grid content to prevent unnecessary re-renders
   const chartGridContent = useMemo(() => {
     if (series.length === 0) {
-      return <p className="text-gray-500 dark:text-gray-400 dark:text-white">No aggregations available yet.</p>;
+      return <p className="text-gray-500  dark:text-white">No aggregations available yet.</p>;
     }
 
     return (
@@ -102,7 +102,7 @@ const VisualizationContent: React.FC = React.memo(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900 dark:text-white dark:bg-gray-900">
+      <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900 dark:text-white">
         <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8">
           <SkeletonPage 
             hasHeader={true}

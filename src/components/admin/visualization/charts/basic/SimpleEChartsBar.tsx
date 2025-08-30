@@ -1,6 +1,7 @@
 import { useMemo, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { BaseChartProps } from '../../types';
+import { useVisualization } from '../../context';
 
 interface SimpleEChartsBarProps extends BaseChartProps {
   direction?: 'horizontal' | 'vertical';
@@ -15,6 +16,7 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
   size = 'normal',
   direction = 'horizontal'
 }, ref) => {
+  const { isDarkMode } = useVisualization();
   const isVertical = direction === 'vertical';
   const isLarge = size === 'large';
 
@@ -35,13 +37,15 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
         }
       };
     });
-  }, [counts, total, orderedValues, colors, showPercent]);
+  }, [counts, total, orderedValues, colors, showPercent, isDarkMode]);
 
   // Generate ECharts option
   const option = useMemo(() => {
     const categoryData = chartData.map(item => item.name);
+    const backgroundColor = isDarkMode ? '#1f2937' : '#f9fafb'; // Match container bg-gray-50/dark:bg-gray-800
 
     return {
+      backgroundColor: backgroundColor,
       tooltip: {
         trigger: 'axis',
         axisPointer: {
@@ -52,6 +56,11 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
           const originalCount = Object.entries(counts).find(([key]) => key === param.name)?.[1] || 0;
           const pct = total > 0 ? ((originalCount / total) * 100).toFixed(1) : '0';
           return `${param.name}<br/>Count: ${originalCount}<br/>Percentage: ${pct}%`;
+        },
+        backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+        borderColor: isDarkMode ? '#4b5563' : '#e5e7eb',
+        textStyle: {
+          color: isDarkMode ? '#ffffff' : '#374151'
         }
       },
       grid: {
@@ -67,14 +76,16 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
         axisLabel: {
           interval: 0,
           rotate: isVertical ? 45 : 0,
-          fontSize: isLarge ? 12 : 10
+          fontSize: isLarge ? 12 : 10,
+          color: isDarkMode ? '#ffffff' : '#666'
         }
       },
       [isVertical ? 'yAxis' : 'xAxis']: {
         type: 'value',
         axisLabel: {
           formatter: showPercent ? '{value}%' : '{value}',
-          fontSize: isLarge ? 12 : 10
+          fontSize: isLarge ? 12 : 10,
+          color: isDarkMode ? '#ffffff' : '#666'
         }
       },
       series: [{
@@ -86,7 +97,7 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
         }
       }]
     };
-  }, [chartData, isVertical, isLarge, showPercent]);
+  }, [chartData, isVertical, isLarge, showPercent, isDarkMode]);
 
   const containerStyle = {
     height: isLarge ? '650px' : '400px', // Optimized modal size to match pie chart
@@ -95,12 +106,13 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
 
   return (
     <ReactECharts
+      key={`bar-chart-${isDarkMode ? 'dark' : 'light'}`} // Force re-render on theme change
       ref={ref}
       option={option}
       style={containerStyle}
-      theme="light"
-      notMerge={true}
-      lazyUpdate={true}
+      theme={isDarkMode ? 'dark' : 'light'}
+      notMerge={false} // Allow merging to update colors
+      lazyUpdate={false} // Ensure immediate updates
     />
   );
 });

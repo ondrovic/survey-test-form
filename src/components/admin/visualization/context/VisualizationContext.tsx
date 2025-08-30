@@ -18,6 +18,9 @@ interface VisualizationContextType {
   // Chart preferences
   preferences: VisualizationPreferences;
 
+  // Theme state
+  isDarkMode: boolean;
+
   // Modal actions
   openChartModal: (chartData: ChartModalData) => void;
   closeChartModal: () => void;
@@ -42,6 +45,62 @@ interface VisualizationProviderProps {
 }
 
 export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ children }) => {
+  // Theme state - detect dark mode using multiple methods
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    
+    // Check multiple sources for dark mode
+    const hasClassDark = document.documentElement.classList.contains('dark');
+    const hasDataDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const bodyClassDark = document.body.classList.contains('dark');
+    
+    // Use system preference as fallback if no class/attribute is set
+    return hasClassDark || hasDataDark || bodyClassDark || systemPrefersDark;
+  });
+
+  // Watch for theme changes
+  React.useEffect(() => {
+    const checkDarkMode = () => {
+      const hasClassDark = document.documentElement.classList.contains('dark');
+      const hasDataDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const bodyClassDark = document.body.classList.contains('dark');
+      
+      const isDark = hasClassDark || hasDataDark || bodyClassDark || systemPrefersDark;
+      
+      setIsDarkMode(isDark);
+    };
+
+    // Watch for class changes on html and body elements
+    const htmlObserver = new MutationObserver(checkDarkMode);
+    const bodyObserver = new MutationObserver(checkDarkMode);
+    
+    htmlObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme']
+    });
+    
+    bodyObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    // Watch for system preference changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleMediaChange = () => {
+      checkDarkMode();
+    };
+    
+    mediaQuery.addListener(handleMediaChange);
+    
+    return () => {
+      htmlObserver.disconnect();
+      bodyObserver.disconnect();
+      mediaQuery.removeListener(handleMediaChange);
+    };
+  }, []);
+
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
     startDate: '',
@@ -177,6 +236,7 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     state,
     updateState,
     preferences,
+    isDarkMode,
     openChartModal,
     closeChartModal,
     toggleSectionCollapsed,

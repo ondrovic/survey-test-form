@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -28,14 +29,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log('🧹 Starting session cleanup...')
-
     // Call the database function to perform cleanup
     const { data, error } = await supabaseClient
       .rpc('cleanup_survey_sessions')
 
     if (error) {
-      console.error('❌ Database cleanup function failed:', error)
+      // console.error('❌ Database cleanup function failed:', error)
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -50,8 +50,6 @@ serve(async (req) => {
     }
 
     const result: CleanupResult = data as CleanupResult
-    console.log('✅ Cleanup completed:', result)
-
     // Optional: Log the cleanup results to a monitoring table
     if (result.success) {
       try {

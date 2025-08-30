@@ -172,7 +172,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
       {!state.collapsedSections.has(section.id) && (
         <div className="space-y-6">
           {/* Grid layout indicator */}
-          <div className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-md">
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-md">
             Layout: {(() => {
               const chartTypes = allCharts.map(item => {
                 const chartType = preferences.perFieldChartType[item.series.fieldId] || preferences.defaultChartType;
@@ -206,18 +206,21 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                   chartItem.subsectionTitle,
                   chartItem.series.label
                 );
-                saveChartAsImage(chartRef, filename, 'png', 2, '#ffffff');
+                // Use dynamic background color based on theme
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                const bgColor = isDarkMode ? '#1f2937' : '#ffffff';
+                saveChartAsImage(chartRef, filename, 'png', 2, bgColor);
               };
 
               return (
                 <div
                   key={chartItem.series.fieldId}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-0 transition-all duration-200 hover:shadow-md hover:border-gray-300 group"
+                  className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 min-w-0 transition-all duration-200 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-500 group"
                 >
                   <div className="flex items-start justify-between mb-4 gap-3">
                     <div className="flex-1 min-w-0">
                       <h4
-                        className={`font-medium text-gray-800 ${isLongTitle ? 'text-sm leading-tight' : 'text-sm'} ${isLongTitle ? 'line-clamp-2' : 'truncate'}`}
+                        className={`font-medium text-gray-800 dark:text-gray-200 ${isLongTitle ? 'text-sm leading-tight' : 'text-sm'} ${isLongTitle ? 'line-clamp-2' : 'truncate'}`}
                         title={fullTitle}
                       >
                         {fullTitle}
@@ -229,7 +232,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                           e.stopPropagation();
                           hideField(chartItem.series.fieldId);
                         }}
-                        className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors duration-150"
+                        className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors duration-150"
                         title="Hide this chart"
                         aria-label={`Hide ${fullTitle} chart`}
                       >
@@ -239,7 +242,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                       </button>
                       <button
                         onClick={handleSaveImage}
-                        className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded transition-colors duration-150"
+                        className="p-1 text-gray-400 dark:text-gray-500 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors duration-150"
                         title="Save chart as image"
                         aria-label={`Save ${fullTitle} chart as image`}
                       >
@@ -250,7 +253,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
                       </button>
                       <button
                         onClick={() => openChartModal(chartItem)}
-                        className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors duration-150"
+                        className="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors duration-150"
                         title="Open chart in full view"
                         aria-label={`Open ${fullTitle} chart in full view`}
                       >

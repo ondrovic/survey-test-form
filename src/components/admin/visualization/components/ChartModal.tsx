@@ -50,7 +50,10 @@ export const ChartModal: React.FC = () => {
       selectedChart.subsectionTitle,
       selectedChart.series.label
     );
-    saveChartAsImage(modalChartRef, `${filename}_large`, 'png', 2, '#ffffff');
+    // Use dynamic background color based on theme
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    const bgColor = isDarkMode ? '#1f2937' : '#ffffff';
+    saveChartAsImage(modalChartRef, `${filename}_large`, 'png', 2, bgColor);
   };
 
   const renderChart = () => {
