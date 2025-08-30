@@ -21,7 +21,7 @@ import { getClientIPAddressWithTimeout } from '@/utils/ip.utils';
 import { routes } from '@/routes';
 import { DatabaseSessionManagerService } from '@/services/database-session-manager.service';
 import { isReCaptchaConfigured, verifyReCaptchaTokenClientSide } from '@/utils/recaptcha.utils';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
@@ -111,16 +111,21 @@ const AppContent = () => {
         }
     }, []);
 
+    // Use ref to avoid recreating the initialization function
+    const initializeFrameworkRef = useRef(initializeFramework);
+    initializeFrameworkRef.current = initializeFramework;
+
     // Initialize framework on mount if authenticated, or set migrating to false if not
     useEffect(() => {
         if (isAuthenticated) {
-            initializeFramework();
+            initializeFrameworkRef.current();
         } else {
             setIsMigrating(false);
         }
-    }, [isAuthenticated, initializeFramework]);
+    }, [isAuthenticated]); // Remove initializeFramework from deps since we use ref
 
-    const getSurveyInstanceBySlug = (slugOrId: string) => {
+    // Memoize survey instance lookup to avoid recalculation on every render
+    const getSurveyInstanceBySlug = useCallback((slugOrId: string) => {
         // First, try to find by slug (preferred method)
         let instance = allSurveyInstances.find(instance =>
             instance.slug === slugOrId && isSurveyInstanceActive(instance)
@@ -142,7 +147,7 @@ const AppContent = () => {
         }
 
         return instance;
-    };
+    }, [allSurveyInstances]);
 
     // Show loading while auth is initializing OR while migrating (only if authenticated)
     if (authLoading || (isAuthenticated && isMigrating)) {
@@ -250,7 +255,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
         } finally {
             setLoading(false);
         }
-    }, [instance?.id]);
+    }, [instance?.id, instance?.configId]); // Add configId to dependencies
 
     // Load survey config - option sets are loaded automatically by context
     useEffect(() => {
@@ -479,7 +484,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [instance?.id, surveyConfig?.id, showSuccess, showError, navigate, surveySession]);
+    }, [instance, surveyConfig, showSuccess, showError, navigate, surveySession]);
 
     // Check if instance is valid
     if (!instance) {
@@ -538,11 +543,13 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
 const ConfirmationPage = ({ getSurveyInstanceBySlug }: { getSurveyInstanceBySlug: (slug: string) => SurveyInstance | undefined }) => {
     const { slug } = useParams<{ slug: string }>();
     
+    // Call all hooks at the top level before any conditional logic
+    const instance = slug ? getSurveyInstanceBySlug(slug) : undefined;
+    
+    // Handle conditional rendering after all hooks have been called
     if (!slug) {
         return <NotFoundPage title="Invalid Survey" message="No survey identifier provided." />;
     }
-    
-    const instance = getSurveyInstanceBySlug(slug);
     
     if (instance) {
         return <SurveyConfirmation surveyTitle={instance.title} />;

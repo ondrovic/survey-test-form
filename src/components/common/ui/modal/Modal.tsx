@@ -1,4 +1,4 @@
-import React, { createContext, forwardRef, useContext, useEffect, useRef } from 'react';
+import React, { createContext, forwardRef, useCallback, useContext, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
@@ -127,62 +127,56 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       bodyId,
     };
 
-    // Handle escape key
-    useEffect(() => {
-      if (!isOpen || !closeOnEscape) return;
+    // Memoize escape key handler to prevent recreation
+    const handleEscape = useCallback((e: KeyboardEvent) => {
+      if (e.key === 'Escape' && closeOnEscape) {
+        onClose();
+      }
+    }, [closeOnEscape, onClose]);
 
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          onClose();
+    // Combined effect for modal management: escape key, focus, and scroll prevention
+    useEffect(() => {
+      if (!isOpen) return;
+
+      // Store the current focused element for restoration later
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      
+      // Prevent body scroll and compensate for scrollbar
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+      // Focus the modal or initial focus element
+      setTimeout(() => {
+        if (initialFocus?.current) {
+          initialFocus.current.focus();
+        } else if (modalRef.current) {
+          const focusableElement = modalRef.current.querySelector(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          ) as HTMLElement;
+          focusableElement?.focus();
         }
-      };
+      }, 0);
 
+      // Add escape key listener
       document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }, [isOpen, closeOnEscape, onClose]);
 
-    // Focus management
-    useEffect(() => {
-      if (isOpen) {
-        // Store the current focused element
-        previousFocusRef.current = document.activeElement as HTMLElement;
+      // Cleanup function
+      return () => {
+        // Remove event listener
+        document.removeEventListener('keydown', handleEscape);
         
-        // Focus the modal or initial focus element
-        setTimeout(() => {
-          if (initialFocus?.current) {
-            initialFocus.current.focus();
-          } else if (modalRef.current) {
-            const focusableElement = modalRef.current.querySelector(
-              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            ) as HTMLElement;
-            focusableElement?.focus();
-          }
-        }, 0);
-      } else {
-        // Restore focus when modal closes
-        if (previousFocusRef.current) {
+        // Restore body scroll
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        // Restore focus to previous element
+        if (previousFocusRef.current && document.contains(previousFocusRef.current)) {
           previousFocusRef.current.focus();
           previousFocusRef.current = null;
         }
-      }
-    }, [isOpen, initialFocus]);
-
-    // Prevent body scroll when modal is open
-    useEffect(() => {
-      if (isOpen) {
-        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-        document.body.style.overflow = 'hidden';
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      } else {
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-      }
-
-      return () => {
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
       };
-    }, [isOpen]);
+    }, [isOpen, initialFocus, handleEscape]);
 
     // Handle backdrop click
     const handleBackdropClick = (e: React.MouseEvent) => {
@@ -191,8 +185,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       }
     };
 
-    // Focus trap
-    const handleKeyDown = (e: KeyboardEvent) => {
+    // Memoize focus trap handler to prevent recreation
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
       if (!isOpen || e.key !== 'Tab') return;
 
       const modal = modalRef.current;
@@ -215,7 +209,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           firstElement?.focus();
         }
       }
-    };
+    }, [isOpen]);
 
     useEffect(() => {
       if (isOpen) {
@@ -223,7 +217,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         return () => document.removeEventListener('keydown', handleKeyDown);
       }
       return undefined;
-    }, [isOpen]);
+    }, [isOpen, handleKeyDown]);
 
     if (!isOpen) return null;
 

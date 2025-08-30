@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { ChartModalData, ChartType, FilterState, VisualizationPreferences, VisualizationState } from '../types';
 import { ChartModal } from '../components/ChartModal';
 
@@ -45,36 +45,35 @@ interface VisualizationProviderProps {
 }
 
 export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ children }) => {
-  // Theme state - detect dark mode using multiple methods
-  const [isDarkMode, setIsDarkMode] = useState(() => {
+  // Memoize dark mode detection function to avoid recreation
+  const checkDarkMode = useCallback(() => {
     if (typeof window === 'undefined') return false;
     
-    // Check multiple sources for dark mode
     const hasClassDark = document.documentElement.classList.contains('dark');
     const hasDataDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const bodyClassDark = document.body.classList.contains('dark');
     
-    // Use system preference as fallback if no class/attribute is set
     return hasClassDark || hasDataDark || bodyClassDark || systemPrefersDark;
-  });
+  }, []);
 
-  // Watch for theme changes
+  // Theme state - detect dark mode using multiple methods
+  const [isDarkMode, setIsDarkMode] = useState(checkDarkMode);
+
+  // Use ref to store the media query to avoid recreating it
+  const mediaQueryRef = useRef<MediaQueryList | null>(null);
+  
+  // Watch for theme changes - optimized single useEffect
   React.useEffect(() => {
-    const checkDarkMode = () => {
-      const hasClassDark = document.documentElement.classList.contains('dark');
-      const hasDataDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const bodyClassDark = document.body.classList.contains('dark');
-      
-      const isDark = hasClassDark || hasDataDark || bodyClassDark || systemPrefersDark;
-      
+    // Memoized handler to avoid recreation on each observer trigger
+    const handleThemeChange = () => {
+      const isDark = checkDarkMode();
       setIsDarkMode(isDark);
     };
 
     // Watch for class changes on html and body elements
-    const htmlObserver = new MutationObserver(checkDarkMode);
-    const bodyObserver = new MutationObserver(checkDarkMode);
+    const htmlObserver = new MutationObserver(handleThemeChange);
+    const bodyObserver = new MutationObserver(handleThemeChange);
     
     htmlObserver.observe(document.documentElement, {
       attributes: true,
@@ -86,20 +85,21 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
       attributeFilter: ['class']
     });
 
-    // Watch for system preference changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleMediaChange = () => {
-      checkDarkMode();
-    };
+    // Watch for system preference changes - reuse media query
+    if (!mediaQueryRef.current) {
+      mediaQueryRef.current = window.matchMedia('(prefers-color-scheme: dark)');
+    }
     
-    mediaQuery.addListener(handleMediaChange);
+    mediaQueryRef.current.addListener(handleThemeChange);
     
     return () => {
       htmlObserver.disconnect();
       bodyObserver.disconnect();
-      mediaQuery.removeListener(handleMediaChange);
+      if (mediaQueryRef.current) {
+        mediaQueryRef.current.removeListener(handleThemeChange);
+      }
     };
-  }, []);
+  }, [checkDarkMode]);
 
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -127,14 +127,18 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
   const [defaultChartType, setDefaultChartType] = useState<ChartType>('donut');
   const [perFieldChartType, setPerFieldChartType] = useState<Record<string, ChartType | undefined>>({});
 
-  const preferences: VisualizationPreferences = {
+  // Memoize setPerFieldChartType callback to prevent recreation
+  const setPerFieldChartTypeCallback = useCallback((fieldId: string, chartType: ChartType | undefined) => {
+    setPerFieldChartType(prev => ({ ...prev, [fieldId]: chartType }));
+  }, []);
+
+  // Memoize preferences object to prevent context consumers from unnecessary re-renders
+  const preferences = useMemo<VisualizationPreferences>(() => ({
     defaultChartType,
     setDefaultChartType,
     perFieldChartType,
-    setPerFieldChartType: (fieldId: string, chartType: ChartType | undefined) => {
-      setPerFieldChartType(prev => ({ ...prev, [fieldId]: chartType }));
-    }
-  };
+    setPerFieldChartType: setPerFieldChartTypeCallback
+  }), [defaultChartType, perFieldChartType, setPerFieldChartTypeCallback]);
 
 
 
@@ -230,7 +234,8 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     setState(prev => ({ ...prev, hiddenFields: new Set() }));
   }, []);
 
-  const contextValue: VisualizationContextType = {
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo<VisualizationContextType>(() => ({
     filters,
     updateFilters,
     state,
@@ -247,7 +252,24 @@ export const VisualizationProvider: React.FC<VisualizationProviderProps> = ({ ch
     showField,
     toggleFieldVisibility,
     showAllFields
-  };
+  }), [
+    filters,
+    updateFilters,
+    state,
+    updateState,
+    preferences,
+    isDarkMode,
+    openChartModal,
+    closeChartModal,
+    toggleSectionCollapsed,
+    toggleSubsectionCollapsed,
+    expandAll,
+    collapseAll,
+    hideField,
+    showField,
+    toggleFieldVisibility,
+    showAllFields
+  ]);
 
   return (
     <VisualizationContext.Provider value={contextValue}>

@@ -1,12 +1,19 @@
 import { useAuth } from '@/contexts/auth-context';
 import { databaseHelpers, getDatabaseProviderInfo } from '@/config/database';
 import { ErrorLoggingService } from '@/services/error-logging.service';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectionStatus } from '@/types';
 
 /**
  * Hook to monitor database connection status and authentication state
  * Works with any configured database provider (Firebase, Supabase, PostgreSQL)
+ * 
+ * Connection checking triggers:
+ * - Initial check when authentication is ready
+ * - When user returns to browser tab (window focus)
+ * - Manual retry via retry() function
+ * 
+ * No automatic polling for scalability - connection status is checked on-demand
  */
 export const useConnectionStatus = (): ConnectionStatus => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -14,10 +21,12 @@ export const useConnectionStatus = (): ConnectionStatus => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
+  const loadingRef = useRef(false);
   // Track only when the last check completed (success or failure)
 
   const checkConnection = useCallback(async () => {
     try {
+      loadingRef.current = true;
       setLoading(true);
       setError(null);
       
@@ -56,52 +65,40 @@ export const useConnectionStatus = (): ConnectionStatus => {
       setConnected(false);
       setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
+      loadingRef.current = false;
       setLoading(false);
       setLastCheckedAt(new Date());
     }
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   const retry = () => {
     checkConnection();
   };
 
+  // Optimized effect for connection management - no automatic polling for scalability
   useEffect(() => {
-    // Only check connection if auth is not loading
-    if (!authLoading) {
-      checkConnection();
-    }
-  }, [authLoading, checkConnection]);
-
-  // Poll periodically to keep status fresh
-  useEffect(() => {
-    if (authLoading || !isAuthenticated) return;
-
-    const POLL_INTERVAL_MS = 60_000; // 1 minute
-    const intervalId = setInterval(() => {
-      const dbInfo = getDatabaseProviderInfo();
-      if (dbInfo.isInitialized) {
-        checkConnection();
-      }
-    }, POLL_INTERVAL_MS);
-
-    return () => clearInterval(intervalId);
-  }, [authLoading, isAuthenticated, checkConnection]);
-
-  // Re-check on window focus for responsiveness
-  useEffect(() => {
+    // Don't do anything if auth is still loading
     if (authLoading) return;
 
+    // Initial connection check when auth is ready
+    checkConnection();
+
+    // Set up focus event handler - check when user returns to tab
     const handleFocus = () => {
       // Avoid spamming if already checking or if database isn't ready
       const dbInfo = getDatabaseProviderInfo();
-      if (!loading && dbInfo.isInitialized) {
+      if (!loadingRef.current && dbInfo.isInitialized) {
         checkConnection();
       }
     };
 
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [authLoading, loading, checkConnection]);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [authLoading, isAuthenticated, checkConnection]);
 
   return {
     connected,

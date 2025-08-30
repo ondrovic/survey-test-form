@@ -247,10 +247,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     setFieldValue,
   ]);
 
-  // Set default values when rating scales are loaded
+  // Combined effect to set default values for all field types when option sets are loaded
   React.useEffect(() => {
     config.sections.forEach((section) => {
       processAllFields(section, (field) => {
+        // Skip if field already has a value
+        if (formState.formData[field.id] !== undefined) return;
+
+        // Handle rating fields
         if (
           field.type === "rating" &&
           field.ratingScaleId &&
@@ -258,116 +262,66 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         ) {
           const scale = ratingScalesRecord[field.ratingScaleId];
           const defaultOption = scale.options.find((opt) => opt.isDefault);
-          if (defaultOption && !formState.formData[field.id]) {
+          if (defaultOption) {
             setFieldValue(field.id, defaultOption.value);
           }
         }
-      });
-    });
-  }, [
-    ratingScalesRecord,
-    config,
-    formState.formData,
-    setFieldValue,
-    processAllFields,
-  ]);
-
-  // Set default values when radio option sets are loaded
-  React.useEffect(() => {
-    config.sections.forEach((section) => {
-      processAllFields(section, (field) => {
-        if (
+        
+        // Handle radio fields
+        else if (
           field.type === "radio" &&
           field.radioOptionSetId &&
           radioOptionSetsRecord[field.radioOptionSetId]
         ) {
           const optionSet = radioOptionSetsRecord[field.radioOptionSetId];
           const defaultOption = optionSet.options.find((opt) => opt.isDefault);
-          // Only set default value if there is a default option and no value is currently set
-          if (defaultOption && formState.formData[field.id] === undefined) {
+          if (defaultOption) {
             setFieldValue(field.id, defaultOption.value);
           }
         }
-      });
-    });
-  }, [
-    radioOptionSetsRecord,
-    config,
-    formState.formData,
-    setFieldValue,
-    processAllFields,
-  ]);
-
-  // Set default values when multi-select option sets are loaded
-  React.useEffect(() => {
-    config.sections.forEach((section) => {
-      processAllFields(section, (field) => {
-        if (
+        
+        // Handle multiselect fields
+        else if (
           field.type === "multiselect" &&
           field.multiSelectOptionSetId &&
           multiSelectOptionSetsRecord[field.multiSelectOptionSetId]
         ) {
-          const optionSet =
-            multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
-          const defaultOptions = optionSet.options.filter(
-            (opt) => opt.isDefault
-          );
-          // Only set default values if there are default options and no value is currently set
-          if (
-            defaultOptions.length > 0 &&
-            formState.formData[field.id] === undefined
-          ) {
+          const optionSet = multiSelectOptionSetsRecord[field.multiSelectOptionSetId];
+          const defaultOptions = optionSet.options.filter((opt) => opt.isDefault);
+          if (defaultOptions.length > 0) {
             const defaultValues = defaultOptions.map((opt) => opt.value);
             setFieldValue(field.id, defaultValues);
+          }
+        }
+        
+        // Handle select and multiselectdropdown fields
+        else if (
+          (field.type === "select" || field.type === "multiselectdropdown") &&
+          field.selectOptionSetId &&
+          selectOptionSetsRecord[field.selectOptionSetId]
+        ) {
+          const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
+          
+          if (field.type === "select") {
+            const defaultOption = optionSet.options.find((opt) => opt.isDefault);
+            if (defaultOption) {
+              setFieldValue(field.id, defaultOption.value);
+            }
+          } else {
+            // multiselectdropdown
+            const defaultOptions = optionSet.options.filter((opt) => opt.isDefault);
+            if (defaultOptions.length > 0) {
+              const defaultValues = defaultOptions.map((opt) => opt.value);
+              setFieldValue(field.id, defaultValues);
+            }
           }
         }
       });
     });
   }, [
+    ratingScalesRecord,
+    radioOptionSetsRecord,
     multiSelectOptionSetsRecord,
-    config,
-    formState.formData,
-    setFieldValue,
-    processAllFields,
-  ]);
-
-  // Set default values when select option sets are loaded
-  React.useEffect(() => {
-    config.sections.forEach((section) => {
-      processAllFields(section, (field) => {
-        if (
-          field.type === "select" &&
-          field.selectOptionSetId &&
-          selectOptionSetsRecord[field.selectOptionSetId]
-        ) {
-          const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-          const defaultOption = optionSet.options.find((opt) => opt.isDefault);
-         
-          // Only set default value if there is a default option and no value is currently set
-          if (defaultOption && formState.formData[field.id] === undefined) {
-            setFieldValue(field.id, defaultOption.value);
-          }
-        } else if (
-          field.type === "multiselectdropdown" &&
-          field.selectOptionSetId &&
-          selectOptionSetsRecord[field.selectOptionSetId]
-        ) {
-          const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-          const defaultOptions = optionSet.options.filter(
-            (opt) => opt.isDefault
-          );
-          // Only set default values if there are default options and no value is currently set
-          if (
-            defaultOptions.length > 0 &&
-            formState.formData[field.id] === undefined
-          ) {
-            const defaultValues = defaultOptions.map((opt) => opt.value);
-            setFieldValue(field.id, defaultValues);
-          }
-        }
-      });
-    });
-  }, [
     selectOptionSetsRecord,
     config,
     formState.formData,

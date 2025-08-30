@@ -1,4 +1,4 @@
-import  React,{ useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 
 // Simple dark mode detection for BaseEChartsComponent
 const getIsDarkMode = () => {
