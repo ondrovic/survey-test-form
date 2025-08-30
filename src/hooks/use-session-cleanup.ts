@@ -14,7 +14,6 @@ export const useSessionCleanup = (enabled: boolean = true) => {
     // Only start cleanup service if database is initialized
     const dbInfo = getDatabaseProviderInfo();
     if (!dbInfo.isInitialized) {
-      console.log('⏳ Session cleanup - Database not ready yet, skipping service start...');
       return;
     }
 

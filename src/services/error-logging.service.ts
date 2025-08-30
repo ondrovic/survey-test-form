@@ -68,7 +68,6 @@ export class ErrorLoggingService {
   static async logError(errorData: ErrorLogData): Promise<string | null> {
     // Prevent recursive error logging
     if (this.isLoggingError) {
-      console.warn('Recursive error logging detected, skipping');
       return null;
     }
     
@@ -85,7 +84,6 @@ export class ErrorLoggingService {
       // Try using the database function first, fall back to direct insertion
       const client = SupabaseClientService.getInstance().getClientSafe();
       if (!client) {
-        console.warn('Error logging service: Supabase client not initialized, skipping database logging');
         return null;
       }
       
@@ -123,9 +121,7 @@ export class ErrorLoggingService {
         }
 
         return data as string;
-      } catch (functionError) {
-        console.warn('log_error function failed, falling back to direct insertion:', functionError);
-        
+      } catch {
         // Fallback: Direct table insertion with elevated privileges
         const clientService = SupabaseClientService.getInstance();
         
@@ -163,16 +159,15 @@ export class ErrorLoggingService {
             .single();
 
           if (insertError) {
-            console.error('Failed to insert error directly:', insertError);
             return null;
           }
 
           return insertData?.id || null;
         });
       }
-    } catch (err) {
+    } catch (error) {
       // Fallback logging to prevent infinite loops
-      console.error('Error logging service failed:', err);
+      console.error('ErrorLoggingService failed to log error:', error);
       return null;
     } finally {
       this.isLoggingError = false;
@@ -304,7 +299,6 @@ export class ErrorLoggingService {
         const { data, error } = await query;
 
         if (error) {
-          console.error('Failed to get error statistics:', error);
           return null;
         }
 
@@ -325,8 +319,8 @@ export class ErrorLoggingService {
 
         return stats;
       });
-    } catch (err) {
-      console.error('Error statistics service failed:', err);
+    } catch (error) {
+      console.error('ErrorLoggingService failed to get error statistics:', error);
       return null;
     }
   }
@@ -361,14 +355,13 @@ export class ErrorLoggingService {
         const { data, error } = await query;
 
         if (error) {
-          console.error('Failed to get recent errors:', error);
           return null;
         }
 
         return data;
       });
-    } catch (err) {
-      console.error('Recent errors service failed:', err);
+    } catch (error) {
+      console.error('ErrorLoggingService failed to get recent errors:', error);
       return null;
     }
   }
@@ -388,14 +381,13 @@ export class ErrorLoggingService {
           .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
         
         if (error) {
-          console.error('Failed to clear error logs:', error);
           return false;
         }
         
         return true;
       });
-    } catch (err) {
-      console.error('Clear error logs failed:', err);
+    } catch (error) {
+      console.error('ErrorLoggingService failed to clear error logs:', error);
       return false;
     }
   }
@@ -424,7 +416,6 @@ export class ErrorLoggingService {
 
       const client = SupabaseClientService.getInstance().getClientSafe();
       if (!client) {
-        console.warn('Update error status service: Supabase client not initialized');
         return false;
       }
       
@@ -434,13 +425,12 @@ export class ErrorLoggingService {
         .eq('id', errorId);
 
       if (error) {
-        console.error('Failed to update error status:', error);
         return false;
       }
 
       return true;
-    } catch (err) {
-      console.error('Update error status failed:', err);
+    } catch (error) {
+      console.error('ErrorLoggingService failed to update error status:', error);
       return false;
     }
   }
@@ -527,7 +517,6 @@ export const setupGlobalErrorHandlers = () => {
     
     // Skip browser extension errors
     if (isExtensionError(errorMessage)) {
-      console.debug('Skipping browser extension error:', errorMessage);
       return;
     }
     
@@ -551,7 +540,6 @@ export const setupGlobalErrorHandlers = () => {
     
     // Skip browser extension errors
     if (isExtensionError(error, event.filename)) {
-      console.debug('Skipping browser extension error:', error.message, event.filename);
       return;
     }
     

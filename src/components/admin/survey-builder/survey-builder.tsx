@@ -177,25 +177,12 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                 changedAt: now
             }]
         };
-        console.log('📝 Adding field and opening editor:', {
-            sectionId,
-            fieldId: newField.id,
-            subsectionId,
-            field: newField
-        });
+        
         addField(sectionId, newField, subsectionId);
         handleOpenFieldEditor(newField.id);
     };
 
     const handleUpdateField = (sectionId: string, fieldId: string, updates: Partial<SurveyField>, subsectionId?: string) => {
-        console.log('🔄 Updating field:', {
-            sectionId,
-            fieldId,
-            updates,
-            subsectionId,
-            isSubsectionField: !!subsectionId
-        });
-
         // CRITICAL: Prevent any automatic label history additions
         // Only allow label history to be updated through our explicit save function
         if (updates.labelHistory) {
@@ -203,7 +190,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { labelHistory, ...otherUpdates } = updates;
             updates = otherUpdates;
-            console.log('⚠️ Blocked automatic label history during field update');
         }
 
         updateField(sectionId, fieldId, updates, subsectionId);
@@ -211,15 +197,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
     // New function to handle field changes when saving (not on every keystroke)
     const handleSaveFieldChanges = (sectionId: string, fieldId: string, originalLabel: string, currentLabel: string, subsectionId?: string) => {
-        console.log('🔍 handleSaveFieldChanges called:', {
-            sectionId,
-            fieldId,
-            originalLabel,
-            currentLabel,
-            labelChanged: originalLabel !== currentLabel
-        });
-
-        // Find the current field to update its metadata
+       // Find the current field to update its metadata
         let currentField: SurveyField | undefined;
         const section = state.config.sections.find(section => section.id === sectionId);
 
@@ -238,8 +216,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
             // If field has no labelHistory, initialize it
             if (!currentField.labelHistory) {
-                console.log('🔄 Field has no labelHistory, initializing');
-
                 // For fields without label history, create initial entry(s)
                 const initialChanges: Array<{
                     label: string;
@@ -257,14 +233,12 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                         label: currentLabel,
                         changedAt: now
                     });
-                    console.log(`📝 Creating label history with change: ${originalLabel} → ${currentLabel}`);
                 } else {
                     // If they're the same, just add the current label as initial entry
                     initialChanges.push({
                         label: currentLabel,
                         changedAt: now
                     });
-                    console.log(`📝 Creating label history with initial label: ${currentLabel}`);
                 }
 
                 const updates: Partial<SurveyField> = {
@@ -272,8 +246,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                 };
 
                 updateField(sectionId, fieldId, updates, subsectionId);
-                console.log(`📝 Initialized labelHistory for field ${fieldId}`, updates);
-                console.log(`🔄 Remember to save the survey to persist label history to database`);
                 return;
             }
 
@@ -299,16 +271,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
                     // Update labelHistory directly on the field
                     updateField(sectionId, fieldId, { labelHistory: updatedLabelHistory }, subsectionId);
-
-                    console.log(`📝 Field label saved: ${originalLabel} → ${currentLabel} (ID: ${fieldId} preserved)`);
-                    console.log(`📝 Added clean label history entry:`, newLabelHistoryEntry);
-                    console.log(`📝 Updated labelHistory:`, updatedLabelHistory);
-                    console.log(`🔄 Remember to save the survey to persist label history to database`);
-                } else {
-                    console.log(`📝 Duplicate label entry avoided (ID: ${fieldId})`);
                 }
-            } else {
-                console.log(`📝 Field label unchanged, no history entry needed (ID: ${fieldId})`);
             }
         }
     };
@@ -334,17 +297,13 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     };
 
     const handleMoveField = useCallback((moveData: FieldMoveData) => {
-        console.log('🎯 New drag system - Field moved:', moveData);
-
         const { sourceContainerId, destinationContainerId, sourceIndex, destinationIndex } = moveData;
 
         // Parse container IDs to get section/subsection info
         const parseContainerId = (containerId: string, sections = state.config.sections) => {
-            console.log('🔍 Parsing container ID:', containerId);
             // Format: "section-{sectionId}" or "subsection-{subsectionId}"
             if (containerId.startsWith('section-')) {
                 const result = { type: 'section' as const, sectionId: containerId.replace('section-', ''), subsectionId: undefined };
-                console.log('📦 Parsed as section:', result);
                 return result;
             } else if (containerId.startsWith('subsection-')) {
                 const subsectionId = containerId.replace('subsection-', '');
@@ -354,10 +313,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                 );
                 if (section) {
                     const result = { type: 'subsection' as const, sectionId: section.id, subsectionId: subsectionId };
-                    console.log('📁 Parsed as subsection:', result);
                     return result;
                 }
-                console.error('❌ Subsection not found:', subsectionId);
             }
             return null;
         };
@@ -366,18 +323,11 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         const destinationContainer = parseContainerId(destinationContainerId);
 
         if (!sourceContainer || !destinationContainer) {
-            console.error('Invalid container IDs:', { sourceContainerId, destinationContainerId });
             return;
         }
 
         // Same container reordering
         if (sourceContainerId === destinationContainerId) {
-            console.log('🔄 Same container reordering:', {
-                sectionId: sourceContainer.sectionId,
-                subsectionId: sourceContainer.subsectionId,
-                from: sourceIndex,
-                to: destinationIndex
-            });
             reorderFields(
                 sourceContainer.sectionId,
                 sourceIndex,
@@ -387,19 +337,12 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             return;
         }
 
-        // Cross-container move
-        console.log('🔀 Cross-container move:', {
-            from: `${sourceContainer.type}-${sourceContainer.sectionId}${sourceContainer.subsectionId ? '-' + sourceContainer.subsectionId : ''}`,
-            to: `${destinationContainer.type}-${destinationContainer.sectionId}${destinationContainer.subsectionId ? '-' + destinationContainer.subsectionId : ''}`
-        });
-
         // Find the field to move
         const currentSections = state.config.sections; // Get current state
         let fieldToMove: SurveyField | undefined;
         const sourceSection = currentSections.find(section => section.id === sourceContainer.sectionId);
 
         if (!sourceSection) {
-            console.error('Source section not found:', sourceContainer.sectionId);
             return;
         }
 
@@ -414,11 +357,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }
 
         if (!fieldToMove) {
-            console.error('Field to move not found at index:', sourceIndex);
             return;
         }
-
-        console.log('🎯 Moving field:', fieldToMove.label, 'ID:', fieldToMove.id);
 
         // Remove from source
         deleteField(sourceContainer.sectionId, fieldToMove.id, sourceContainer.subsectionId);
@@ -458,8 +398,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     }, [reorderFields, deleteField, addField]);
 
     const handleSortableListMove = useCallback((moveData: SortableListMoveData) => {
-        console.log('📋 Sortable list move:', moveData);
-
         const { droppableId, oldIndex, newIndex } = moveData;
 
         // Route to the appropriate reorder function based on droppableId
@@ -477,20 +415,8 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     }, [reorderSections, reorderSubsections, reorderSectionContent]);
 
     const handleOpenFieldEditor = (fieldId: string) => {
-        console.log('📝 Opening field editor for:', fieldId);
         selectField(fieldId);
         showFieldEditorModal(true);
-
-        // Debug: Check state after setting
-        setTimeout(() => {
-            console.log('🔍 Modal state check:', {
-                showFieldEditorModal: state.showFieldEditorModal,
-                selectedField: selectedField ? { id: selectedField.id, label: selectedField.label } : null,
-                selectedSection: selectedSection ? { id: selectedSection.id, title: selectedSection.title } : null,
-                selectedFieldSubsectionId: selectedFieldSubsectionId,
-                shouldShowModal: state.showFieldEditorModal && selectedField && selectedSection
-            });
-        }, 100);
     };
 
     // Get all fields for the drag context - memoized to prevent unnecessary re-renders
@@ -527,7 +453,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
             // Trigger validation to check if the saved configuration is valid
             // This will update validation status and handle any instances that need deactivation/reactivation
-            console.log('🔍 Triggering validation after survey config save...');
             await verifyConfig();
 
             onClose();
@@ -570,11 +495,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             for (const subsection of (selectedSection.subsections || [])) {
                 const field = subsection.fields.find(f => f.id === state.selectedField);
                 if (field) {
-                    console.log('🔍 Found field in subsection:', {
-                        fieldId: field.id,
-                        subsectionId: subsection.id,
-                        subsectionTitle: subsection.title
-                    });
                     selectedField = field;
                     selectedFieldSubsectionId = subsection.id;
                     break;
@@ -608,7 +528,19 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     options: [] // Clear individual options when using option set
                 }, selectedFieldSubsectionId);
             } catch (error) {
-                console.error('Error fetching option set name:', error);
+                ErrorLoggingService.logError({
+                    severity: 'medium',
+                    errorMessage: 'Failed to fetch radio option set for field configuration',
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'SurveyBuilderContent',
+                    functionName: 'handleRadioOptionSetSelect',
+                    additionalContext: {
+                        optionSetId,
+                        fieldId: selectedField.id,
+                        sectionId: selectedSection!.id,
+                        error: error instanceof Error ? error.message : String(error)
+                    }
+                });
                 // Fallback to generic name if fetch fails
                 handleUpdateField(selectedSection!.id, selectedField.id, {
                     radioOptionSetId: optionSetId,
@@ -622,7 +554,6 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
     // Memoize the multi-select option set selection callback
     const handleMultiSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
-        console.log('🎯 Selected multi-select option set:', optionSetId);
         if (selectedField) {
             try {
                 // Fetch the actual option set to get its name
@@ -633,7 +564,19 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     options: [] // Clear individual options when using option set
                 }, selectedFieldSubsectionId);
             } catch (error) {
-                console.error('Error fetching option set name:', error);
+                ErrorLoggingService.logError({
+                    severity: 'medium',
+                    errorMessage: 'Failed to fetch multi-select option set for field configuration',
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'SurveyBuilderContent',
+                    functionName: 'handleMultiSelectOptionSetSelect',
+                    additionalContext: {
+                        optionSetId,
+                        fieldId: selectedField.id,
+                        sectionId: selectedSection!.id,
+                        error: error instanceof Error ? error.message : String(error)
+                    }
+                });
                 // Fallback to generic name if fetch fails
                 handleUpdateField(selectedSection!.id, selectedField.id, {
                     multiSelectOptionSetId: optionSetId,
@@ -657,7 +600,19 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     options: [] // Clear individual options when using option set
                 }, selectedFieldSubsectionId);
             } catch (error) {
-                console.error('Error fetching option set name:', error);
+                ErrorLoggingService.logError({
+                    severity: 'medium',
+                    errorMessage: 'Failed to fetch select option set for field configuration',
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'SurveyBuilderContent',
+                    functionName: 'handleSelectOptionSetSelect',
+                    additionalContext: {
+                        optionSetId,
+                        fieldId: selectedField.id,
+                        sectionId: selectedSection!.id,
+                        error: error instanceof Error ? error.message : String(error)
+                    }
+                });
                 // Fallback to generic name if fetch fails
                 handleUpdateField(selectedSection!.id, selectedField.id, {
                     selectOptionSetId: optionSetId,
@@ -912,20 +867,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                     sectionId={selectedSection.id}
                                     subsectionId={selectedFieldSubsectionId}
                                     onUpdateField={(sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {
-                                        console.log('🔧 Update wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
                                         handleUpdateField(sectionId, fieldId, updates, selectedFieldSubsectionId);
                                     }}
                                     onSaveFieldChanges={handleSaveFieldChanges}
                                     onAddFieldOption={(sectionId: string, fieldId: string) => {
-                                        console.log('🔧 Add field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
                                         handleAddFieldOption(sectionId, fieldId, selectedFieldSubsectionId);
                                     }}
                                     onUpdateFieldOption={(sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string; color?: string }) => {
-                                        console.log('🔧 Update field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
                                         handleUpdateFieldOption(sectionId, fieldId, optionIndex, updates, selectedFieldSubsectionId);
                                     }}
                                     onDeleteFieldOption={(sectionId: string, fieldId: string, optionIndex: number) => {
-                                        console.log('🔧 Delete field option wrapper - using selectedFieldSubsectionId:', selectedFieldSubsectionId);
                                         handleDeleteFieldOption(sectionId, fieldId, optionIndex, selectedFieldSubsectionId);
                                     }}
                                     onShowRatingScaleManager={() => showRatingScaleManager(true)}

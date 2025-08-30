@@ -107,7 +107,7 @@ export const PasswordInput = <T extends string = string>({
                         data-testid={testId}
                         className={inputClasses}
                         autoComplete={getAutocompleteValue()}
-                        {...(typeof register === 'function' ? register(name) : register)}
+                        {...register}
                         {...props}
                     />
 

@@ -1,4 +1,5 @@
 import type ReactECharts from 'echarts-for-react';
+import { ErrorLoggingService } from '../../../../services/error-logging.service';
 
 /**
  * Save an ECharts instance as an image file
@@ -16,7 +17,6 @@ export const saveChartAsImage = (
   backgroundColor: string = '#ffffff'
 ) => {
   if (!chartRef.current) {
-    console.error('Chart reference is not available');
     return;
   }
 
@@ -25,7 +25,6 @@ export const saveChartAsImage = (
     const chartInstance = chartRef.current.getEchartsInstance();
     
     if (!chartInstance) {
-      console.error('ECharts instance is not available');
       return;
     }
 
@@ -47,9 +46,16 @@ export const saveChartAsImage = (
     link.click();
     document.body.removeChild(link);
 
-    console.log(`Chart saved as ${filename}.${format}`);
   } catch (error) {
-    console.error('Failed to save chart as image:', error);
+    // Log chart export error
+    ErrorLoggingService.logError({
+      severity: 'medium',
+      errorMessage: 'Failed to export chart as image',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'chart-export',
+      functionName: 'saveChartAsImage',
+      additionalContext: { filename, format, pixelRatio, backgroundColor }
+    });
   }
 };
 

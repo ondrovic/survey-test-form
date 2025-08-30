@@ -1,5 +1,6 @@
 import { Button } from "@/components/common";
 import React, { useState } from "react";
+import { ErrorLoggingService } from "../../../../../services/error-logging.service";
 
 interface ValidationError {
   configTitle: string;
@@ -53,10 +54,7 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
 
   // Parse the error messages to extract structured information
   const parseErrors = (errors: string[]): ValidationError[] => {
-    console.log("🔍 Parsing validation errors:", errors);
     return errors.map((error) => {
-      console.log("🔍 Parsing error:", error);
-
       // Parse basic structure first
       const configMatch = error.match(/Config "([^"]+)"/);
       const sectionMatch = error.match(/Section "([^"]+)"/);
@@ -72,18 +70,8 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
         /([\w\s]+) field must reference a ([\w\s-]+)/
       );
 
-      console.log("🔍 Regex matches:", {
-        configMatch: configMatch?.[1],
-        sectionMatch: sectionMatch?.[1],
-        fieldMatch: fieldMatch?.[1],
-        missingItemMatch: missingItemMatch,
-        noFieldsMatch: !!noFieldsMatch,
-        mustReferenceMatch: mustReferenceMatch,
-      });
-
       // Handle "No fields defined" error pattern
       if (configMatch && sectionMatch && noFieldsMatch) {
-        console.log('✅ Successfully parsed "No fields defined" error');
         return {
           configTitle: configMatch[1],
           sectionTitle: sectionMatch[1],
@@ -103,12 +91,6 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
         const requiredItemType = mustReferenceMatch[2]
           .toLowerCase()
           .replace(/\s+/g, "-"); // "select-option-set"
-
-        console.log('✅ Successfully parsed "must reference" error:', {
-          fieldType,
-          requiredItemType,
-          fieldLabel: fieldMatch[1],
-        });
 
         return {
           configTitle: configMatch[1],
@@ -134,12 +116,6 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
           missingItemTypeText as ValidationError["missingItemType"];
         const missingItemId = missingItemMatch[2];
 
-        console.log("✅ Successfully parsed missing item error:", {
-          missingItemType,
-          missingItemId,
-          fieldLabel: fieldMatch[1],
-        });
-
         return {
           configTitle: configMatch[1],
           sectionTitle: sectionMatch[1],
@@ -154,7 +130,6 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
       }
 
       // Fallback for unparseable errors
-      console.error("❌ Failed to parse error, using fallback:", error);
       return {
         configTitle: configMatch?.[1] || "Unknown",
         sectionTitle: sectionMatch?.[1] || "Unknown",
@@ -204,17 +179,10 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
 
   const handleCreateMissingItem = async (error: ValidationError) => {
     try {
-      console.log("🚀 Starting creation for missing item:", error);
       setIsCreating(true);
       setCreatingItem(error.missingItemId);
 
       // Create the missing item
-      console.log("🔧 Calling onCreateMissingItem with:", {
-        type: error.missingItemType,
-        id: error.missingItemId,
-        name: error.fieldLabel,
-        fieldLabel: error.fieldLabel,
-      });
       await onCreateMissingItem(
         error.missingItemType,
         error.missingItemId,
@@ -228,7 +196,15 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
       // Refresh validation to see if issues are resolved
       await onRefreshValidation();
     } catch (error) {
-      console.error("❌ Failed to create missing item in modal:", error);
+      // Log validation item creation error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to create missing validation item',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'ValidationResultsModal',
+        functionName: 'handleCreateMissingItem',
+        additionalContext: { creatingItem }
+      });
     } finally {
       setIsCreating(false);
       setCreatingItem(null);
@@ -237,10 +213,6 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
 
   const handleCreateAllMissingItems = async () => {
     try {
-      console.log(
-        "🚀 Starting creation for all missing items:",
-        validationErrors.length
-      );
       setIsCreating(true);
 
       // Create all missing items that can be created
@@ -251,7 +223,6 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
           !error.fieldType?.includes("field configuration");
 
         if (canCreate && !createdItems.has(error.missingItemId)) {
-          console.log("🔧 Creating item in batch:", error.missingItemId);
           setCreatingItem(error.missingItemId);
           await onCreateMissingItem(
             error.missingItemType,
@@ -260,18 +231,21 @@ export const ValidationResultsModal: React.FC<ValidationResultsModalProps> = ({
             error.fieldLabel
           );
           setCreatedItems((prev) => new Set(prev).add(error.missingItemId));
-        } else {
-          console.log(
-            "⏭️ Skipping item that cannot be auto-created or already created:",
-            error.missingItemId || "structural-error"
-          );
         }
       }
 
       // Refresh validation
       await onRefreshValidation();
     } catch (error) {
-      console.error("Failed to create all missing items:", error);
+      // Log validation batch creation error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to create all missing validation items',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'ValidationResultsModal',
+        functionName: 'handleCreateAllMissingItems',
+        additionalContext: { validationErrorsCount: validationErrors.length }
+      });
     } finally {
       setIsCreating(false);
       setCreatingItem(null);

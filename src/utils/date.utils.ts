@@ -199,7 +199,6 @@ export const normalizeExistingDate = (isoString: string): string => {
 
     // Check if the date is valid
     if (isNaN(date.getTime())) {
-      console.warn("Invalid date string:", isoString);
       return isoString; // Return original if invalid
     }
 
@@ -211,13 +210,6 @@ export const normalizeExistingDate = (isoString: string): string => {
     // Return the normalized date string
     return `${year}-${month}-${day}`;
   } catch (error) {
-    console.error(
-      "Error normalizing date:",
-      error,
-      "Original string:",
-      isoString
-    );
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'low',
@@ -269,13 +261,6 @@ export const getDisplayDate = (isoString: string): string => {
       day: "numeric"
     });
   } catch (error) {
-    console.error(
-      "Error getting display date:",
-      error,
-      "Original string:",
-      isoString
-    );
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'low',

@@ -17,8 +17,6 @@ export const initializeErrorLogging = () => {
     return; // Already initialized
   }
 
-  console.log('🛡️ Initializing global error logging system...');
-
   try {
     // Setup global error handlers
     setupGlobalErrorHandlers();
@@ -27,12 +25,21 @@ export const initializeErrorLogging = () => {
     setupPerformanceMonitoring();
     
     isSetup = true;
-    console.log('✅ Error logging system initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to initialize error logging system:', error);
+    // Fallback logging since error service may not be available yet
+    ErrorLoggingService.logCriticalError(
+      'Failed to initialize error logging system',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        componentName: 'ErrorSetupUtils',
+        functionName: 'initializeErrorLogging'
+      }
+    );
   }
 };
 
+
+// QUESTION: do we need this at all?
 /**
  * Setup performance monitoring
  */
@@ -42,13 +49,7 @@ const setupPerformanceMonitoring = () => {
     try {
       const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {
-          if (entry.duration > 50) { // Tasks longer than 50ms
-            console.warn('⚠️ Long task detected:', {
-              duration: entry.duration,
-              startTime: entry.startTime,
-              name: entry.name
-            });
-            
+          if (entry.duration > 50) { // Tasks longer than 50m            
             // You could log this as a performance issue
             // LogPerformanceIssue('Long Task', entry.duration, 50);
           }
@@ -57,7 +58,15 @@ const setupPerformanceMonitoring = () => {
       
       observer.observe({ entryTypes: ['longtask'] });
     } catch (error) {
-      console.warn('Performance monitoring not available:', error);
+      // Log performance observer setup error
+      ErrorLoggingService.logError({
+        severity: 'low',
+        errorMessage: 'Failed to setup performance monitoring',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'ErrorSetupUtils',
+        functionName: 'setupPerformanceMonitoring',
+        additionalContext: { errorType: 'performance_setup_error' }
+      });
     }
   }
 
@@ -66,25 +75,26 @@ const setupPerformanceMonitoring = () => {
   window.fetch = async (...args) => {
     try {
       const response = await originalFetch(...args);
+      const url = args[0]?.toString() || 'unknown';
       
       // Log API errors
       if (!response.ok) {
-        const url = args[0]?.toString() || 'unknown';
-        console.warn('🌐 API Error:', {
+        ErrorLoggingService.logApiError(
+          `HTTP ${response.status}: ${response.statusText}`,
           url,
-          status: response.status,
-          statusText: response.statusText
-        });
-        
-        // You could log this as an API error
-        // LogApiError(url, 'GET', response.status, response.statusText);
+          args[1]?.method || 'GET',
+          response.status,
+          undefined,
+          {
+            componentName: 'ErrorSetupUtils',
+            functionName: 'enhancedFetch'
+          }
+        );
       }
       
       return response;
     } catch (error) {
       const url = args[0]?.toString() || 'unknown';
-      console.error('🌐 Network Error:', { url, error });
-      
       // Log the error using ErrorLoggingService if available
       try {
         ErrorLoggingService.logError({

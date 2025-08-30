@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { databaseHelpers } from '@/config/database';
 import { getClientIPAddressWithTimeout } from '../utils/ip.utils';
 import { emailService } from '../services/email.service';
+import { ErrorLoggingService } from '../services/error-logging.service';
 import { SessionCreationTracker, SessionMetrics, UseSurveySessionOptions } from '@/types';
 
 export const useSurveySession = (options: UseSurveySessionOptions | null) => {
@@ -35,27 +36,17 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
       return null;
     }
 
-    console.log('🔍 createSession called:', {
-      isCreatingSession,
-      surveyInstanceId,
-      trackerIsCreating: sessionTracker.isCreating(surveyInstanceId),
-      trackerHasExisting: !!sessionTracker.getExistingSession(surveyInstanceId)
-    });
-
     // Check global tracker first
     if (sessionTracker.isCreating(surveyInstanceId)) {
-      console.log('🔍 Skipping session creation - already creating globally');
       return null;
     }
 
     const existingSessionId = sessionTracker.getExistingSession(surveyInstanceId);
     if (existingSessionId) {
-      console.log('🔍 Using existing session from global tracker:', existingSessionId);
       return existingSessionId;
     }
 
     if (isCreatingSession) {
-      console.log('🔍 Skipping session creation - already in progress locally');
       return null;
     }
 
@@ -89,10 +80,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         }
       };
 
-      console.log('🚀 Creating survey session with data:', sessionData);
       const savedSession = await databaseHelpers.addSurveySession(sessionData);
-      
-      console.log('🔍 Database response from addSurveySession:', savedSession);
       
       if (savedSession?.id) {
         sessionTokenRef.current = sessionToken;
@@ -106,22 +94,25 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           status: 'started'
         });
 
-        console.log('✅ Survey session created successfully:', {
-          sessionId: savedSession.id,
-          sessionToken,
-          surveyInstanceId
-        });
-
         // Mark as finished in global tracker
         sessionTracker.finishCreating(surveyInstanceId, savedSession.id);
         return savedSession.id;
       } else {
-        console.log('❌ No session ID returned from database');
         sessionTracker.finishCreating(surveyInstanceId); // Mark as finished even if failed
         return null;
       }
     } catch (error) {
-      console.error('❌ Failed to create survey session:', error);
+      // Log session creation error
+      ErrorLoggingService.logCriticalError(
+        'Failed to create survey session',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          componentName: 'useSurveySession',
+          functionName: 'createSession',
+          surveyInstanceId,
+          additionalContext: { totalSections }
+        }
+      );
       sessionTracker.finishCreating(surveyInstanceId); // Mark as finished even if failed
       return null;
     } finally {
@@ -148,10 +139,18 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         status: 'abandoned',
         lastActivityAt: new Date()
       }));
-
-      console.log('⏰ Session manually marked as abandoned:', session.sessionId);
     } catch (error) {
-      console.error('❌ Failed to mark session as abandoned:', error);
+      // Log session abandonment error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to abandon survey session',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useSurveySession',
+        functionName: 'abandonSession',
+        sessionToken: sessionTokenRef.current || undefined,
+        surveyInstanceId,
+        additionalContext: { sessionId: session.sessionId }
+      });
     }
   }, [session.sessionId, session.status]);
 
@@ -193,17 +192,21 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           metadata: updatedMetadata,
           lastActivityAt: new Date().toISOString()
         });
-
-        console.log('📊 Survey answers saved to session:', {
-          sessionId: session.sessionId,
-          answersCount: Object.keys(answers).length,
-          answers: answers,
-          updatedMetadata: updatedMetadata,
-          answerCount: Object.keys(answers).length,
-          currentPage: currentPage
-        });
       } catch (error) {
-        console.error('❌ Failed to save answers to session:', error);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: 'Failed to save answers to survey session',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'useSurveySession',
+          functionName: 'saveAnswersToSession',
+          sessionToken: sessionTokenRef.current || undefined,
+          surveyInstanceId,
+          additionalContext: { 
+            sessionId: session.sessionId,
+            answerCount: Object.keys(answers).length,
+            currentPage 
+          }
+        });
       }
     }, 1000); // 1 second debounce for answer saving
   }, [session.sessionId, session.status]);
@@ -240,12 +243,6 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
             currentPage: newSection,
             lastPageUpdate: now.toISOString()
           };
-          
-          console.log('📍 Updating page in metadata:', {
-            sessionId: session.sessionId,
-            newSection: newSection,
-            previousSection: session.currentSection
-          });
         }
         
         await databaseHelpers.updateSurveySession(session.sessionId!, updateData);
@@ -260,14 +257,21 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
             status: newStatus
           };
         });
-
-        console.log('📊 Session activity updated:', {
-          sessionId: session.sessionId,
-          section: newSection !== undefined ? newSection : session.currentSection,
-          lastActivity: now.toISOString()
-        });
       } catch (error) {
-        console.error('❌ Failed to update session activity:', error);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: 'Failed to update session activity',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'useSurveySession',
+          functionName: 'updateActivity',
+          sessionToken: sessionTokenRef.current || undefined,
+          surveyInstanceId,
+          additionalContext: { 
+            sessionId: session.sessionId,
+            newSection,
+            currentSection: session.currentSection 
+          }
+        });
       }
     }, 1500); // Reduced debounce time since we're not managing abandonment client-side
   }, [session.sessionId, session.status, session.currentSection]);
@@ -277,16 +281,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     responses: Record<string, any>;
     surveyTitle?: string;
   }) => {
-    console.log('🔍 completeSession called with:', {
-      sessionId: session.sessionId,
-      hasSurveyData: !!surveyData,
-      surveyDataKeys: surveyData ? Object.keys(surveyData) : [],
-      responses: surveyData?.responses,
-      surveyTitle: surveyData?.surveyTitle
-    });
-
     if (!session.sessionId) {
-      console.log('❌ No session ID, skipping session completion');
       return;
     }
 
@@ -308,18 +303,9 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
 
       // Send email notification if survey data is provided
       if (surveyData && surveyInstanceId) {
+        // Look for email field in responses using multiple strategies
+        let recipientEmail: string | undefined;
         try {
-          console.log('🔍 Email notification check - Survey data received:', {
-            hasSurveyData: !!surveyData,
-            hasResponses: !!surveyData.responses,
-            responseKeys: Object.keys(surveyData.responses || {}),
-            responseValues: surveyData.responses,
-            surveyTitle: surveyData.surveyTitle
-          });
-
-          // Look for email field in responses using multiple strategies
-          let recipientEmail: string | undefined;
-          let foundField: string | undefined;
           
           // Strategy 1: Look for common field name patterns (including transformed names)
           const emailFields = [
@@ -332,7 +318,6 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           for (const field of emailFields) {
             if (surveyData.responses[field] && typeof surveyData.responses[field] === 'string') {
               recipientEmail = surveyData.responses[field] as string;
-              foundField = field;
               break;
             }
           }
@@ -343,7 +328,6 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
             for (const [fieldName, value] of Object.entries(surveyData.responses)) {
               if (typeof value === 'string' && emailPatterns.some(pattern => fieldName.endsWith(pattern))) {
                 recipientEmail = value;
-                foundField = fieldName;
                 break;
               }
             }
@@ -352,31 +336,16 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           // Strategy 3: Look for any field that contains a valid email address (fallback)
           if (!recipientEmail) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            for (const [fieldName, value] of Object.entries(surveyData.responses)) {
+            for (const [_fieldName, value] of Object.entries(surveyData.responses)) {
               if (typeof value === 'string' && emailRegex.test(value)) {
                 recipientEmail = value;
-                foundField = fieldName;
                 break;
               }
             }
           }
 
-          console.log('🔍 Email field search results:', {
-            foundField,
-            recipientEmail,
-            hasAtSymbol: recipientEmail ? recipientEmail.includes('@') : false,
-            allResponseFields: Object.keys(surveyData.responses),
-            strategy: foundField ? (
-              emailFields.includes(foundField) ? 'Strategy 1: Direct match' :
-              foundField.endsWith('_email') || foundField.endsWith('_Email') || foundField.endsWith('email') || foundField.endsWith('Email') ? 'Strategy 2: Ends with email pattern' :
-              'Strategy 3: Email regex match'
-            ) : 'No email found'
-          });
-
           if (recipientEmail && recipientEmail.includes('@')) {
-            console.log('📧 Sending survey completion email to:', recipientEmail);
-            
-            const emailResult = await emailService.sendSurveyCompletionEmail({
+            await emailService.sendSurveyCompletionEmail({
               surveyInstanceId: surveyInstanceId,
               sessionId: session.sessionId,
               recipientEmail: recipientEmail,
@@ -384,25 +353,26 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
               surveyTitle: surveyData.surveyTitle
             });
 
-            if (emailResult.success) {
-              console.log('✅ Survey completion email sent successfully');
-            } else {
-              console.warn('⚠️ Email sending failed but survey was completed:', emailResult.error);
-            }
-          } else {
-            console.log('📧 No valid email address found in survey responses, skipping email notification');
-            console.log('📧 Available response fields:', Object.keys(surveyData.responses || {}));
+            
           }
         } catch (emailError) {
-          console.warn('⚠️ Email sending failed but survey was completed:', emailError);
+          ErrorLoggingService.logError({
+            severity: 'low',
+            errorMessage: 'Failed to send survey completion email',
+            stackTrace: emailError instanceof Error ? emailError.stack : String(emailError),
+            componentName: 'useSurveySession',
+            functionName: 'completeSession',
+            sessionToken: sessionTokenRef.current || undefined,
+            surveyInstanceId,
+            additionalContext: { 
+              sessionId: session.sessionId,
+              recipientEmail: recipientEmail ? 'present' : 'not_found',
+              surveyTitle: surveyData?.surveyTitle
+            }
+          });
           // Don't throw - email failure shouldn't prevent session completion
         }
-      } else {
-        console.log('🔍 Email notification skipped:', {
-          hasSurveyData: !!surveyData,
-          surveyInstanceId
-        });
-      }
+      } 
 
       // Clean up localStorage and global tracker
       if (surveyInstanceId) {
@@ -410,9 +380,22 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         sessionTracker.clearSession(surveyInstanceId);
       }
       
-      console.log('✅ Session completed:', session.sessionId);
     } catch (error) {
-      console.error('❌ Failed to complete session:', error);
+      ErrorLoggingService.logCriticalError(
+        'Failed to complete survey session',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          componentName: 'useSurveySession',
+          functionName: 'completeSession',
+          sessionToken: sessionTokenRef.current || undefined,
+          surveyInstanceId,
+          additionalContext: { 
+            sessionId: session.sessionId,
+            hasSurveyData: !!surveyData,
+            surveyTitle: surveyData?.surveyTitle
+          }
+        }
+      );
     }
   }, [session.sessionId, surveyInstanceId, sessionTracker]);
 
@@ -423,15 +406,8 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     }
 
     const initializeSession = async () => {
-      console.log('🔍 Initializing session for:', {
-        surveyInstanceId,
-        hasExistingSessionId: !!session.sessionId
-      });
-
       // Check for existing session token in localStorage
       const storedToken = localStorage.getItem(`survey_session_${surveyInstanceId}`);
-      
-      console.log('🔍 Found stored token:', storedToken ? 'YES' : 'NO');
       
       if (storedToken) {
         try {
@@ -441,17 +417,6 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           if (existingSession && existingSession.status !== 'completed' && existingSession.status !== 'abandoned') {
             // Resume session - convert snake_case to camelCase and restore saved answers
             const savedAnswers = existingSession.metadata?.savedAnswers || {};
-            
-            console.log('🔍 SESSION RESUME DEBUG:', {
-              sessionId: existingSession.id,
-              hasMetadata: !!existingSession.metadata,
-              metadataKeys: existingSession.metadata ? Object.keys(existingSession.metadata) : [],
-              hasSavedAnswers: !!existingSession.metadata?.savedAnswers,
-              savedAnswersCount: savedAnswers ? Object.keys(savedAnswers).length : 0,
-              savedAnswers: savedAnswers,
-              fullMetadata: existingSession.metadata
-            });
-            
             setSession({
               sessionId: existingSession.id,
               startedAt: new Date(existingSession.started_at),
@@ -461,8 +426,6 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
               savedAnswers: savedAnswers
             });
             sessionTokenRef.current = storedToken;
-            
-            console.log('🔄 Resumed existing session:', existingSession.id);
             
             // Update activity to mark as active again (database will handle status management)
             setTimeout(() => {
@@ -476,13 +439,24 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
             localStorage.removeItem(`survey_session_${surveyInstanceId}`);
           }
         } catch (error) {
-          console.error('❌ Error resuming session:', error);
+          ErrorLoggingService.logError({
+            severity: 'medium',
+            errorMessage: 'Failed to resume existing survey session',
+            stackTrace: error instanceof Error ? error.stack : String(error),
+            componentName: 'useSurveySession',
+            functionName: 'initializeSession',
+            sessionToken: storedToken,
+            surveyInstanceId,
+            additionalContext: { 
+              action: 'resume_session',
+              hasStoredToken: !!storedToken
+            }
+          });
           localStorage.removeItem(`survey_session_${surveyInstanceId}`);
         }
       }
 
       // Create new session if no valid session exists
-      console.log('🔍 No existing session found, creating new one...');
       await createSession();
     };
 
@@ -521,19 +495,10 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     
     getSavedPage: useCallback(async (): Promise<number | null> => {
       if (!session.sessionId) {
-        console.log('🔍 getSavedPage: No session ID');
         return null;
       }
       try {
-        console.log('🔍 getSavedPage: Fetching session data for ID:', session.sessionId);
         const sessionData = await databaseHelpers.getSurveySession(session.sessionId);
-        console.log('🔍 getSavedPage: Session data retrieved:', {
-          hasMetadata: !!sessionData?.metadata,
-          metadata: sessionData?.metadata,
-          currentPage: sessionData?.metadata?.currentPage,
-          currentSection: sessionData?.current_section
-        });
-        
         // Check metadata.currentPage first, then fall back to current_section
         const savedPage = sessionData?.metadata?.currentPage !== undefined 
           ? sessionData.metadata.currentPage 
@@ -541,7 +506,18 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
           
         return savedPage !== undefined ? savedPage : null;
       } catch (error) {
-        console.error('❌ Failed to get saved page from session:', error);
+        ErrorLoggingService.logError({
+          severity: 'low',
+          errorMessage: 'Failed to get saved page from session',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'useSurveySession',
+          functionName: 'getSavedPage',
+          sessionToken: sessionTokenRef.current || undefined,
+          surveyInstanceId,
+          additionalContext: { 
+            sessionId: session.sessionId
+          }
+        });
         return null;
       }
     }, [session.sessionId])

@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { ErrorLoggingService } from '../../../../../services/error-logging.service';
 import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
@@ -79,7 +80,20 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                             setRadioOptionSets(prev => ({ ...prev, [field.radioOptionSetId!]: optionSet }));
                         }
                     } catch (error) {
-                        console.error('Error loading radio option set:', error);
+                        ErrorLoggingService.logError({
+                            severity: 'medium',
+                            errorMessage: 'Failed to load radio option set for subsection field',
+                            stackTrace: error instanceof Error ? error.stack : String(error),
+                            componentName: 'SubsectionEditor',
+                            functionName: 'loadOptionSets',
+                            additionalContext: {
+                                subsectionId: subsection.id,
+                                sectionId,
+                                fieldId: field.id,
+                                radioOptionSetId: field.radioOptionSetId,
+                                error: error instanceof Error ? error.message : String(error)
+                            }
+                        });
                     } finally {
                         setLoadingOptionSets(prev => ({ ...prev, [field.radioOptionSetId!]: false }));
                     }
@@ -93,7 +107,20 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                             setMultiSelectOptionSets(prev => ({ ...prev, [field.multiSelectOptionSetId!]: optionSet }));
                         }
                     } catch (error) {
-                        console.error('Error loading multi-select option set:', error);
+                        ErrorLoggingService.logError({
+                            severity: 'medium',
+                            errorMessage: 'Failed to load multi-select option set for subsection field',
+                            stackTrace: error instanceof Error ? error.stack : String(error),
+                            componentName: 'SubsectionEditor',
+                            functionName: 'loadOptionSets',
+                            additionalContext: {
+                                subsectionId: subsection.id,
+                                sectionId,
+                                fieldId: field.id,
+                                multiSelectOptionSetId: field.multiSelectOptionSetId,
+                                error: error instanceof Error ? error.message : String(error)
+                            }
+                        });
                     } finally {
                         setLoadingOptionSets(prev => ({ ...prev, [field.multiSelectOptionSetId!]: false }));
                     }
@@ -183,7 +210,6 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                     <Button
                         size="sm"
                         onClick={() => {
-                            console.log('🟨 ADD SUBSECTION FIELD CLICKED:', sectionId, subsection.id);
                             onAddField(sectionId, 'text', subsection.id);
                         }}
                         disabled={!subsection.title || titleError !== ''}

@@ -64,8 +64,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
     const { surveyInstances } = surveyData.state;
     const { loadFrameworkData } = surveyData;
 
-    console.log('🔍 Survey data context:', surveyData);
-    console.log('🔍 Survey instances from context:', surveyInstances);
 
     // Helper function to format completion time
     const formatCompletionTime = (seconds: number): string => {
@@ -92,7 +90,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
     // Ensure data is loaded
     useEffect(() => {
         if (surveyInstances.length === 0) {
-            console.log('🔍 No survey instances found, loading framework data...');
             loadFrameworkData();
         }
     }, [surveyInstances.length, loadFrameworkData]);
@@ -102,8 +99,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             setLoading(true);
             setError(null);
 
-            console.log('🔍 Loading analytics data for instance:', selectedInstanceId);
-            console.log('🔍 Available survey instances:', surveyInstances);
 
             // Get survey responses and sessions for selected instance
             let responses: SurveyResponse[] = [];
@@ -113,28 +108,22 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
             if (selectedInstanceId) {
                 // Get fresh instances from database (like visualization does)
-                console.log('🔍 Looking for instance with ID:', selectedInstanceId);
                 const freshInstances = await databaseHelpers.getSurveyInstances();
-                console.log('🔍 Fresh instances from database:', freshInstances.map(i => ({ id: i.id, slug: i.slug, title: i.title })));
 
                 // Try to find by ID first, then by slug (exactly like visualization does)
                 instance = freshInstances.find(i => i.id === selectedInstanceId || i.slug === selectedInstanceId);
-                console.log('🔍 Found instance:', instance);
 
                 // Update instance state
                 setInstance(instance);
 
                 if (instance) {
-                    console.log('🔍 Fetching responses and sessions for instance:', instance.id);
 
                     // Fetch both responses and sessions
                     const [responsesResult, sessionsResult] = await Promise.allSettled([
                         databaseHelpers.getSurveyResponsesFromCollection(instance.id).catch(() => {
-                            console.log('❌ Failed to fetch responses, returning empty array');
                             return [];
                         }),
                         databaseHelpers.getSurveySessions(instance.id).catch(() => {
-                            console.log('❌ Failed to fetch sessions, returning empty array');
                             return [];
                         })
                     ]);
@@ -142,15 +131,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                     responses = responsesResult.status === 'fulfilled' ? responsesResult.value : [];
                     sessions = sessionsResult.status === 'fulfilled' ? sessionsResult.value : [];
 
-                    console.log('🔍 Fetched responses count:', responses.length);
-                    console.log('🔍 Fetched sessions count:', sessions.length);
-                    console.log('🔍 Session statuses:', sessions.map(s => s.status));
 
                     const configResult = await databaseHelpers.getSurveyConfig(instance.configId);
                     config = configResult || undefined;
-                    console.log('🔍 Fetched config:', config);
                 } else {
-                    console.log('❌ No instance found for ID:', selectedInstanceId);
                     throw new Error(`Instance not found: ${selectedInstanceId}`);
                 }
             } else {
@@ -161,14 +145,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 return;
             }
 
-            console.log('🔍 Calculating analytics with:', { responses: responses.length, sessions: sessions.length, config: !!config });
             // Calculate analytics (always calculate, even with 0 responses)
             const data = calculateAnalytics(responses, sessions, config, dateRange, groupBy);
-            console.log('🔍 Calculated analytics data:', data);
             setAnalyticsData(data);
         } catch (err) {
-            console.error('❌ Error loading analytics data:', err);
-
             // Log the error using ErrorLoggingService
             ErrorLoggingService.logError({
                 severity: 'medium',
@@ -194,13 +174,11 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
     }, [selectedInstanceId, dateRange, groupBy, surveyInstances]);
 
     useEffect(() => {
-        console.log('🔍 useEffect triggered with:', { selectedInstanceId, dateRange, groupBy });
         loadAnalyticsData();
     }, [selectedInstanceId, dateRange, groupBy, loadAnalyticsData]);
 
     // Update selected instance when prop changes
     useEffect(() => {
-        console.log('🔍 instanceId prop changed:', instanceId);
         setSelectedInstanceId(instanceId);
     }, [instanceId]);
 
@@ -259,21 +237,15 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
 
         // Group responses by period
         const responsesByPeriod = groupResponsesByPeriod(filteredResponses, groupBy);
-        console.log('🔍 Responses by period:', responsesByPeriod);
 
         // Group sessions by period
         const sessionsByPeriod = groupSessionsByPeriod(filteredSessions, groupBy);
-        console.log('🔍 Sessions by period:', sessionsByPeriod);
 
         // Calculate field analysis
         const fieldAnalysis = calculateFieldAnalysis(filteredResponses, config);
-        console.log('🔍 Field analysis:', fieldAnalysis);
-        console.log('🔍 Config sections:', config?.sections);
-        console.log('🔍 Filtered responses:', filteredResponses);
 
         // Calculate trends
         const trends = calculateTrends(filteredResponses, filteredSessions, groupBy);
-        console.log('🔍 Trends:', trends);
 
         return {
             totalResponses,

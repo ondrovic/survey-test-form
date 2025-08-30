@@ -17,9 +17,7 @@ import {
 async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[]): Promise<SurveyInstance[]> {
     const now = new Date();
     const updatedInstances: SurveyInstance[] = [];
-    let updateCount = 0;
-
-    console.log(`🔍 Checking ${instances.length} survey instances for status updates...`);
+    let _updateCount = 0;
 
     for (const instance of instances) {
         // Only check instances that have activeDateRange configured
@@ -32,22 +30,17 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
         // Set endDate to end of day (23:59:59.999) to ensure survey is active through the entire end date
         const endDate = new Date(instance.activeDateRange.endDate);
         endDate.setHours(23, 59, 59, 999);
-
-        console.log(`📅 Survey "${instance.title}": ${startDate.toISOString()} to ${endDate.toISOString()} (now: ${now.toISOString()})`);
-
         // Determine what isActive should be based on current time
         const shouldBeActive = now >= startDate && now <= endDate;
 
         // Only allow activation if config is valid
         if (shouldBeActive && !instance.config_valid) {
-            console.log(`⏭️ Survey "${instance.title}": Skipping activation - config is invalid (config_valid = false)`);
             updatedInstances.push(instance);
             continue;
         }
 
         // Only allow deactivation if config is valid (prevents interference with manual deactivation)
         if (!shouldBeActive && !instance.config_valid) {
-            console.log(`⏭️ Survey "${instance.title}": Skipping deactivation - config is invalid (config_valid = false), likely manually deactivated`);
             updatedInstances.push(instance);
             continue;
         }
@@ -66,15 +59,11 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
                     }
                 };
 
-                // Update in Firestore
                 await databaseHelpers.updateSurveyInstance(instance.id, updatedInstance);
                 updatedInstances.push(updatedInstance);
-                updateCount++;
+                _updateCount++; // Track update count
 
-                console.log(`✅ Updated survey "${instance.title}": ${instance.isActive} → ${shouldBeActive}`);
             } catch (error) {
-                console.error(`❌ Failed to update survey "${instance.title}":`, error);
-                
                 // Log to database
                 await ErrorLoggingService.logError({
                     severity: 'high',
@@ -98,14 +87,7 @@ async function checkAndUpdateSurveyInstanceStatuses(instances: SurveyInstance[])
             }
         } else {
             updatedInstances.push(instance);
-            console.log(`⏭️ Survey "${instance.title}": No change needed (already ${instance.isActive})`);
         }
-    }
-
-    if (updateCount > 0) {
-        console.log(`📊 Survey status check: ${updateCount} instances updated out of ${instances.length}`);
-    } else {
-        console.log(`📊 Survey status check: No updates needed for ${instances.length} instances`);
     }
 
     return updatedInstances;
@@ -372,7 +354,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         try {
             const dbInfo = getDatabaseProviderInfo();
             if (!dbInfo.isInitialized) {
-                console.warn('⚠️ Database not initialized yet, skipping framework data loading');
                 return;
             }
             setLoading(true);
@@ -390,7 +371,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             dispatch({ type: 'SET_SURVEY_INSTANCES', payload: instances });
             setLastUpdated();
         } catch (error) {
-            console.error("Error loading framework data:", error);
             setError("Failed to load framework data");
             
             // Log to database
@@ -417,14 +397,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         try {
             const dbInfo = getDatabaseProviderInfo();
             if (!dbInfo.isInitialized) {
-                console.warn('⚠️ Database not initialized yet, skipping rating scales loading');
                 return;
             }
             const scales = await databaseHelpers.getRatingScales();
             dispatch({ type: 'SET_RATING_SCALES', payload: scales });
         } catch (error) {
-            console.error("Error loading rating scales:", error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'medium',
@@ -445,19 +422,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         try {
             const dbInfo = getDatabaseProviderInfo();
             if (!dbInfo.isInitialized) {
-                console.warn('⚠️ Database not initialized yet, skipping radio option sets loading');
                 return;
             }
-            console.log('🔍 Loading radio option sets...');
             const optionSets = await databaseHelpers.getRadioOptionSets();
-            console.log('✅ Radio option sets loaded:', {
-                count: optionSets.length,
-                optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
-            });
             dispatch({ type: 'SET_RADIO_OPTION_SETS', payload: optionSets });
         } catch (error) {
-            console.error("❌ Error loading radio option sets:", error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'medium',
@@ -478,19 +447,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         try {
             const dbInfo = getDatabaseProviderInfo();
             if (!dbInfo.isInitialized) {
-                console.warn('⚠️ Database not initialized yet, skipping multi-select option sets loading');
                 return;
             }
-            console.log('🔍 Loading multi-select option sets...');
             const optionSets = await databaseHelpers.getMultiSelectOptionSets();
-            console.log('✅ Multi-select option sets loaded:', {
-                count: optionSets.length,
-                optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
-            });
             dispatch({ type: 'SET_MULTI_SELECT_OPTION_SETS', payload: optionSets });
         } catch (error) {
-            console.error("❌ Error loading multi-select option sets:", error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'medium',
@@ -511,19 +472,11 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
         try {
             const dbInfo = getDatabaseProviderInfo();
             if (!dbInfo.isInitialized) {
-                console.warn('⚠️ Database not initialized yet, skipping select option sets loading');
                 return;
             }
-            console.log('🔍 Loading select option sets...');
             const optionSets = await databaseHelpers.getSelectOptionSets();
-            console.log('✅ Select option sets loaded:', {
-                count: optionSets.length,
-                optionSets: optionSets.map(set => ({ id: set.id, name: set.name, optionsCount: set.options?.length || 0 }))
-            });
             dispatch({ type: 'SET_SELECT_OPTION_SETS', payload: optionSets });
         } catch (error) {
-            console.error("❌ Error loading select option sets:", error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'medium',
@@ -541,12 +494,9 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
     }, []);
 
     const refreshAll = useCallback(async () => {
-        console.log("🔄 refreshAll called - starting data reload...");
-
         // Check if database is initialized before proceeding
         const dbInfo = getDatabaseProviderInfo();
         if (!dbInfo.isInitialized) {
-            console.log('⏳ refreshAll - Database not ready yet, skipping data reload...');
             return;
         }
 
@@ -557,25 +507,20 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             loadMultiSelectOptionSets(),
             loadSelectOptionSets(),
         ]);
-        console.log("✅ refreshAll completed - all data reloaded");
     }, [loadFrameworkData, loadRatingScales, loadRadioOptionSets, loadMultiSelectOptionSets, loadSelectOptionSets]);
 
     // Manual validation of survey instance statuses based on date ranges
     const validateSurveyInstanceStatuses = useCallback(async () => {
-        console.log("🔄 Manual validation of survey instance statuses requested...");
-
         try {
             // Check if database is initialized
             const dbInfo = getDatabaseProviderInfo();
             if (!dbInfo.isInitialized) {
-                console.log('⏳ Validation - Database not ready yet, skipping...');
                 return;
             }
 
             // Get current instances from state
             const instances = state.surveyInstances;
             if (instances.length === 0) {
-                console.log('📊 No survey instances to validate');
                 return;
             }
 
@@ -585,10 +530,7 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             // Update state with any changes
             dispatch({ type: 'SET_SURVEY_INSTANCES', payload: updatedInstances });
 
-            console.log("✅ Manual survey instance status validation completed");
         } catch (error) {
-            console.error("❌ Error during manual survey instance status validation:", error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'medium',
@@ -643,8 +585,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             await databaseHelpers.addRatingScale(scale);
             dispatch({ type: 'ADD_RATING_SCALE', payload: scale });
         } catch (error) {
-            console.error('Failed to add rating scale:', error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'high',
@@ -682,8 +622,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             await databaseHelpers.addRadioOptionSet(optionSet);
             dispatch({ type: 'ADD_RADIO_OPTION_SET', payload: optionSet });
         } catch (error) {
-            console.error('Failed to add radio option set:', error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'high',
@@ -719,8 +657,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             await databaseHelpers.addMultiSelectOptionSet(optionSet);
             dispatch({ type: 'ADD_MULTI_SELECT_OPTION_SET', payload: optionSet });
         } catch (error) {
-            console.error('Failed to add multi-select option set:', error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'high',
@@ -756,8 +692,6 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
             await databaseHelpers.addSelectOptionSet(optionSet);
             dispatch({ type: 'ADD_SELECT_OPTION_SET', payload: optionSet });
         } catch (error) {
-            console.error('Failed to add select option set:', error);
-            
             // Log to database
             await ErrorLoggingService.logError({
                 severity: 'high',
@@ -797,11 +731,8 @@ export const SurveyDataProvider: React.FC<SurveyDataProviderProps> = ({
 
         const dbInfo = getDatabaseProviderInfo();
         if (dbInfo.isInitialized) {
-            console.log('✅ Database is ready and user authenticated, loading survey data...');
             hasLoadedRef.current = true;
             refreshAll();
-        } else {
-            console.log('⏳ Database not ready yet, skipping auto-load...');
         }
     }, [autoLoad, authLoading, isAuthenticated, refreshAll]);
 

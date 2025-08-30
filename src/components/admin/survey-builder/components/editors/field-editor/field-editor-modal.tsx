@@ -1,4 +1,5 @@
 import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2 } from 'lucide-react';
+import { ErrorLoggingService } from '../../../../../../services/error-logging.service';
 import React, { useCallback, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../../config/database';
 import { useValidation } from '../../../../../../contexts/validation-context';
@@ -94,18 +95,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             // Always call save function for label history tracking (even if label didn't change)
             // This ensures existing fields get initialized with label history
             if (onSaveFieldChanges) {
-                console.log('🔍 Calling onSaveFieldChanges:', {
-                    sectionId,
-                    fieldId: field.id,
-                    originalLabel,
-                    currentLabel: field.label,
-                    subsectionId,
-                    labelChanged: originalLabel !== field.label,
-                    hasLabelHistory: !!field.labelHistory
-                });
                 onSaveFieldChanges(sectionId, field.id, originalLabel, field.label, subsectionId);
-            } else {
-                console.log('🔍 No onSaveFieldChanges function provided');
             }
 
             onSave();
@@ -121,10 +111,8 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     useEffect(() => {
         if (isOpen && field) {
             setOriginalLabel(field.label);
-            console.log('🔄 Modal opened - Original label set to:', field.label);
         } else if (!isOpen) {
             setOriginalLabel('');
-            console.log('🔄 Modal closed - Original label reset');
         }
     }, [isOpen, field]); // Only reset when modal opens or field changes
 
@@ -185,7 +173,22 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     setLoadedSelectOptionSet(selectOptionSet);
                 }
             } catch (error) {
-                console.error('Error loading option sets:', error);
+                ErrorLoggingService.logError({
+                    severity: 'medium',
+                    errorMessage: 'Failed to load option sets for field editor modal',
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'FieldEditorModal',
+                    functionName: 'loadOptionSets',
+                    additionalContext: {
+                        fieldId: field.id,
+                        fieldType: field.type,
+                        ratingScaleId: field.ratingScaleId,
+                        radioOptionSetId: field.radioOptionSetId,
+                        multiSelectOptionSetId: field.multiSelectOptionSetId,
+                        selectOptionSetId: field.selectOptionSetId,
+                        error: error instanceof Error ? error.message : String(error)
+                    }
+                });
             } finally {
                 setIsLoadingOptionSets(false);
                 // Validate options after loading
@@ -204,15 +207,6 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     }, [field?.options, validateOptions, field]);
 
     if (!field) return null;
-
-    // Debug: Log label history status
-    if (field.labelHistory && field.labelHistory.length > 0) {
-        console.log('📝 Field has label history:', {
-            fieldId: field.id,
-            historyCount: field.labelHistory.length,
-            latestLabel: field.labelHistory[field.labelHistory.length - 1]?.label
-        });
-    }
 
     return (
         <Modal

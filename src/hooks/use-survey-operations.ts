@@ -110,10 +110,6 @@ export const useSurveyOperations = () => {
                 );
               allResponses.push(...responses);
             } catch (error) {
-              console.warn(
-                `Failed to get responses for instance ${instance.id}:`,
-                error
-              );
               ErrorLoggingService.logError({
                 severity: 'low',
                 errorMessage: `Failed to get responses for instance ${instance.id}`,
@@ -170,7 +166,6 @@ export const useSurveyOperations = () => {
         }
 
         // Get fresh data directly from database to bypass React state issues
-        console.log("🔄 Loading fresh data directly from database...");
         const [
           freshSurveyConfigs,
           freshSurveyInstances,
@@ -195,13 +190,6 @@ export const useSurveyOperations = () => {
           multiSelectOptionSets: freshMultiSelectOptionSets,
           selectOptionSets: freshSelectOptionSets,
         };
-
-        console.log("📊 Fresh database data for validation:", {
-          ratingScales: currentData.ratingScales.length,
-          radioOptionSets: currentData.radioOptionSets.length,
-          multiSelectOptionSets: currentData.multiSelectOptionSets.length,
-          selectOptionSets: currentData.selectOptionSets.length,
-        });
 
         const validationResults = {
           totalConfigs: currentData.surveyConfigs.length,
@@ -356,15 +344,6 @@ export const useSurveyOperations = () => {
                   });
 
                   validationResults.reactivatedInstances++;
-                  console.log(
-                    `✅ Immediately reactivated instance "${
-                      instance.title
-                    }" - config fixed and ${
-                      instance.activeDateRange
-                        ? "within date range"
-                        : "no date range restrictions"
-                    }`
-                  );
                 } else {
                   // Just mark as config_valid=true for future activation
                   await databaseHelpers.updateSurveyInstance(instance.id, {
@@ -381,16 +360,8 @@ export const useSurveyOperations = () => {
                       createdBy: instance.metadata?.createdBy || 'system'
                     },
                   });
-
-                  console.log(
-                    `✅ Marked instance "${instance.title}" as config_valid=true - can now be activated by date range`
-                  );
                 }
               } catch (error) {
-                console.error(
-                  `❌ Failed to update instance "${instance.title}":`,
-                  error
-                );
                 ErrorLoggingService.logError({
                   severity: 'medium',
                   errorMessage: `Failed to update instance during validation: ${instance.title}`,
@@ -439,20 +410,12 @@ export const useSurveyOperations = () => {
 
                 if (instance.isActive) {
                   try {
-                    console.log(
-                      `🔄 Deactivating instance "${instance.title}" due to invalid configuration...`
-                    );
-
                     // Update both isActive and config_valid to prevent automated reactivation
                     // Also set validation_in_progress to prevent date automation from running
                     await databaseHelpers.updateSurveyInstance(instance.id, {
                         isActive: false,
                         config_valid: false, // Prevents automated date-range reactivation
                       });
-
-                    console.log(
-                      `✅ Database update successful for instance "${instance.title}"`
-                    );
 
                     // Immediately update local context state to reflect the change
                     updateSurveyInstance({
@@ -466,15 +429,7 @@ export const useSurveyOperations = () => {
                         updatedAt: new Date().toISOString(),
                       },
                     });
-
-                    console.log(
-                      `✅ Deactivated instance "${instance.title}" due to invalid configuration and marked config_valid=false to prevent automated reactivation`
-                    );
                   } catch (error) {
-                    console.error(
-                      `❌ Failed to deactivate instance "${instance.title}":`,
-                      error
-                    );
                     validationResults.warnings.push(
                       `Failed to deactivate instance "${instance.title}": ${
                         error instanceof Error ? error.message : "Unknown error"
@@ -497,18 +452,10 @@ export const useSurveyOperations = () => {
                 } else {
                   // Also mark inactive instances with invalid configs as config_valid=false
                   try {
-                    console.log(
-                      `🔄 Marking inactive instance "${instance.title}" as config_valid=false...`
-                    );
-
                     await databaseHelpers.updateSurveyInstance(instance.id, {
                         config_valid: false, // Prevents future automated activation
                         validation_in_progress: true, // Prevents date automation from running
                       });
-
-                    console.log(
-                      `✅ Database update successful for inactive instance "${instance.title}"`
-                    );
 
                     updateSurveyInstance({
                       ...instance,
@@ -522,14 +469,7 @@ export const useSurveyOperations = () => {
                       },
                     });
 
-                    console.log(
-                      `✅ Marked instance "${instance.title}" as config_valid=false to prevent automated activation`
-                    );
                   } catch (error) {
-                    console.error(
-                      `❌ Failed to mark instance "${instance.title}" as invalid:`,
-                      error
-                    );
                     ErrorLoggingService.logError({
                       severity: 'medium',
                       errorMessage: `Failed to mark instance as invalid during validation: ${instance.title}`,
@@ -554,9 +494,7 @@ export const useSurveyOperations = () => {
 
           // Add a small delay to ensure database updates are committed
           if (totalAffectedInstances > 0) {
-            console.log(`⏳ Waiting for database updates to commit...`);
             await new Promise((resolve) => setTimeout(resolve, 1000));
-            console.log(`✅ Database update delay completed`);
           }
 
           // Update context state with fresh data
@@ -573,13 +511,11 @@ export const useSurveyOperations = () => {
           }
         }
 
-        console.log("Configuration validation results:", validationResults);
         return validationResults;
       } catch (error) {
         if (!silent) {
           showError("Failed to verify configurations");
         }
-        console.error("Configuration verification error:", error);
         ErrorLoggingService.logError({
           severity: 'high',
           errorMessage: 'Configuration verification failed',

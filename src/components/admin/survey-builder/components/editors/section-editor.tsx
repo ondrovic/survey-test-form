@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ErrorLoggingService } from '../../../../../services/error-logging.service';
 import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
@@ -152,7 +153,19 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                             setRadioOptionSets(prev => ({ ...prev, [field.radioOptionSetId!]: optionSet }));
                         }
                     } catch (error) {
-                        console.error('Error loading radio option set:', error);
+                        ErrorLoggingService.logError({
+                            severity: 'medium',
+                            errorMessage: 'Failed to load radio option set for section field',
+                            stackTrace: error instanceof Error ? error.stack : String(error),
+                            componentName: 'SectionEditor',
+                            functionName: 'loadOptionSets',
+                            additionalContext: {
+                                sectionId: section.id,
+                                fieldId: field.id,
+                                radioOptionSetId: field.radioOptionSetId,
+                                error: error instanceof Error ? error.message : String(error)
+                            }
+                        });
                     } finally {
                         setLoadingOptionSets(prev => ({ ...prev, [field.radioOptionSetId!]: false }));
                     }
@@ -166,7 +179,19 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                             setMultiSelectOptionSets(prev => ({ ...prev, [field.multiSelectOptionSetId!]: optionSet }));
                         }
                     } catch (error) {
-                        console.error('Error loading multi-select option set:', error);
+                        ErrorLoggingService.logError({
+                            severity: 'medium',
+                            errorMessage: 'Failed to load multi-select option set for section field',
+                            stackTrace: error instanceof Error ? error.stack : String(error),
+                            componentName: 'SectionEditor',
+                            functionName: 'loadOptionSets',
+                            additionalContext: {
+                                sectionId: section.id,
+                                fieldId: field.id,
+                                multiSelectOptionSetId: field.multiSelectOptionSetId,
+                                error: error instanceof Error ? error.message : String(error)
+                            }
+                        });
                     } finally {
                         setLoadingOptionSets(prev => ({ ...prev, [field.multiSelectOptionSetId!]: false }));
                     }
@@ -299,7 +324,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                         <Button
                             size="sm"
                             onClick={() => {
-                                console.log('🟦 ADD FIELD CLICKED:', section.id);
                                 onAddField(section.id, 'text');
                             }}
                             disabled={!section.title || !section.type || titleError !== ''}
@@ -474,7 +498,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                 <Button
                                                                     size="sm"
                                                                     onClick={() => {
-                                                                        console.log('🟨 ADD SUBSECTION FIELD CLICKED:', section.id, subsection.id);
                                                                         onAddField(section.id, 'text', subsection.id);
                                                                     }}
                                                                     disabled={!subsection.title}

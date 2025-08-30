@@ -24,8 +24,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
-
     // Log error to our error logging service
     ErrorLoggingService.logUnhandledError(
       error,

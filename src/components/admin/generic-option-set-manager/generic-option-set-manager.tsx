@@ -53,43 +53,15 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
 
   // Define loadItemsData function before using it in useEffect
   const loadItemsData = useCallback(async () => {
-    console.log(
-      "🔄 Loading items for:",
-      config.displayName,
-      "in selection mode:",
-      selectionMode
-    );
     const loadedItems = await loadItems(config);
-    console.log(
-      "📊 Loaded items:",
-      loadedItems.length,
-      "items for",
-      config.displayName
-    );
     setItems(loadedItems);
   }, [selectionMode, loadItems]);
 
   // Load items when component becomes visible, but only in selection mode
   // In creation mode, we don't need to load existing items
   useEffect(() => {
-    console.log("🔍 Rating scale manager effect:", {
-      isVisible,
-      selectionMode,
-      displayName: config.displayName,
-    });
     if (isVisible && selectionMode) {
-      console.log("✅ Triggering loadItemsData for", config.displayName);
       loadItemsData();
-    } else {
-      console.log("❌ Not loading items:", {
-        isVisible,
-        selectionMode,
-        reason: !isVisible
-          ? "not visible"
-          : !selectionMode
-            ? "not in selection mode"
-            : "unknown",
-      });
     }
   }, [isVisible, selectionMode, loadItemsData]);
 
@@ -264,10 +236,10 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
     return success;
   };
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = (_result: DropResult) => {
     // This is a no-op handler for the DragDropContext
     // The actual reordering is handled by the SortableList component
-    console.log("Drag ended:", result);
+    // QUESTION: What happens if we use this since all it was doing was pervious logging the results to the console?
   };
 
   // Prepare current editing data for form

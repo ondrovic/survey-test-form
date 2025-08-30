@@ -1,4 +1,5 @@
 import { InputHTMLAttributes } from 'react';
+import { UseFormRegisterReturn } from 'react-hook-form';
 
 export interface PasswordInputProps<T extends string = string> extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange' | 'onBlur'> {
     name: string;
@@ -9,7 +10,7 @@ export interface PasswordInputProps<T extends string = string> extends Omit<Inpu
     onBlur?: (value: T) => void;
     
     // react-hook-form props
-    register?: any; // TODO: Type this properly when react-hook-form is fully typed
+    register?: UseFormRegisterReturn;
     
     // UI props
     label?: string;

@@ -24,7 +24,6 @@ export const useConnectionStatus = (): ConnectionStatus => {
       // Check if database is initialized
       const dbInfo = getDatabaseProviderInfo();
       if (!dbInfo.isInitialized) {
-        console.log('⏳ Connection status - Database not ready yet, skipping connection check...');
         setConnected(false);
         setError('Database service initializing...');
         setLoading(false);
@@ -38,8 +37,6 @@ export const useConnectionStatus = (): ConnectionStatus => {
       setConnected(true);
       setError(null);
     } catch (err) {
-      console.error('Database connection test failed:', err);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'low',

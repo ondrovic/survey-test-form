@@ -1,4 +1,5 @@
 import { MULTISELECT_OPTION_BUTTON_NAME, RADIO_OPTION_BUTTON_NAME, RATING_OPTION_BUTTON_NAME, SELECT_OPTION_BUTTON_NAME } from '@/constants/options-sets.constants';
+import { ErrorLoggingService } from '../../../../services/error-logging.service';
 import React, { useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../config/database';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet } from '../../../../types/framework.types';
@@ -59,7 +60,18 @@ export const OptionSetPreview: React.FC<OptionSetPreviewProps> = ({
                     }
                 }
             } catch (error) {
-                console.error(`Error loading ${type} option set for preview:`, error);
+                ErrorLoggingService.logError({
+                    severity: 'low',
+                    errorMessage: `Failed to load option set for preview: ${type} option set`,
+                    stackTrace: error instanceof Error ? error.stack : String(error),
+                    componentName: 'OptionSetPreview',
+                    functionName: 'loadOptionSet',
+                    additionalContext: {
+                        type,
+                        optionSetId,
+                        error: error instanceof Error ? error.message : String(error)
+                    }
+                });
             } finally {
                 setIsLoading(false);
             }

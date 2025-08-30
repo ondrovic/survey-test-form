@@ -43,15 +43,12 @@ export class SupabaseClientService {
 
     // Reuse existing client if configuration matches
     if (this.canReuseClient(currentConfig)) {
-      console.log("Reusing existing Supabase client");
       return this.globalClient!;
     }
 
     // Create new single client
     this.initializationInProgress = true;
     try {
-      console.log("Creating new Supabase client");
-      
       // Create single client with stable auth configuration
       this.globalClient = createClient(
         config.supabase.url,
@@ -64,14 +61,6 @@ export class SupabaseClientService {
           },
         }
       );
-
-      if (!this.serviceRoleKey || this.serviceRoleKey === "your_service_role_key_here") {
-        console.warn(
-          "Service role key not configured. Admin operations may fail due to RLS policies."
-        );
-      } else {
-        console.log("Service role key available for privilege elevation");
-      }
 
       this.globalConfig = currentConfig;
       
@@ -101,12 +90,6 @@ export class SupabaseClientService {
       }
       throw error;
     }
-
-    // Using optimized JSONB schema design
-    console.log("Using optimized JSONB schema (survey_configs.sections).");
-    console.log("Optimized features available with current schema design.");
-
-    console.log("Supabase connection test successful");
   }
 
   /**

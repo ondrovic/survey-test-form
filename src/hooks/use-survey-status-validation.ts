@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSurveyData } from '../contexts/survey-data-context';
+import { ErrorLoggingService } from '../services/error-logging.service';
 
 /**
  * Hook to provide survey status validation utilities
@@ -10,12 +11,17 @@ export const useSurveyStatusValidation = () => {
   // Manual validation with user feedback
   const validateStatuses = useCallback(async () => {
     try {
-      console.log('🔄 Triggering manual survey status validation...');
       await validateSurveyInstanceStatuses();
-      console.log('✅ Survey status validation completed');
       return { success: true, message: 'Survey statuses updated successfully' };
     } catch (error) {
-      console.error('❌ Survey status validation failed:', error);
+      // Log status validation error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to validate survey statuses',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useSurveyStatusValidation',
+        functionName: 'validateStatuses'
+      });
       return { success: false, message: 'Failed to validate survey statuses', error };
     }
   }, [validateSurveyInstanceStatuses]);

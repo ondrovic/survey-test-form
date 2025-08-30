@@ -52,7 +52,6 @@ export const useSectionPagination = ({
   const goToSection = useCallback(
     (index: number): void => {
       if (!canGoToSection(index)) {
-        console.warn(`Cannot navigate to section ${index}`);
         return;
       }
 

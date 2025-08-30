@@ -9,7 +9,7 @@ import { useModal } from "@/contexts/modal-context";
 import { useToast } from "@/contexts/toast-context/index";
 import { useValidationStatus } from "@/contexts/validation-status-context";
 import { useSurveyOperations } from "./use-survey-operations";
-
+import { ErrorLoggingService } from "@/services/error-logging.service";
 
 export const useConfigValidation = () => {
   const { showError, showInfo } = useToast();
@@ -21,7 +21,6 @@ export const useConfigValidation = () => {
 
   // Handle validation refresh after item creation
   const handleRefreshValidation = async () => {
-    console.log("🔄 Refreshing validation after item creation...");
     try {
       // Close the validation modal first
       closeModal("validation-results");
@@ -30,11 +29,9 @@ export const useConfigValidation = () => {
       const results = await verifyConfig(true);
       
       // Always update validation status with the results
-      console.log("🔄 Updating validation status after refresh validation");
       updateValidationStatus(results);
 
       if (results.invalidConfigs > 0) {
-        console.log("⚠️ Validation still has issues after item creation");
         // Reopen validation modal with updated results
         openReactiveModal(
           "validation-results",
@@ -48,12 +45,21 @@ export const useConfigValidation = () => {
             />
           )
         );
-      } else {
-        console.log("✅ Validation passed after item creation - badges should clear");
       }
     } catch (error) {
-      console.error("❌ Error refreshing validation:", error);
       // On error, clear validation status to prevent stuck badges
+      ErrorLoggingService.logError({
+        errorMessage: 'Failed to refresh configuration validation',
+        severity: 'medium',
+        componentName: 'useConfigValidation',
+        functionName: 'handleRefreshValidation',
+        errorCode: 'CONFIG_VALIDATION_REFRESH_FAILED',
+        additionalContext: {
+          originalError: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      });
+      showError("Failed to refresh validation. Please try again.");
       updateValidationStatus({ invalidConfigs: 0, validConfigs: 0, totalConfigs: 0 });
     }
   };
@@ -64,7 +70,6 @@ export const useConfigValidation = () => {
       const results = await verifyConfig();
       
       // Always update validation status
-      console.log("🔄 Updating validation status after manual verification");
       updateValidationStatus(results);
       
       openReactiveModal(
@@ -91,7 +96,17 @@ export const useConfigValidation = () => {
       );
     } catch (error) {
       showError("Failed to verify configurations. Please try again.");
-      console.error("Failed to verify config:", error);
+      ErrorLoggingService.logError({
+        errorMessage: 'Failed to verify configuration',
+        severity: 'medium',
+        componentName: 'useConfigValidation',
+        functionName: 'handleVerifyConfig',
+        errorCode: 'CONFIG_VERIFICATION_FAILED',
+        additionalContext: {
+          originalError: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      });
       // On error, clear validation status to prevent stuck badges
       updateValidationStatus({ invalidConfigs: 0, validConfigs: 0, totalConfigs: 0 });
     }
@@ -101,16 +116,9 @@ export const useConfigValidation = () => {
   const handleCreateMissingItem = async (
     type: string,
     id: string,
-    name?: string,
+    // name?: string,
     fieldLabel?: string
   ) => {
-    console.log("🔧 Opening creation modal for missing item:", {
-      type,
-      id,
-      name,
-      fieldLabel,
-    });
-
     showInfo(`Opening ${type.replace(/-/g, " ")} creation form...`);
 
     // Handle modal close with validation refresh
@@ -122,7 +130,6 @@ export const useConfigValidation = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Force a complete data refresh and revalidation
-        console.log("🔄 Modal closed, triggering validation refresh...");
         await handleRefreshValidation();
       };
     };

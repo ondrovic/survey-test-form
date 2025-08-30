@@ -23,12 +23,11 @@ export const downloadFrameworkResponsesAsExcel = (
 
   try {
     if (responses.length === 0) {
-      console.warn("No responses to download");
       return;
     }
 
     // Transform responses to flat structure for Excel with proper ordering
-    const flatData = responses.map((response, index) => {
+    const flatData = responses.map((response, _index) => {
       const flatRow: any = {
         // Metadata section (1st)
         "Response ID": response.id,
@@ -41,12 +40,6 @@ export const downloadFrameworkResponsesAsExcel = (
 
       // Add all response fields dynamically, but we'll reorder them later
       if (response.responses) {
-        console.log(`Processing response ${index + 1}/${responses.length}:`, {
-          responseId: response.id,
-          fieldCount: Object.keys(response.responses).length,
-          fields: Object.keys(response.responses),
-        });
-
         Object.entries(response.responses).forEach(([key, value]) => {
           // Convert the key to a more readable format
           const readableKey = key
@@ -58,23 +51,11 @@ export const downloadFrameworkResponsesAsExcel = (
           if (Array.isArray(value)) {
             // Convert arrays to comma-separated strings
             displayValue = value.join(", ");
-            console.log(
-              `Array field "${readableKey}":`,
-              value,
-              "->",
-              displayValue
-            );
           } else if (value === null || value === undefined) {
             displayValue = "";
           } else if (typeof value === "object") {
             // Convert objects to JSON strings for readability
             displayValue = JSON.stringify(value);
-            console.log(
-              `Object field "${readableKey}":`,
-              value,
-              "->",
-              displayValue
-            );
           }
 
           flatRow[readableKey] = displayValue;
@@ -97,22 +78,8 @@ export const downloadFrameworkResponsesAsExcel = (
       reorderedRow["IP Address"] = row["IP Address"];
 
       if (surveyConfig) {
-        console.log("Reordering data using survey config:", {
-          sections: surveyConfig.sections.map((s) => s.title),
-          totalFields: surveyConfig.sections.reduce(
-            (sum, s) => sum + s.fields.length,
-            0
-          ),
-        });
-
         // Group fields by section and process them in order
-        surveyConfig.sections.forEach((section, sectionIndex) => {
-          console.log(
-            `Processing section ${sectionIndex + 1}: "${section.title}" with ${
-              section.fields.length
-            } fields`
-          );
-
+        surveyConfig.sections.forEach((section, _sectionIndex) => {
           // Get all fields that belong to this section
           const sectionFields = Object.keys(row).filter((key) => {
             const keyLower = key.toLowerCase();
@@ -124,11 +91,6 @@ export const downloadFrameworkResponsesAsExcel = (
             );
           });
 
-          console.log(
-            `Found ${sectionFields.length} fields for section "${section.title}":`,
-            sectionFields
-          );
-
           // Special handling for "Additional Notes" sections - group them with their main sections
           if (section.title.toLowerCase().includes("additional notes")) {
             // Find the main section this belongs to
@@ -137,10 +99,6 @@ export const downloadFrameworkResponsesAsExcel = (
               .replace(" additional notes", "")
               .replace("services ", "")
               .replace("services", "");
-
-            console.log(
-              `Additional Notes section "${section.title}" belongs to main section: "${mainSectionTitle}"`
-            );
 
             // Get all fields for the main section
             const mainSectionFields = Object.keys(row).filter((key) => {
@@ -154,24 +112,17 @@ export const downloadFrameworkResponsesAsExcel = (
             mainSectionFields.forEach((fieldKey) => {
               if (!Object.prototype.hasOwnProperty.call(reorderedRow, fieldKey)) {
                 reorderedRow[fieldKey] = row[fieldKey];
-                console.log(`✓ Added main section field "${fieldKey}"`);
               }
             });
 
             // Then add the additional notes fields
             sectionFields.forEach((fieldKey) => {
               reorderedRow[fieldKey] = row[fieldKey];
-              console.log(
-                `✓ Added additional notes field "${fieldKey}" to main section "${mainSectionTitle}"`
-              );
             });
           } else {
             // Regular section - add all fields for this section in their original order
             sectionFields.forEach((fieldKey) => {
               reorderedRow[fieldKey] = row[fieldKey];
-              console.log(
-                `✓ Added field "${fieldKey}" to section "${section.title}"`
-              );
             });
           }
         });
@@ -193,17 +144,6 @@ export const downloadFrameworkResponsesAsExcel = (
 
     // Convert data to worksheet
     const worksheet = XLSX.utils.json_to_sheet(reorderedData);
-
-    // Log summary of exported data
-    if (reorderedData.length > 0) {
-      const exportedFields = Object.keys(reorderedData[0]);
-      console.log("Excel export summary:", {
-        totalResponses: responses.length,
-        totalFields: exportedFields.length,
-        exportedFields: exportedFields,
-        sampleData: reorderedData[0],
-      });
-    }
 
     // Auto-size columns based on dynamic headers
     const columnWidths = Object.keys(reorderedData[0] || {}).map((key) => ({
@@ -235,13 +175,7 @@ export const downloadFrameworkResponsesAsExcel = (
 
     // Clean up the URL
     window.URL.revokeObjectURL(url);
-
-    console.log(
-      `Excel file "${filename}" downloaded successfully with ${responses.length} response records`
-    );
   } catch (error) {
-    console.error("Error generating Excel file:", error);
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'medium',

@@ -99,7 +99,7 @@ export const ChartModal: React.FC = () => {
       role="presentation"
     >
       <div
-        className="bg-white/95 backdrop-blur-md shadow-2xl border border-gray-200/50 w-full max-w-[95vw] xl:max-w-7xl max-h-[95vh] overflow-hidden transform transition-all duration-300 ease-out scale-100 opacity-100 rounded-lg"
+        className="bg-white/95 backdrop-blur-md shadow-2xl border border-gray-200/50 w-full max-w-[95vw] xl:max-w-7xl max-h-[95vh] overflow-hidden transform transition-all duration-300 ease-out scale-100 opacity-100 rounded-lg dark:bg-gray-800/95 dark:border-gray-700/50"
         role="dialog"
         aria-modal="true"
         aria-label="Chart details modal"
@@ -107,13 +107,13 @@ export const ChartModal: React.FC = () => {
       >
         <div className="flex items-center justify-between p-4 sm:p-6" style={{ margin: 0, paddingTop: '1rem' }}>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-semibold text-gray-800 truncate">
+            <h2 className="text-xl font-semibold text-gray-800 truncate dark:text-white">
               {selectedChart.subsectionTitle
                 ? `${selectedChart.subsectionTitle} • ${selectedChart.series.label}`
                 : selectedChart.series.label
               }
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 mt-1 dark:text-white">
               {selectedChart.sectionTitle} • Total: {selectedChart.series.total} responses
             </p>
           </div>
@@ -122,14 +122,11 @@ export const ChartModal: React.FC = () => {
               const chartType = preferences.perFieldChartType[selectedChart.series.fieldId] || preferences.defaultChartType;
               const supportsLegend = chartType === 'donut';
 
-              console.log('ChartModal Debug:', { chartType, supportsLegend, showLegend });
-
               return supportsLegend ? (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    console.log('Legend toggle clicked! Current showLegend:', showLegend);
                     setShowLegend(!showLegend);
                   }}
                   className="flex items-center gap-2"

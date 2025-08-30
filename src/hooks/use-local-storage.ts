@@ -11,8 +11,6 @@ export const useLocalStorage = <T>(
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'low',
@@ -41,8 +39,6 @@ export const useLocalStorage = <T>(
         setValue(valueToStore);
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error);
-        
         // Log the error using ErrorLoggingService
         ErrorLoggingService.logError({
           severity: 'low',
@@ -68,8 +64,6 @@ export const useLocalStorage = <T>(
       setValue(defaultValue);
       window.localStorage.removeItem(key);
     } catch (error) {
-      console.error(`Error removing localStorage key "${key}":`, error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'low',
@@ -93,11 +87,6 @@ export const useLocalStorage = <T>(
         try {
           setValue(JSON.parse(e.newValue));
         } catch (error) {
-          console.error(
-            `Error parsing localStorage value for key "${key}":`,
-            error
-          );
-          
           // Log the error using ErrorLoggingService
           ErrorLoggingService.logError({
             severity: 'low',

@@ -1,15 +1,15 @@
 /**
- * Simple Error Logs Overview Card
+ * Error Logs Overview Card
  */
 
 import { ErrorLoggingService } from '@/services/error-logging.service';
 import React, { useEffect, useState } from 'react';
 
-interface SimpleErrorLogsOverviewProps {
+interface ErrorLogsOverviewProps {
   onNavigateToErrorLogs: () => void;
 }
 
-export const SimpleErrorLogsOverview: React.FC<SimpleErrorLogsOverviewProps> = ({
+export const ErrorLogsOverview: React.FC<ErrorLogsOverviewProps> = ({
   onNavigateToErrorLogs
 }) => {
   const [stats, setStats] = useState<any>(null);
@@ -22,7 +22,17 @@ export const SimpleErrorLogsOverview: React.FC<SimpleErrorLogsOverviewProps> = (
         const errorStats = await ErrorLoggingService.getErrorStatistics(24);
         setStats(errorStats);
       } catch (error) {
-        console.error('Failed to fetch error statistics:', error);
+        ErrorLoggingService.logError({
+          errorMessage: 'Failed to fetch error statistics in SimpleErrorLogsOverview',
+          severity: 'medium',
+          componentName: 'ErrorLogsOverview',
+          functionName: 'fetchStats',
+          errorCode: 'ERROR_STATS_FETCH_FAILED',
+          additionalContext: {
+            originalError: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          }
+        });
       } finally {
         setLoading(false);
       }

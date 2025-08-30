@@ -7,8 +7,6 @@ import { Analytics } from "./analytics";
 export const AdminAnalyticsPage: React.FC = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
 
-  console.log("🔍 AdminAnalyticsPage received instanceId:", instanceId);
-
   if (!instanceId) {
     return (
       <div className="min-h-screen flex flex-col bg-blue-50/30 dark:bg-gray-900">

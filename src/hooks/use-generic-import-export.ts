@@ -22,6 +22,7 @@ import { useCallback } from "react";
 
 import { IMPORT_CANCELLED_MESSAGE } from "@/constants/import-export.constants";
 import { useConfirmation } from "@/contexts/modal-context";
+import { logError } from "@/utils/error-logging.utils";
 
 export const useGenericImportExport = () => {
   const { refreshAll } = useSurveyData();
@@ -30,19 +31,22 @@ export const useGenericImportExport = () => {
 
   // Generic export function
   const exportItem = useCallback(
-    <T>(item: T, dataType: ExportableDataType, customFilename?: string) => {
+    async <T>(item: T, dataType: ExportableDataType, customFilename?: string) => {
       try {
         exportData(item, dataType, customFilename);
         showSuccess(
           `Successfully exported ${getDataTypeDisplayName(dataType)}`
         );
-        console.log(
-          `Successfully exported ${getDataTypeDisplayName(dataType)}`
-        );
       } catch (error) {
-        console.error(
-          `Failed to export ${getDataTypeDisplayName(dataType)}:`,
-          error
+        await logError(
+          `Failed to export ${getDataTypeDisplayName(dataType)}`,
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            componentName: 'useGenericImportExport',
+            userAction: `Exporting ${dataType}`,
+            severity: 'medium',
+            tags: ['export', 'data-management']
+          }
         );
         showError(`Failed to export ${getDataTypeDisplayName(dataType)}`);
       }
@@ -57,6 +61,8 @@ export const useGenericImportExport = () => {
       dataType?: ExportableDataType,
       closeModalCallback?: () => void
     ): Promise<boolean> => {
+      let finalDataType: ExportableDataType = dataType || 'config';
+      
       try {
         // Parse the file
         const data = await parseJsonFile(file);
@@ -64,13 +70,23 @@ export const useGenericImportExport = () => {
         // Validate the data
         const validation = validateImportData(data);
         if (!validation.isValid) {
-          console.error("Import validation failed:", validation.errors);
+          await logError(
+            "Import validation failed",
+            new Error(validation.errors.join(", ")),
+            {
+              componentName: 'useGenericImportExport',
+              userAction: `Importing ${dataType || 'unknown'}`,
+              severity: 'low',
+              tags: ['import', 'validation', 'data-management'],
+              additionalContext: { validationErrors: validation.errors }
+            }
+          );
           showError(`Import failed: ${validation.errors.join(", ")}`);
           return false;
         }
 
         // Use detected type if not provided
-        const finalDataType = dataType || validation.dataType!;
+        finalDataType = dataType || validation.dataType!;
 
         // Create a copy of data for processing
         const dataForProcessing = { ...data };
@@ -118,14 +134,8 @@ export const useGenericImportExport = () => {
               ...processedData,
               metadata: await createMetadata(),
             } as SurveyConfig;
-            const savedConfig = await databaseHelpers.addSurveyConfig(
+            await databaseHelpers.addSurveyConfig(
               configWithMetadata
-            );
-            console.log(
-              "✅ Config saved to database with ID:",
-              savedConfig?.id,
-              "Title:",
-              savedConfig?.title
             );
             break;
           }
@@ -363,9 +373,7 @@ export const useGenericImportExport = () => {
         }
 
         // Refresh all data from the database
-        console.log(`🔄 Refreshing all data after ${finalDataType} import...`);
         await refreshAll();
-        console.log(`✅ Data refresh completed after ${finalDataType} import`);
 
         // Note: Automatic validation has been removed - validation will be handled by the validation context when needed
 
@@ -373,12 +381,18 @@ export const useGenericImportExport = () => {
         showSuccess(
           `Successfully imported ${getDataTypeDisplayName(finalDataType)}`
         );
-        console.log(
-          `Successfully imported ${getDataTypeDisplayName(finalDataType)}`
-        );
         return true;
       } catch (error) {
-        console.error("Import failed:", error);
+        await logError(
+          "Import operation failed",
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            componentName: 'useGenericImportExport',
+            userAction: `Importing ${finalDataType || 'unknown'}`,
+            severity: 'high',
+            tags: ['import', 'data-management', 'critical-failure']
+          }
+        );
 
         // Handle specific database constraint errors
         if (error && typeof error === "object" && "code" in error) {

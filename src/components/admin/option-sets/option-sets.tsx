@@ -2,6 +2,7 @@ import { useSurveyData } from '@/contexts/survey-data-context/index';
 import { useConfirmation } from '@/contexts/modal-context';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, DeleteModalData } from '@/types';
 import React from 'react';
+import { ErrorLoggingService } from '../../../services/error-logging.service';
 import { OptionSetSection } from './option-set-section';
 import {
     RATING_OPTION_SET_NAME,
@@ -60,7 +61,6 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
     // Helper function to create type-safe delete confirmations
     const createDeleteHandler = (type: DeleteModalData['type']) => (item: { id: string; name: string }) => {
         if (!item?.id || !item?.name) {
-            console.error('Invalid item data for delete confirmation:', item);
             return;
         }
 
@@ -83,7 +83,14 @@ export const AdminOptionSets: React.FC<AdminOptionSetsProps> = ({
                         onDeleteSelectOptionSet(item.id, item.name);
                         break;
                     default:
-                        console.error('Unknown delete type:', type);
+                        // Log unknown option set type
+                        ErrorLoggingService.logError({
+                          severity: 'medium',
+                          errorMessage: 'Unknown option set type in delete operation',
+                          componentName: 'OptionSets',
+                          functionName: 'handleDelete',
+                          additionalContext: { itemType: type, itemId: item.id, itemName: item.name }
+                        });
                 }
             }
         });

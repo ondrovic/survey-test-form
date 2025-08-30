@@ -1,3 +1,4 @@
+// QUESTION: do we need this at all now? or can we remove the whole file?
 /**
  * Suppress specific console warnings that are not actionable
  */

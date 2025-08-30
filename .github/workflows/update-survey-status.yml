@@ -67,7 +67,43 @@ jobs:
           echo "🟢 Surveys activating in next 24h: $UPCOMING_ACTIVATIONS"
           echo "🔴 Surveys deactivating in next 24h: $UPCOMING_DEACTIVATIONS"
           
-          # TODO: In the future, this is where we would send email notifications
+          # Store notification data for email step
+          echo "UPCOMING_ACTIVATIONS=$UPCOMING_ACTIVATIONS" >> $GITHUB_ENV
+          echo "UPCOMING_DEACTIVATIONS=$UPCOMING_DEACTIVATIONS" >> $GITHUB_ENV
+          
+          # Store the full upcoming data as JSON for detailed notifications
+          echo "UPCOMING_DATA<<EOF" >> $GITHUB_ENV
+          echo "$UPCOMING" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Email Notifications
+        if: env.UPCOMING_ACTIVATIONS > 0 || env.UPCOMING_DEACTIVATIONS > 0
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: Survey Status Update Alert - ${{ env.UPCOMING_ACTIVATIONS }} Activating, ${{ env.UPCOMING_DEACTIVATIONS }} Deactivating
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: Survey System <${{ secrets.EMAIL_USERNAME }}>
+          html_body: |
+            <h2>Survey Status Update Report</h2>
+            <p><strong>Date:</strong> ${{ steps.date.outputs.date }}</p>
+            
+            <h3>📊 Summary</h3>
+            <ul>
+              <li>🟢 <strong>Surveys activating in next 24h:</strong> ${{ env.UPCOMING_ACTIVATIONS }}</li>
+              <li>🔴 <strong>Surveys deactivating in next 24h:</strong> ${{ env.UPCOMING_DEACTIVATIONS }}</li>
+            </ul>
+            
+            <h3>📋 Details</h3>
+            <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto;">
+            ${{ env.UPCOMING_DATA }}
+            </pre>
+            
+            <hr>
+            <p><small>This automated notification was sent from the Survey System status update workflow.</small></p>
 
       - name: Log Activity Summary
         run: |

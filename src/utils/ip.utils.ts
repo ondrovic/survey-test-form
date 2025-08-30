@@ -14,16 +14,11 @@ export async function getClientIPAddress(): Promise<string | null> {
     const response = await fetch("https://api.ipify.org?format=json");
 
     if (!response.ok) {
-      console.warn(
-        "Failed to get IP address from ipify.org, trying fallback..."
-      );
-
       // Fallback to another service
       const fallbackResponse = await fetch(
         "https://api64.ipify.org?format=json"
       );
       if (!fallbackResponse.ok) {
-        console.warn("Failed to get IP address from fallback service");
         return null;
       }
 
@@ -34,8 +29,6 @@ export async function getClientIPAddress(): Promise<string | null> {
     const data = await response.json();
     return data.ip || null;
   } catch (error) {
-    console.warn("Error getting IP address:", error);
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'low',
@@ -74,8 +67,6 @@ export async function getClientIPAddressWithTimeout(
     const result = await Promise.race([ipPromise, timeoutPromise]);
     return result;
   } catch (error) {
-    console.warn("Error getting IP address with timeout:", error);
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'low',

@@ -21,8 +21,6 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
   fieldName = 'Survey Data', // Default fallback
   showLegend = size === 'large' // Default: show legend on large modal, hide on small
 }, ref) => {
-  console.log('SimpleEChartsPie props:', { size, showLegend, fieldName });
-  
   const isLarge = size === 'large';
   const isDonut = variant === 'donut';
 

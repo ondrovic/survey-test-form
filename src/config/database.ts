@@ -17,7 +17,6 @@ class DatabaseInitializationManager {
   async initialize(retryOnFailure = true): Promise<void> {
     // If already initialized, return immediately
     if (this.isInitialized) {
-      console.log("Database already initialized, skipping");
       return;
     }
 
@@ -28,7 +27,6 @@ class DatabaseInitializationManager {
 
     // If initialization is in progress, wait for it
     if (this.initializationPromise) {
-      console.log("Database initialization already in progress, waiting...");
       try {
         await this.initializationPromise;
         return;
@@ -50,8 +48,6 @@ class DatabaseInitializationManager {
     try {
       await this.initializationPromise;
       this.isInitialized = true;
-      this.initializationError = null;
-      console.log("Database service initialized successfully");
     } catch (error) {
       this.initializationPromise = null;
       this.initializationError =
@@ -66,12 +62,12 @@ class DatabaseInitializationManager {
     const config = createDatabaseConfig();
     validateDatabaseConfig(config);
 
-    console.log(`Initializing database with provider: ${config.provider}`);
     await databaseService.initialize(config);
   }
 
   private handleInitializationError(error: unknown): void {
     if (error instanceof Error) {
+      // QUESTION: Should we log this error to ErrorLoggingService as well? and not log to the console
       const errorHandlers = {
         "process is not defined": () => console.error(
           "💡 This error usually means you're trying to use a Node.js library in the browser. Please check your database provider configuration."
@@ -105,18 +101,12 @@ class DatabaseInitializationManager {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        console.log(
-          `Database initialization retry attempt ${attempt}/${maxAttempts}`
-        );
         await this.initialize(false); // Don't auto-retry within initialize
         return; // Success
       } catch (error) {
+        // QUESTION: should we log each retry attempt to ErrorLoggingService as a warning? 
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.warn(
-          `Database initialization attempt ${attempt} failed:`,
-          lastError.message
-        );
-
+        
         // Don't retry on configuration or schema errors
         const isNonRetryable = nonRetryableErrors.some(errorText => 
           lastError!.message.includes(errorText)
@@ -128,7 +118,6 @@ class DatabaseInitializationManager {
 
         if (attempt < maxAttempts) {
           const waitTime = delay * attempt; // Linear backoff
-          console.log(`Waiting ${waitTime}ms before retry...`);
           await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
@@ -196,8 +185,6 @@ class DatabaseHelperProxy {
           try {
             helperObject = getHelperObject();
           } catch (error) {
-            console.error("Error getting helper object:", error);
-            
             // Log the error using ErrorLoggingService
             ErrorLoggingService.logError({
               severity: 'medium',
@@ -301,9 +288,6 @@ export const databaseHelpers = DatabaseHelperProxy.createProxy<DatabaseHelpers>(
   {
     // Custom method that doesn't require database initialization
     async verifyInstanceCollectionSeparation() {
-      console.log(
-        "🔍 Collection separation verification not implemented for this provider"
-      );
       return {
         totalInstances: 0,
         properlyIsolated: 0,
@@ -348,7 +332,6 @@ export const withDatabaseInitialized = <T>(
     if (fallback !== undefined) {
       return fallback;
     }
-    console.warn("Database service not initialized. Operation skipped.");
     return undefined;
   }
   return operation();

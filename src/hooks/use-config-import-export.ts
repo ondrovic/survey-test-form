@@ -10,6 +10,7 @@ import {
   validateImportedConfig 
 } from '@/utils/config-import-export.utils';
 import { useCallback } from 'react';
+import { ErrorLoggingService } from '../services/error-logging.service';
 
 export const useConfigImportExport = () => {
   const { refreshAll } = useSurveyData();
@@ -20,7 +21,15 @@ export const useConfigImportExport = () => {
       exportSurveyConfig(config);
       showSuccess(`Survey config "${config.title}" exported successfully!`);
     } catch (error) {
-      console.error('Export error:', error);
+      // Log config export error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to export survey config',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useConfigImportExport',
+        functionName: 'handleExportConfig',
+        additionalContext: { surveyTitle: config.title }
+      });
       showError('Failed to export survey config');
     }
   }, [showSuccess, showError]);
@@ -55,7 +64,15 @@ export const useConfigImportExport = () => {
       showSuccess(`Survey config "${processedConfig.title}" imported successfully!`);
       return true;
     } catch (error) {
-      console.error('Import error:', error);
+      // Log config import error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to import survey config',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'useConfigImportExport',
+        functionName: 'handleImportConfig',
+        additionalContext: { fileName: file.name, fileSize: file.size }
+      });
       showError(`Failed to import survey config: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return false;
     }

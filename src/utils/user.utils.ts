@@ -25,8 +25,6 @@ export const getCurrentUser = async (): Promise<CurrentUser | null> => {
       email: user.email
     };
   } catch (error) {
-    console.error('Failed to get current user:', error);
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'low',

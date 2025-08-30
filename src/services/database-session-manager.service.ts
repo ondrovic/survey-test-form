@@ -30,18 +30,13 @@ export class DatabaseSessionManagerService {
    */
   start(): void {
     if (this.isRunning) {
-      console.log('📊 Database session manager already running');
       return;
     }
 
     this.isRunning = true;
-    console.log('📊 Starting database session manager...');
-
     // Periodic light checks - just call the database function
     this.checkInterval = setInterval(() => {
       this.performLightCleanup().catch(error => {
-        console.error('❌ Light session cleanup failed:', error);
-        
         // Log the error using ErrorLoggingService
         ErrorLoggingService.logError({
           severity: 'high',
@@ -63,8 +58,6 @@ export class DatabaseSessionManagerService {
     // Periodic full cleanup via Edge Function (if available)
     this.forceCleanupInterval = setInterval(() => {
       this.performFullCleanup().catch(error => {
-        console.error('❌ Full session cleanup failed:', error);
-        
         // Log the error using ErrorLoggingService
         ErrorLoggingService.logError({
           severity: 'high',
@@ -85,8 +78,6 @@ export class DatabaseSessionManagerService {
 
     // Run initial light cleanup
     this.performLightCleanup().catch(error => {
-      console.error('❌ Initial session cleanup failed:', error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'high',
@@ -102,8 +93,6 @@ export class DatabaseSessionManagerService {
         tags: ['database', 'session-manager', 'service', 'startup']
       });
     });
-
-    console.log('📊 Database session manager started');
   }
 
   /**
@@ -123,7 +112,6 @@ export class DatabaseSessionManagerService {
     }
 
     this.isRunning = false;
-    console.log('📊 Database session manager stopped');
   }
 
   /**
@@ -137,16 +125,10 @@ export class DatabaseSessionManagerService {
       if (result && result.success) {
         const stats = result as any;
         if (stats.abandoned_sessions > 0 || stats.expired_sessions > 0) {
-          console.log('🧹 Session status updated:', {
-            abandoned: stats.abandoned_sessions,
-            expired: stats.expired_sessions,
-            timestamp: stats.timestamp
-          });
+          // QUESTION: should we do something here? log to database?    
         }
       }
     } catch (error) {
-      console.error('❌ Light cleanup failed:', error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'high',
@@ -183,15 +165,10 @@ export class DatabaseSessionManagerService {
         });
 
         if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
-            console.log('🧹 Full cleanup via Edge Function completed:', result);
-          } else {
-            console.warn('⚠️ Edge Function cleanup reported issues:', result);
-          }
+          await response.json(); // Consume response but don't use result
+          // QUESTION - should we do something with the result? other than log to console?
         } else {
           // Fall back to database function
-          console.log('⚠️ Edge Function not available, falling back to database function');
           await this.performLightCleanup();
         }
       } else {
@@ -199,8 +176,6 @@ export class DatabaseSessionManagerService {
         await this.performLightCleanup();
       }
     } catch (error) {
-      console.error('❌ Full cleanup failed, attempting fallback:', error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'high',
@@ -231,8 +206,6 @@ export class DatabaseSessionManagerService {
       // For now, we'll use a direct approach
       return await this.executeCleanupDirectly();
     } catch (error) {
-      console.error('❌ Database cleanup function failed:', error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'high',
@@ -332,7 +305,6 @@ export class DatabaseSessionManagerService {
    * Manually trigger cleanup
    */
   async manualCleanup(): Promise<any> {
-    console.log('🧹 Manual session cleanup triggered...');
     return await this.performLightCleanup();
   }
 

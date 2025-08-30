@@ -26,8 +26,6 @@ export class EmailService {
     try {
       this.clientService = SupabaseClientService.getInstance();
     } catch (error) {
-      console.error('❌ Failed to initialize EmailService:', error);
-      
       // Log critical error for service initialization failure
       ErrorLoggingService.logError({
         severity: 'critical',
@@ -55,8 +53,6 @@ export class EmailService {
       try {
         EmailService.instance = new EmailService();
       } catch (error) {
-        console.error('❌ Failed to create EmailService instance:', error);
-        
         // Log critical error for service instance creation failure
         ErrorLoggingService.logError({
           severity: 'critical',
@@ -94,8 +90,6 @@ export class EmailService {
       });
 
       if (error) {
-        console.error('Error invoking send-survey-email function:', error);
-        
         // Log to database with high severity for email function invocation failure
         await ErrorLoggingService.logError({
           severity: 'high',
@@ -119,8 +113,6 @@ export class EmailService {
       }
 
       if (data && !data.success) {
-        console.error('Email function returned error:', data.error);
-        
         // Log to database with high severity for email sending failure
         await ErrorLoggingService.logError({
           severity: 'high',
@@ -143,12 +135,9 @@ export class EmailService {
         throw new Error(data.error || 'Email sending failed');
       }
 
-      console.log('✅ Survey completion email sent successfully:', data?.message);
       return data as SendSurveyEmailResponse;
 
     } catch (error) {
-      console.error('❌ Failed to send survey completion email:', error);
-      
       // Log to database with high severity for survey completion email failure
       await ErrorLoggingService.logError({
         severity: 'high',

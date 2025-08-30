@@ -58,7 +58,6 @@ const AppContent = () => {
 
             // Verify database is ready before proceeding
             if (!getDatabaseProviderInfo().isInitialized) {
-                console.warn('Database not fully initialized yet, retrying...');
                 const retryDelay = parseInt(import.meta.env.VITE_DATABASE_RETRY_DELAY) || 60000;
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
 
@@ -71,29 +70,11 @@ const AppContent = () => {
             const instances = await databaseHelpers.getSurveyInstances();
             setAllSurveyInstances(instances);
 
-            // Debug: Check what survey configs exist
-            const configs = await databaseHelpers.getSurveyConfigs();
-
-            // Consolidated debug information
-            console.log('Framework Initialization Debug Info:', {
-                surveyInstances: instances,
-                surveyConfigs: configs,
-                configIds: configs.map(config => ({
-                    documentId: config.id,
-                    configId: config.id,
-                    title: config.title
-                })),
-                timestamp: new Date().toISOString()
-                //timestamp: new Date().toLocaleString()
-            });
-
             // Start the database session manager for reliable session tracking
             try {
                 const sessionManager = DatabaseSessionManagerService.getInstance();
                 sessionManager.start();
-                console.log('📊 Database session manager started');
             } catch (error) {
-                console.error('❌ Failed to start session manager:', error);
                 await ErrorLoggingService.logError({
                     severity: 'high',
                     errorMessage: 'Database session manager startup failed',
@@ -111,7 +92,6 @@ const AppContent = () => {
 
             setIsMigrating(false);
         } catch (error) {
-            console.error('Error initializing framework:', error);
             await ErrorLoggingService.logError({
                 severity: 'critical',
                 errorMessage: 'Framework initialization failed',
@@ -136,8 +116,6 @@ const AppContent = () => {
         if (isAuthenticated) {
             initializeFramework();
         } else {
-            // If not authenticated, we don't need to migrate data
-            console.log('App - Not authenticated, skipping framework initialization');
             setIsMigrating(false);
         }
     }, [isAuthenticated, initializeFramework]);
@@ -168,11 +146,9 @@ const AppContent = () => {
 
     // Show loading while auth is initializing OR while migrating (only if authenticated)
     if (authLoading || (isAuthenticated && isMigrating)) {
-        console.log('App - Showing loading spinner:', { authLoading, isAuthenticated, isMigrating });
         return <LoadingSpinner fullScreen text="Initializing..." />;
     }
 
-    console.log('App - Rendering main content:', { authLoading, isAuthenticated, isMigrating });
 
     return (
         <ErrorBoundary>
@@ -241,16 +217,6 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
         activityTimeoutMs: 24 * 60 * 60 * 1000 // 24 hours
     });
 
-    // Debug: Log session state
-    console.log('🔍 SurveyPage - Session Debug:', {
-        instanceId: instance?.id,
-        sessionId: surveySession.session.sessionId,
-        sessionStatus: surveySession.session.status,
-        startedAt: surveySession.session.startedAt,
-        isCreating: surveySession.isCreatingSession,
-        isSessionActive: surveySession.isSessionActive()
-    });
-
     const loadSurveyConfig = useCallback(async () => {
         if (!instance) return;
 
@@ -265,7 +231,6 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 setError('Survey configuration not found');
             }
         } catch (err) {
-            console.error('Error loading survey config:', err);
             await ErrorLoggingService.logError({
                 severity: 'medium',
                 errorMessage: 'Survey configuration loading failed',
@@ -293,38 +258,17 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
     }, [loadSurveyConfig]);
 
     const handleSubmit = useCallback(async (responses: Record<string, any>) => {
-        console.log('🚀 [EMAIL-DEBUG-v1] App.tsx handleSubmit called with responses:', responses);
         if (!instance || !surveyConfig) {
-            console.error('❌ No instance or survey config available, cannot submit');
             showError('Survey configuration not found');
             return;
         }
-
-        console.log('🔍 handleSubmit called with:', {
-            hasSurveyConfig: !!surveyConfig,
-            surveyConfigId: surveyConfig?.id,
-            responsesCount: Object.keys(responses).length,
-            responses: responses,
-            userAgent: navigator.userAgent,
-            location: window.location.href,
-            networkType: (navigator as any).connection?.effectiveType || 'unknown'
-        });
-
+        
         setIsSubmitting(true);
         try {
             // Check network connectivity first
             if (!navigator.onLine) {
                 throw new Error('No internet connection detected');
             }
-            
-            console.log('Starting survey submission...', {
-                instanceId: instance.id,
-                configVersion: surveyConfig.version,
-                responseCount: Object.keys(responses).length,
-                isOnline: navigator.onLine,
-                connectionType: (navigator as any).connection?.effectiveType || 'unknown'
-            });
-
             // Verify reCAPTCHA if enabled
             if (isReCaptchaConfigured() && responses.recaptchaToken) {
                 const isValid = await verifyReCaptchaTokenClientSide(responses.recaptchaToken);
@@ -339,15 +283,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             // Calculate completion time if session is available
             const completionTimeSeconds = surveySession.session.sessionId ? 
                 surveySession.getSessionDuration() : null;
-
-            console.log('🔍 Session data before creating response:', {
-                hasSessionId: !!surveySession.session.sessionId,
-                sessionId: surveySession.session.sessionId,
-                startedAt: surveySession.session.startedAt,
-                completionTimeSeconds,
-                sessionStatus: surveySession.session.status
-            });
-
+        
             const completedAt = getCurrentTimestamp();
             const surveyResponse: SurveyResponse = {
                 id: generateUUID(),
@@ -366,22 +302,10 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 }
             };
 
-            console.log('🔍 Survey response being submitted:', {
-                id: surveyResponse.id,
-                sessionId: surveyResponse.sessionId,
-                startedAt: surveyResponse.startedAt,
-                completion_time_seconds: surveyResponse.completion_time_seconds,
-                completion_status: surveyResponse.completion_status,
-                hasResponses: Object.keys(responses).length > 0
-            });
-            
             // Test database connectivity before submission
-            console.log('Testing database connectivity...');
             try {
                 await databaseHelpers.getSurveyConfigs();
-                console.log('Database connectivity test passed');
             } catch (connError) {
-                console.error('Database connectivity test failed:', connError);
                 await ErrorLoggingService.logError({
                     severity: 'critical',
                     errorMessage: 'Database connectivity test failed during survey submission',
@@ -400,10 +324,6 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 });
                 throw new Error(`Database connection failed: ${connError instanceof Error ? connError.message : 'Unknown error'}`);
             }
-            
-            console.log('🚀 [EMAIL-DEBUG-v2] Submitting survey response to database...', surveyResponse);
-            console.log('🚀 [EMAIL-DEBUG-v2] Original responses for email:', responses);
-            
             // Add timeout wrapper for mobile connections
             const submissionPromise = databaseHelpers.addSurveyResponse(surveyResponse);
             const timeoutPromise = new Promise((_, reject) => {
@@ -412,9 +332,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             
             try {
                 await Promise.race([submissionPromise, timeoutPromise]);
-                console.log('✅ Database submission completed successfully');
             } catch (submissionError) {
-                console.error('❌ Database submission error:', submissionError);
                 await ErrorLoggingService.logError({
                     severity: 'critical',
                     errorMessage: 'Survey response database submission failed',
@@ -436,12 +354,9 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 throw submissionError;
             }
             
-            console.log('🔧 About to start session completion - if this is the last log you see, there\'s a silent error!');
-            
             // Add window error handler to catch any silent errors
             const originalHandler = window.onerror;
             window.onerror = async (message, source, lineno, colno, error) => {
-                console.error('🚨 CAUGHT SILENT ERROR:', { message, source, lineno, colno, error });
                 await ErrorLoggingService.logError({
                     severity: 'high',
                     errorMessage: `Silent error caught during survey submission: ${message}`,
@@ -465,24 +380,13 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             
             // Mark session as completed and send email notification
             try {
-                console.log('🔍 About to check session completion...');
-                console.log('🔍 Session details:', {
-                    hasSession: !!surveySession,
-                    hasSessionId: !!surveySession?.session?.sessionId,
-                    sessionId: surveySession?.session?.sessionId,
-                    sessionStatus: surveySession?.session?.status
-                });
-                
                 if (surveySession.session.sessionId) {
                     await surveySession.completeSession({
                         responses,
                         surveyTitle: surveyConfig.title
                     });
-                } else {
-                    console.log('❌ No session ID found, skipping session completion');
                 }
             } catch (sessionError) {
-                console.error('❌ Session completion error:', sessionError);
                 await ErrorLoggingService.logError({
                     severity: 'high',
                     errorMessage: 'Survey session completion failed',
@@ -502,19 +406,16 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 // Don't throw - continue with success message even if session completion fails
             }
             
-            console.log('Survey response submitted successfully!');
             showSuccess('Survey submitted!');
 
             // Redirect to confirmation page instead of resetting form
             const urlParam = instance.slug || instance.id;
             const confirmationUrl = `${window.location.origin}${routes.confirmation(urlParam)}`;
-            console.log('🔍 Redirecting to confirmation:', confirmationUrl);
             
             // Try React Router navigation first, fallback to window.location
             try {
                 navigate(`/survey-confirmation/${urlParam}`);
             } catch (navError) {
-                console.warn('React Router navigation failed, using window.location:', navError);
                 await ErrorLoggingService.logError({
                     severity: 'low',
                     errorMessage: 'React Router navigation failed, fallback to window.location',
@@ -533,8 +434,6 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 window.location.href = confirmationUrl;
             }
         } catch (err) {
-            console.error('Survey submission error:', err);
-            
             // Provide more specific error messages
             let errorMessage = 'Failed to submit survey. Please try again.';
             let errorType = 'general';
@@ -552,14 +451,6 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                     errorMessage = 'Request timed out. Please try again.';
                     errorType = 'timeout';
                 }
-                console.error('Detailed error:', {
-                    name: err.name,
-                    message: err.message,
-                    stack: err.stack,
-                    location: window.location.href,
-                    userAgent: navigator.userAgent,
-                    online: navigator.onLine
-                });
             }
             
             await ErrorLoggingService.logError({

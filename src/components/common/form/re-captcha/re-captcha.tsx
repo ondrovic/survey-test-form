@@ -12,7 +12,6 @@ export const ReCaptchaComponent: React.FC<ReCaptchaProps> = ({
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   if (!siteKey) {
-    console.error('reCAPTCHA site key is not configured. Please add VITE_RECAPTCHA_SITE_KEY to your environment variables.');
     return (
       <div className={`p-4 border border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20 rounded-md ${className}`}>
         <p className="text-red-600 dark:text-red-400 text-sm">

@@ -17,17 +17,11 @@ class DatabaseService {
       this.config?.provider === config.provider &&
       this.provider.isInitialized()
     ) {
-      console.log(
-        `Database service already initialized with ${config.provider} provider`
-      );
       return;
     }
 
     // If we have a different provider, clean up first
     if (this.provider && this.config?.provider !== config.provider) {
-      console.log(
-        `Switching from ${this.config?.provider} to ${config.provider} provider`
-      );
       this.provider = null;
     }
 
@@ -37,9 +31,6 @@ class DatabaseService {
     if (!this.provider) {
       switch (config.provider) {
         case "supabase": {
-          console.log(
-            "Using optimized Supabase provider with repository pattern"
-          );
           const { SupabaseProvider } = await import(
             "../providers/supabase.provider"
           );

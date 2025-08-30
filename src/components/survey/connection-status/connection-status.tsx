@@ -142,11 +142,6 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     const statusInfo = getStatusInfo();
     const Icon = statusInfo.icon;
 
-    const handleMainClick = () => {
-        // Main button could show connection details or trigger a check
-        console.log('Connection status clicked');
-    };
-
     const handleDropdownToggle = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
@@ -163,7 +158,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                 {/* Main Button */}
                 <button
                     type="button"
-                    onClick={handleMainClick}
+                    // onClick={handleMainClick}
                     className={clsx(
                         'relative inline-flex items-center px-3 py-2 text-sm font-medium border',
                         'rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-offset-2',

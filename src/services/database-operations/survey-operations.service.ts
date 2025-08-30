@@ -47,8 +47,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyConfigs.findAll();
     } catch (error) {
-      console.error('Error getting survey configs:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey configs',
@@ -72,8 +70,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyConfigs.findById(id);
     } catch (error) {
-      console.error('Error getting survey config:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey config by ID',
@@ -98,8 +94,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyConfigs.create(config);
     } catch (error) {
-      console.error('Error adding survey config:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to create survey config',
@@ -125,8 +119,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyConfigs.update(id, data);
     } catch (error) {
-      console.error('Error updating survey config:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to update survey config',
@@ -153,8 +145,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyConfigs.delete(id);
     } catch (error) {
-      console.error('Error deleting survey config:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'critical',
         errorMessage: 'Failed to delete survey config',
@@ -180,8 +170,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.findAll();
     } catch (error) {
-      console.error('Error getting survey instances:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey instances',
@@ -205,8 +193,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.findByConfigId(configId);
     } catch (error) {
-      console.error('Error getting survey instances by config:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey instances by config ID',
@@ -231,8 +217,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.create(instance);
     } catch (error) {
-      console.error('Error adding survey instance:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to create survey instance',
@@ -259,8 +243,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.update(id, data);
     } catch (error) {
-      console.error('Error updating survey instance:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to update survey instance',
@@ -287,8 +269,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.delete(id);
     } catch (error) {
-      console.error('Error deleting survey instance:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'critical',
         errorMessage: 'Failed to delete survey instance',
@@ -314,8 +294,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyResponses.create(response);
     } catch (error) {
-      console.error('Error adding survey response:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to create survey response',
@@ -345,8 +323,6 @@ export class SurveyOperationsService {
       }
       return repositories.surveyResponses.findAll();
     } catch (error) {
-      console.error('Error getting survey responses:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey responses',
@@ -371,8 +347,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyResponses.findFromCollection(instanceId);
     } catch (error) {
-      console.error('Error getting survey responses from collection:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey responses from collection',
@@ -398,8 +372,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.updateStatuses();
     } catch (error) {
-      console.error('Error updating survey instance statuses:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to update survey instance statuses',
@@ -420,14 +392,10 @@ export class SurveyOperationsService {
 
   async clearValidationLocks() {
     try {
-      console.log('🔓 Clearing validation locks...');
       const result = await this.getRepositories().surveyInstances.clearValidationLocks();
       
-      console.log('✅ Validation locks cleared:', result);
       return result;
     } catch (error) {
-      console.error('❌ Failed to clear validation locks:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to clear validation locks',
@@ -451,8 +419,6 @@ export class SurveyOperationsService {
       const repositories = this.getRepositories();
       return repositories.surveyInstances.getUpcomingStatusChanges(hoursAhead);
     } catch (error) {
-      console.error('Error getting upcoming status changes:', error);
-      
       await ErrorLoggingService.logError({
         severity: 'low',
         errorMessage: 'Failed to get upcoming status changes',
@@ -500,8 +466,6 @@ export class SurveyOperationsService {
         })) || []
       );
     } catch (error) {
-      console.error("Error getting survey instance status changes:", error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey instance status changes',
@@ -540,7 +504,11 @@ export class SurveyOperationsService {
       };
 
       // Use admin privileges for survey sessions due to RLS policy complexity
-      // TODO: Fix RLS policies to allow proper anonymous access in the future
+      // NOTE: RLS policies need to be updated in Supabase to allow anonymous access
+      // This would require modifying the survey_sessions table RLS policies to:
+      // 1. Allow INSERT for anonymous users (public role)
+      // 2. Allow SELECT/UPDATE for session owners based on session_token
+      // Once RLS is fixed, this can be changed to use regular client
       return await this.withAdminPrivileges(async (client) => {
         const { data, error } = await client
           .from("survey_sessions")
@@ -552,8 +520,6 @@ export class SurveyOperationsService {
         return data;
       });
     } catch (error) {
-      console.error("Error adding survey session:", error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to add survey session',
@@ -599,8 +565,6 @@ export class SurveyOperationsService {
         if (error) throw error;
       });
     } catch (error) {
-      console.error("Error updating survey session:", error);
-      
       await ErrorLoggingService.logError({
         severity: 'high',
         errorMessage: 'Failed to update survey session',
@@ -644,8 +608,6 @@ export class SurveyOperationsService {
         return data;
       });
     } catch (error) {
-      console.error("Error getting survey session by token:", error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey session by token',
@@ -680,8 +642,6 @@ export class SurveyOperationsService {
         return data;
       });
     } catch (error) {
-      console.error("Error getting survey session:", error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey session by ID',
@@ -721,8 +681,6 @@ export class SurveyOperationsService {
         return data || [];
       });
     } catch (error) {
-      console.error("Error getting survey sessions:", error);
-      
       await ErrorLoggingService.logError({
         severity: 'medium',
         errorMessage: 'Failed to get survey sessions',

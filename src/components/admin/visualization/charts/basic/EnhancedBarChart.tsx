@@ -194,17 +194,17 @@ export const EnhancedBarChart: React.FC<EnhancedChartProps> = ({
     return baseOption;
   }, [chartData, isVertical, isLarge, showPercent, analytics, interactions, series]);
 
+  // QUESTION: Do we need handleChartEvents at all since we aren't doing anything with them?
   // Chart event handlers
   const handleChartEvents = useMemo(() => ({
-    click: (params: any) => {
+    click: (_params: any) => {
       if (interactions.drilling) {
-        console.log('Drill down to:', params.name, params.value);
         // Implement drill-down logic here
+
       }
     },
-    brush: (params: any) => {
+    brush: (_params: any) => {
       if (interactions.brushing) {
-        console.log('Brushed data:', params.areas);
         // Implement brush selection logic here
       }
     }

@@ -7,7 +7,7 @@ import {
     RatingScalesOverviewCard,
     SelectOptionSetsOverviewCard
 } from './index';
-import { SimpleErrorLogsOverview } from '@/components/admin/error-logs/simple-error-logs-overview';
+import { ErrorLogsOverview } from '@/components/admin/error-logs/error-logs-overview';
 import { DrawerPage } from '@/components/admin/layout';
 
 interface AdminOverviewProps {
@@ -65,7 +65,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                 onNavigateToOptionSets={() => onNavigateToTab('option-sets')}
             />
 
-            <SimpleErrorLogsOverview
+            <ErrorLogsOverview
                 onNavigateToErrorLogs={() => onNavigateToTab('error-logs')}
             />
 

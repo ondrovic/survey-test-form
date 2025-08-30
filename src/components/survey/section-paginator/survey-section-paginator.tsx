@@ -36,10 +36,10 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
     totalSections: sections.length,
     initialIndex: 0,
     allowBackNavigation: mergedConfig.allowBackNavigation,
-    onSectionChange: (index) => {
-      // Optional: Analytics or other side effects
-      console.log(`Navigated to section ${index + 1}: ${sections[index]?.title}`);
-    }
+    // onSectionChange: (index) => {
+    //   // Optional: Analytics or other side effects
+
+    // }
   });
 
   // Keyboard navigation
@@ -94,7 +94,6 @@ export const SurveySectionPaginator: React.FC<SurveyPaginatorProps> = ({
 
   const handleSubmit = useCallback(() => {
     if (onSubmit) {
-      console.log('Survey submitted with paginated navigation');
       onSubmit();
     }
   }, [onSubmit]);

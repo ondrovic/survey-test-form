@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { EChartsInstance } from 'echarts-for-react/lib/types';
+import { ErrorLoggingService } from '../../../../../services/error-logging.service';
 import { 
   AnalyticsEChartsOption, 
   ChartEvent, 
@@ -88,12 +89,6 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
       Object.assign(baseOption, accessibilityConfig);
     }
 
-    // Apply performance optimizations
-    if (performance.sampling?.enabled && dataSize > (performance.sampling.maxPoints || 10000)) {
-      // Note: Actual sampling would be done in data preparation layer
-      console.warn(`Dataset size (${dataSize}) exceeds sampling threshold, consider enabling data sampling`);
-    }
-
     return baseOption;
   }, [option, dataSize, performance, accessibility]);
 
@@ -142,11 +137,10 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
     });
 
     // Add default click handler for drill-down capability
-    if (!events.click) {
-      events.click = (params: any) => {
-        console.log('Chart clicked:', params);
-      };
-    }
+    // if (!events.click) {
+    //   events.click = (params: any) => {
+    //   };
+    // }
 
     return events;
   }, [onEvents]);
@@ -168,7 +162,14 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
 
       exportConfig.onExport?.(exportData, config);
     } catch (error) {
-      console.error('Export failed:', error);
+      // Log chart export error
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Failed to export chart',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'BaseEChartsComponent',
+        functionName: 'handleExport'
+      });
     }
   }, [exportConfig]);
 
@@ -183,11 +184,10 @@ export const BaseEChartsComponent: React.FC<BaseEChartsComponentProps> = ({
   }, []);
 
   // Performance monitoring (development only)
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && dataSize > 5000) {
-      console.warn(`Large dataset detected (${dataSize} points). Consider enabling performance optimizations.`);
-    }
-  }, [dataSize]);
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === 'development' && dataSize > 5000) {
+  //   }
+  // }, [dataSize]);
 
   return (
     <div className={`echarts-container ${className}`} style={{ position: 'relative', ...style }}>

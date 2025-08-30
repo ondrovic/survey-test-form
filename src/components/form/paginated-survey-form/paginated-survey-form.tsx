@@ -13,6 +13,7 @@ import {
   validateFieldValue,
   validateSection as validateSectionShared,
 } from "../utils/validation.utils";
+import { ErrorLoggingService } from "../../../services/error-logging.service";
 import { FormNavigationControls } from "./form-navigation-controls";
 import { FormStepIndicator } from "./form-step-indicator";
 import { PaginatedSurveyFormProps } from "./paginated-survey-form.types";
@@ -49,17 +50,6 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         }
       : null
   );
-
-  console.log("🔍 PaginatedSurveyForm - SurveyData context state:", {
-    isLoading: surveyDataState.isLoading,
-    ratingScalesCount: surveyDataState.ratingScales?.length || 0,
-    radioOptionSetsCount: surveyDataState.radioOptionSets?.length || 0,
-    multiSelectOptionSetsCount:
-      surveyDataState.multiSelectOptionSets?.length || 0,
-    selectOptionSetsCount: surveyDataState.selectOptionSets?.length || 0,
-    error: surveyDataState.error,
-    lastUpdated: surveyDataState.lastUpdated,
-  });
 
   // Track pagination state
   const {
@@ -117,20 +107,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         record[set.id] = set;
       });
     }
-    console.log(
-      "🔍 PaginatedSurveyForm - multiSelectOptionSetsRecord updated:",
-      {
-        isArray: Array.isArray(multiSelectOptionSets),
-        count: multiSelectOptionSets?.length || 0,
-        recordKeys: Object.keys(record),
-        sets:
-          multiSelectOptionSets?.map((set) => ({
-            id: set.id,
-            name: set.name,
-            optionsCount: set.options?.length,
-          })) || [],
-      }
-    );
+    
     return record;
   }, [multiSelectOptionSets]);
 
@@ -227,18 +204,6 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
   // Restore answers from session when session data is available
   useEffect(() => {
     if (surveySession?.session.sessionId) {
-      console.log("🔍 SESSION RESTORE DEBUG:", {
-        sessionId: surveySession.session.sessionId,
-        hasSavedAnswers: !!surveySession.session.savedAnswers,
-        savedAnswers: surveySession.session.savedAnswers,
-        answersCount: surveySession.session.savedAnswers
-          ? Object.keys(surveySession.session.savedAnswers).length
-          : 0,
-        answersRestored,
-        sessionStatus: surveySession.session.status,
-        fullSession: surveySession.session,
-      });
-
       const hasAnswersToRestore =
         surveySession.session.savedAnswers &&
         Object.keys(surveySession.session.savedAnswers).length > 0;
@@ -248,12 +213,6 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         !answersRestored &&
         surveySession.session.savedAnswers
       ) {
-        console.log("🔄 Restoring answers from session:", {
-          sessionId: surveySession.session.sessionId,
-          answersCount: Object.keys(surveySession.session.savedAnswers).length,
-          answers: surveySession.session.savedAnswers,
-        });
-
         // Restore saved answers to form state
         Object.entries(surveySession.session.savedAnswers).forEach(
           ([fieldId, value]) => {
@@ -263,54 +222,32 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
 
         // Restore saved page if available
         if (surveySession.getSavedPage) {
-          console.log("🔍 Attempting to get saved page...");
           surveySession
             .getSavedPage()
             .then((savedPage) => {
-              console.log("🔍 getSavedPage result:", savedPage);
               if (savedPage !== null && savedPage >= 0) {
                 const isValidPage = savedPage < (config.sections?.length || 0);
                 const needsRestoration =
                   savedPage !== paginationState.currentSectionIndex;
 
-                console.log("🔄 Page restoration check:", {
-                  currentPage: paginationState.currentSectionIndex,
-                  savedPage: savedPage,
-                  totalSections: config.sections?.length,
-                  isValidPage,
-                  needsRestoration,
-                });
-
                 if (isValidPage && needsRestoration) {
-                  console.log("🔄 Restoring page from session:", savedPage);
                   goToSection(savedPage);
-                } else if (!isValidPage) {
-                  console.log("❌ Saved page out of bounds:", {
-                    savedPage,
-                    totalSections: config.sections?.length,
-                  });
-                } else {
-                  console.log(
-                    "✅ Already on correct page, no restoration needed"
-                  );
                 }
-              } else {
-                console.log(
-                  "🔍 No saved page found or invalid page number:",
-                  savedPage
-                );
-              }
-            })
+            }})
             .catch((error) => {
-              console.error("❌ Failed to restore page from session:", error);
+              // Log page restoration error
+              ErrorLoggingService.logError({
+                severity: 'medium',
+                errorMessage: 'Failed to restore saved page',
+                stackTrace: error instanceof Error ? error.stack : String(error),
+                componentName: 'PaginatedSurveyForm',
+                functionName: 'useEffect-restoreAnswers',
+                surveyInstanceId: surveyInstanceId || undefined
+              });
             });
-        } else {
-          console.log("❌ getSavedPage function not available");
         }
 
         setAnswersRestored(true);
-      } else if (!surveySession.session.savedAnswers) {
-        console.log("❌ No saved answers found in session");
       }
     }
   }, [
@@ -422,21 +359,9 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
         ) {
           const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
           const defaultOption = optionSet.options.find((opt) => opt.isDefault);
-          console.log("🔍 Select option set loaded for field:", {
-            fieldId: field.id,
-            fieldLabel: field.label,
-            optionSetId: field.selectOptionSetId,
-            hasDefaultOption: !!defaultOption,
-            defaultValue: defaultOption?.value,
-            currentValue: formState.formData[field.id],
-          });
+          
           // Only set default value if there is a default option and no value is currently set
           if (defaultOption && formState.formData[field.id] === undefined) {
-            console.log(
-              "🔄 Setting default value for select field:",
-              field.id,
-              defaultOption.value
-            );
             setFieldValue(field.id, defaultOption.value);
           }
         } else if (
@@ -448,24 +373,12 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
           const defaultOptions = optionSet.options.filter(
             (opt) => opt.isDefault
           );
-          console.log("🔍 Multi-select dropdown option set loaded for field:", {
-            fieldId: field.id,
-            fieldLabel: field.label,
-            optionSetId: field.selectOptionSetId,
-            hasDefaultOptions: defaultOptions.length > 0,
-            currentValue: formState.formData[field.id],
-          });
           // Only set default values if there are default options and no value is currently set
           if (
             defaultOptions.length > 0 &&
             formState.formData[field.id] === undefined
           ) {
             const defaultValues = defaultOptions.map((opt) => opt.value);
-            console.log(
-              "🔄 Setting default values for multi-select dropdown field:",
-              field.id,
-              defaultValues
-            );
             setFieldValue(field.id, defaultValues);
           }
         }
@@ -487,24 +400,9 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
       if (surveySession?.saveAnswersToSession) {
         // Get current form state and update with new value
         const currentAnswers = { ...formState.formData, [fieldId]: value };
-        console.log("💾 SAVING ANSWERS TO SESSION:", {
-          fieldId,
-          value,
-          answerCount: Object.keys(currentAnswers).length,
-          currentPage: paginationState.currentSectionIndex,
-          sessionId: surveySession.session?.sessionId,
-        });
         surveySession.saveAnswersToSession(
           currentAnswers,
           paginationState.currentSectionIndex
-        );
-      } else {
-        console.log(
-          "❌ Cannot save answers - surveySession or saveAnswersToSession not available:",
-          {
-            hasSurveySession: !!surveySession,
-            hasSaveFunction: !!surveySession?.saveAnswersToSession,
-          }
         );
       }
 
@@ -723,7 +621,17 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
       );
       await onSubmit(transformedData);
     } catch (error) {
-      console.error("Form submission error:", error);
+      // Log form submission error
+      ErrorLoggingService.logCriticalError(
+        'Failed to submit form data',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          componentName: 'PaginatedSurveyForm',
+          functionName: 'handleSubmit',
+          surveyInstanceId: surveyInstanceId || undefined,
+          additionalContext: { formDataKeys: Object.keys(formState.formData) }
+        }
+      );
     }
   }, [
     formState.formData,

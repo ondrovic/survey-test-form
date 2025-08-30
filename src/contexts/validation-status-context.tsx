@@ -22,24 +22,16 @@ export const ValidationStatusProvider: React.FC<{ children: ReactNode }> = ({ ch
   });
 
   const updateValidationStatus = useCallback((results: any) => {
-    console.log("🔧 [CONTEXT] updateValidationStatus called with:", {
-      invalidConfigs: results.invalidConfigs,
-      validConfigs: results.validConfigs,
-      totalConfigs: results.totalConfigs
-    });
-
     const newStatus = {
       hasErrors: results.invalidConfigs > 0,
       errorCount: results.invalidConfigs || 0,
       lastChecked: new Date(),
     };
 
-    console.log("🔧 [CONTEXT] Setting validation status to:", newStatus);
     setValidationStatus({ ...newStatus });
   }, []);
 
   const clearValidationStatus = useCallback(() => {
-    console.log("🧹 [CONTEXT] Force clearing validation status");
     const clearedStatus = {
       hasErrors: false,
       errorCount: 0,
@@ -67,6 +59,7 @@ export const useValidationStatus = () => {
   return context;
 };
 
+// QUESTION: can we remove this function?
 // Optional version that doesn't throw error if not in provider
 export const useOptionalValidationStatus = () => {
   const context = useContext(ValidationStatusContext);

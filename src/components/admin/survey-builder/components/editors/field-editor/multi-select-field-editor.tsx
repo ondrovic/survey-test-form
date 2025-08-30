@@ -64,7 +64,6 @@ export const MultiSelectFieldEditor: React.FC<MultiSelectFieldEditorProps> = ({
                     },
                     tags: ['rating-scales', 'multi-select', 'field-editor']
                 });
-                console.error('Error loading rating scales:', error);
             }
         };
         loadRatingScales();

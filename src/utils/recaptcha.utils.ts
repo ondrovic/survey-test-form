@@ -31,11 +31,6 @@ export async function verifyReCaptchaToken(
     );
 
     if (!response.ok) {
-      console.error(
-        "reCAPTCHA verification request failed:",
-        response.statusText
-      );
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'medium',
@@ -58,8 +53,6 @@ export async function verifyReCaptchaToken(
     const data: ReCaptchaVerificationResponse = await response.json();
 
     if (!data.success) {
-      console.error("reCAPTCHA verification failed:", data["error-codes"]);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'medium',
@@ -80,8 +73,6 @@ export async function verifyReCaptchaToken(
 
     return true;
   } catch (error) {
-    console.error("Error verifying reCAPTCHA token:", error);
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'medium',
@@ -115,8 +106,6 @@ export async function verifyReCaptchaTokenClientSide(
   // In production, you should implement proper server-side verification
   // using Supabase Edge Functions or similar server-side solution
   if (!token || token.trim() === '') {
-    console.error("reCAPTCHA token is empty");
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'medium',
@@ -137,8 +126,6 @@ export async function verifyReCaptchaTokenClientSide(
   
   // Basic token format validation
   if (token.length < 20) {
-    console.error("reCAPTCHA token appears to be invalid");
-    
     // Log the error using ErrorLoggingService
     ErrorLoggingService.logError({
       severity: 'medium',
@@ -158,9 +145,73 @@ export async function verifyReCaptchaTokenClientSide(
     return false;
   }
   
-  // TODO: Implement proper server-side verification with Supabase Edge Functions
-  console.log("reCAPTCHA token received and basic validation passed");
-  return true;
+  // Server-side verification with ReCaptcha API
+  try {
+    const response = await fetch('/api/verify-recaptcha', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token })
+    });
+
+    if (!response.ok) {
+      ErrorLoggingService.logError({
+        severity: 'high',
+        errorMessage: 'ReCaptcha verification API request failed',
+        stackTrace: `HTTP ${response.status}: ${response.statusText}`,
+        componentName: 'ReCaptchaUtils',
+        functionName: 'verifyReCaptchaTokenClientSide',
+        userAction: 'Server-side reCAPTCHA verification',
+        additionalContext: {
+          errorType: 'recaptcha_api_request_failed',
+          status: response.status,
+          statusText: response.statusText
+        },
+        tags: ['utils', 'recaptcha', 'security', 'server-side']
+      });
+      return false;
+    }
+
+    const data = await response.json();
+    
+    if (data.success) {
+      return true;
+    } else {
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'ReCaptcha token verification failed',
+        stackTrace: 'Server-side token verification',
+        componentName: 'ReCaptchaUtils',
+        functionName: 'verifyReCaptchaTokenClientSide',
+        userAction: 'Server-side reCAPTCHA verification',
+        additionalContext: {
+          errorType: 'recaptcha_verification_failed',
+          errorCodes: data['error-codes'] || [],
+          score: data.score
+        },
+        tags: ['utils', 'recaptcha', 'security', 'server-side']
+      });
+      return false;
+    }
+  } catch (error) {
+    ErrorLoggingService.logError({
+      severity: 'high',
+      errorMessage: 'ReCaptcha verification request failed',
+      stackTrace: error instanceof Error ? error.stack : String(error),
+      componentName: 'ReCaptchaUtils',
+      functionName: 'verifyReCaptchaTokenClientSide',
+      userAction: 'Server-side reCAPTCHA verification',
+      additionalContext: {
+        errorType: 'recaptcha_request_error'
+      },
+      tags: ['utils', 'recaptcha', 'security', 'server-side']
+    });
+    
+    // In case of server error, fall back to allowing the request
+    // This prevents ReCaptcha issues from completely blocking users
+    return true;
+  }
 }
 
 /**
@@ -178,31 +229,3 @@ export const getReCaptchaSiteKey = (): string | undefined => {
 export const isReCaptchaConfigured = (): boolean => {
   return !!getReCaptchaSiteKey();
 }
-
-// /**
-//  * Simple client-side reCAPTCHA verification
-//  * Note: For production use, implement server-side verification
-//  * @param token - The reCAPTCHA token from the frontend
-//  * @returns Promise<boolean> - Whether the token is valid
-//  */
-// export async function verifyReCaptchaToken(
-//   token: string
-// ): Promise<boolean> {
-//   // For now, just check if token exists
-//   // In production, you should implement proper server-side verification
-//   // using Supabase Edge Functions or similar server-side solution
-//   if (!token || token.trim() === '') {
-//     console.error("reCAPTCHA token is empty");
-//     return false;
-//   }
-  
-//   // Basic token format validation
-//   if (token.length < 20) {
-//     console.error("reCAPTCHA token appears to be invalid");
-//     return false;
-//   }
-  
-//   // TODO: Implement proper server-side verification with Supabase Edge Functions
-//   console.log("reCAPTCHA token received and basic validation passed");
-//   return true;
-// }

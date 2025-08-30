@@ -39,12 +39,6 @@ export const FieldDragProvider: React.FC<FieldDragProviderProps> = ({
     if (draggableId.startsWith('field-')) {
       const fieldId = draggableId.replace('field-', '');
 
-      console.log('🎯 Field moved:', {
-        fieldId,
-        from: { containerId: source.droppableId, index: source.index },
-        to: { containerId: destination.droppableId, index: destination.index }
-      });
-
       onFieldMove({
         fieldId,
         sourceContainerId: source.droppableId,
@@ -61,13 +55,6 @@ export const FieldDragProvider: React.FC<FieldDragProviderProps> = ({
         !draggableId.startsWith('field-')) {
       
       if (onSortableListMove) {
-        console.log('📋 List item moved:', {
-          itemId: draggableId,
-          droppableId: source.droppableId,
-          from: source.index,
-          to: destination.index
-        });
-
         onSortableListMove({
           droppableId: source.droppableId,
           oldIndex: source.index,

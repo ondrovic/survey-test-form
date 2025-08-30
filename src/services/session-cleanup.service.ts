@@ -28,26 +28,34 @@ export class SessionCleanupService {
    */
   start(): void {
     if (this.isRunning) {
-      console.log('📅 Session cleanup service already running');
       return;
     }
 
     this.isRunning = true;
-    console.log('📅 Starting session cleanup service...');
-
     // Run immediately
     this.performCleanup().catch(error => {
-      console.error('❌ Initial session cleanup failed:', error);
+      ErrorLoggingService.logError({
+        severity: 'medium',
+        errorMessage: 'Session cleanup failed during startup',
+        stackTrace: error instanceof Error ? error.stack : String(error),
+        componentName: 'SessionCleanupService',
+        functionName: 'start'
+      });
     });
 
     // Schedule periodic cleanup
     this.cleanupInterval = setInterval(() => {
       this.performCleanup().catch(error => {
-        console.error('❌ Scheduled session cleanup failed:', error);
+        ErrorLoggingService.logError({
+          severity: 'medium',
+          errorMessage: 'Periodic session cleanup failed',
+          stackTrace: error instanceof Error ? error.stack : String(error),
+          componentName: 'SessionCleanupService',
+          functionName: 'start-interval'
+        });
       });
     }, this.CLEANUP_INTERVAL_MS);
 
-    console.log(`📅 Session cleanup service started (running every ${this.CLEANUP_INTERVAL_MS / 1000 / 60}min)`);
   }
 
   /**
@@ -64,7 +72,6 @@ export class SessionCleanupService {
     }
 
     this.isRunning = false;
-    console.log('📅 Session cleanup service stopped');
   }
 
   /**
@@ -72,8 +79,6 @@ export class SessionCleanupService {
    */
   private async performCleanup(): Promise<void> {
     try {
-      console.log('🧹 Starting session cleanup...');
-      
       const cutoffTime = new Date(Date.now() - this.SESSION_TIMEOUT_MS);
       const cutoffISO = cutoffTime.toISOString();
 
@@ -81,25 +86,20 @@ export class SessionCleanupService {
       const expiredSessions = await this.getExpiredSessions(cutoffISO);
       
       if (expiredSessions.length === 0) {
-        console.log('🧹 No expired sessions found');
         return;
       }
 
-      console.log(`🧹 Found ${expiredSessions.length} expired sessions`);
-
       // Process in batches
       const batches = this.chunkArray(expiredSessions, this.MAX_SESSIONS_PER_CLEANUP);
-      let totalProcessed = 0;
+      let _totalProcessed = 0;
 
       for (const batch of batches) {
         await this.processBatch(batch);
-        totalProcessed += batch.length;
+        _totalProcessed += batch.length; // Keep track of total processed sessions
       }
 
-      console.log(`✅ Session cleanup completed: ${totalProcessed} sessions marked as expired`);
-    } catch (error) {
-      console.error('❌ Session cleanup failed:', error);
       
+    } catch (error) {
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'medium',
@@ -137,8 +137,6 @@ export class SessionCleanupService {
         return lastActivity < new Date(cutoffISO);
       });
     } catch (error) {
-      console.error('❌ Failed to get expired sessions:', error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'low',
@@ -185,11 +183,7 @@ export class SessionCleanupService {
           reason: 'inactivity_timeout'
         }
       });
-
-      console.log(`⏰ Session ${sessionId} marked as expired (was: ${session.status})`);
     } catch (error) {
-      console.error(`❌ Failed to mark session ${sessionId} as expired:`, error);
-      
       // Log the error using ErrorLoggingService
       ErrorLoggingService.logError({
         severity: 'low',
@@ -212,8 +206,6 @@ export class SessionCleanupService {
    * Manually trigger cleanup (useful for testing or forced cleanup)
    */
   async manualCleanup(): Promise<number> {
-    console.log('🧹 Manual session cleanup triggered...');
-    
     const cutoffTime = new Date(Date.now() - this.SESSION_TIMEOUT_MS);
     const expiredSessions = await this.getExpiredSessions(cutoffTime.toISOString());
     
@@ -221,7 +213,6 @@ export class SessionCleanupService {
       await this.processBatch(expiredSessions);
     }
 
-    console.log(`✅ Manual cleanup completed: ${expiredSessions.length} sessions processed`);
     return expiredSessions.length;
   }
 

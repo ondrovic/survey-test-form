@@ -29,7 +29,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for existing admin authentication
     const checkAuth = (): boolean => {
         const isAuth = cookieUtils.isAdminAuthenticated();
-        console.log("🔐 AuthContext - checkAuth():", { isAuth });
         return isAuth;
     };
 
@@ -40,12 +39,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const initializeAuth = async () => {
             // Prevent double initialization in React StrictMode
             if (authState.inProgress) {
-                console.log("🚀 AuthContext - initializeAuth() already in progress, skipping");
                 return;
             }
             
             authState.inProgress = true;
-            console.log("🚀 AuthContext - initializeAuth() started");
             try {
                 setIsLoading(true);
                 setError(null);
@@ -54,7 +51,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 try {
                     await retryDatabaseInitialization();
                 } catch (dbError) {
-                    console.error("❌ AuthContext - Database initialization failed after retries:", dbError);
                     await logCriticalError(
                         "Database initialization failed after retries in AuthContext", 
                         dbError instanceof Error ? dbError : new Error(String(dbError)),
@@ -109,18 +105,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 // Check if admin is already authenticated via cookie
                 const hasAdminAuth = checkAuth();
-                console.log("🔍 AuthContext - Admin auth check:", { hasAdminAuth });
-
+        
                 if (hasAdminAuth) {
-                    console.log("✅ AuthContext - Admin already authenticated, setting isAuthenticated = true");
                     if (isMounted) setIsAuthenticated(true);
                 } else {
-                    console.log("👤 AuthContext - No admin auth, initializing anonymous auth for regular users");
                     // If not admin authenticated, initialize anonymous auth for regular users
                     // but don't set isAuthenticated to true for admin routes
                     try {
                         await authHelpers.signInAnonymously();
-                        console.log("👤 AuthContext - Anonymous auth initialized, setting isAuthenticated = false");
                         if (isMounted) setIsAuthenticated(false); // Admin routes should not be accessible
                     } catch (anonError) {
                         // Log anonymous authentication failure
@@ -143,9 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         throw anonError;
                     }
                 }
-            } catch (error) {
-                console.error("❌ AuthContext - Failed to initialize:", error);
-                
+            } catch (error) {        
                 if (!isMounted) return;
                 
                 // Add ErrorLoggingService logging for auth initialization failure
@@ -180,7 +170,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setIsAuthenticated(false);
             } finally {
                 if (isMounted) {
-                    console.log("🏁 AuthContext - Setting isLoading = false");
                     setIsLoading(false);
                 }
                 authState.inProgress = false;
@@ -197,30 +186,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []);
 
     const login = async (password: string): Promise<boolean> => {
-        console.log("🔑 AuthContext - login() called");
         try {
             setIsLoading(true);
             setError(null);
 
             const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-            console.log("🔑 AuthContext - Checking password against:", {
-                hasPassword: !!adminPassword,
-                passwordLength: adminPassword?.length
-            });
-
             if (password === adminPassword) {
-                console.log("✅ AuthContext - Password correct, setting admin auth");
                 cookieUtils.setAdminAuth();
                 setIsAuthenticated(true);
                 return true;
             } else {
-                console.log("❌ AuthContext - Invalid password");
                 setError("Invalid password");
                 return false;
             }
         } catch (error) {
-            console.error("❌ AuthContext - Login failed:", error);
-            
             // Add ErrorLoggingService logging for login failure
             await ErrorLoggingService.logError({
                 severity: 'critical',
@@ -246,7 +225,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const logout = () => {
-        console.log("🚪 AuthContext - logout() called");
         cookieUtils.clearAdminAuth();
         setIsAuthenticated(false);
         setError(null);
@@ -260,13 +238,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         checkAuth,
     };
-
-    // Only log significant state changes, not every render
-    // console.log("🔄 AuthContext - State update:", {
-    //     isAuthenticated,
-    //     isLoading,
-    //     error: error ? error.substring(0, 50) + "..." : null
-    // });
 
     return (
         <AuthContext.Provider value={contextValue}>

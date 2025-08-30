@@ -1,5 +1,5 @@
 import { AdminAuth } from "@/components/admin/auth";
-import { SimpleErrorLogsPage } from "@/components/admin/error-logs/simple-error-logs-page";
+import { ErrorLogsPage } from "@/components/admin/error-logs/error-logs-page";
 import { AdminFramework } from "@/components/admin/framework";
 import { AppDrawer, DrawerPage } from "@/components/admin/layout";
 import {
@@ -326,7 +326,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack: _onBack }) => {
                 />
               )}
 
-              {activePage === "error-logs" && <SimpleErrorLogsPage />}
+              {activePage === "error-logs" && <ErrorLogsPage />}
             </div>
           </main>
         </div>
