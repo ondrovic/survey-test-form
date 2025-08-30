@@ -59,8 +59,8 @@ const RadioOption = <T extends string | number = string>({
           disabled={isDisabled}
           className={clsx(
             'h-4 w-4 mr-3 flex-shrink-0',
-            `text-${colors.info[600]} dark:text-blue-400 border-${colors.gray[300]} dark:border-gray-600`,
-            'focus:ring-blue-500 dark:focus:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800'
+            `text-${colors.primary[600]} dark:text-amber-400 border-${colors.gray[300]} dark:border-gray-600`,
+            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
           )}
         />
         <span

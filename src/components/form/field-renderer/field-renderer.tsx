@@ -232,7 +232,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-y bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400",
+                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 resize-y bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400",
                             error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
                         )}
                         rows={4}
@@ -284,7 +284,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         value={value || ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
+                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
                             error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
                         )}
                     >
@@ -581,7 +581,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                 handleDropdownOpen(field.id);
                             }}
                             className={clsx(
-                                "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-left flex items-center justify-between transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
+                                "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 text-left flex items-center justify-between transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
                                 error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
                             )}
                         >
@@ -623,7 +623,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                                 : [...selectedValues, option.value];
                                                             handleFieldChange(field.id, newValues);
                                                         }}
-                                                        className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                                        className="rounded border-gray-300 text-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                                                     />
                                                     <span className="ml-3 text-gray-900 dark:text-gray-100">{option.label}</span>
                                                 </label>
@@ -653,7 +653,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                             : [...selectedValues, option.value];
                                                         handleFieldChange(field.id, newValues);
                                                     }}
-                                                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                                    className="rounded border-gray-300 text-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                                                 />
                                                 <span className="ml-3 text-gray-900 dark:text-gray-100">{option.label}</span>
                                             </label>

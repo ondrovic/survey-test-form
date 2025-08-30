@@ -105,13 +105,10 @@ export const transitions = {
 } as const;
 
 export const focusRing = {
-  primary:
-    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400 dark:focus:ring-offset-gray-800",
-  error:
-    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-red-400 dark:focus:ring-offset-gray-800",
-  success:
-    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-green-400 dark:focus:ring-offset-gray-800",
-  info: "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:focus:ring-offset-gray-800",
+  primary: "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
+  error: "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500",
+  success: "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
+  info: "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
 } as const;
 
 export const typography = {
@@ -143,19 +140,19 @@ export const typography = {
 
 // Component-specific design tokens
 export const button = {
-  base: "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+  base: "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 disabled:cursor-not-allowed",
 
   variants: {
     primary:
-      "bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 focus:ring-amber-500 dark:focus:ring-amber-400 shadow-sm active:bg-blue-800 dark:active:bg-blue-800",
+      "bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 shadow-sm active:bg-blue-800 dark:active:bg-blue-800",
     secondary:
-      "bg-gray-600 dark:bg-gray-600 text-white hover:bg-gray-700 dark:hover:bg-gray-700 focus:ring-gray-500 dark:focus:ring-gray-400 shadow-sm active:bg-gray-800 dark:active:bg-gray-800",
+      "bg-gray-600 dark:bg-gray-600 text-white hover:bg-gray-700 dark:hover:bg-gray-700 shadow-sm active:bg-gray-800 dark:active:bg-gray-800",
     outline:
-      "border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-amber-500 dark:focus:ring-amber-400 active:bg-gray-100 dark:active:bg-gray-600",
+      "border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-600",
     ghost:
-      "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-gray-500 dark:focus:ring-gray-400 active:bg-gray-200 dark:active:bg-gray-600",
+      "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600",
     danger:
-      "bg-red-600 dark:bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-700 focus:ring-red-500 dark:focus:ring-red-400 shadow-sm active:bg-red-800 dark:active:bg-red-800",
+      "bg-red-600 dark:bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-700 shadow-sm active:bg-red-800 dark:active:bg-red-800",
   },
 
   sizes: {
@@ -176,13 +173,13 @@ export const button = {
 } as const;
 
 export const input = {
-  base: "block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700",
+  base: "block w-full px-3 py-2 border rounded-md shadow-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700",
 
   states: {
     default:
-      "border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400",
+      "border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400",
     error:
-      "border-red-300 dark:border-red-600 text-red-900 dark:text-red-400 placeholder-red-300 dark:placeholder-red-400 focus:ring-red-500 dark:focus:ring-red-400 focus:border-red-500 dark:focus:border-red-400",
+      "border-red-300 dark:border-red-600 text-red-900 dark:text-red-400 placeholder-red-300 dark:placeholder-red-400 focus:border-red-500 dark:focus:border-red-400",
   },
 
   // Mobile-first sizing and interaction
@@ -255,7 +252,7 @@ export const modal = {
   title:
     "text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate pr-2",
   closeButton:
-    "flex-shrink-0 p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 transition-all duration-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-gray-800 min-h-[44px] min-w-[44px] flex items-center justify-center",
+    "flex-shrink-0 p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 transition-all duration-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 min-h-[44px] min-w-[44px] flex items-center justify-center",
   body: "flex-1 overflow-y-auto p-4 sm:p-6",
   footer:
     "flex-shrink-0 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700",
@@ -307,7 +304,7 @@ export const pagination = {
 
   // Button base styles
   button: {
-    base: "inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400",
+    base: "inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
     sizes: {
       sm: "px-2 py-1 text-sm min-w-[32px] h-8",
       md: "px-3 py-2 text-sm min-w-[40px] h-10",
@@ -352,7 +349,7 @@ export const collapsible = {
 
   // Trigger button styles - mobile-first responsive
   trigger: {
-    base: "flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400 gap-2",
+    base: "flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-left transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 gap-2",
     variants: {
       default: "p-4 hover:bg-gray-50 dark:hover:bg-gray-700",
       minimal: "py-2 hover:bg-gray-25 dark:hover:bg-gray-700",

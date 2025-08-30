@@ -147,7 +147,7 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
                         text-sm font-medium transition-all duration-200
                         ${getStepStyles(status)}
                         ${clickable
-                          ? 'cursor-pointer hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                          ? 'cursor-pointer hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
                           : 'cursor-default'
                         }
                       `}
@@ -226,7 +226,7 @@ export const FormStepIndicator: React.FC<FormStepIndicatorProps> = ({
                         text-sm font-medium transition-all duration-200
                         ${getStepStyles(status)}
                         ${clickable
-                          ? 'cursor-pointer active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                          ? 'cursor-pointer active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
                           : 'cursor-default'
                         }
                       `}

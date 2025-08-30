@@ -51,35 +51,35 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
             bgColor: 'bg-blue-50 dark:bg-blue-900/20',
             borderColor: 'border-blue-300 dark:border-blue-600',
             hoverBg: 'hover:bg-blue-100 dark:hover:bg-blue-900/30',
-            focusRing: 'focus:ring-blue-500 dark:focus:ring-blue-400'
+            focusRing: 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         },
         orange: {
             color: 'text-orange-700 dark:text-orange-300',
             bgColor: 'bg-orange-50 dark:bg-orange-900/20',
             borderColor: 'border-orange-300 dark:border-orange-600',
             hoverBg: 'hover:bg-orange-100 dark:hover:bg-orange-900/30',
-            focusRing: 'focus:ring-orange-500 dark:focus:ring-orange-400'
+            focusRing: 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         },
         green: {
             color: 'text-green-700 dark:text-green-300',
             bgColor: 'bg-green-50 dark:bg-green-900/20',
             borderColor: 'border-green-300 dark:border-green-600',
             hoverBg: 'hover:bg-green-100 dark:hover:bg-green-900/30',
-            focusRing: 'focus:ring-green-500 dark:focus:ring-green-400'
+            focusRing: 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         },
         red: {
             color: 'text-red-700 dark:text-red-300',
             bgColor: 'bg-red-50 dark:bg-red-900/20',
             borderColor: 'border-red-300 dark:border-red-600',
             hoverBg: 'hover:bg-red-100 dark:hover:bg-red-900/30',
-            focusRing: 'focus:ring-red-500 dark:focus:ring-red-400'
+            focusRing: 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         },
         gray: {
             color: 'text-gray-700 dark:text-gray-300',
             bgColor: 'bg-gray-50 dark:bg-gray-700',
             borderColor: 'border-gray-300 dark:border-gray-600',
             hoverBg: 'hover:bg-gray-100 dark:hover:bg-gray-600',
-            focusRing: 'focus:ring-gray-500 dark:focus:ring-gray-400'
+            focusRing: 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         }
     };
 

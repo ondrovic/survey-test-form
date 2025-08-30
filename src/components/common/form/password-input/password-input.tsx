@@ -74,11 +74,11 @@ export const PasswordInput = <T extends string = string>({
         return 'current-password'; // Default for login forms
     };
 
-    const baseClasses = 'dark:text-white block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseClasses = 'dark:text-white block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const stateClasses = error
-        ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500'
-        : 'border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-500 focus:border-amber-500';
+        ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500'
+        : 'border-gray-300 text-gray-900 placeholder-gray-400';
 
     const inputClasses = clsx(baseClasses, stateClasses, className);
 
