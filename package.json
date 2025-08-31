@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
-    "@supabase/supabase-js": "^2.56.0",
+    "@supabase/supabase-js": "^2.56.1",
     "@types/react-beautiful-dnd": "^13.1.8",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
