@@ -5,7 +5,7 @@ import { databaseHelpers } from '../../../../../../config/database';
 import { useValidation } from '../../../../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '../../../../../../types/framework.types';
 import { Button, Input } from '../../../../../common';
-import { LegacyModal as Modal } from '../../../../../common/ui/modal/Modal';
+import Modal from '../../../../../common/ui/modal/Modal';
 import { OptionSetPreview } from '../../../shared';
 import { FIELD_TYPES } from '../../../survey-builder.types';
 
@@ -116,23 +116,6 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         }
     }, [isOpen, field]); // Only reset when modal opens or field changes
 
-    // Add keyboard shortcut to close modal with Escape
-    useEffect(() => {
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                onClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-            return () => {
-                document.removeEventListener('keydown', handleEscape);
-            };
-        }
-
-        return undefined;
-    }, [isOpen, onClose]);
 
     // Load option sets and validate when field changes
     useEffect(() => {
@@ -212,10 +195,12 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={`Edit Field: ${field.label} (${FIELD_TYPES.find(t => t.value === field.type)?.label})`}
             size="full"
-            showCloseButton={true}
         >
+            <Modal.Header>
+                <Modal.Title>{`Edit Field: ${field.label} (${FIELD_TYPES.find(t => t.value === field.type)?.label})`}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
             <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
                 {/* Basic Field Configuration */}
                 <div className="space-y-4">
@@ -877,6 +862,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     </Button>
                 </div>
             </div>
+            </Modal.Body>
         </Modal>
     );
 };

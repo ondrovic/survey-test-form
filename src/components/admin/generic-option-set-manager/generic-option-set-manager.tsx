@@ -11,7 +11,7 @@ import { useSurveyData } from "../../../contexts/survey-data-context";
 import { useGenericImportExport } from "../../../hooks";
 import { ExportableDataType } from "../../../utils/generic-import-export.utils";
 import { Button, GenericImportModal } from "../../common";
-import { Modal } from "../../common/ui/modal/Modal";
+import Modal from "../../common/ui/modal/Modal";
 import {
   OptionSetForm,
   OptionSetFormData,

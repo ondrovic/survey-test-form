@@ -1,4 +1,4 @@
-import React, { createContext, forwardRef, useCallback, useContext, useEffect, useRef } from 'react';
+import React, { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
@@ -107,14 +107,28 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
   ) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
-    const modalId = `modal-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Generate IDs only once using useRef to prevent regeneration on every render
+    const modalIdRef = useRef(`modal-${Math.random().toString(36).substr(2, 9)}`);
+    const modalId = modalIdRef.current;
     const titleId = `${modalId}-title`;
     const bodyId = `${modalId}-body`;
     
     // Focus management
     const previousFocusRef = useRef<HTMLElement | null>(null);
     
-    const contextValue: ModalContextValue = {
+    // Use refs to avoid dependency issues that cause re-renders
+    const onCloseRef = useRef(onClose);
+    const closeOnEscapeRef = useRef(closeOnEscape);
+    const closeOnBackdropRef = useRef(closeOnBackdrop);
+    
+    // Update refs when props change
+    onCloseRef.current = onClose;
+    closeOnEscapeRef.current = closeOnEscape;
+    closeOnBackdropRef.current = closeOnBackdrop;
+    
+    // Memoize context value to prevent unnecessary re-renders of context consumers
+    const contextValue = useMemo<ModalContextValue>(() => ({
       isOpen,
       onClose,
       size,
@@ -125,14 +139,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       modalId,
       titleId,
       bodyId,
-    };
-
-    // Memoize escape key handler to prevent recreation
-    const handleEscape = useCallback((e: KeyboardEvent) => {
-      if (e.key === 'Escape' && closeOnEscape) {
-        onClose();
-      }
-    }, [closeOnEscape, onClose]);
+    }), [isOpen, onClose, size, variant, closable, closeOnBackdrop, closeOnEscape, modalId, titleId, bodyId]);
 
     // Combined effect for modal management: escape key, focus, and scroll prevention
     useEffect(() => {
@@ -158,6 +165,13 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         }
       }, 0);
 
+      // Handle escape key using refs to avoid dependency issues
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && closeOnEscapeRef.current) {
+          onCloseRef.current();
+        }
+      };
+
       // Add escape key listener
       document.addEventListener('keydown', handleEscape);
 
@@ -176,48 +190,47 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           previousFocusRef.current = null;
         }
       };
-    }, [isOpen, initialFocus, handleEscape]);
+    }, [isOpen, initialFocus]); // Remove onClose and closeOnEscape from deps
 
-    // Handle backdrop click
-    const handleBackdropClick = (e: React.MouseEvent) => {
-      if (e.target === backdropRef.current && closeOnBackdrop) {
-        onClose();
+    // Handle backdrop click - memoized to prevent recreation
+    const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+      if (e.target === backdropRef.current && closeOnBackdropRef.current) {
+        onCloseRef.current();
       }
-    };
+    }, []); // No dependencies since we use refs
 
-    // Memoize focus trap handler to prevent recreation
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-      if (!isOpen || e.key !== 'Tab') return;
-
-      const modal = modalRef.current;
-      if (!modal) return;
-
-      const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement?.focus();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement?.focus();
-        }
-      }
-    }, [isOpen]);
-
+    // Focus trap handling
     useEffect(() => {
-      if (isOpen) {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-      }
-      return undefined;
-    }, [isOpen, handleKeyDown]);
+      if (!isOpen) return;
+      
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab') return;
+
+        const modal = modalRef.current;
+        if (!modal) return;
+
+        const focusableElements = modal.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement?.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement?.focus();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -235,11 +248,6 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           style={zIndex ? { zIndex } : undefined}
           role="presentation"
           onClick={handleBackdropClick}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              onClose();
-            }
-          }}
           ref={backdropRef}
         >
           <div className={clsx(modalTokens.backdrop, modalTokens.container)}>
