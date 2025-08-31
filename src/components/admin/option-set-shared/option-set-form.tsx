@@ -229,7 +229,7 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                                                         type="checkbox"
                                                         checked={!!option.isDefault}
                                                         onChange={(e) => updateOption(index, { isDefault: e.target.checked } as Partial<TOption>)}
-                                                        className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                                        className="rounded border-gray-300 text-amber-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                                                     />
                                                     <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{DEFAULT_FIELD_LABEL}</span>
                                                 </label>

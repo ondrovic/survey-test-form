@@ -68,7 +68,7 @@ export const InstanceSettingsModal: React.FC<InstanceSettingsModalProps> = ({
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="mr-2 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-500 focus:ring-amber-500 dark:focus:ring-amber-400"
+                  className="mr-2 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 />
                 <span className="text-gray-900 dark:text-gray-100">Active</span>
               </label>

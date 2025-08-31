@@ -22,7 +22,7 @@ export const SelectFields: React.FC<SelectFieldsProps> = ({
           type="checkbox"
           checked={!!data.allowMultiple}
           onChange={(e) => setField("allowMultiple", e.target.checked)}
-          className="rounded border-gray-300 dark:border-gray-600 text-amber-600 dark:text-amber-500 focus:ring-amber-500 dark:focus:ring-amber-400 bg-white dark:bg-gray-700"
+          className="rounded border-gray-300 dark:border-gray-600 text-amber-600 dark:text-amber-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 bg-white dark:bg-gray-700"
         />
         <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
           Allow multiple selections

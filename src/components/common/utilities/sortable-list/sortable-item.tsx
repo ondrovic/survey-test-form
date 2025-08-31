@@ -44,7 +44,7 @@ export const SortableItem: React.FC<SortableItemProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             {...provided.dragHandleProps}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 rounded-md cursor-grab active:cursor-grabbing transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:ring-offset-1 dark:focus:ring-offset-gray-800"
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 rounded-md cursor-grab active:cursor-grabbing transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                             type="button"
                             title="Drag to reorder"
                             aria-label="Drag to reorder"

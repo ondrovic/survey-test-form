@@ -51,7 +51,7 @@ export const RadioSelectPreview: React.FC<RadioSelectPreviewProps> = ({
                 name="preview-radio"
                 checked={!!option.isDefault}
                 readOnly
-                className="text-amber-600 dark:text-amber-500 focus:ring-amber-500 dark:focus:ring-amber-400 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                className="text-amber-600 dark:text-amber-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 {option.label || `Option ${index + 1}`}

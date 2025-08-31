@@ -11,7 +11,7 @@ import { useSurveyData } from "../../../contexts/survey-data-context";
 import { useGenericImportExport } from "../../../hooks";
 import { ExportableDataType } from "../../../utils/generic-import-export.utils";
 import { Button, GenericImportModal } from "../../common";
-import { LegacyModal as Modal } from "../../common/ui/modal/Modal";
+import { Modal } from "../../common/ui/modal/Modal";
 import {
   OptionSetForm,
   OptionSetFormData,
@@ -258,10 +258,13 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
       <Modal
         isOpen={isVisible}
         onClose={onClose}
-        title={`${config.displayName} Manager`}
         size="lg"
         className="max-h-[90vh]"
       >
+        <Modal.Header>
+          <Modal.Title>{config.displayName} Manager</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
         <div className="p-6">
           {!selectionMode ? (
             <OptionSetForm
@@ -430,6 +433,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
             </div>
           )}
         </div>
+        </Modal.Body>
       </Modal>
     </DragDropContext>
   );
