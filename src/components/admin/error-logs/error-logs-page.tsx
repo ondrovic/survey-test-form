@@ -64,8 +64,7 @@ export const ErrorLogsPage: React.FC = () => {
     }
 
     // Subscribe to all changes on error_logs table
-    const subscription = client
-      .channel('error-logs-changes')
+    const channel = client.channel('error-logs-changes')
       .on('postgres_changes', {
         event: '*', // Listen to ALL events (INSERT, UPDATE, DELETE)
         schema: 'public',
@@ -96,10 +95,11 @@ export const ErrorLogsPage: React.FC = () => {
           );
         }
       })
+      .subscribe();
 
     // Cleanup subscription on unmount
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, [showError]);
 
