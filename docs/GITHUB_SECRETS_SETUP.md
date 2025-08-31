@@ -90,7 +90,7 @@ VITE_ADMIN_PASSWORD=your-secure-admin-password
    **For each secret:**
 
    - **Name**: Use the exact name from the table above
-   - **Value**: Copy the corresponding value from your Firebase config
+   - **Value**: Copy the corresponding value from your Supabase config
    - Click **Add secret**
 
 ### Step 3: Verify Setup
@@ -98,7 +98,7 @@ VITE_ADMIN_PASSWORD=your-secure-admin-password
 1. Go to **Actions** tab in your repository
 2. Push a change to the main branch
 3. Check that the deployment workflow runs successfully
-4. Verify that your app is deployed without Firebase connection errors
+4. Verify that your app is deployed without Supabase connection errors
 
 ## 🔍 Troubleshooting
 

@@ -50,8 +50,8 @@ A comprehensive survey framework application built on Supabase with advanced sur
 - **Excel Export**: xlsx library for admin downloads
 - **reCAPTCHA**: Google reCAPTCHA v2 integration
 - **Email**: Supabase Edge Functions with universal SMTP support
-- **Deployment**: GitHub Pages → Netlify (planned)
-- **CI/CD**: GitHub Actions with automated survey status management
+- **Deployment**: Static hosting (Netlify, Vercel, GitHub Pages)
+- **CI/CD**: GitHub Actions
 - **Automation**: Database functions and triggers for scheduled tasks
 
 ## 📋 Prerequisites
@@ -98,14 +98,11 @@ VITE_USE_OPTIMIZED_PROVIDER=true
 
 ### 4. Database Setup
 
-**Quick Setup (Recommended):** Follow [SUPABASE_SIMPLE_SETUP.md](./docs/SUPABASE_SIMPLE_SETUP.md) for a simple setup without RLS.
-
-**Advanced Setup:** Follow [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) to set up your Supabase database with:
-- Full SQL database capabilities
-- Advanced data visualization
-- Automated status management
-- Better performance for complex queries
-- Complete audit trail system
+Follow [SUPABASE_SIMPLE_SETUP.md](./docs/SUPABASE_SIMPLE_SETUP.md) to set up your Supabase database with:
+- Full PostgreSQL database capabilities
+- Automated survey management
+- Data visualization support
+- Email notification system
 
 ### 5. GitHub Secrets Setup (Production Deployment)
 
@@ -172,8 +169,9 @@ npm run test:coverage # Run tests with coverage
 - `yarn test:coverage` - Run tests with coverage report
 
 ### Database
-- `yarn db:setup` - Instructions for database setup
-- `yarn db:migrate` - Run database migrations
+- `yarn db:setup` - Push database schema to Supabase
+- `yarn db:reset` - Reset database to clean state
+- `yarn db:status` - Check migration status
 
 ### Supabase Edge Functions
 - `yarn supabase:login` - Login to Supabase CLI
@@ -213,10 +211,6 @@ service-line-survey/
 │       ├── send-survey-email/   # Email notification function
 │       ├── survey-analytics/    # Analytics function
 │       └── survey-validation/   # Validation function
-├── scripts/                # Database and utility scripts
-│   ├── reset-supabase-optimized.sql   # Database reset
-│   ├── setup-supabase-optimized.sql   # Optimized setup
-│   └── test-status-automation.js      # Test script
 ├── .github/workflows/      # GitHub Actions
 ├── public/                 # Static assets
 └── dist/                   # Build output
@@ -327,12 +321,11 @@ See [SMTP_EMAIL_SETUP.md](./docs/SMTP_EMAIL_SETUP.md) for detailed configuration
 Set up your Supabase database:
 
 1. Create a Supabase project at [https://supabase.com](https://supabase.com)
-2. Run the setup script from `scripts/setup-supabase.sql`
+2. Run `yarn db:setup` to push the database schema
 3. Configure environment variables
 4. Set up SMTP secrets for email notifications (optional)
-5. Includes automated status management and advanced features
 
-See [DATABASE_SETUP.md](./docs/DATABASE_SETUP.md), [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md), and [SMTP_EMAIL_SETUP.md](./docs/SMTP_EMAIL_SETUP.md) for detailed setup instructions.
+See [SUPABASE_SIMPLE_SETUP.md](./docs/SUPABASE_SIMPLE_SETUP.md) and [SMTP_EMAIL_SETUP.md](./docs/SMTP_EMAIL_SETUP.md) for detailed setup instructions.
 
 ## 🧪 Testing
 
@@ -403,7 +396,7 @@ npm run test:coverage
 
 ### Getting Help
 
-1. Check the [Issues](./docs/ISSUES.MD) page for known problems
+1. Check the repository issues for known problems
 2. Create a new issue with detailed error information
 3. Include browser console logs and error messages
 
@@ -423,7 +416,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Latest Updates
 
-- **Updated Node.js Requirement**: Upgraded to Node.js 20+ for Firebase compatibility
+- **Updated Node.js Requirement**: Upgraded to Node.js 20+ for modern development
 - **Enhanced Linting Options**: Added multiple lint commands for different workflow needs
   - `npm run lint:check` - Non-blocking linting for development workflows
   - `npm run lint:strict` - Strict linting that fails on warnings
