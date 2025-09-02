@@ -29,14 +29,13 @@ export const FieldDropZone: React.FC<FieldDropZoneProps> = ({
           {React.Children.count(children) > 0 ? (
             <>
               {children}
-              {provided.placeholder}
             </>
           ) : (
             <div className="flex items-center justify-center p-8 text-gray-500">
               {emptyMessage}
             </div>
           )}
-          {React.Children.count(children) > 0 && provided.placeholder}
+          {provided.placeholder}
         </div>
       )}
     </Droppable>
