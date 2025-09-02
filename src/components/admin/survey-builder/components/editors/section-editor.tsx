@@ -386,7 +386,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                 onReorder={(oldIndex, newIndex) => onReorderSubsections(section.id, oldIndex, newIndex)}
                                 className="space-y-4"
                                 itemClassName=""
-                                disabled={false}
+                                disabled={true}
                                 droppableId={`subsections-${section.id}`}
                                 renderItem={(item) => {
                                     const subsection = item as unknown as SurveySubsection;
