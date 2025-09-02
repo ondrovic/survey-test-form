@@ -1,7 +1,7 @@
 import React from 'react';
 import { SurveyConfig } from '../../../../../types/framework.types';
 import { getBadgeLayoutClasses } from '../../../../../utils/layout.utils';
-import { SurveySectionPaginator } from '../../../../survey/section-paginator';
+import { SurveySectionPaginator } from '../../../../survey/section-paginator/survey-section-paginator';
 import { OptionSetPreview } from '../../shared';
 
 interface SurveyPreviewProps {
@@ -15,7 +15,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
     // If pagination is enabled, use the paginator component
     if (shouldUsePagination) {
         return (
-            <div className="survey-preview-paginated bg-white dark:bg-gray-800">
+            <div className="survey-preview-paginated bg-white dark:bg-gray-800 dark:text-white">
                 <SurveySectionPaginator
                     sections={config.sections}
                     config={config.paginatorConfig}
@@ -28,7 +28,7 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
     // Otherwise, render the traditional single-page view
     return (
         <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{config.title}</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white dark:bg-gray-800">{config.title}</h2>
             {config.description && (
                 <p className="text-gray-600 dark:text-gray-300 mb-6">{config.description}</p>
             )}

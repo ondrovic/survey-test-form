@@ -15,8 +15,8 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
 }) => {
   const renderField = (field: any) => (
     <div key={field.id} className={clsx(
-      'bg-white p-6',
-      `border border-${colors.gray[200]}`,
+      'bg-white dark:bg-gray-800 p-6',
+      `border border-${colors.gray[200]} dark:border-gray-600`,
       borderRadius.lg,
       shadows.sm
     )}>
@@ -24,7 +24,7 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         'block mb-3',
         typography.text.sm,
         typography.weight.medium,
-        `text-${colors.gray[700]}`
+        `text-${colors.gray[700]} dark:text-gray-200`
       )}>
         {field.label}
         {field.required && <span className={`text-${colors.error[500]} ml-1`}>*</span>}
@@ -35,8 +35,8 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         <span className={clsx(
           'inline-block px-2 py-1',
           typography.text.xs,
-          `text-${colors.gray[500]}`,
-          `bg-${colors.gray[100]}`,
+          `text-${colors.gray[500]} dark:text-gray-400`,
+          `bg-${colors.gray[100]} dark:bg-gray-600`,
           borderRadius.sm
         )}>
           {field.type}
@@ -51,10 +51,11 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           disabled
           className={clsx(
             'w-full px-4 py-3',
-            `border border-${colors.gray[300]}`,
+            `border border-${colors.gray[300]} dark:border-gray-600`,
             borderRadius.md,
             typography.text.sm,
-            `bg-${colors.gray[50]}`,
+            `bg-${colors.gray[50]} dark:bg-gray-700`,
+            'text-gray-900 dark:text-white',
             'focus:outline-none'
           )}
         />
@@ -67,10 +68,11 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           rows={4}
           className={clsx(
             'w-full px-4 py-3 resize-none',
-            `border border-${colors.gray[300]}`,
+            `border border-${colors.gray[300]} dark:border-gray-600`,
             borderRadius.md,
             typography.text.sm,
-            `bg-${colors.gray[50]}`,
+            `bg-${colors.gray[50]} dark:bg-gray-700`,
+            'text-gray-900 dark:text-white',
             'focus:outline-none'
           )}
         />
@@ -83,10 +85,11 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           disabled
           className={clsx(
             'w-full px-4 py-3',
-            `border border-${colors.gray[300]}`,
+            `border border-${colors.gray[300]} dark:border-gray-600`,
             borderRadius.md,
             typography.text.sm,
-            `bg-${colors.gray[50]}`,
+            `bg-${colors.gray[50]} dark:bg-gray-700`,
+            'text-gray-900 dark:text-white',
             'focus:outline-none'
           )}
         />
@@ -99,10 +102,11 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           disabled
           className={clsx(
             'w-full px-4 py-3',
-            `border border-${colors.gray[300]}`,
+            `border border-${colors.gray[300]} dark:border-gray-600`,
             borderRadius.md,
             typography.text.sm,
-            `bg-${colors.gray[50]}`,
+            `bg-${colors.gray[50]} dark:bg-gray-700`,
+            'text-gray-900 dark:text-white',
             'focus:outline-none'
           )}
         />
@@ -121,10 +125,11 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           disabled
           className={clsx(
             'w-full px-4 py-3',
-            `border border-${colors.gray[300]}`,
+            `border border-${colors.gray[300]} dark:border-gray-600`,
             borderRadius.md,
             typography.text.sm,
-            `bg-${colors.gray[50]}`,
+            `bg-${colors.gray[50]} dark:bg-gray-700`,
+            'text-gray-900 dark:text-white',
             'focus:outline-none'
           )}
         >
@@ -164,14 +169,15 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                   'h-4 w-4',
                   `text-${colors.primary[600]}`,
                   `focus:ring-${colors.primary[500]}`,
-                  `border-${colors.gray[300]}`,
+                  `border-${colors.gray[300]} dark:border-gray-600`,
+                  'dark:bg-gray-700',
                   borderRadius.sm
                 )}
               />
               <span className={clsx(
                 'ml-3',
                 typography.text.sm,
-                `text-${colors.gray[700]}`
+                `text-${colors.gray[700]} dark:text-gray-200`
               )}>{option.label}</span>
             </div>
           ))}
@@ -198,13 +204,14 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                   'h-4 w-4',
                   `text-${colors.primary[600]}`,
                   `focus:ring-${colors.primary[500]}`,
-                  `border-${colors.gray[300]}`
+                  `border-${colors.gray[300]} dark:border-gray-600`,
+                  'dark:bg-gray-700'
                 )}
               />
               <span className={clsx(
                 'ml-3',
                 typography.text.sm,
-                `text-${colors.gray[700]}`
+                `text-${colors.gray[700]} dark:text-gray-200`
               )}>{option.label}</span>
             </div>
           ))}
@@ -222,14 +229,15 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                   'h-4 w-4',
                   `text-${colors.primary[600]}`,
                   `focus:ring-${colors.primary[500]}`,
-                  `border-${colors.gray[300]}`,
+                  `border-${colors.gray[300]} dark:border-gray-600`,
+                  'dark:bg-gray-700',
                   borderRadius.sm
                 )}
               />
               <span className={clsx(
                 'ml-3',
                 typography.text.sm,
-                `text-${colors.gray[700]}`
+                `text-${colors.gray[700]} dark:text-gray-200`
               )}>{option.label}</span>
             </div>
           ))}
@@ -253,9 +261,9 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                 'px-3 py-2 border',
                 typography.text.sm,
                 borderRadius.md,
-                `bg-${colors.gray[100]}`,
-                `text-${colors.gray[700]}`,
-                `border-${colors.gray[200]}`
+                `bg-${colors.gray[100]} dark:bg-gray-600`,
+                `text-${colors.gray[700]} dark:text-gray-200`,
+                `border-${colors.gray[200]} dark:border-gray-600`
               )}
             >
               {option.label}
@@ -274,8 +282,8 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         <div className={clsx(
           'p-3 italic',
           typography.text.sm,
-          `text-${colors.gray[500]}`,
-          `bg-${colors.gray[50]}`,
+          `text-${colors.gray[500]} dark:text-gray-400`,
+          `bg-${colors.gray[50]} dark:bg-gray-600`,
           borderRadius.md
         )}>
           No options configured for this field
@@ -304,13 +312,13 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         <h2 className={clsx(
           typography.text['2xl'],
           typography.weight.bold,
-          `text-${colors.gray[900]}`,
+          `text-${colors.gray[900]} dark:text-white`,
           'mb-2'
         )}>{section.title}</h2>
         {section.description && (
           <p className={clsx(
             typography.text.lg,
-            `text-${colors.gray[600]}`
+            `text-${colors.gray[600]} dark:text-gray-300`
           )}>{section.description}</p>
         )}
       </div>
@@ -324,8 +332,8 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
             return (
               <div key={subsection.id} className={clsx(
                 'p-6',
-                `bg-${colors.gray[50]}`,
-                `border border-${colors.gray[200]}`,
+                `bg-${colors.gray[50]} dark:bg-gray-700`,
+                `border border-${colors.gray[200]} dark:border-gray-600`,
                 borderRadius.lg
               )}>
                 {/* Subsection Header */}
@@ -333,12 +341,12 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                   <h3 className={clsx(
                     typography.text.xl,
                     typography.weight.semibold,
-                    `text-${colors.gray[800]}`,
+                    `text-${colors.gray[800]} dark:text-gray-200`,
                     'mb-2'
                   )}>{subsection.title}</h3>
                   {subsection.description && (
                     <p className={clsx(
-                      `text-${colors.gray[600]}`
+                      `text-${colors.gray[600]} dark:text-gray-300`
                     )}>{subsection.description}</p>
                   )}
                 </div>
@@ -351,7 +359,7 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                   {subsection.fields.length === 0 && (
                     <div className={clsx(
                       'text-center py-8',
-                      `text-${colors.gray[500]}`
+                      `text-${colors.gray[500]} dark:text-gray-400`
                     )}>
                       <p className={typography.text.sm}>No fields in this subsection</p>
                     </div>
@@ -370,7 +378,7 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         {getOrderedSectionContent(section).length === 0 && (
           <div className={clsx(
             'text-center py-12',
-            `text-${colors.gray[500]}`
+            `text-${colors.gray[500]} dark:text-gray-400`
           )}>
             <p className={typography.text.lg}>No content in this section</p>
             <p className={typography.text.sm}>Add fields or subsections to this section in the survey builder</p>

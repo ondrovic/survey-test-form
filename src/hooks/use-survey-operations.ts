@@ -229,9 +229,15 @@ export const useSurveyOperations = () => {
 
           // Validate each section and its fields
           for (const section of config.sections || []) {
-            if (!section.fields || section.fields.length === 0) {
+            // Check if section has either section-level fields OR subsection fields
+            const hasSectionFields = section.fields && section.fields.length > 0;
+            const hasSubsectionFields = section.subsections && section.subsections.some(
+              subsection => subsection.fields && subsection.fields.length > 0
+            );
+            
+            if (!hasSectionFields && !hasSubsectionFields) {
               configErrors.push(
-                `Config "${config.title}" > Section "${section.title}": No fields defined`
+                `Config "${config.title}" > Section "${section.title}": No fields defined in section or subsections`
               );
               configValid = false;
             }

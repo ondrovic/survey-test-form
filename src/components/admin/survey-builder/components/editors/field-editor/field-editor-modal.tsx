@@ -493,11 +493,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                 </div>
                             ) : field.radioOptionSetId ? (
                                 // Show radio option set options as buttons
-                                <div className="p-4 border rounded-md bg-gray-50">
+                                <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <h6 className="font-medium text-gray-900">{field.radioOptionSetName?.split('x')[0] || field.radioOptionSetName}</h6>
-                                            <p className="text-xs text-gray-500">Radio Option Set</p>
+                                            <h6 className="font-medium text-gray-900 dark:text-gray-100">{field.radioOptionSetName?.split('x')[0] || field.radioOptionSetName}</h6>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Radio Option Set</p>
                                         </div>
                                         <Button
                                             size="sm"
@@ -507,7 +507,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 radioOptionSetName: undefined,
                                                 options: []
                                             })}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-md transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -538,11 +538,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                 </div>
                             ) : field.multiSelectOptionSetId ? (
                                 // Show multi-select option set options as buttons
-                                <div className="p-4 border rounded-md bg-gray-50">
+                                <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <h6 className="font-medium text-gray-900">{field.multiSelectOptionSetName?.split('x')[0] || field.multiSelectOptionSetName}</h6>
-                                            <p className="text-xs text-gray-500">Multi-Select Option Set</p>
+                                            <h6 className="font-medium text-gray-900 dark:text-gray-100">{field.multiSelectOptionSetName?.split('x')[0] || field.multiSelectOptionSetName}</h6>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Multi-Select Option Set</p>
                                         </div>
                                         <Button
                                             size="sm"
@@ -552,7 +552,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 multiSelectOptionSetName: undefined,
                                                 options: []
                                             })}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-md transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -583,11 +583,11 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                 </div>
                             ) : field.selectOptionSetId ? (
                                 // Show select option set options as buttons
-                                <div className="p-4 border rounded-md bg-gray-50">
+                                <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <h6 className="font-medium text-gray-900">{field.selectOptionSetName?.split('x')[0] || field.selectOptionSetName}</h6>
-                                            <p className="text-xs text-gray-500">Select Option Set</p>
+                                            <h6 className="font-medium text-gray-900 dark:text-gray-100">{field.selectOptionSetName?.split('x')[0] || field.selectOptionSetName}</h6>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Select Option Set</p>
                                         </div>
                                         <Button
                                             size="sm"
@@ -597,7 +597,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                 selectOptionSetName: undefined,
                                                 options: []
                                             })}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-md transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>

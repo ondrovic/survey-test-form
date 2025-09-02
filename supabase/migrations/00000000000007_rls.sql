@@ -1,0 +1,5 @@
+-- ===================================
+-- RLS Migration: 00000000000007
+-- Description: Enable Row Level Security for specific tables
+-- Purpose: PII data protection
+-- ===================================
