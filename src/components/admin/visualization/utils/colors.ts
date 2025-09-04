@@ -1,25 +1,30 @@
 import { 
   CHART_PALETTE, 
+  CHART_PALETTE_DARK,
   NAMED_COLOR_MAP, 
+  NAMED_COLOR_MAP_DARK,
   NEUTRAL_GRAY, 
+  NEUTRAL_GRAY_DARK,
   SEMANTIC_COLORS, 
+  SEMANTIC_COLORS_DARK,
   SEMANTIC_LABELS 
 } from './constants';
 
 /**
  * Normalizes a color candidate by checking named color mappings
  */
-export const normalizeColorCandidate = (candidate?: string): string | undefined => {
+export const normalizeColorCandidate = (candidate?: string, isDarkMode: boolean = false): string | undefined => {
   if (!candidate) return undefined;
   const c = candidate.trim();
-  return NAMED_COLOR_MAP[c] || c;
+  const colorMap = isDarkMode ? NAMED_COLOR_MAP_DARK : NAMED_COLOR_MAP;
+  return colorMap[c] || c;
 };
 
 /**
  * Normalizes and validates a color, filtering out transparent/invisible colors
  */
-export const normalizeEffectiveColor = (candidate?: string): string | undefined => {
-  const c = normalizeColorCandidate(candidate);
+export const normalizeEffectiveColor = (candidate?: string, isDarkMode: boolean = false): string | undefined => {
+  const c = normalizeColorCandidate(candidate, isDarkMode);
   if (!c) return undefined;
   const v = c.trim();
   const lower = v.toLowerCase();
@@ -63,19 +68,22 @@ export const isSemanticLabel = (lower: string): boolean =>
 /**
  * Gets the semantic color for a label
  */
-export const semanticColorFor = (lower: string): string | undefined => 
-  SEMANTIC_COLORS[lower];
+export const semanticColorFor = (lower: string, isDarkMode: boolean = false): string | undefined => {
+  const colors = isDarkMode ? SEMANTIC_COLORS_DARK : SEMANTIC_COLORS;
+  return colors[lower];
+};
 
 /**
  * Generates a consistent palette color based on label and salt
  */
-export const paletteColorFor = (label: string, salt: number): string => {
+export const paletteColorFor = (label: string, salt: number, isDarkMode: boolean = false): string => {
   let hash = 0;
   for (let i = 0; i < label.length; i++) {
     hash = (hash * 31 + label.charCodeAt(i)) | 0;
   }
-  const idx = Math.abs(hash + salt) % CHART_PALETTE.length;
-  return CHART_PALETTE[idx];
+  const palette = isDarkMode ? CHART_PALETTE_DARK : CHART_PALETTE;
+  const idx = Math.abs(hash + salt) % palette.length;
+  return palette[idx];
 };
 
 /**
@@ -126,19 +134,22 @@ export const computeColorForLabel = (args: {
   colors?: Record<string, string | undefined>;
   neutralMode?: boolean;
   colorSalt?: number;
+  isDarkMode?: boolean;
 }): string => {
-  const { label, lower, strict, colors, neutralMode, colorSalt } = args;
+  const { label, lower, strict, colors, neutralMode, colorSalt, isDarkMode = false } = args;
   const candidateRaw = (colors?.[label] ?? colors?.[lower] ?? colors?.[strict]);
-  const candidate = normalizeEffectiveColor(candidateRaw);
+  const candidate = normalizeEffectiveColor(candidateRaw, isDarkMode);
   
   let chosen = candidate
-    || (isSemanticLabel(lower) ? semanticColorFor(lower) : undefined)
-    || (neutralMode ? NEUTRAL_GRAY : undefined)
-    || paletteColorFor(label, colorSalt || 0);
+    || (isSemanticLabel(lower) ? semanticColorFor(lower, isDarkMode) : undefined)
+    || (neutralMode ? (isDarkMode ? NEUTRAL_GRAY_DARK : NEUTRAL_GRAY) : undefined)
+    || paletteColorFor(label, colorSalt || 0, isDarkMode);
     
   if (isTransparentToken(chosen)) {
     // Final guardrail to ensure visible colors
-    chosen = neutralMode ? NEUTRAL_GRAY : paletteColorFor(label, colorSalt || 0);
+    chosen = neutralMode 
+      ? (isDarkMode ? NEUTRAL_GRAY_DARK : NEUTRAL_GRAY) 
+      : paletteColorFor(label, colorSalt || 0, isDarkMode);
   }
   
   return chosen as string;

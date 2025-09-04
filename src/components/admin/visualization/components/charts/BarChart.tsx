@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseChartProps } from '../../types';
 import { computeColorForLabel } from '../../utils';
+import { useVisualization } from '../../context';
 
 export const BarChart: React.FC<BaseChartProps> = ({ 
   counts, 
@@ -12,6 +13,7 @@ export const BarChart: React.FC<BaseChartProps> = ({
   colorSalt, 
   size: chartSize = 'normal' 
 }) => {
+  const { isDarkMode } = useVisualization();
   const baseEntries = Object.entries(counts);
   const entries = orderedValues && orderedValues.length > 0
     ? orderedValues.filter(v => counts[v] !== undefined).map(v => [v, counts[v]] as [string, number])
@@ -32,20 +34,20 @@ export const BarChart: React.FC<BaseChartProps> = ({
         const pct = total > 0 ? (value / total) * 100 : 0;
         const lower = label?.toString().toLowerCase?.() || '';
         const strict = lower.replace(/[^a-z0-9]+/g, '-');
-        const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt });
+        const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt, isDarkMode });
 
         const widthPct = Math.max(0.5, pct);
 
         return (
-          <div key={label} className={`${spacing} ${padding} bg-gray-50 rounded-lg border border-gray-100`}>
+          <div key={label} className={`${spacing} ${padding} ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-100'} rounded-lg border`}>
             {/* Label - now on its own line for better readability */}
-            <div className={`${labelSize} font-medium text-gray-800 truncate`} title={label}>
+            <div className={`${labelSize} font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} truncate`} title={label}>
               {label || '—'}
             </div>
 
             {/* Bar container with better spacing */}
             <div className={`flex items-center ${gap}`}>
-              <div className={`flex-1 bg-gray-200 rounded-full ${barHeight} overflow-hidden shadow-inner`}>
+              <div className={`flex-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full ${barHeight} overflow-hidden shadow-inner`}>
                 <div
                   className="h-full rounded-full transition-all duration-300 ease-out shadow-sm"
                   style={{
@@ -58,7 +60,7 @@ export const BarChart: React.FC<BaseChartProps> = ({
               </div>
 
               {/* Value display - larger and more prominent */}
-              <div className={`${valueSize} font-bold text-gray-700 min-w-[4rem] text-right`}>
+              <div className={`${valueSize} font-bold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} min-w-[4rem] text-right`}>
                 {showPercent ? `${pct.toFixed(0)}%` : value}
               </div>
             </div>

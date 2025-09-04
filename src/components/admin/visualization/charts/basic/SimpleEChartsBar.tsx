@@ -2,6 +2,7 @@ import { useMemo, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { BaseChartProps } from '../../types';
 import { useVisualization } from '../../context';
+import { computeColorForLabel } from '../../utils';
 
 interface SimpleEChartsBarProps extends BaseChartProps {
   direction?: 'horizontal' | 'vertical';
@@ -14,7 +15,9 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
   colors,
   showPercent = false,
   size = 'normal',
-  direction = 'horizontal'
+  direction = 'horizontal',
+  neutralMode,
+  colorSalt
 }, ref) => {
   const { isDarkMode } = useVisualization();
   const isVertical = direction === 'vertical';
@@ -29,15 +32,27 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
 
     return entries.map(([label, value]) => {
       const pct = total > 0 ? (value / total) * 100 : 0;
+      const lower = label?.toString().toLowerCase?.() || '';
+      const strict = lower.replace(/[^a-z0-9]+/g, '-');
+      const color = computeColorForLabel({ 
+        label, 
+        lower, 
+        strict, 
+        colors, 
+        neutralMode, 
+        colorSalt, 
+        isDarkMode 
+      });
+      
       return {
         name: label || '—',
         value: showPercent ? parseFloat(pct.toFixed(1)) : value,
         itemStyle: {
-          color: colors?.[label] || '#5470c6'
+          color: color
         }
       };
     });
-  }, [counts, total, orderedValues, colors, showPercent, isDarkMode]);
+  }, [counts, total, orderedValues, colors, showPercent, isDarkMode, neutralMode, colorSalt]);
 
   // Generate ECharts option
   const option = useMemo(() => {
@@ -97,7 +112,7 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
         }
       }]
     };
-  }, [chartData, isVertical, isLarge, showPercent, isDarkMode]);
+  }, [chartData, isVertical, isLarge, showPercent, isDarkMode, neutralMode, colorSalt]);
 
   const containerStyle = {
     height: isLarge ? '650px' : '400px', // Optimized modal size to match pie chart

@@ -1,10 +1,12 @@
 import React from 'react';
+import { useVisualization } from '../../context';
 
 interface SparklineProps {
   data: Array<{ x: string; y: number }>;
 }
 
 export const Sparkline: React.FC<SparklineProps> = ({ data }) => {
+  const { isDarkMode } = useVisualization();
   // Simple SVG sparkline
   const width = 280;
   const height = 60;
@@ -21,10 +23,10 @@ export const Sparkline: React.FC<SparklineProps> = ({ data }) => {
     .join(' ');
 
   return (
-    <svg width={width} height={height} className="text-amber-600">
+    <svg width={width} height={height} className={isDarkMode ? "text-amber-400" : "text-amber-600"}>
       <polyline 
         fill="none" 
-        stroke="#f59e0b" 
+        stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
         strokeWidth="2" 
         points={points} 
       />

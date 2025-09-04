@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseChartProps } from '../../types';
 import { computeColorForLabel } from '../../utils';
+import { useVisualization } from '../../context';
 
 export const VerticalBarChart: React.FC<BaseChartProps> = ({ 
   counts, 
@@ -12,6 +13,7 @@ export const VerticalBarChart: React.FC<BaseChartProps> = ({
   colorSalt, 
   size: chartSize = 'normal' 
 }) => {
+  const { isDarkMode } = useVisualization();
   const baseEntries = Object.entries(counts);
   const entries = orderedValues && orderedValues.length > 0
     ? orderedValues.filter(v => counts[v] !== undefined).map(v => [v, counts[v]] as [string, number])
@@ -40,7 +42,7 @@ export const VerticalBarChart: React.FC<BaseChartProps> = ({
           const pct = total > 0 ? (value / total) * 100 : 0;
           const lower = label?.toString().toLowerCase?.() || '';
           const strict = lower.replace(/[^a-z0-9]+/g, '-');
-          const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt });
+          const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt, isDarkMode });
           
           return (
             <div key={label} className="flex flex-col items-center">
@@ -52,10 +54,10 @@ export const VerticalBarChart: React.FC<BaseChartProps> = ({
                 }} 
                 title={`${label}: ${value} (${pct.toFixed(1)}%)`} 
               />
-              <div className={`mt-2 ${labelSize} text-gray-700 truncate w-full text-center`} title={label}>
+              <div className={`mt-2 ${labelSize} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} truncate w-full text-center`} title={label}>
                 {label}
               </div>
-              <div className={`${valueSize} text-gray-500 font-medium`}>
+              <div className={`${valueSize} ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
                 {showPercent ? `${pct.toFixed(0)}%` : value}
               </div>
             </div>

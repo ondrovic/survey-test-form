@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseChartProps } from '../../types';
 import { computeColorForLabel } from '../../utils';
+import { useVisualization } from '../../context';
 
 export const DonutChart: React.FC<BaseChartProps> = ({ 
   counts, 
@@ -12,6 +13,7 @@ export const DonutChart: React.FC<BaseChartProps> = ({
   colorSalt, 
   size: chartSize = 'normal' 
 }) => {
+  const { isDarkMode } = useVisualization();
   const baseEntries = Object.entries(counts);
   const entries = orderedValues && orderedValues.length > 0
     ? orderedValues.filter(v => counts[v] !== undefined).map(v => [v, counts[v]] as [string, number])
@@ -29,7 +31,7 @@ export const DonutChart: React.FC<BaseChartProps> = ({
     <div className={`grid gap-6 items-center ${chartSize === 'large' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 lg:grid-cols-2'}`}>
       <div className={`flex justify-center items-center ${chartSize === 'large' ? 'xl:col-span-1' : ''}`}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-sm">
-          <circle cx={center} cy={center} r={radius} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />
+          <circle cx={center} cy={center} r={radius} fill="none" stroke={isDarkMode ? "#374151" : "#f3f4f6"} strokeWidth={stroke} />
           {entries.map(([label, value]) => {
             const fraction = total > 0 ? value / total : 0;
             const dash = fraction * circumference;
@@ -37,7 +39,7 @@ export const DonutChart: React.FC<BaseChartProps> = ({
             cumulative += fraction;
             const lower = label?.toString().toLowerCase?.() || '';
             const strict = lower.replace(/[^a-z0-9]+/g, '-');
-            const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt });
+            const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt, isDarkMode });
             
             return (
               <circle
@@ -59,7 +61,7 @@ export const DonutChart: React.FC<BaseChartProps> = ({
             y={center} 
             textAnchor="middle" 
             dominantBaseline="middle" 
-            className="fill-gray-700" 
+            className={isDarkMode ? "fill-gray-200" : "fill-gray-700"} 
             fontSize={chartSize === 'large' ? "24" : "16"} 
             fontWeight="600"
           >
@@ -73,7 +75,7 @@ export const DonutChart: React.FC<BaseChartProps> = ({
           const fraction = total > 0 ? value / total : 0;
           const lower = label?.toString().toLowerCase?.() || '';
           const strict = lower.replace(/[^a-z0-9]+/g, '-');
-          const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt });
+          const color = computeColorForLabel({ label, lower, strict, colors, neutralMode, colorSalt, isDarkMode });
           const isLongLabel = (label || '').length > 25;
 
           return (
@@ -84,13 +86,13 @@ export const DonutChart: React.FC<BaseChartProps> = ({
                   style={{ backgroundColor: color }} 
                 />
                 <span
-                  className={`${isLongLabel ? 'line-clamp-2 leading-tight' : 'truncate'} text-gray-800`}
+                  className={`${isLongLabel ? 'line-clamp-2 leading-tight' : 'truncate'} ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}
                   title={label}
                 >
                   {label || '—'}
                 </span>
               </div>
-              <span className={`text-gray-600 shrink-0 ml-2 ${chartSize === 'large' ? 'text-lg font-semibold' : ''}`}>
+              <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} shrink-0 ml-2 ${chartSize === 'large' ? 'text-lg font-semibold' : ''}`}>
                 {showPercent ? `${(fraction * 100).toFixed(0)}%` : value}
               </span>
             </div>

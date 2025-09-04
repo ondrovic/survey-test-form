@@ -1,12 +1,13 @@
 import { Plus, Star, Trash2 } from 'lucide-react';
 import React from 'react';
-import { FieldType, SurveyField } from '../../../../../../types/framework.types';
+import { FieldType, RatingScale, SurveyField } from '../../../../../../types/framework.types';
 import { Button, Input } from '../../../../../common';
 import { FIELD_TYPES } from '../../../survey-builder.types';
 
 interface FieldEditorProps {
     field: SurveyField;
     sectionId: string;
+    ratingScale?: RatingScale;
     onUpdateField: (sectionId: string, fieldId: string, updates: Partial<SurveyField>) => void;
     onAddFieldOption: (sectionId: string, fieldId: string) => void;
     onUpdateFieldOption: (sectionId: string, fieldId: string, optionIndex: number, updates: { label?: string; value?: string }) => void;
@@ -17,6 +18,7 @@ interface FieldEditorProps {
 export const FieldEditor: React.FC<FieldEditorProps> = ({
     field,
     sectionId,
+    ratingScale,
     onUpdateField,
     onAddFieldOption,
     onUpdateFieldOption,
@@ -116,7 +118,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
                                         <h6 className="font-medium text-gray-900">{field.ratingScaleName}</h6>
-                                        <p className="text-xs text-gray-500">High, Medium, Low, Not Important Scale</p>
+                                        <p className="text-xs text-gray-500">{ratingScale ? `${ratingScale.options.length} options` : 'Loading...'}</p>
                                     </div>
                                     <Button
                                         size="sm"
@@ -132,18 +134,26 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
                                     </Button>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1 text-sm rounded border bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700">
-                                        High (Default)
-                                    </span>
-                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
-                                        Medium
-                                    </span>
-                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
-                                        Low
-                                    </span>
-                                    <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
-                                        Not Important
-                                    </span>
+                                    {ratingScale ? (
+                                        ratingScale.options
+                                            .sort((a, b) => a.order - b.order)
+                                            .map((option, index) => (
+                                                <span
+                                                    key={`${option.value}-${index}`}
+                                                    className={`px-3 py-1 text-sm rounded border ${option.isDefault
+                                                        ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'
+                                                        }`}
+                                                    style={option.color ? { backgroundColor: option.color } : undefined}
+                                                >
+                                                    {option.label} {option.isDefault ? '(Default)' : ''}
+                                                </span>
+                                            ))
+                                    ) : (
+                                        <span className="px-3 py-1 text-sm rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
+                                            Loading options...
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ) : (

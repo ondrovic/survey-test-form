@@ -3,7 +3,7 @@ import { ErrorLoggingService } from '../../../../../services/error-logging.servi
 import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
-import { FieldType, MultiSelectOptionSet, RadioOptionSet, SurveySubsection } from '../../../../../types/framework.types';
+import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SurveySubsection } from '../../../../../types/framework.types';
 import { Button, Input } from '../../../../common';
 // import { FIELD_TYPES } from './survey-builder.types';
 // import { DraggableField } from './draggable-field';
@@ -32,6 +32,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
 
     const [radioOptionSets, setRadioOptionSets] = useState<Record<string, RadioOptionSet>>({});
     const [multiSelectOptionSets, setMultiSelectOptionSets] = useState<Record<string, MultiSelectOptionSet>>({});
+    const [ratingScales, setRatingScales] = useState<Record<string, RatingScale>>({});
     const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
     const [titleError, setTitleError] = useState<string>('');
     const [descriptionError, setDescriptionError] = useState<string>('');
@@ -68,7 +69,8 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
         const loadOptionSets = async () => {
             const fieldsWithOptionSets = (subsection.fields || []).filter(field =>
                 (field.type === 'radio' && field.radioOptionSetId) ||
-                (field.type === 'multiselect' && field.multiSelectOptionSetId)
+                (field.type === 'multiselect' && field.multiSelectOptionSetId) ||
+                (field.type === 'rating' && field.ratingScaleId)
             );
 
             for (const field of fieldsWithOptionSets) {
@@ -125,6 +127,33 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
                         setLoadingOptionSets(prev => ({ ...prev, [field.multiSelectOptionSetId!]: false }));
                     }
                 }
+
+                if (field.type === 'rating' && field.ratingScaleId && !ratingScales[field.ratingScaleId]) {
+                    setLoadingOptionSets(prev => ({ ...prev, [field.ratingScaleId!]: true }));
+                    try {
+                        const ratingScale = await databaseHelpers.getRatingScale(field.ratingScaleId);
+                        if (ratingScale) {
+                            setRatingScales(prev => ({ ...prev, [field.ratingScaleId!]: ratingScale }));
+                        }
+                    } catch (error) {
+                        ErrorLoggingService.logError({
+                            severity: 'medium',
+                            errorMessage: 'Failed to load rating scale for subsection field',
+                            stackTrace: error instanceof Error ? error.stack : String(error),
+                            componentName: 'SubsectionEditor',
+                            functionName: 'loadOptionSets',
+                            additionalContext: {
+                                subsectionId: subsection.id,
+                                sectionId,
+                                fieldId: field.id,
+                                ratingScaleId: field.ratingScaleId,
+                                error: error instanceof Error ? error.message : String(error)
+                            }
+                        });
+                    } finally {
+                        setLoadingOptionSets(prev => ({ ...prev, [field.ratingScaleId!]: false }));
+                    }
+                }
             }
         };
 
@@ -133,7 +162,14 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
 
     const getOptionCount = (field: any) => {
         if (field.ratingScaleId) {
-            return '4 options'; // Rating scale has 4 options: High, Medium, Low, Not Important
+            const ratingScale = ratingScales[field.ratingScaleId];
+            if (ratingScale) {
+                return `${ratingScale.options.length} options`;
+            }
+            if (loadingOptionSets[field.ratingScaleId]) {
+                return 'Loading...';
+            }
+            return 'Failed to load';
         }
 
         if (field.radioOptionSetId) {

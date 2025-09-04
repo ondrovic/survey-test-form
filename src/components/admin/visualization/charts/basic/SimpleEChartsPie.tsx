@@ -2,6 +2,7 @@ import { useMemo, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { BaseChartProps } from '../../types';
 import { useVisualization } from '../../context';
+import { computeColorForLabel } from '../../utils';
 
 interface SimpleEChartsPieProps extends BaseChartProps {
   variant?: 'pie' | 'donut';
@@ -20,7 +21,9 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
   variant = 'donut',
   padAngle = 5, // Padding angle between segments like the example
   fieldName = 'Survey Data', // Default fallback
-  showLegend = size === 'large' // Default: show legend on large modal, hide on small
+  showLegend = size === 'large', // Default: show legend on large modal, hide on small
+  neutralMode,
+  colorSalt
 }, ref) => {
   const { isDarkMode } = useVisualization();
   const isLarge = size === 'large';
@@ -35,12 +38,24 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
 
     return entries.map(([label, value]) => {
       const pct = total > 0 ? (value / total) * 100 : 0;
+      const lower = label?.toString().toLowerCase?.() || '';
+      const strict = lower.replace(/[^a-z0-9]+/g, '-');
+      const color = computeColorForLabel({ 
+        label, 
+        lower, 
+        strict, 
+        colors, 
+        neutralMode, 
+        colorSalt, 
+        isDarkMode 
+      });
+      
       return {
         name: label || '—',
         value: showPercent ? parseFloat(pct.toFixed(1)) : value,
         percentage: pct,
         itemStyle: {
-          color: colors?.[label] || undefined, // Let ECharts handle default colors if not specified
+          color: color,
           borderRadius: 6, // Rounded corners for modern look
           borderColor: isDarkMode ? '#374151' : '#fff',
           borderWidth: 2
@@ -48,7 +63,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         // Removed individual label config - using series-level labels instead
       };
     });
-  }, [counts, total, orderedValues, colors, showPercent, isDarkMode]);
+  }, [counts, total, orderedValues, colors, showPercent, isDarkMode, neutralMode, colorSalt]);
 
   // Generate ECharts option matching the exact example you provided
   const option = useMemo(() => {
@@ -127,11 +142,13 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         animationDelay: (idx: number) => idx * 100
       }],
       
-      // Color palette (will be used if colors not specified)
-      color: [
-        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
-        '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#87c7ca',
-        '#d4a574', '#8d98b3', '#e5cf54', '#97b552', '#95706d'
+      // Color palette (will be used if colors not specified) - theme-aware
+      color: isDarkMode ? [
+        '#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa',
+        '#2dd4bf', '#fb923c', '#38bdf8', '#a3e635', '#c084fc'
+      ] : [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+        '#14b8a6', '#f97316', '#0ea5e9', '#84cc16', '#a855f7'
       ]
     };
   }, [chartData, isLarge, isDonut, padAngle, showPercent, showLegend, counts, total, isDarkMode]);
