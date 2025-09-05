@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CheckSquare, ChevronDown, ChevronRight, List, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { ErrorLoggingService } from '../../../../../services/error-logging.service';
 import React, { memo, useEffect, useState } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
@@ -6,8 +6,7 @@ import { useValidation } from '../../../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SurveySection, SurveySubsection } from '../../../../../types/framework.types';
 import { getOrderedSectionContent } from '../../../../../utils/section-content.utils';
 import { Button, Input, SortableList } from '../../../../common';
-// import { FIELD_TYPES } from './survey-builder.types';
-// import { DraggableField } from './draggable-field';
+import { FIELD_TYPES } from '../../survey-builder.types';
 import { FieldDropZone, DraggableField } from '../../drag-and-drop';
 
 // Utility function to generate kebab-case identifier from title
@@ -37,6 +36,10 @@ interface SectionEditorProps {
     onOpenFieldEditor: (fieldId: string) => void;
     onDeleteField: (sectionId: string, fieldId: string, subsectionId?: string) => void;
     onReorderFields: (sectionId: string, oldIndex: number, newIndex: number, subsectionId?: string) => void;
+    onShowRatingScaleManager?: () => void;
+    onShowRadioOptionSetManager?: () => void;
+    onShowMultiSelectOptionSetManager?: () => void;
+    onOptionSetSelect?: (optionSetId: string, optionSetName: string, optionSetType: 'rating' | 'radio' | 'multiselect') => void;
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = memo(({
@@ -52,7 +55,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
     onSelectSubsection,
     onAddField,
     onOpenFieldEditor,
-    onDeleteField
+    onDeleteField,
+    onShowRatingScaleManager,
+    onShowRadioOptionSetManager,
+    onShowMultiSelectOptionSetManager
 }) => {
     const { validateSectionTitle, validateSectionDescription } = useValidation();
 
@@ -79,6 +85,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
 
         setExpandedSubsections(newExpanded);
     }, [selectedSubsectionId, selectedFieldId, section.subsections]);
+
 
     // Toggle subsection expansion (allow multiple expanded)
     const toggleSubsection = (subsectionId: string) => {
@@ -337,6 +344,222 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                         <p className="mt-1 text-sm text-red-600">{descriptionError}</p>
                     )}
                 </div>
+
+                {/* Default Field Settings */}
+                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Default Field Settings</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
+                        Set default field type and option sets for new fields added to this section. Subsections can inherit or override these defaults.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="section-default-field-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Default Field Type
+                            </label>
+                            <select
+                                id="section-default-field-type"
+                                value={section.defaults?.fieldType || ''}
+                                onChange={(e) => {
+                                    const fieldType = e.target.value as FieldType;
+                                    onUpdateSection(section.id, {
+                                        defaults: {
+                                            ...section.defaults,
+                                            fieldType: fieldType || undefined,
+                                            // Clear option sets when field type changes
+                                            ...(fieldType !== 'rating' && { ratingScaleId: undefined, ratingScaleName: undefined }),
+                                            ...(fieldType !== 'radio' && { radioOptionSetId: undefined, radioOptionSetName: undefined }),
+                                            ...(fieldType !== 'multiselect' && { multiSelectOptionSetId: undefined, multiSelectOptionSetName: undefined })
+                                        }
+                                    });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            >
+                                <option value="">No default (users choose)</option>
+                                {FIELD_TYPES.map((type) => (
+                                    <option key={type.value} value={type.value}>
+                                        {type.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Conditional Option Set Selection */}
+                        {section.defaults?.fieldType === 'rating' && (
+                            <div>
+                                <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Default Rating Scale
+                                </div>
+                                <div className="space-y-2">
+                                    {section.defaults?.ratingScaleId ? (
+                                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Star className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                                        {section.defaults.ratingScaleName || 'Unknown Scale'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => onShowRatingScaleManager?.()}
+                                                        className="text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200 h-7 px-2"
+                                                    >
+                                                        Change
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onUpdateSection(section.id, {
+                                                                defaults: {
+                                                                    ...section.defaults,
+                                                                    ratingScaleId: undefined,
+                                                                    ratingScaleName: undefined
+                                                                }
+                                                            });
+                                                        }}
+                                                        className="text-red-500 hover:text-red-600 h-7 px-2"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onShowRatingScaleManager?.()}
+                                            className="w-full justify-start bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 border-dashed border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                                            variant="ghost"
+                                        >
+                                            <Star className="w-4 h-4 mr-2" />
+                                            Select Rating Scale
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {section.defaults?.fieldType === 'radio' && (
+                            <div>
+                                <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Default Radio Option Set
+                                </div>
+                                <div className="space-y-2">
+                                    {section.defaults?.radioOptionSetId ? (
+                                        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <List className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                                    <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                                                        {section.defaults.radioOptionSetName || 'Unknown Set'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => onShowRadioOptionSetManager?.()}
+                                                        className="text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200 h-7 px-2"
+                                                    >
+                                                        Change
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onUpdateSection(section.id, {
+                                                                defaults: {
+                                                                    ...section.defaults,
+                                                                    radioOptionSetId: undefined,
+                                                                    radioOptionSetName: undefined
+                                                                }
+                                                            });
+                                                        }}
+                                                        className="text-red-500 hover:text-red-600 h-7 px-2"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onShowRadioOptionSetManager?.()}
+                                            className="w-full justify-start bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 border-dashed border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                                            variant="ghost"
+                                        >
+                                            <List className="w-4 h-4 mr-2" />
+                                            Select Radio Options
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {section.defaults?.fieldType === 'multiselect' && (
+                            <div>
+                                <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Default Multi-Select Option Set
+                                </div>
+                                <div className="space-y-2">
+                                    {section.defaults?.multiSelectOptionSetId ? (
+                                        <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <CheckSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                                    <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                                                        {section.defaults.multiSelectOptionSetName || 'Unknown Set'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => onShowMultiSelectOptionSetManager?.()}
+                                                        className="text-purple-700 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200 h-7 px-2"
+                                                    >
+                                                        Change
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onUpdateSection(section.id, {
+                                                                defaults: {
+                                                                    ...section.defaults,
+                                                                    multiSelectOptionSetId: undefined,
+                                                                    multiSelectOptionSetName: undefined
+                                                                }
+                                                            });
+                                                        }}
+                                                        className="text-red-500 hover:text-red-600 h-7 px-2"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onShowMultiSelectOptionSetManager?.()}
+                                            className="w-full justify-start bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 border-dashed border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                                            variant="ghost"
+                                        >
+                                            <CheckSquare className="w-4 h-4 mr-2" />
+                                            Select Multi-Select Options
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Section Content - Unified Fields and Subsections */}
@@ -359,13 +582,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                         <Button
                             size="sm"
                             onClick={() => {
-                                onAddField(section.id, 'text');
+                                const defaultType = section.defaults?.fieldType || 'text';
+                                onAddField(section.id, defaultType);
                             }}
                             disabled={!section.title || !section.type || titleError !== ''}
                             title={!section.title || !section.type ? 'Please enter a valid section title first' : ''}
                         >
                             <Plus className="w-4 h-4 mr-2" />
-                            Add Field
+                            Add Field {section.defaults?.fieldType && `(${FIELD_TYPES.find(t => t.value === section.defaults?.fieldType)?.label})`}
                         </Button>
                     </div>
                 </div>
@@ -533,13 +757,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                 <Button
                                                                     size="sm"
                                                                     onClick={() => {
-                                                                        onAddField(section.id, 'text', subsection.id);
+                                                                        const defaultType = subsection.defaults?.fieldType || section.defaults?.fieldType || 'text';
+                                                                        onAddField(section.id, defaultType, subsection.id);
                                                                     }}
                                                                     disabled={!subsection.title}
                                                                     title={!subsection.title ? 'Please enter a valid subsection title first' : ''}
                                                                 >
                                                                     <Plus className="w-4 h-4 mr-2" />
-                                                                    Add Field
+                                                                    Add Field {(subsection.defaults?.fieldType || section.defaults?.fieldType) && `(${FIELD_TYPES.find(t => t.value === (subsection.defaults?.fieldType || section.defaults?.fieldType))?.label})`}
                                                                 </Button>
                                                             </div>
                                                             <FieldDropZone

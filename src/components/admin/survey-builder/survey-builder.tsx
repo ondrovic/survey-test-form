@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { databaseHelpers } from '../../../config/database';
 import { SurveyBuilderProvider, useSurveyBuilder } from '../../../contexts/survey-builder-context/index';
 import { useSurveyData } from '../../../contexts/survey-data-context/index';
@@ -163,6 +163,13 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             ])
             .map(field => field.id);
 
+        // Find the section and subsection to get defaults
+        const section = state.config.sections.find(s => s.id === sectionId);
+        const subsection = subsectionId ? section?.subsections?.find(sub => sub.id === subsectionId) : undefined;
+        
+        // Determine defaults (subsection overrides section)
+        const defaults = subsection?.defaults || section?.defaults;
+
         const fieldLabel = `New ${fieldType} Field`;
         const fieldId = generateFieldId(fieldType, fieldLabel, existingFieldIds);
         const now = new Date().toISOString();
@@ -175,7 +182,20 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
             labelHistory: [{
                 label: fieldLabel,
                 changedAt: now
-            }]
+            }],
+            // Apply default option sets based on field type
+            ...(fieldType === 'rating' && defaults?.ratingScaleId && {
+                ratingScaleId: defaults.ratingScaleId,
+                ratingScaleName: defaults.ratingScaleName
+            }),
+            ...(fieldType === 'radio' && defaults?.radioOptionSetId && {
+                radioOptionSetId: defaults.radioOptionSetId,
+                radioOptionSetName: defaults.radioOptionSetName
+            }),
+            ...(fieldType === 'multiselect' && defaults?.multiSelectOptionSetId && {
+                multiSelectOptionSetId: defaults.multiSelectOptionSetId,
+                multiSelectOptionSetName: defaults.multiSelectOptionSetName
+            })
         };
         
         addField(sectionId, newField, subsectionId);
@@ -503,22 +523,150 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }
     }
 
+    // State to track which section is being configured for defaults
+    const [sectionDefaultsContext, setSectionDefaultsContext] = useState<{ sectionId: string; subsectionId?: string } | null>(null);
+
+    // Section defaults option set handlers
+    const handleSectionRatingScaleSelect = useCallback(async (optionSetId: string) => {
+        if (!sectionDefaultsContext) return;
+        
+        try {
+            const scale = await databaseHelpers.getRatingScale(optionSetId);
+            if (scale) {
+                if (sectionDefaultsContext.subsectionId) {
+                    // Update subsection defaults
+                    handleUpdateSubsection(sectionDefaultsContext.sectionId, sectionDefaultsContext.subsectionId, {
+                        defaults: {
+                            ...selectedSection?.subsections?.find(s => s.id === sectionDefaultsContext.subsectionId)?.defaults,
+                            ratingScaleId: scale.id,
+                            ratingScaleName: scale.name
+                        }
+                    });
+                } else {
+                    // Update section defaults
+                    handleUpdateSection(sectionDefaultsContext.sectionId, {
+                        defaults: {
+                            ...selectedSection?.defaults,
+                            ratingScaleId: scale.id,
+                            ratingScaleName: scale.name
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error selecting rating scale for defaults:', error);
+        }
+        
+        setSectionDefaultsContext(null);
+        showRatingScaleManager(false);
+    }, [sectionDefaultsContext, selectedSection, handleUpdateSection, handleUpdateSubsection, showRatingScaleManager]);
+
+    const handleSectionRadioOptionSetSelect = useCallback(async (optionSetId: string) => {
+        if (!sectionDefaultsContext) return;
+        
+        try {
+            const optionSet = await databaseHelpers.getRadioOptionSet(optionSetId);
+            if (optionSet) {
+                if (sectionDefaultsContext.subsectionId) {
+                    // Update subsection defaults
+                    handleUpdateSubsection(sectionDefaultsContext.sectionId, sectionDefaultsContext.subsectionId, {
+                        defaults: {
+                            ...selectedSection?.subsections?.find(s => s.id === sectionDefaultsContext.subsectionId)?.defaults,
+                            radioOptionSetId: optionSet.id,
+                            radioOptionSetName: optionSet.name
+                        }
+                    });
+                } else {
+                    // Update section defaults
+                    handleUpdateSection(sectionDefaultsContext.sectionId, {
+                        defaults: {
+                            ...selectedSection?.defaults,
+                            radioOptionSetId: optionSet.id,
+                            radioOptionSetName: optionSet.name
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error selecting radio option set for defaults:', error);
+        }
+        
+        setSectionDefaultsContext(null);
+        showRadioOptionSetManager(false);
+    }, [sectionDefaultsContext, selectedSection, handleUpdateSection, handleUpdateSubsection, showRadioOptionSetManager]);
+
+    const handleSectionMultiSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
+        if (!sectionDefaultsContext) return;
+        
+        try {
+            const optionSet = await databaseHelpers.getMultiSelectOptionSet(optionSetId);
+            if (optionSet) {
+                if (sectionDefaultsContext.subsectionId) {
+                    // Update subsection defaults
+                    handleUpdateSubsection(sectionDefaultsContext.sectionId, sectionDefaultsContext.subsectionId, {
+                        defaults: {
+                            ...selectedSection?.subsections?.find(s => s.id === sectionDefaultsContext.subsectionId)?.defaults,
+                            multiSelectOptionSetId: optionSet.id,
+                            multiSelectOptionSetName: optionSet.name
+                        }
+                    });
+                } else {
+                    // Update section defaults
+                    handleUpdateSection(sectionDefaultsContext.sectionId, {
+                        defaults: {
+                            ...selectedSection?.defaults,
+                            multiSelectOptionSetId: optionSet.id,
+                            multiSelectOptionSetName: optionSet.name
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error selecting multi-select option set for defaults:', error);
+        }
+        
+        setSectionDefaultsContext(null);
+        showMultiSelectOptionSetManager(false);
+    }, [sectionDefaultsContext, selectedSection, handleUpdateSection, handleUpdateSubsection, showMultiSelectOptionSetManager]);
+
+    // Section defaults manager show handlers
+    const handleShowRatingScaleManagerForDefaults = useCallback((sectionId: string, subsectionId?: string) => {
+        setSectionDefaultsContext({ sectionId, subsectionId });
+        showRatingScaleManager(true);
+    }, [showRatingScaleManager]);
+
+    const handleShowRadioOptionSetManagerForDefaults = useCallback((sectionId: string, subsectionId?: string) => {
+        setSectionDefaultsContext({ sectionId, subsectionId });
+        showRadioOptionSetManager(true);
+    }, [showRadioOptionSetManager]);
+
+    const handleShowMultiSelectOptionSetManagerForDefaults = useCallback((sectionId: string, subsectionId?: string) => {
+        setSectionDefaultsContext({ sectionId, subsectionId });
+        showMultiSelectOptionSetManager(true);
+    }, [showMultiSelectOptionSetManager]);
 
     // Memoize the onScaleSelect callback to prevent infinite re-renders
     const handleScaleSelect = useCallback((scaleId: string) => {
-        if (selectedField) {
+        // Check if we're in section defaults mode
+        if (sectionDefaultsContext) {
+            handleSectionRatingScaleSelect(scaleId);
+        } else if (selectedField) {
+            // Original field selection logic
             handleUpdateField(selectedSection!.id, selectedField.id, {
                 ratingScaleId: scaleId,
                 ratingScaleName: `Rating Option Set ${scaleId}`,
                 options: [] // Clear individual options when using rating scale
             }, selectedFieldSubsectionId);
+            showRatingScaleManager(false);
         }
-        showRatingScaleManager(false);
-    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showRatingScaleManager]);
+    }, [sectionDefaultsContext, handleSectionRatingScaleSelect, selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showRatingScaleManager]);
 
     // Memoize the radio option set selection callback
     const handleRadioOptionSetSelect = useCallback(async (optionSetId: string) => {
-        if (selectedField) {
+        // Check if we're in section defaults mode
+        if (sectionDefaultsContext) {
+            handleSectionRadioOptionSetSelect(optionSetId);
+        } else if (selectedField) {
             try {
                 // Fetch the actual option set to get its name
                 const optionSet = await databaseHelpers.getRadioOptionSet(optionSetId);
@@ -548,13 +696,16 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     options: [] // Clear individual options when using option set
                 }, selectedFieldSubsectionId);
             }
+            showRadioOptionSetManager(false);
         }
-        showRadioOptionSetManager(false);
-    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showRadioOptionSetManager]);
+    }, [sectionDefaultsContext, handleSectionRadioOptionSetSelect, selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showRadioOptionSetManager]);
 
     // Memoize the multi-select option set selection callback
     const handleMultiSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
-        if (selectedField) {
+        // Check if we're in section defaults mode
+        if (sectionDefaultsContext) {
+            handleSectionMultiSelectOptionSetSelect(optionSetId);
+        } else if (selectedField) {
             try {
                 // Fetch the actual option set to get its name
                 const optionSet = await databaseHelpers.getMultiSelectOptionSet(optionSetId);
@@ -584,9 +735,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     options: [] // Clear individual options when using option set
                 }, selectedFieldSubsectionId);
             }
+            showMultiSelectOptionSetManager(false);
         }
-        showMultiSelectOptionSetManager(false);
-    }, [selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showMultiSelectOptionSetManager]);
+    }, [sectionDefaultsContext, handleSectionMultiSelectOptionSetSelect, selectedField, selectedSection, selectedFieldSubsectionId, handleUpdateField, showMultiSelectOptionSetManager]);
 
     // Memoize the select option set selection callback
     const handleSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
@@ -692,6 +843,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                                     onOpenFieldEditor={handleOpenFieldEditor}
                                                     onDeleteField={handleDeleteField}
                                                     onReorderFields={handleReorderFields}
+                                                    onShowRatingScaleManager={() => handleShowRatingScaleManagerForDefaults(selectedSection.id)}
+                                                    onShowRadioOptionSetManager={() => handleShowRadioOptionSetManagerForDefaults(selectedSection.id)}
+                                                    onShowMultiSelectOptionSetManager={() => handleShowMultiSelectOptionSetManagerForDefaults(selectedSection.id)}
                                                 />
                                             </div>
                                         )}
@@ -769,6 +923,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                             onOpenFieldEditor={handleOpenFieldEditor}
                                             onDeleteField={handleDeleteField}
                                             onReorderFields={handleReorderFields}
+                                            onShowRatingScaleManager={() => handleShowRatingScaleManagerForDefaults(selectedSection.id)}
+                                            onShowRadioOptionSetManager={() => handleShowRadioOptionSetManagerForDefaults(selectedSection.id)}
+                                            onShowMultiSelectOptionSetManager={() => handleShowMultiSelectOptionSetManagerForDefaults(selectedSection.id)}
                                         />
                                     </div>
                                 ) : (

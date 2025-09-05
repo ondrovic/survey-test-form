@@ -153,12 +153,23 @@ export interface SurveyField {
   }>;
 }
 
+export interface FieldDefaults {
+  fieldType?: FieldType;
+  ratingScaleId?: string;
+  ratingScaleName?: string;
+  radioOptionSetId?: string;
+  radioOptionSetName?: string;
+  multiSelectOptionSetId?: string;
+  multiSelectOptionSetName?: string;
+}
+
 export interface SurveySubsection {
   id: string;
   title: string;
   description?: string;
   fields: SurveyField[];
   order: number;
+  defaults?: FieldDefaults;
   metadata?: Record<string, any>;
 }
 
@@ -179,6 +190,7 @@ export interface SurveySection {
   content?: SectionContent[]; // New unified ordering array
   order: number;
   description?: string;
+  defaults?: FieldDefaults;
   metadata?: Record<string, any>;
 }
 
