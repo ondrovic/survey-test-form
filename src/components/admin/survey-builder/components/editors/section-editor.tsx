@@ -1,6 +1,6 @@
 import { CheckSquare, ChevronDown, ChevronRight, List, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { ErrorLoggingService } from '../../../../../services/error-logging.service';
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useState, useCallback, useRef } from 'react';
 import { databaseHelpers } from '../../../../../config/database';
 import { useValidation } from '../../../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SurveySection, SurveySubsection } from '../../../../../types/framework.types';
@@ -64,6 +64,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
 
     // State to track which subsections are expanded
     const [expandedSubsections, setExpandedSubsections] = useState<Set<string>>(new Set());
+    
+    // Local state for subsection inputs to prevent immediate updates
+    const [subsectionInputs, setSubsectionInputs] = useState<Record<string, { title: string; description: string }>>({});
+    const subsectionTimeoutRefs = useRef<Record<string, { title?: NodeJS.Timeout; description?: NodeJS.Timeout }>>({});
 
     // Auto-expand subsections that are selected or have selected fields
     useEffect(() => {
@@ -106,26 +110,135 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
     const [loadingOptionSets, setLoadingOptionSets] = useState<Record<string, boolean>>({});
     const [titleError, setTitleError] = useState<string>('');
     const [descriptionError, setDescriptionError] = useState<string>('');
+    
+    // Local state for inputs to prevent immediate updates
+    const [localTitle, setLocalTitle] = useState(section.title);
+    const [localDescription, setLocalDescription] = useState(section.description || '');
+    
+    // Debounce refs
+    const titleTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const descriptionTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    
+    // Initialize subsection inputs when section changes
+    useEffect(() => {
+        const newInputs: Record<string, { title: string; description: string }> = {};
+        (section.subsections || []).forEach(subsection => {
+            newInputs[subsection.id] = {
+                title: subsection.title,
+                description: subsection.description || ''
+            };
+        });
+        setSubsectionInputs(newInputs);
+    }, [section.subsections?.length, section.id]); // Update when subsections change
 
-    // Handle title change with validation and auto-update type
-    const handleTitleChange = (newTitle: string) => {
+    // Cleanup timeouts
+    useEffect(() => {
+        return () => {
+            if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
+            if (descriptionTimeoutRef.current) clearTimeout(descriptionTimeoutRef.current);
+            
+            // Clean up subsection timeouts
+            Object.values(subsectionTimeoutRefs.current).forEach(timeouts => {
+                if (timeouts.title) clearTimeout(timeouts.title);
+                if (timeouts.description) clearTimeout(timeouts.description);
+            });
+        };
+    }, []);
+    
+    // Update local state when section changes
+    useEffect(() => {
+        setLocalTitle(section.title);
+        setLocalDescription(section.description || '');
+    }, [section.id]); // Only update when section ID changes, not on every prop update
+    
+    // Sync local state with section changes (but don't overwrite user input)
+    useEffect(() => {
+        // Only update if the section value changed from external source and we're not currently editing
+        if (section.title !== localTitle && !titleTimeoutRef.current) {
+            setLocalTitle(section.title);
+        }
+        if ((section.description || '') !== localDescription && !descriptionTimeoutRef.current) {
+            setLocalDescription(section.description || '');
+        }
+    }, [section.title, section.description]); // Sync but don't interfere with active editing
+
+    // Debounced handlers
+    const handleTitleChange = useCallback((newTitle: string) => {
+        setLocalTitle(newTitle);
+        
+        // Immediate validation for UI feedback
         const validation = validateSectionTitle(newTitle);
         setTitleError(validation.isValid ? '' : validation.error || '');
+        
+        // Debounce the actual state update
+        if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
+        titleTimeoutRef.current = setTimeout(() => {
+            const newType = newTitle.trim() ? generateSectionType(newTitle) : 'custom';
+            onUpdateSection(section.id, {
+                title: newTitle,
+                type: newType as any
+            });
+        }, 500);
+    }, [section.id, onUpdateSection, validateSectionTitle]);
 
-        const newType = newTitle.trim() ? generateSectionType(newTitle) : 'custom';
-        onUpdateSection(section.id, {
-            title: newTitle,
-            type: newType as any
-        });
-    };
-
-    // Handle description change with validation
-    const handleDescriptionChange = (newDescription: string) => {
+    const handleDescriptionChange = useCallback((newDescription: string) => {
+        setLocalDescription(newDescription);
+        
+        // Immediate validation for UI feedback
         const validation = validateSectionDescription(newDescription);
         setDescriptionError(validation.isValid ? '' : validation.error || '');
+        
+        // Debounce the actual state update
+        if (descriptionTimeoutRef.current) clearTimeout(descriptionTimeoutRef.current);
+        descriptionTimeoutRef.current = setTimeout(() => {
+            onUpdateSection(section.id, { description: newDescription });
+        }, 500);
+    }, [section.id, onUpdateSection, validateSectionDescription]);
 
-        onUpdateSection(section.id, { description: newDescription });
-    };
+    // Debounced handlers for subsection inputs
+    const handleSubsectionTitleChange = useCallback((subsectionId: string, newTitle: string) => {
+        // Update local state immediately for UI feedback
+        setSubsectionInputs(prev => ({
+            ...prev,
+            [subsectionId]: { ...prev[subsectionId], title: newTitle }
+        }));
+        
+        // Debounce the actual state update
+        if (!subsectionTimeoutRefs.current[subsectionId]) {
+            subsectionTimeoutRefs.current[subsectionId] = {};
+        }
+        
+        if (subsectionTimeoutRefs.current[subsectionId].title) {
+            clearTimeout(subsectionTimeoutRefs.current[subsectionId].title);
+        }
+        
+        subsectionTimeoutRefs.current[subsectionId].title = setTimeout(() => {
+            onUpdateSubsection(section.id, subsectionId, { title: newTitle });
+            delete subsectionTimeoutRefs.current[subsectionId].title;
+        }, 500);
+    }, [section.id, onUpdateSubsection]);
+
+    const handleSubsectionDescriptionChange = useCallback((subsectionId: string, newDescription: string) => {
+        // Update local state immediately for UI feedback
+        setSubsectionInputs(prev => ({
+            ...prev,
+            [subsectionId]: { ...prev[subsectionId], description: newDescription }
+        }));
+        
+        // Debounce the actual state update
+        if (!subsectionTimeoutRefs.current[subsectionId]) {
+            subsectionTimeoutRefs.current[subsectionId] = {};
+        }
+        
+        if (subsectionTimeoutRefs.current[subsectionId].description) {
+            clearTimeout(subsectionTimeoutRefs.current[subsectionId].description);
+        }
+        
+        subsectionTimeoutRefs.current[subsectionId].description = setTimeout(() => {
+            onUpdateSubsection(section.id, subsectionId, { description: newDescription });
+            delete subsectionTimeoutRefs.current[subsectionId].description;
+        }, 500);
+    }, [section.id, onUpdateSubsection]);
 
     // Validate on mount and section change
     useEffect(() => {
@@ -237,7 +350,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
         loadOptionSets();
     }, [section.id]);
 
-    const getOptionCount = (field: any) => {
+    const getOptionCount = useCallback((field: any) => {
         if (field.ratingScaleId) {
             const ratingScale = ratingScales[field.ratingScaleId];
             if (ratingScale) {
@@ -276,7 +389,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
         }
 
         return 'No options';
-    };
+    }, [ratingScales, radioOptionSets, multiSelectOptionSets, loadingOptionSets]);
 
     // Handle adding a new subsection
     const handleAddSubsection = () => {
@@ -303,7 +416,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                         <Input
                             name="sectionTitle"
                             label="Section Title *"
-                            value={section.title}
+                            value={localTitle}
                             onChange={handleTitleChange}
                             error={titleError}
                             placeholder="e.g., About Us, Contact Info"
@@ -319,7 +432,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                             value={section.type || ''}
                             readOnly
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-not-allowed"
-                            placeholder={section.title ? generateSectionType(section.title) : 'Enter title to generate type'}
+                            placeholder={localTitle ? generateSectionType(localTitle) : 'Enter title to generate type'}
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Auto-generated from title in kebab-case format
@@ -333,7 +446,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                     <textarea
                         id="section-description"
                         name="sectionDescription"
-                        value={section.description || ''}
+                        value={localDescription}
                         onChange={(e) => handleDescriptionChange(e.target.value)}
                         placeholder="Enter section description (optional, max 300 characters)"
                         rows={3}
@@ -722,9 +835,9 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                     <Input
                                                                         name="subsectionTitle"
                                                                         label="Subsection Title *"
-                                                                        value={subsection.title}
+                                                                        value={subsectionInputs[subsection.id]?.title || subsection.title}
                                                                         onChange={(newTitle) => {
-                                                                            onUpdateSubsection(section.id, subsection.id, { title: newTitle });
+                                                                            handleSubsectionTitleChange(subsection.id, newTitle);
                                                                         }}
                                                                         placeholder="e.g., Personal Details, Preferences"
                                                                     />
@@ -736,9 +849,9 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
                                                                     <textarea
                                                                         id="subsection-description"
                                                                         name="subsectionDescription"
-                                                                        value={subsection.description || ''}
+                                                                        value={subsectionInputs[subsection.id]?.description || subsection.description || ''}
                                                                         onChange={(e) => {
-                                                                            onUpdateSubsection(section.id, subsection.id, { description: e.target.value });
+                                                                            handleSubsectionDescriptionChange(subsection.id, e.target.value);
                                                                         }}
                                                                         placeholder="Enter subsection description (optional, max 300 characters)"
                                                                         rows={2}

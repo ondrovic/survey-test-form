@@ -8,7 +8,7 @@ interface DraggableFieldProps {
   children: React.ReactNode;
 }
 
-export const DraggableField: React.FC<DraggableFieldProps> = ({
+export const DraggableField: React.FC<DraggableFieldProps> = React.memo(({
   fieldId,
   index,
   children,
@@ -42,4 +42,6 @@ export const DraggableField: React.FC<DraggableFieldProps> = ({
       )}
     </Draggable>
   );
-};
+});
+
+DraggableField.displayName = 'DraggableField';

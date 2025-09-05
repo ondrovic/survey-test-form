@@ -315,38 +315,38 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
             };
 
         case 'UPDATE_FIELD': {
+            // Use Immer-like approach for better performance with deep updates
+            const updatedSections = state.config.sections.map(section => {
+                if (section.id !== action.payload.sectionId) return section;
+                
+                if (action.payload.subsectionId) {
+                    const updatedSubsections = section.subsections.map(subsection => {
+                        if (subsection.id !== action.payload.subsectionId) return subsection;
+                        
+                        const updatedFields = subsection.fields.map(field => 
+                            field.id === action.payload.fieldId 
+                                ? { ...field, ...action.payload.updates }
+                                : field
+                        );
+                        
+                        return { ...subsection, fields: updatedFields };
+                    });
+                    
+                    return { ...section, subsections: updatedSubsections };
+                } else {
+                    const updatedFields = section.fields.map(field => 
+                        field.id === action.payload.fieldId 
+                            ? { ...field, ...action.payload.updates }
+                            : field
+                    );
+                    
+                    return { ...section, fields: updatedFields };
+                }
+            });
+            
             const updatedFieldConfig = {
                 ...state.config,
-                sections: state.config.sections.map(section =>
-                    section.id === action.payload.sectionId
-                        ? action.payload.subsectionId
-                            ? {
-                                ...section,
-                                subsections: section.subsections.map(subsection =>
-                                    subsection.id === action.payload.subsectionId
-                                        ? {
-                                            ...subsection,
-                                            fields: subsection.fields.map(field => {
-                                                if (field.id === action.payload.fieldId) {
-                                                    return { ...field, ...action.payload.updates };
-                                                }
-                                                return field;
-                                            })
-                                        }
-                                        : subsection
-                                )
-                            }
-                            : {
-                                ...section,
-                                fields: section.fields.map(field => {
-                                    if (field.id === action.payload.fieldId) {
-                                        return { ...field, ...action.payload.updates };
-                                    }
-                                    return field;
-                                })
-                            }
-                        : section
-                ),
+                sections: updatedSections,
                 metadata: updateMetadata(state.config.metadata)
             };
 

@@ -1,6 +1,6 @@
 import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2 } from 'lucide-react';
 import { ErrorLoggingService } from '../../../../../../services/error-logging.service';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { databaseHelpers } from '../../../../../../config/database';
 import { useValidation } from '../../../../../../contexts/validation-context';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '../../../../../../types/framework.types';
@@ -57,21 +57,66 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
 
     // Track the original label when the modal opens to detect actual changes
     const [originalLabel, setOriginalLabel] = useState<string>('');
+    
+    // Local state for inputs to prevent immediate updates
+    const [localLabel, setLocalLabel] = useState<string>('');
+    const [localPlaceholder, setLocalPlaceholder] = useState<string>('');
+    
+    // Debounce refs
+    const labelTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const placeholderTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    
+    // Cleanup timeouts
+    useEffect(() => {
+        return () => {
+            if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current);
+            if (placeholderTimeoutRef.current) clearTimeout(placeholderTimeoutRef.current);
+            if (validationTimeoutRef.current) clearTimeout(validationTimeoutRef.current);
+        };
+    }, []);
 
-    // Validation handlers
-    const handleLabelChange = (value: string) => {
-        if (!field) return;
-        const validation = validateFieldLabel(value);
-        setLabelError(validation.isValid ? '' : validation.error || '');
-        onUpdateField(sectionId, field.id, { label: value });
-    };
+    // Debounced validation
+    const debouncedValidateLabel = useCallback((value: string) => {
+        if (validationTimeoutRef.current) clearTimeout(validationTimeoutRef.current);
+        validationTimeoutRef.current = setTimeout(() => {
+            const validation = validateFieldLabel(value);
+            setLabelError(validation.isValid ? '' : validation.error || '');
+        }, 300);
+    }, [validateFieldLabel]);
 
-    const handlePlaceholderChange = (value: string) => {
+    const debouncedValidatePlaceholder = useCallback((value: string) => {
+        if (validationTimeoutRef.current) clearTimeout(validationTimeoutRef.current);
+        validationTimeoutRef.current = setTimeout(() => {
+            const validation = validateFieldPlaceholder(value);
+            setPlaceholderError(validation.isValid ? '' : validation.error || '');
+        }, 300);
+    }, [validateFieldPlaceholder]);
+
+    // Debounced update handlers
+    const handleLabelChange = useCallback((value: string) => {
         if (!field) return;
-        const validation = validateFieldPlaceholder(value);
-        setPlaceholderError(validation.isValid ? '' : validation.error || '');
-        onUpdateField(sectionId, field.id, { placeholder: value });
-    };
+        setLocalLabel(value);
+        debouncedValidateLabel(value);
+        
+        // Debounce the actual state update
+        if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current);
+        labelTimeoutRef.current = setTimeout(() => {
+            onUpdateField(sectionId, field.id, { label: value });
+        }, 300);
+    }, [field, sectionId, onUpdateField, debouncedValidateLabel]);
+
+    const handlePlaceholderChange = useCallback((value: string) => {
+        if (!field) return;
+        setLocalPlaceholder(value);
+        debouncedValidatePlaceholder(value);
+        
+        // Debounce the actual state update
+        if (placeholderTimeoutRef.current) clearTimeout(placeholderTimeoutRef.current);
+        placeholderTimeoutRef.current = setTimeout(() => {
+            onUpdateField(sectionId, field.id, { placeholder: value });
+        }, 300);
+    }, [field, sectionId, onUpdateField, debouncedValidatePlaceholder]);
 
     const validateOptions = useCallback((): boolean => {
         if (!field) return true;
@@ -107,14 +152,31 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
         onClose();
     };
 
-    // Reset original label when modal opens/closes
+    // Reset original label and local state when modal opens/closes
     useEffect(() => {
         if (isOpen && field) {
             setOriginalLabel(field.label);
+            setLocalLabel(field.label);
+            setLocalPlaceholder(field.placeholder || '');
         } else if (!isOpen) {
             setOriginalLabel('');
+            setLocalLabel('');
+            setLocalPlaceholder('');
         }
-    }, [isOpen, field]); // Only reset when modal opens or field changes
+    }, [isOpen, field?.id]); // Only reset when modal opens or field ID changes
+    
+    // Sync local state with field changes (but don't overwrite user input)
+    useEffect(() => {
+        if (field && isOpen) {
+            // Only update if the field value changed from external source and we're not currently editing
+            if (field.label !== localLabel && !labelTimeoutRef.current) {
+                setLocalLabel(field.label);
+            }
+            if ((field.placeholder || '') !== localPlaceholder && !placeholderTimeoutRef.current) {
+                setLocalPlaceholder(field.placeholder || '');
+            }
+        }
+    }, [field?.label, field?.placeholder, isOpen]); // Sync but don't interfere with active editing
 
 
     // Load option sets and validate when field changes
@@ -212,7 +274,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         <Input
                             name="fieldLabel"
                             label="Field Label *"
-                            value={field.label}
+                            value={localLabel}
                             onChange={handleLabelChange}
                             placeholder="Enter field label (1-500 characters)"
                             error={labelError}
@@ -251,7 +313,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     <Input
                         name="fieldPlaceholder"
                         label="Placeholder Text"
-                        value={field.placeholder || ''}
+                        value={localPlaceholder}
                         onChange={handlePlaceholderChange}
                         placeholder="Enter placeholder text (optional, max 150 characters)"
                         error={placeholderError}
@@ -649,8 +711,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                             type="text"
                                                             value={option.label}
                                                             onChange={(e) => {
+                                                                // Update immediately for UI feedback
                                                                 onUpdateFieldOption(sectionId, field.id, index, { label: e.target.value });
-                                                                setTimeout(validateOptions, 100); // Re-validate after update
+                                                                // Debounce validation
+                                                                setTimeout(validateOptions, 300);
                                                             }}
                                                             className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${labelValidation.isValid
                                                                 ? 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
@@ -671,8 +735,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                             type="text"
                                                             value={option.value}
                                                             onChange={(e) => {
+                                                                // Update immediately for UI feedback
                                                                 onUpdateFieldOption(sectionId, field.id, index, { value: e.target.value });
-                                                                setTimeout(validateOptions, 100); // Re-validate after update
+                                                                // Debounce validation
+                                                                setTimeout(validateOptions, 300);
                                                             }}
                                                             className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${valueValidation.isValid
                                                                 ? 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
