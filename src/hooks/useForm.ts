@@ -14,10 +14,10 @@ import { useForm as useReactHookForm } from "react-hook-form";
  * @example
  * ```tsx
  * const { values, errors, handleSubmit, setValue } = useForm({
- *   initialValues: { email: '', password: '' },
+ *   initialValues: { email: '', [REDACTED]: '' },
  *   validationRules: {
  *     email: { required: 'Email is required' },
- *     password: { required: 'Password is required' }
+ *     [REDACTED]: { required: 'Password is required' }
  *   },
  *   onSubmit: async (values) => {
  *     await loginUser(values);
@@ -36,6 +36,7 @@ export const useForm = <T extends Record<string, any>>({
     setValue: setReactHookFormValue,
     reset,
     watch,
+    getValues,
     setError,
     trigger,
   } = useReactHookForm({
@@ -46,10 +47,17 @@ export const useForm = <T extends Record<string, any>>({
   const values = watch() as T;
 
   const setValue = useCallback(
-    <K extends keyof T>(field: K, value: T[K]) => {
-      setReactHookFormValue(field as any, value);
+    <K extends keyof T>(field: K, value: T[K] | ((prev: T[K]) => T[K])) => {
+      if (typeof value === "function") {
+        // Use getValues to get current value without causing re-renders
+        const currentValue = getValues(field as any);
+        const newValue = (value as (prev: T[K]) => T[K])(currentValue);
+        setReactHookFormValue(field as any, newValue);
+      } else {
+        setReactHookFormValue(field as any, value);
+      }
     },
-    [setReactHookFormValue]
+    [setReactHookFormValue, getValues]
   );
 
   const setFieldError = useCallback(
@@ -60,9 +68,11 @@ export const useForm = <T extends Record<string, any>>({
   );
 
   const handleSubmit = useCallback(
-    reactHookFormSubmit(async (data: any) => {
-      await onSubmit(data as T);
-    }),
+    (e?: React.BaseSyntheticEvent) => {
+      return reactHookFormSubmit(async (data: any) => {
+        await onSubmit(data as T);
+      })(e);
+    },
     [reactHookFormSubmit, onSubmit]
   );
 

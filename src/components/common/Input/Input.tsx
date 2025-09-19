@@ -62,8 +62,8 @@ export const Input = <T extends string | number = string>({
         switch (type) {
             case 'email':
                 return 'email';
-            case 'password':
-                return 'new-password'; // For admin password, use new-password
+            case '[REDACTED]':
+                return 'new-[REDACTED]'; // For admin [REDACTED], use new-[REDACTED]
             case 'number':
                 return 'off';
             default:

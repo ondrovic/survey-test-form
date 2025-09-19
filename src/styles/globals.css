@@ -196,4 +196,104 @@ select:focus {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Custom Image Gallery Styles */
+.custom-image-gallery .image-gallery {
+  background-color: #f8fafc !important;
+}
+
+.custom-image-gallery .image-gallery-content {
+  background-color: #f8fafc !important;
+}
+
+.custom-image-gallery .image-gallery-slide {
+  background-color: #f8fafc !important;
+}
+
+.custom-image-gallery .image-gallery-image {
+  background-color: #f8fafc !important;
+}
+
+/* Position fullscreen button above thumbnails */
+.custom-image-gallery .image-gallery-fullscreen-button {
+  position: absolute !important;
+  bottom: 60px !important; /* Position above thumbnails */
+  right: 10px !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: 10 !important;
+  color: #000000 !important; /* Black color for visibility */
+  background-color: rgba(150, 150, 150, .5) !important;
+  /* background-color: rgba(156, 163, 175, .5) !important; Semi-transparent light gray background */
+  border: none !important; /* No border */
+  border-radius: 4px !important;
+  padding: 4px !important;
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important; Subtle shadow for depth */
+}
+
+.custom-image-gallery .image-gallery-fullscreen-button:hover {
+  color: #e5e7eb!important; /* White text on hover */
+  /* background-color: rgba(100, 100, 100, .5) !important; Semi-transparent light gray background */
+  border: none !important; /* No border on hover */
+}
+
+/* Remove shadow from maximize/minimize buttons in fullscreen mode */
+.custom-image-gallery .image-gallery-fullscreen-button svg,
+.custom-image-gallery .image-gallery-fullscreen-button svg * {
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  /* drop-shadow: none !important; */
+}
+
+/* More comprehensive shadow removal for all gallery buttons */
+.custom-image-gallery .image-gallery-fullscreen-button,
+.custom-image-gallery .image-gallery-fullscreen-button *,
+.custom-image-gallery .image-gallery-fullscreen-button svg,
+.custom-image-gallery .image-gallery-fullscreen-button svg *,
+.custom-image-gallery .image-gallery-fullscreen-button svg path,
+.custom-image-gallery .image-gallery-fullscreen-button svg circle,
+.custom-image-gallery .image-gallery-fullscreen-button svg rect {
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  drop-shadow: none !important;
+  -webkit-filter: none !important;
+  -moz-filter: none !important;
+  -ms-filter: none !important;
+}
+
+/* Force fullscreen button to always be visible */
+.custom-image-gallery .image-gallery-fullscreen-button {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Override any library hiding logic for single images */
+.custom-image-gallery .image-gallery:not(.image-gallery-thumbnails) .image-gallery-fullscreen-button {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Style the thumbnail area to accommodate controls */
+.custom-image-gallery .image-gallery-thumbnails-wrapper {
+  position: relative !important;
+  margin-top: 10px !important;
+}
+
+.custom-image-gallery .image-gallery-thumbnails {
+  padding: 0 40px !important; /* Add padding for controls */
+}
+
+/* Ensure thumbnails are visible and properly spaced */
+.custom-image-gallery .image-gallery-thumbnail {
+  border: 2px solid transparent !important;
+  transition: border-color 0.3s ease !important;
+}
+
+.custom-image-gallery .image-gallery-thumbnail.active {
+  border-color: #3b82f6 !important;
 } 

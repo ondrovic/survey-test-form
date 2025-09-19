@@ -1,9 +1,9 @@
-import { Download, Eye, EyeOff, Lock } from 'lucide-react';
+import { BarChart3, Download, Eye, EyeOff, Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { firestoreHelpers } from '../../config/firebase';
 import { SurveyData } from '../../types/survey.types';
 import { downloadSurveyDataAsExcel } from '../../utils/excel.utils';
-import { Alert, Button, Input } from '../common';
+import { Alert, Button } from '../common';
 
 interface AdminPanelProps {
     isVisible: boolean;
@@ -152,6 +152,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
         setState(prev => ({ ...prev, showPassword: !prev.showPassword }));
     };
 
+    const handleOpenDashboard = () => {
+        // Open dashboard in a new tab
+        const dashboardUrl = window.location.origin + window.location.pathname + '#dashboard';
+        window.open(dashboardUrl, '_blank');
+    };
+
     // Auto-load survey count when admin panel becomes visible
     useEffect(() => {
         if (isVisible && state.isAuthenticated) {
@@ -198,15 +204,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                                     aria-hidden="true"
                                 />
                                 <div className="relative">
-                                    <Input
+                                    <input
                                         name="adminPassword"
                                         type={state.showPassword ? 'text' : 'password'}
                                         value={state.password}
-                                        onChange={(value) => setState(prev => ({ ...prev, password: value }))}
+                                        onChange={(e) => setState(prev => ({ ...prev, password: e.target.value }))}
                                         placeholder="Enter admin password"
                                         required
-                                        className="pr-10"
-                                        autocomplete="new-password"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                                        autoComplete="current-password"
                                     />
                                     <button
                                         type="button"
@@ -284,26 +290,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isVisible, onClose }) =>
                                 <Alert type="success" title="Download Successful" message={state.success} />
                             )}
 
-                            <div className="flex space-x-3">
-                                <Button
-                                    onClick={handleDownloadData}
-                                    disabled={state.isLoading}
-                                    variant="primary"
-                                    className="flex-1"
-                                >
-                                    {state.isLoading ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                                    ) : (
-                                        <Download className="h-4 w-4 mr-2" />
-                                    )}
-                                    {state.isLoading ? 'Downloading...' : 'Download Excel File'}
-                                </Button>
-                                <Button
-                                    onClick={handleLogout}
-                                    variant="secondary"
-                                >
-                                    Logout
-                                </Button>
+                            <div className="space-y-3">
+                                <div className="flex space-x-3">
+                                    <Button
+                                        onClick={handleDownloadData}
+                                        disabled={state.isLoading}
+                                        variant="primary"
+                                        className="flex-1"
+                                    >
+                                        {state.isLoading ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                        ) : (
+                                            <Download className="h-4 w-4 mr-2" />
+                                        )}
+                                        {state.isLoading ? 'Downloading...' : 'Download Excel File'}
+                                    </Button>
+                                    <Button
+                                        onClick={handleLogout}
+                                        variant="secondary"
+                                    >
+                                        Logout
+                                    </Button>
+                                </div>
+
+                                <div className="border-t pt-3">
+                                    <Button
+                                        onClick={handleOpenDashboard}
+                                        variant="secondary"
+                                        className="w-full"
+                                    >
+                                        <BarChart3 className="h-4 w-4 mr-2" />
+                                        Open Analytics Dashboard
+                                    </Button>
+                                    <p className="text-xs text-gray-500 mt-2 text-center">
+                                        View comprehensive survey analysis with charts and insights
+                                    </p>
+                                </div>
                             </div>
 
                             {state.surveys.length > 0 && (

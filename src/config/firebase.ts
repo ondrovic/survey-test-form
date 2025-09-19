@@ -36,7 +36,7 @@ function initializeFirebase() {
     firebaseApp = initializeApp(firebaseConfig);
     firestoreDb = getFirestore(firebaseApp);
     authInstance = getAuth(firebaseApp);
-    surveysCol = collection(firestoreDb, "surveys");
+    surveysCol = collection(firestoreDb, "surveys_v2");
 
     // Disable real-time listeners to prevent connection spam
     // We only need one-time reads and writes

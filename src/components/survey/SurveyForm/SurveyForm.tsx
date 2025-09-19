@@ -1,5 +1,5 @@
 import { Alert, Button, Input } from '@/components/common';
-import { CheckboxGroup, RadioGroup, ServiceLineSection } from '@/components/form';
+import { CheckboxGroup, NavigationLayoutSection, RadioGroup, ServiceLineSection, SubNavSection } from '@/components/form';
 import {
     BUSINESS_FOCUS_OPTIONS,
     LICENSE_RANGES,
@@ -7,9 +7,10 @@ import {
 } from '@/constants';
 import { useForm } from '@/hooks/useForm';
 import { SurveyFormData } from '@/types';
+import { createInitialSubNavValues } from '@/utils';
 import { createInitialServiceLineSection } from '@/utils/serviceLine.utils';
 import { clsx } from 'clsx';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { SurveyFormProps } from './SurveyForm.types';
 
 /**
@@ -38,6 +39,8 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 }) => {
 
 
+    const initialSubNavValues = createInitialSubNavValues();
+
     const initialValues: SurveyFormData = {
         personalInfo: {
             fullName: '',
@@ -48,7 +51,10 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
             marketRegions: [],
             otherMarket: '',
             numberOfLicenses: '',
-            businessFocus: ''
+            businessFocus: '',
+            subNavQuestions: initialSubNavValues.subNavQuestions,
+            subNavOtherText: initialSubNavValues.subNavOtherText,
+            navigationLayout: ''
         },
         serviceLines: createInitialServiceLineSection()
     };
@@ -73,42 +79,70 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
 
 
 
+    // Track if we've already reset the form for this success state
+    const hasResetForSuccess = useRef(false);
+
     // Reset form when submission is successful
     useEffect(() => {
-        if (success) {
+        if (success && !hasResetForSuccess.current) {
+            hasResetForSuccess.current = true;
             resetForm();
+        } else if (!success) {
+            // Reset the flag when success becomes false
+            hasResetForSuccess.current = false;
         }
-    }, [success]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [success]); // resetForm intentionally omitted to prevent infinite loop
 
-    const handleBusinessInfoChange = useCallback((field: keyof typeof values.businessInfo, value: any) => {
-        setValue('businessInfo', {
-            ...values.businessInfo,
+    const handleBusinessInfoChange = useCallback((field: keyof SurveyFormData['businessInfo'], value: any) => {
+        setValue('businessInfo', (prev) => ({
+            ...prev,
             [field]: value
+        }));
+    }, [setValue]);
+
+    const handleServiceLineRatingChange = useCallback((section: 'residentialServices' | 'commercialServices' | 'industries', categoryIndex: number, itemIndex: number, rating: any) => {
+        setValue('serviceLines', (prev) => {
+            const updatedCategories = [...prev[section]];
+            const updatedItems = [...updatedCategories[categoryIndex].items];
+            updatedItems[itemIndex] = { ...updatedItems[itemIndex], rating };
+            updatedCategories[categoryIndex] = { ...updatedCategories[categoryIndex], items: updatedItems };
+
+            return {
+                ...prev,
+                [section]: updatedCategories
+            };
         });
-    }, [values.businessInfo, setValue]);
+    }, [setValue]);
 
-    const handleServiceLineRatingChange = (section: 'residentialServices' | 'commercialServices' | 'industries', categoryIndex: number, itemIndex: number, rating: any) => {
-        const updatedCategories = [...values.serviceLines[section]];
-        const updatedItems = [...updatedCategories[categoryIndex].items];
-        updatedItems[itemIndex] = { ...updatedItems[itemIndex], rating };
-        updatedCategories[categoryIndex] = { ...updatedCategories[categoryIndex], items: updatedItems };
-
-        setValue('serviceLines', {
-            ...values.serviceLines,
-            [section]: updatedCategories
-        });
-    };
-
-    const handleServiceLineAdditionalNotesChange = (section: 'residentialServices' | 'commercialServices' | 'industries', notes: string) => {
+    const handleServiceLineAdditionalNotesChange = useCallback((section: 'residentialServices' | 'commercialServices' | 'industries', notes: string) => {
         const notesField = section === 'residentialServices' ? 'residentialAdditionalNotes' :
             section === 'commercialServices' ? 'commercialAdditionalNotes' :
                 'industriesAdditionalNotes';
 
-        setValue('serviceLines', {
-            ...values.serviceLines,
+        setValue('serviceLines', (prev) => ({
+            ...prev,
             [notesField]: notes
-        });
-    };
+        }));
+    }, [setValue]);
+
+    const handleSubNavQuestionChange = useCallback((subNavKey: string, selectedValues: string[]) => {
+        setValue('businessInfo', (prev) => ({
+            ...prev,
+            subNavQuestions: {
+                ...prev.subNavQuestions,
+                [subNavKey]: selectedValues
+            }
+        }));
+    }, [setValue]);
+
+    const handleNavigationLayoutChange = useCallback((value: string) => {
+        setValue('businessInfo', (prev) => ({
+            ...prev,
+            navigationLayout: value
+        }));
+    }, [setValue]);
+
 
 
 
@@ -244,11 +278,27 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
                                 type="hidden"
                                 value={values.businessInfo.businessFocus || ''}
                             />
+
+
                         </div>
                     </div>
                 </div>
 
+                {/* Sub-Navigation Questions Section */}
+                <SubNavSection
+                    subNavQuestions={values.businessInfo.subNavQuestions}
+                    onQuestionChange={handleSubNavQuestionChange}
+                    register={register}
+                    errors={errors.businessInfo}
+                />
 
+                {/* Navigation Layout Section */}
+                <NavigationLayoutSection
+                    selectedValue={values.businessInfo.navigationLayout}
+                    onChange={handleNavigationLayoutChange}
+                    register={register}
+                    errors={errors.businessInfo}
+                />
 
                 {/* Service Line Sections */}
                 <ServiceLineSection

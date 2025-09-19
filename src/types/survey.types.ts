@@ -11,6 +11,9 @@ export interface BusinessInfo {
   otherMarket?: string;
   numberOfLicenses: string;
   businessFocus: string;
+  subNavQuestions: Record<string, string[]>; // kebab-case service names -> selected options
+  subNavOtherText: Record<string, string>; // kebab-case service names -> "other" text input
+  navigationLayout: string;
 }
 
 export interface ServiceLineItem {

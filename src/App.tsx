@@ -1,4 +1,5 @@
 import { AdminPanel } from '@/components/admin';
+import { SurveyDashboard } from '@/components/admin/SurveyDashboard';
 import { ConnectionStatus, SurveyForm } from '@/components/survey';
 import { authHelpers } from '@/config/firebase';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
@@ -27,6 +28,7 @@ function App() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [showDashboard, setShowDashboard] = useState(false);
 
     const { loading, error, connected, save, refresh } = useFirebaseStorage<SurveyData>();
 
@@ -57,6 +59,20 @@ function App() {
         }
 
         return unsubscribe;
+    }, []);
+
+    // Check for dashboard hash on component mount and hash changes
+    useEffect(() => {
+        const checkDashboardHash = () => {
+            setShowDashboard(window.location.hash === '#dashboard');
+        };
+
+        // Check on mount
+        checkDashboardHash();
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', checkDashboardHash);
+        return () => window.removeEventListener('hashchange', checkDashboardHash);
     }, []);
 
     // Keyboard shortcut for admin panel (Ctrl+Shift+A)
@@ -116,6 +132,17 @@ function App() {
     const handleCloseAdminPanel = useCallback(() => {
         setShowAdminPanel(false);
     }, []);
+
+    const handleCloseDashboard = useCallback(() => {
+        // Remove the hash and go back to the main page
+        window.location.hash = '';
+        setShowDashboard(false);
+    }, []);
+
+    // Show dashboard if hash is present
+    if (showDashboard) {
+        return <SurveyDashboard isVisible={true} onClose={handleCloseDashboard} />;
+    }
 
     return (
         <div className="min-h-screen bg-amber-50/30">

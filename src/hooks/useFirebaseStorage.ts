@@ -61,7 +61,7 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
       setLoading(false);
       isLoading = false;
     }
-  }, []); // Remove dependencies to prevent infinite loops
+  }, [setLocalData]); // Add setLocalData dependency
 
   // Save data to Firebase
   const save = useCallback(
@@ -78,9 +78,11 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
         await firestoreHelpers.addSurvey(item);
 
         // Update local state after successful save
-        const newData = [...data, item];
-        setData(newData);
-        setLocalData(newData);
+        setData((prevData) => {
+          const newData = [...prevData, item];
+          setLocalData(newData);
+          return newData;
+        });
         setConnected(true);
         console.log("Successfully saved to Firebase");
       } catch (err) {
@@ -91,7 +93,7 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
         isSaving = false;
       }
     },
-    [data, setLocalData]
+    [setLocalData]
   );
 
   // Refresh data
@@ -99,7 +101,7 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
     isLoading = false; // Reset loading flag
     connectionInitialized = false; // Allow fresh load
     await loadData();
-  }, []); // Remove loadData dependency
+  }, [loadData]);
 
   // Load data on mount - only once
   useEffect(() => {
@@ -109,7 +111,7 @@ export const useFirebaseStorage = <T>(): FirebaseStorageReturn<T> => {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, []); // Empty dependency array - only run once on mount
+  }, [loadData]); // Include loadData dependency
 
   return {
     data,

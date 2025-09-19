@@ -2,6 +2,7 @@ export const MARKET_REGIONS = [
   "Northeast",
   "Southeast",
   "Midwest",
+  "Northwest",
   "Southwest",
   "West",
   "Multi-region",
@@ -16,8 +17,29 @@ export const LICENSE_RANGES = [
 export const BUSINESS_FOCUS_OPTIONS = [
   { value: "Residential", label: "Residential" },
   { value: "Commercial", label: "Commercial" },
-  { value: "Commerical and Residential", label: "Both" },
+  { value: "Commercial and Residential", label: "Both" },
 ] as const;
+
+export const NAVIGATION_LAYOUTS = {
+  question: "Which navigation layout do you prefer? (text & images simulated)",
+  options: [
+    {
+      value: "current-navigation",
+      label: "Current",
+      images: ["/images/current-layout-with-sub-navs.png"],
+    },
+    {
+      value: "side-bar-navigation",
+      label: "Side-Bar",
+      images: [
+        "/images/side-bar-residential.png",
+        "/images/water-damage-side-bar.png",
+        "/images/fire-damage-side-bar.png",
+        "/images/speciality-cleaning-side-bar.png",
+      ],
+    },
+  ],
+} as const;
 
 export const RATING_OPTIONS = [
   { value: "High", label: "High", color: "success" as const },

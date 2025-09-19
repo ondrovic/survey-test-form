@@ -1,15 +1,20 @@
 # Service Line Survey
 
-A professional survey application for collecting service line feedback with Firebase integration and Excel export functionality.
+A professional survey application for collecting service line feedback with Firebase integration, Excel export functionality, and a comprehensive data analysis dashboard.
 
 <!-- Last updated: 2025-01-08 -->
 
 ## 🚀 Features
 
+### Survey Application
+
 - **Modern React 18 + TypeScript**: Built with the latest React features and strict TypeScript
 - **Professional UI/UX**: Clean, accessible design with smooth animations
 - **Interactive Service Line Selection**: Checkbox-based service line selection with proper state management
 - **Expandable Rating Sections**: Click to expand and select High/Medium/Low ratings for selected services
+- **Sub-Navigation Selection**: Interactive sub-navigation options with image-based selection
+- **Navigation Layout Preferences**: Choose preferred navigation layout options
+- **Additional Notes**: Text input for additional feedback and comments
 - **Firebase Firestore Integration**: Store survey data in Firebase Firestore
 - **Local Storage Fallback**: Works offline with browser storage
 - **Form Validation**: Comprehensive client-side validation with real-time feedback
@@ -18,7 +23,21 @@ A professional survey application for collecting service line feedback with Fire
 - **Auto-deployment**: GitHub Actions workflow for seamless deployment
 - **Robust State Management**: Proper handling of complex nested form state with race condition prevention
 
+### Data Analysis Dashboard
+
+- **Interactive Excel Data Processing**: Upload and analyze survey data from Excel files
+- **Comprehensive Visualizations**: Charts and graphs for service priorities, sub-navigation preferences, and navigation layouts
+- **Real-time Filtering**: Search and filter data across multiple dimensions
+- **Status Cards**: Quick overview metrics for services, sub-navigation options, and navigation layouts
+- **Detailed Data Tables**: Complete breakdown of survey responses with sorting and filtering
+- **Sub-Navigation Analysis**: Deep dive into sub-navigation preferences across service categories
+- **Navigation Layout Insights**: Analysis of preferred navigation layouts from survey responses
+- **Additional Notes Processing**: Text analysis and insights from open-ended feedback
+- **Export Capabilities**: Download processed data and insights
+
 ## 🛠️ Tech Stack
+
+### Survey Application
 
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS, CSS Custom Properties
@@ -27,6 +46,14 @@ A professional survey application for collecting service line feedback with Fire
 - **Data Storage**: Firebase Firestore + localStorage fallback
 - **Deployment**: GitHub Pages
 - **CI/CD**: GitHub Actions
+
+### Data Analysis Dashboard
+
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Charts**: Chart.js for interactive visualizations
+- **Data Processing**: SheetJS (XLSX) for Excel file handling
+- **Styling**: Custom CSS with responsive design
+- **File Processing**: Client-side Excel data processing
 
 ## 📋 Prerequisites
 
@@ -116,6 +143,39 @@ npm run dev
 
 The app will be available at `http://localhost:3000`
 
+## 📊 Data Analysis Dashboard
+
+The project includes a comprehensive data analysis dashboard (`survey_dashboard.html`) for processing and visualizing survey data.
+
+### Dashboard Features
+
+1. **Excel Data Upload**: Upload survey data from Excel files (.xlsx, .xls)
+2. **Interactive Visualizations**:
+   - Service priority analysis charts
+   - Sub-navigation preference charts
+   - Navigation layout analysis
+3. **Real-time Filtering**: Search and filter data across multiple dimensions
+4. **Status Overview**: Quick metrics cards showing key statistics
+5. **Detailed Tables**: Complete data breakdown with sorting and filtering
+
+### Using the Dashboard
+
+1. **Open the Dashboard**: Open `survey_dashboard.html` in your web browser
+2. **Upload Data**: Click "Upload Excel File" and select your survey data file
+3. **Explore Data**: Use the interactive charts and tables to analyze the data
+4. **Filter Results**: Use the search and filter options to focus on specific data
+5. **Export Insights**: Download processed data and visualizations
+
+### Dashboard Data Structure
+
+The dashboard expects Excel files with the following columns:
+
+- Service line data with priority ratings
+- Sub-navigation selections
+- Navigation layout preferences
+- Additional notes and comments
+- Industry and category classifications
+
 ## 📦 Available Scripts
 
 ```bash
@@ -141,21 +201,22 @@ npm run test:coverage # Run tests with coverage
 
 ```
 service-line-survey/
-├── src/
-│   ├── components/          # React components
-│   │   ├── common/         # Reusable UI components
-│   │   ├── form/           # Form-specific components
-│   │   └── survey/         # Survey-specific components
-│   ├── hooks/              # Custom React hooks
-│   ├── types/              # TypeScript type definitions
-│   ├── utils/              # Utility functions
-│   ├── constants/          # App constants
-│   ├── styles/             # Global styles
-│   ├── App.tsx            # Main app component
-│   └── main.tsx           # App entry point
-├── .github/workflows/      # GitHub Actions
-├── public/                 # Static assets
-└── dist/                   # Build output
+├── src/                    # React survey application
+│   ├── components/         # React components
+│   │   ├── common/        # Reusable UI components
+│   │   ├── form/          # Form-specific components
+│   │   └── survey/        # Survey-specific components
+│   ├── hooks/             # Custom React hooks
+│   ├── types/             # TypeScript type definitions
+│   ├── utils/             # Utility functions
+│   ├── constants/         # App constants
+│   ├── styles/            # Global styles
+│   ├── App.tsx           # Main app component
+│   └── main.tsx          # App entry point
+├── survey_dashboard.html   # Data analysis dashboard
+├── .github/workflows/     # GitHub Actions
+├── public/                # Static assets
+└── dist/                  # Build output
 ```
 
 ## 🎨 Component Architecture
@@ -336,6 +397,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Latest Updates
 
+- **Data Analysis Dashboard**: Added comprehensive dashboard (`survey_dashboard.html`) for processing and visualizing survey data
+- **Excel Data Processing**: Interactive Excel file upload and processing with SheetJS
+- **Interactive Visualizations**: Chart.js-powered charts for service priorities, sub-navigation preferences, and navigation layouts
+- **Real-time Filtering**: Advanced search and filtering capabilities across multiple data dimensions
+- **Status Cards**: Quick overview metrics for services, sub-navigation options, and navigation layouts
+- **Sub-Navigation Analysis**: Deep dive analysis of sub-navigation preferences across service categories
+- **Navigation Layout Insights**: Analysis of preferred navigation layouts from survey responses
+- **Additional Notes Processing**: Text analysis and insights from open-ended feedback
+- **Enhanced Survey Features**: Added sub-navigation selection, navigation layout preferences, and additional notes
 - **Updated Node.js Requirement**: Upgraded to Node.js 20+ for Firebase compatibility
 - **Enhanced Linting Options**: Added multiple lint commands for different workflow needs
   - `npm run lint:check` - Non-blocking linting for development workflows

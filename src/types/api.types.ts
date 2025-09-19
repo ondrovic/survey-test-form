@@ -62,7 +62,10 @@ export interface UseFormReturn<T> {
   touched: Partial<Record<keyof T, boolean>>;
   isSubmitting: boolean;
   isValid: boolean;
-  setValue: <K extends keyof T>(field: K, value: T[K]) => void;
+  setValue: <K extends keyof T>(
+    field: K,
+    value: T[K] | ((prev: T[K]) => T[K])
+  ) => void;
   setFieldError: (field: keyof T, error: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
   resetForm: () => void;

@@ -1,28 +1,28 @@
 # Admin Password Setup Guide
 
-This guide explains how to set up the admin password for accessing the survey data download functionality.
+This guide explains how to set up the admin [REDACTED] for accessing the survey data download functionality.
 
 ## Overview
 
-The admin panel allows authorized users to download all survey responses as an Excel file (.xlsx). Access is protected by a password that should be stored securely as a GitHub secret.
+The admin panel allows authorized users to download all survey responses as an Excel file (.xlsx). Access is protected by a [REDACTED] that should be stored securely as a GitHub secret.
 
 ## Setup Instructions
 
 ### 1. Local Development
 
-For local development, add the admin password to your `.env` file:
+For local development, add the admin [REDACTED] to your `.env` file:
 
 ```bash
 # Copy from env.example
 cp env.example .env
 
-# Edit .env and set your admin password
-VITE_ADMIN_PASSWORD=your-secure-password-here
+# Edit .env and set your admin [REDACTED]
+VITE_ADMIN_PASSWORD=your-secure-[REDACTED]-here
 ```
 
 ### 2. Production Setup (GitHub Secrets)
 
-For production deployment, the admin password should be stored as a GitHub secret:
+For production deployment, the admin [REDACTED] should be stored as a GitHub secret:
 
 1. **Go to your GitHub repository**
 
@@ -30,11 +30,11 @@ For production deployment, the admin password should be stored as a GitHub secre
    - Click on "Settings" tab
    - Click on "Secrets and variables" → "Actions"
 
-2. **Add the admin password secret**
+2. **Add the admin [REDACTED] secret**
 
    - Click "New repository secret"
    - Name: `ADMIN_PASSWORD`
-   - Value: Your secure admin password
+   - Value: Your secure admin [REDACTED]
    - Click "Add secret"
 
 3. **Verify the secret is used in the workflow**
@@ -45,23 +45,23 @@ For production deployment, the admin password should be stored as a GitHub secre
 
 ### Password Requirements
 
-- Use a strong, unique password (at least 12 characters)
+- Use a strong, unique [REDACTED] (at least 12 characters)
 - Include uppercase, lowercase, numbers, and special characters
 - Avoid common words or patterns
-- Consider using a password generator
+- Consider using a [REDACTED] generator
 
 ### Access Control
 
-- Only share the password with authorized personnel
-- Regularly rotate the password
+- Only share the [REDACTED] with authorized personnel
+- Regularly rotate the [REDACTED]
 - Monitor access logs if possible
 - Consider implementing additional security measures for sensitive data
 
 ### Environment Variables
 
-- Never commit the actual password to version control
+- Never commit the actual [REDACTED] to version control
 - Always use environment variables or secrets
-- Use different passwords for development and production
+- Use different [REDACTED]s for development and production
 
 ## Accessing the Admin Panel
 
@@ -111,7 +111,7 @@ Once authenticated, the admin panel provides:
 
 ### Password Not Working
 
-- Verify the password is correctly set in GitHub secrets
+- Verify the [REDACTED] is correctly set in GitHub secrets
 - Check that the deployment completed successfully
 - Ensure the environment variable is properly injected during build
 
@@ -148,12 +148,12 @@ VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
 VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
-VITE_ADMIN_PASSWORD=your-secure-admin-password
+VITE_ADMIN_PASSWORD=your-secure-admin-[REDACTED]
 ```
 
 ### GitHub Secrets
 
-- `ADMIN_PASSWORD`: your-secure-admin-password
+- `ADMIN_PASSWORD`: your-secure-admin-[REDACTED]
 - `VITE_FIREBASE_API_KEY`: your-firebase-api-key
 - `VITE_FIREBASE_AUTH_DOMAIN`: your-project.firebaseapp.com
 - `VITE_FIREBASE_PROJECT_ID`: your-project-id

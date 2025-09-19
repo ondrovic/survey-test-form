@@ -4,7 +4,9 @@ import {
   INDUSTRIES,
   RESIDENTIAL_SERVICE_LINES,
 } from "../constants/services.constants";
+import { SUB_NAV_OPTIONS } from "../constants/sub-nav.constants";
 import { SurveyData } from "../types/survey.types";
+import { getSubNavKey, getSubNavOtherKey } from "./sub-nav.utils";
 
 export interface ExcelExportOptions {
   filename?: string;
@@ -16,7 +18,10 @@ export interface ExcelExportOptions {
  * Useful for testing and validation
  */
 export function getExpectedColumnCount(): number {
-  let count = 12; // Base columns (ID, Submitted At, Updated At, Personal Info, Business Info, Additional Notes)
+  let count = 13; // Base columns (ID, Submitted At, Updated At, Personal Info, Business Info, Navigation Layout, Additional Notes)
+
+  // Add Sub-Nav columns (2 per service: Selected Options and Other Text)
+  count += SUB_NAV_OPTIONS.length * 2;
 
   // Add Residential Services columns
   RESIDENTIAL_SERVICE_LINES.forEach((category) => {
@@ -56,7 +61,25 @@ export function flattenSurveyData(surveys: SurveyData[]): any[] {
       "Other Market": survey.businessInfo.otherMarket || "",
       "Number of Licenses": survey.businessInfo.numberOfLicenses,
       "Business Focus": survey.businessInfo.businessFocus,
+      "Navigation Layout": survey.businessInfo.navigationLayout,
     };
+
+    // Add Sub-Nav Questions and Other Text
+    SUB_NAV_OPTIONS.forEach((option) => {
+      const subNavKey = getSubNavKey(option.service);
+      const subNavOtherKey = getSubNavOtherKey(option.service);
+
+      // Add selected options for this service
+      const selectedOptions =
+        survey.businessInfo.subNavQuestions[subNavKey] || [];
+      flatData[`${option.service} - Sub-Nav - Selected Options`] =
+        selectedOptions.join(", ");
+
+      // Add other text for this service
+      const otherText =
+        survey.businessInfo.subNavOtherText[subNavOtherKey] || "";
+      flatData[`${option.service} - Sub-Nav - Other Text`] = otherText;
+    });
 
     // Add Residential Services - dynamically based on constants
     RESIDENTIAL_SERVICE_LINES.forEach((category) => {
