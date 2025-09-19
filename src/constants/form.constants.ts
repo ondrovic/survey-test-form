@@ -8,6 +8,7 @@ export const MARKET_REGIONS = [
   "Multi-region",
 ] as const;
 
+
 export const LICENSE_RANGES = [
   { value: "1-5", label: "1-5" },
   { value: "5-10", label: "5-10" },
@@ -26,7 +27,7 @@ export const NAVIGATION_LAYOUTS = {
     {
       value: "current-navigation",
       label: "Current",
-      images: ["/images/current-layout-with-sub-navs.png"],
+      images: ["/survey-test-form/images/current-layout-with-sub-navs.png"],
     },
     {
       value: "side-bar-navigation",
