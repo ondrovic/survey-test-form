@@ -3,6 +3,7 @@ import { SurveyConfig } from '../../../../../types/framework.types';
 import { getBadgeLayoutClasses } from '../../../../../utils/layout.utils';
 import { SurveySectionPaginator } from '../../../../survey/section-paginator/survey-section-paginator';
 import { OptionSetPreview } from '../../shared';
+import { SurveyImageGallery } from '../../../../common/ui/survey-image-gallery';
 
 interface SurveyPreviewProps {
     config: SurveyConfig;
@@ -39,12 +40,38 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                         <p className="text-gray-600 dark:text-gray-300 mb-4">{section.description}</p>
                     )}
 
+                    {/* Section Images */}
+                    {section.images && section.images.length > 0 && (
+                        <div className="mb-6">
+                            <SurveyImageGallery
+                                images={section.images}
+                                showThumbnails={section.images.length > 1}
+                                showNav={section.images.length > 1}
+                                showFullscreen={true}
+                                autoPlay={false}
+                            />
+                        </div>
+                    )}
+
                     {/* Subsections */}
                     {section.subsections?.map((subsection) => (
                         <div key={subsection.id} className="mb-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                             <h4 className="text-md font-semibold mb-2 text-gray-800 dark:text-white">{subsection.title}</h4>
                             {subsection.description && (
                                 <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">{subsection.description}</p>
+                            )}
+
+                            {/* Subsection Images */}
+                            {subsection.images && subsection.images.length > 0 && (
+                                <div className="mb-4">
+                                    <SurveyImageGallery
+                                        images={subsection.images}
+                                        showThumbnails={subsection.images.length > 1}
+                                        showNav={subsection.images.length > 1}
+                                        showFullscreen={true}
+                                        autoPlay={false}
+                                    />
+                                </div>
                             )}
                             <div className="space-y-4">
                                 {subsection.fields.map((field) => (
@@ -204,6 +231,19 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                         {option.label}
                                                     </span>
                                                 ))}
+                                            </div>
+                                        )}
+
+                                        {/* Field Images */}
+                                        {field.images && field.images.length > 0 && (
+                                            <div className="mt-3">
+                                                <SurveyImageGallery
+                                                    images={field.images}
+                                                    showThumbnails={field.images.length > 1}
+                                                    showNav={field.images.length > 1}
+                                                    showFullscreen={true}
+                                                    autoPlay={false}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -372,6 +412,19 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                                     {option.label}
                                                 </span>
                                             ))}
+                                        </div>
+                                    )}
+
+                                    {/* Field Images */}
+                                    {field.images && field.images.length > 0 && (
+                                        <div className="mt-3">
+                                            <SurveyImageGallery
+                                                images={field.images}
+                                                showThumbnails={field.images.length > 1}
+                                                showNav={field.images.length > 1}
+                                                showFullscreen={true}
+                                                autoPlay={false}
+                                            />
                                         </div>
                                     )}
                                 </div>

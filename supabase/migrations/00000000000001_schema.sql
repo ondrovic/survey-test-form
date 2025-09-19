@@ -4,7 +4,7 @@
 -- ===================================
 
 CREATE TABLE IF NOT EXISTS survey_configs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
     description TEXT,
     sections JSONB NOT NULL DEFAULT '[]',
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS survey_configs (
 );
 
 CREATE TABLE IF NOT EXISTS survey_instances (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     config_id UUID NOT NULL REFERENCES survey_configs(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS survey_instances (
 );
 
 CREATE TABLE IF NOT EXISTS survey_sessions (
-    id UUID PRIMARY KEY DEFAULT  uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT  gen_random_uuid(),
     survey_instance_id UUID NOT NULL REFERENCES survey_instances(id) ON DELETE CASCADE,
     session_token VARCHAR(255) UNIQUE NOT NULL,
     started_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS survey_sessions (
 );
 
 CREATE TABLE IF NOT EXISTS survey_responses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     survey_instance_id UUID NOT NULL REFERENCES survey_instances(id) ON DELETE CASCADE,
     session_id UUID REFERENCES survey_sessions(id) ON DELETE SET NULL,
     config_version VARCHAR(50) DEFAULT '1.0.0',
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS survey_responses (
 );
 
 CREATE TABLE IF NOT EXISTS rating_scales (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     options JSONB NOT NULL DEFAULT '[]',
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS rating_scales (
 );
 
 CREATE TABLE IF NOT EXISTS radio_option_sets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     options JSONB NOT NULL DEFAULT '[]',
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS radio_option_sets (
 );
 
 CREATE TABLE IF NOT EXISTS checkbox_option_sets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     options JSONB NOT NULL DEFAULT '[]',
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS checkbox_option_sets (
 );
 
 CREATE TABLE IF NOT EXISTS dropdown_option_sets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     options JSONB NOT NULL DEFAULT '[]',
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS dropdown_option_sets (
 );
 
 CREATE TABLE IF NOT EXISTS survey_instance_status_changes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     instance_id UUID NOT NULL REFERENCES survey_instances(id) ON DELETE CASCADE,
     old_status BOOLEAN,
     new_status BOOLEAN NOT NULL,
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS survey_instance_status_changes (
 );
 
 CREATE TABLE IF NOT EXISTS error_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Timestamp and basic info
     occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,

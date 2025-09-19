@@ -10,6 +10,8 @@ export { FormField, useFormField } from "./form-field";
 export { DateRangeSelector, useDateRange } from "./date-range-selector";
 export { NotFoundPage } from "./not-found-page";
 export { Portal } from "./portal/Portal";
+export { SurveyImageGallery } from "./survey-image-gallery";
+export type { SurveyImageGalleryProps } from "./survey-image-gallery";
 
 // Loading Components
 export * from "./skeleton";

@@ -15,6 +15,40 @@ export interface Metadata {
   [key: string]: any;
 }
 
+// Image Types
+export interface SurveyImage {
+  id: string;
+  filename: string;
+  originalFilename: string;
+  fileSize: number;
+  mimeType: string;
+  storagePath: string;
+  storageUrl: string;
+  width?: number;
+  height?: number;
+  altText?: string;
+  caption?: string;
+  entityType: 'field' | 'option' | 'section' | 'subsection';
+  entityId: string;
+  configId: string;
+  displayOrder: number;
+  isPrimary: boolean;
+  isActive: boolean;
+  uploadStatus: 'uploading' | 'completed' | 'failed' | 'deleted';
+  uploadedBy?: string;
+  metadata: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImageGalleryItem {
+  original: string;
+  thumbnail?: string;
+  originalAlt?: string;
+  thumbnailAlt?: string;
+  description?: string;
+}
+
 // Field Types
 export type FieldType =
   | "text"
@@ -145,6 +179,8 @@ export interface SurveyField {
   validation?: ValidationRule[];
   placeholder?: string;
   defaultValue?: any;
+  // Optional image support for all field types
+  images?: SurveyImage[];
   // Track label history for data export/migration purposes
   labelHistory?: Array<{
     label: string;
@@ -170,6 +206,8 @@ export interface SurveySubsection {
   fields: SurveyField[];
   order: number;
   defaults?: FieldDefaults;
+  // Optional image support for subsections
+  images?: SurveyImage[];
   metadata?: Record<string, any>;
 }
 
@@ -191,6 +229,8 @@ export interface SurveySection {
   order: number;
   description?: string;
   defaults?: FieldDefaults;
+  // Optional image support for sections
+  images?: SurveyImage[];
   metadata?: Record<string, any>;
 }
 

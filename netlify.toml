@@ -1,0 +1,38 @@
+# Netlify configuration file
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  # Build command
+  command = "yarn build"
+
+  # Directory to publish
+  publish = "dist"
+
+  # Build environment variables (optional - can also be set in Netlify dashboard)
+  [build.environment]
+    # Image upload configuration examples
+    # Uncomment and adjust as needed for your production environment
+    # VITE_IMAGE_MAX_FILES = "10"
+    # VITE_IMAGE_MAX_FILE_SIZE_MB = "10"
+    # VITE_IMAGE_ALLOWED_TYPES = "image/jpeg,image/jpg,image/png,image/gif,image/webp"
+
+# Redirect rules for SPA (if needed)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security (optional)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -1,4 +1,5 @@
 import { Input, Portal } from '@/components/common';
+import { SurveyImageGallery } from '@/components/common/ui/survey-image-gallery';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '@/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
@@ -201,7 +202,26 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         return selectedOption?.label || 'Select rating';
     };
 
-    switch (field.type) {
+    const renderFieldImages = () => {
+        if (!field.images || field.images.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="mt-4">
+                <SurveyImageGallery
+                    images={field.images}
+                    showThumbnails={field.images.length > 1}
+                    showNav={field.images.length > 1}
+                    showFullscreen={true}
+                    autoPlay={false}
+                />
+            </div>
+        );
+    };
+
+    const renderField = () => {
+        switch (field.type) {
         case 'text':
         case 'email':
         case 'number':
@@ -674,5 +694,13 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     <p className="text-red-500 dark:text-red-400">Unsupported field type: {field.type}</p>
                 </div>
             );
-    }
+        }
+    };
+
+    return (
+        <div className="field-renderer">
+            {renderField()}
+            {renderFieldImages()}
+        </div>
+    );
 };

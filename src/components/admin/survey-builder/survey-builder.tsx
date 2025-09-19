@@ -1022,6 +1022,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                     }}
                                     field={selectedField}
                                     sectionId={selectedSection.id}
+                                    configId={state.config.id}
                                     subsectionId={selectedFieldSubsectionId}
                                     onUpdateField={(sectionId: string, fieldId: string, updates: Partial<SurveyField>) => {
                                         handleUpdateField(sectionId, fieldId, updates, selectedFieldSubsectionId);

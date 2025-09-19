@@ -1,4 +1,4 @@
-import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2 } from 'lucide-react';
+import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2, Image } from 'lucide-react';
 import { ErrorLoggingService } from '../../../../../../services/error-logging.service';
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { databaseHelpers } from '../../../../../../config/database';
@@ -7,6 +7,8 @@ import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOpt
 import { Button, Input } from '../../../../../common';
 import Modal from '../../../../../common/ui/modal/Modal';
 import { OptionSetPreview } from '../../../shared';
+import { ImagePicker } from '../../../../../common/form/image-picker';
+import { IMAGE_PICKER_DEFAULTS } from '../../../../../common/form/image-picker/image-picker.types';
 import { FIELD_TYPES } from '../../../survey-builder.types';
 
 interface FieldEditorModalProps {
@@ -15,6 +17,7 @@ interface FieldEditorModalProps {
     onSave: () => void;
     field: SurveyField | null;
     sectionId: string;
+    configId: string;
     onUpdateField: (sectionId: string, fieldId: string, updates: Partial<SurveyField>) => void;
     onSaveFieldChanges?: (sectionId: string, fieldId: string, originalLabel: string, currentLabel: string, subsectionId?: string) => void;
     onAddFieldOption: (sectionId: string, fieldId: string) => void;
@@ -33,6 +36,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     onSave,
     field,
     sectionId,
+    configId,
     onUpdateField,
     onSaveFieldChanges,
     onAddFieldOption,
@@ -777,6 +781,36 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                     </div>
                 )}
 
+                {/* Field Images */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2 flex items-center">
+                        <Image className="w-5 h-5 mr-2" />
+                        Field Images
+                        <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">(Optional)</span>
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Add images to display alongside this field question. Images will appear below the field label and help provide visual context for users.
+                    </p>
+
+                    <ImagePicker
+                        multiple={true}
+                        maxFiles={IMAGE_PICKER_DEFAULTS.MAX_FILES}
+                        images={field.images || []}
+                        onImagesChange={(images) => {
+                            onUpdateField(sectionId, field.id, { images });
+                        }}
+                        uploadOptions={{
+                            configId,
+                            entityType: 'field',
+                            entityId: field.id
+                        }}
+                        showGallery={true}
+                        label="Upload Field Images"
+                        helpText={`Supported formats: ${IMAGE_PICKER_DEFAULTS.ALLOWED_TYPES.map(type => type.replace('image/', '').toUpperCase()).join(', ')}. Maximum file size: ${IMAGE_PICKER_DEFAULTS.MAX_FILE_SIZE / 1024 / 1024}MB each. Up to ${IMAGE_PICKER_DEFAULTS.MAX_FILES} images.`}
+                        className="mt-4"
+                    />
+                </div>
+
                 {/* Field Preview */}
                 <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2">
@@ -908,6 +942,29 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                         {option.label}
                                     </span>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Field Images Preview */}
+                        {field.images && field.images.length > 0 && (
+                            <div className="mt-4">
+                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Images:</div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {field.images.map((image) => (
+                                        <div key={image.id} className="relative">
+                                            <img
+                                                src={image.storageUrl}
+                                                alt={image.altText || image.originalFilename}
+                                                className="w-full h-32 md:h-40 object-contain rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800"
+                                            />
+                                            {image.isPrimary && (
+                                                <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                                    Primary
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
