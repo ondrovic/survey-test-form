@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { usePagination } from '../../../../hooks/use-pagination';
 import { Pagination } from '../pagination/pagination';
@@ -64,9 +64,9 @@ export const PaginatedList = <T,>({
     });
 
     // Reset to first page when search changes
-    useMemo(() => {
+    useEffect(() => {
         resetToFirstPage();
-    }, [searchQuery, resetToFirstPage]);
+    }, [resetToFirstPage]);
 
     const clearSearch = useCallback(() => {
         setSearchQuery('');

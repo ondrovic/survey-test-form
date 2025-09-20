@@ -185,7 +185,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     });
 
     return initialState;
-  }, [config.id, config.sections, ratingScalesRecord, processAllFields]);
+  }, [config.sections, ratingScalesRecord, processAllFields]);
 
   // Initialize form state
   const setupFormState = useCallback(() => {
@@ -255,6 +255,11 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     surveySession?.session.savedAnswers,
     answersRestored,
     setFieldValue,
+    config.sections?.length,
+    goToSection,
+    paginationState.currentSectionIndex,
+    surveyInstanceId,
+    surveySession,
   ]);
 
   // Handle form reset when resetTrigger changes
@@ -597,6 +602,7 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
     radioOptionSetsRecord,
     multiSelectOptionSetsRecord,
     selectOptionSetsRecord,
+    surveyInstanceId,
   ]);
 
   // Check if current section has validation errors
@@ -605,8 +611,6 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
   }, [
     validateSection,
     paginationState.currentSectionIndex,
-    formState.formData,
-    hasSubmitted,
   ]);
 
   // Calculate section validation states for step indicator
@@ -620,8 +624,6 @@ export const PaginatedSurveyForm: React.FC<PaginatedSurveyFormProps> = ({
   }, [
     config.sections.length,
     validateSection,
-    formState.formData,
-    hasSubmitted,
   ]);
 
   // Create a stable reset trigger that only changes when actually navigating sections

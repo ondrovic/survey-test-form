@@ -1,9 +1,9 @@
 import React from 'react';
 import { SurveyConfig } from '../../../../../types/framework.types';
 import { getBadgeLayoutClasses } from '../../../../../utils/layout.utils';
+import { SurveyImageGallery } from '../../../../common/ui/survey-image-gallery';
 import { SurveySectionPaginator } from '../../../../survey/section-paginator/survey-section-paginator';
 import { OptionSetPreview } from '../../shared';
-import { SurveyImageGallery } from '../../../../common/ui/survey-image-gallery';
 
 interface SurveyPreviewProps {
     config: SurveyConfig;
@@ -416,17 +416,20 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                     )}
 
                                     {/* Field Images */}
-                                    {field.images && field.images.length > 0 && (
-                                        <div className="mt-3">
-                                            <SurveyImageGallery
-                                                images={field.images}
-                                                showThumbnails={field.images.length > 1}
-                                                showNav={field.images.length > 1}
-                                                showFullscreen={true}
-                                                autoPlay={false}
-                                            />
-                                        </div>
-                                    )}
+                                    {field.images && field.images.length > 0 && (() => {
+                                        console.log('SurveyPreview - field.images:', field.images);
+                                        return (
+                                            <div className="mt-3">
+                                                <SurveyImageGallery
+                                                    images={field.images}
+                                                    showThumbnails={field.images.length > 1}
+                                                    showNav={field.images.length > 1}
+                                                    showFullscreen={true}
+                                                    autoPlay={false}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             ))}
                         </div>

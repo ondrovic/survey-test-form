@@ -112,7 +112,7 @@ export const SimpleEChartsBar = forwardRef<ReactECharts, SimpleEChartsBarProps>(
         }
       }]
     };
-  }, [chartData, isVertical, isLarge, showPercent, isDarkMode, neutralMode, colorSalt]);
+  }, [chartData, isVertical, isLarge, showPercent, isDarkMode, counts, total]);
 
   const containerStyle = {
     height: isLarge ? '650px' : '400px', // Optimized modal size to match pie chart

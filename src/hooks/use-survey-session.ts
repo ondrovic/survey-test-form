@@ -118,7 +118,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     } finally {
       setIsCreatingSession(false);
     }
-  }, [surveyInstanceId, totalSections, generateSessionToken, sessionTracker]);
+  }, [surveyInstanceId, totalSections, generateSessionToken, sessionTracker, isCreatingSession]);
 
   // Mark session as abandoned (now mainly for immediate user actions)
   const abandonSession = useCallback(async () => {
@@ -152,7 +152,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         additionalContext: { sessionId: session.sessionId }
       });
     }
-  }, [session.sessionId, session.status]);
+  }, [session.sessionId, session.status, surveyInstanceId]);
 
   // Save survey answers to session (debounced to avoid excessive writes)
   const saveAnswersToSession = useCallback((answers: Record<string, any>, currentPage?: number) => {
@@ -209,7 +209,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         });
       }
     }, 1000); // 1 second debounce for answer saving
-  }, [session.sessionId, session.status]);
+  }, [session.sessionId, session.status, surveyInstanceId]);
 
   // Update session activity (debounced, database triggers handle status updates)
   const updateActivity = useCallback((newSection?: number) => {
@@ -274,7 +274,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         });
       }
     }, 1500); // Reduced debounce time since we're not managing abandonment client-side
-  }, [session.sessionId, session.status, session.currentSection]);
+  }, [session.sessionId, session.status, session.currentSection, surveyInstanceId]);
 
   // Complete the session
   const completeSession = useCallback(async (surveyData?: {
@@ -461,7 +461,7 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
     };
 
     initializeSession();
-  }, [surveyInstanceId]); // Keep minimal dependencies to avoid infinite loops
+  }, [surveyInstanceId, createSession, session.sessionId, updateActivity]);
 
   // Clean up timeouts on unmount
   useEffect(() => {
@@ -520,6 +520,6 @@ export const useSurveySession = (options: UseSurveySessionOptions | null) => {
         });
         return null;
       }
-    }, [session.sessionId])
+    }, [session.sessionId, surveyInstanceId])
   };
 };

@@ -1,11 +1,11 @@
-import React from 'react';
+import { borderRadius, colors, shadows, typography } from '@/styles/design-tokens';
 import { clsx } from 'clsx';
-import { OptionSetPreview } from '../../admin/survey-builder/shared';
+import React from 'react';
 import { getBadgeLayoutClasses } from '../../../utils/layout.utils';
-import { colors, typography, borderRadius, shadows } from '@/styles/design-tokens';
-import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
+import { OptionSetPreview } from '../../admin/survey-builder/shared';
 import { SurveyImageGallery } from '../../common/ui/survey-image-gallery';
+import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
 
 export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> = ({
   section,
@@ -274,17 +274,20 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
       )}
 
       {/* Field Images */}
-      {field.images && field.images.length > 0 && (
-        <div className="mt-4">
-          <SurveyImageGallery
-            images={field.images}
-            showThumbnails={field.images.length > 1}
-            showNav={field.images.length > 1}
-            showFullscreen={true}
-            autoPlay={false}
-          />
-        </div>
-      )}
+      {field.images && field.images.length > 0 && (() => {
+        console.log('PaginatedSectionRenderer - field.images:', field.images);
+        return (
+          <div className="mt-4">
+            <SurveyImageGallery
+              images={field.images}
+              showThumbnails={field.images.length > 1}
+              showNav={field.images.length > 1}
+              showFullscreen={true}
+              autoPlay={false}
+            />
+          </div>
+        );
+      })()}
 
       {/* Show placeholder message if no options configured */}
       {((field.type === 'select' || field.type === 'multiselect' || field.type === 'multiselectdropdown' || field.type === 'radio' || field.type === 'checkbox' || field.type === 'rating') &&
@@ -293,16 +296,16 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         !field.multiSelectOptionSetId &&
         !field.radioOptionSetId &&
         !field.ratingScaleId) && (
-        <div className={clsx(
-          'p-3 italic',
-          typography.text.sm,
-          `text-${colors.gray[500]} dark:text-gray-400`,
-          `bg-${colors.gray[50]} dark:bg-gray-600`,
-          borderRadius.md
-        )}>
-          No options configured for this field
-        </div>
-      )}
+          <div className={clsx(
+            'p-3 italic',
+            typography.text.sm,
+            `text-${colors.gray[500]} dark:text-gray-400`,
+            `bg-${colors.gray[50]} dark:bg-gray-600`,
+            borderRadius.md
+          )}>
+            No options configured for this field
+          </div>
+        )}
     </div>
   );
   return (

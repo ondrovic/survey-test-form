@@ -165,7 +165,7 @@ export const SubsectionEditor: React.FC<SubsectionEditorProps> = memo(({
         };
 
         loadOptionSets();
-    }, [subsection.id]);
+    }, [subsection.id, subsection.fields, sectionId, multiSelectOptionSets, radioOptionSets, ratingScales]);
 
     const getOptionCount = (field: any) => {
         if (field.ratingScaleId) {

@@ -71,23 +71,25 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
 
     // Auto-expand subsections that are selected or have selected fields
     useEffect(() => {
-        const newExpanded = new Set(expandedSubsections);
+        setExpandedSubsections(prev => {
+            const newExpanded = new Set(prev);
 
-        // Always expand the selected subsection
-        if (selectedSubsectionId) {
-            newExpanded.add(selectedSubsectionId);
-        }
+            // Always expand the selected subsection
+            if (selectedSubsectionId) {
+                newExpanded.add(selectedSubsectionId);
+            }
 
-        // Expand subsections that contain the selected field
-        if (selectedFieldId && section.subsections) {
-            for (const subsection of section.subsections) {
-                if (subsection.fields.some(field => field.id === selectedFieldId)) {
-                    newExpanded.add(subsection.id);
+            // Expand subsections that contain the selected field
+            if (selectedFieldId && section.subsections) {
+                for (const subsection of section.subsections) {
+                    if (subsection.fields.some(field => field.id === selectedFieldId)) {
+                        newExpanded.add(subsection.id);
+                    }
                 }
             }
-        }
 
-        setExpandedSubsections(newExpanded);
+            return newExpanded;
+        });
     }, [selectedSubsectionId, selectedFieldId, section.subsections]);
 
 
@@ -129,16 +131,17 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
             };
         });
         setSubsectionInputs(newInputs);
-    }, [section.subsections?.length, section.id]); // Update when subsections change
+    }, [section.subsections, section.id]); // Update when subsections change
 
     // Cleanup timeouts
     useEffect(() => {
+        const timeoutRefs = subsectionTimeoutRefs.current;
         return () => {
             if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
             if (descriptionTimeoutRef.current) clearTimeout(descriptionTimeoutRef.current);
-            
+
             // Clean up subsection timeouts
-            Object.values(subsectionTimeoutRefs.current).forEach(timeouts => {
+            Object.values(timeoutRefs).forEach(timeouts => {
                 if (timeouts.title) clearTimeout(timeouts.title);
                 if (timeouts.description) clearTimeout(timeouts.description);
             });
@@ -149,7 +152,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
     useEffect(() => {
         setLocalTitle(section.title);
         setLocalDescription(section.description || '');
-    }, [section.id]); // Only update when section ID changes, not on every prop update
+    }, [section.title, section.description, section.id]); // Update when section changes
     
     // Sync local state with section changes (but don't overwrite user input)
     useEffect(() => {
@@ -160,7 +163,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
         if ((section.description || '') !== localDescription && !descriptionTimeoutRef.current) {
             setLocalDescription(section.description || '');
         }
-    }, [section.title, section.description]); // Sync but don't interfere with active editing
+    }, [section.title, section.description, localTitle, localDescription]); // Sync but don't interfere with active editing
 
     // Debounced handlers
     const handleTitleChange = useCallback((newTitle: string) => {
@@ -348,7 +351,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = memo(({
         };
 
         loadOptionSets();
-    }, [section.id]);
+    }, [section.id, section.fields, section.subsections, radioOptionSets, multiSelectOptionSets, ratingScales]);
 
     const getOptionCount = useCallback((field: any) => {
         if (field.ratingScaleId) {

@@ -59,6 +59,17 @@ export class SupabaseClientService {
             persistSession: true,
             autoRefreshToken: true,
           },
+          db: {
+            schema: 'public',
+          },
+          global: {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Accept-Profile': 'public',
+              'Content-Profile': 'public',
+            },
+          },
         }
       );
 

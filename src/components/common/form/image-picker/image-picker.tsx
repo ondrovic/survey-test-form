@@ -1,11 +1,11 @@
-import React, { useCallback, useState, useRef } from 'react';
 import { clsx } from 'clsx';
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { AlertCircle, Image as ImageIcon, Upload, X } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
-import { ImagePickerProps, ImagePickerState, IMAGE_PICKER_DEFAULTS } from './image-picker.types';
 import { ImageUploadService } from '../../../../services/image-upload.service';
-import { SurveyImage, ImageGalleryItem } from '../../../../types/framework.types';
+import { ImageGalleryItem, SurveyImage } from '../../../../types/framework.types';
+import { IMAGE_PICKER_DEFAULTS, ImagePickerProps, ImagePickerState } from './image-picker.types';
 
 export const ImagePicker: React.FC<ImagePickerProps> = ({
   multiple = false,
@@ -124,6 +124,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   }, [disabled, images, onImagesChange, onImageDelete]);
 
   const canUploadMore = multiple ? images.length < maxFiles : images.length === 0;
+
   const galleryItems: ImageGalleryItem[] = images.map(img => ({
     original: img.storageUrl,
     thumbnail: img.storageUrl,
@@ -219,7 +220,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
                   <img
                     src={image.storageUrl}
                     alt={image.altText || image.originalFilename}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </div>
 

@@ -28,8 +28,8 @@ export const useSectionPagination = ({
       isLastSection: currentSectionIndex === totalSections - 1,
       totalSections,
     }),
-    [currentSectionIndex, totalSections]
-  ); // Remove visitedSections from dependencies
+    [currentSectionIndex, totalSections, visitedSections]
+  );
 
   const canGoToSection = useCallback(
     (index: number): boolean => {

@@ -1,9 +1,9 @@
-import React from 'react';
 import { clsx } from 'clsx';
+import React from 'react';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
-import { SurveyImageGalleryProps } from './survey-image-gallery.types';
 import { ImageGalleryItem } from '../../../../types/framework.types';
+import { SurveyImageGalleryProps } from './survey-image-gallery.types';
 
 export const SurveyImageGallery: React.FC<SurveyImageGalleryProps> = ({
   images,
@@ -29,6 +29,9 @@ export const SurveyImageGallery: React.FC<SurveyImageGalleryProps> = ({
       thumbnailAlt: img.altText || img.originalFilename,
       description: img.caption
     }));
+
+  console.log('SurveyImageGallery - images:', images);
+  console.log('SurveyImageGallery - galleryItems:', galleryItems);
 
   if (galleryItems.length === 0) {
     return null;

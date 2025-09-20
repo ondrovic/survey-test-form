@@ -7,6 +7,7 @@ import { SurveyConfirmation } from '@/components/survey';
 import { databaseHelpers, getDatabaseProviderInfo, initializeDatabase } from '@/config/database';
 import { useSurveySession } from '@/hooks/use-survey-session';
 import { ErrorLoggingService } from '@/services/error-logging.service';
+import { ImageUploadService } from '@/services/image-upload.service';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -109,7 +110,7 @@ const AppContent = () => {
             });
             setIsMigrating(false);
         }
-    }, []);
+    }, [isAuthenticated, allSurveyInstances.length]);
 
     // Use ref to avoid recreating the initialization function
     const initializeFrameworkRef = useRef(initializeFramework);
@@ -204,6 +205,70 @@ const App = () => {
     );
 }
 
+// Helper function to load images for all fields in a survey config
+const loadImagesForSurveyConfig = async (config: SurveyConfig): Promise<SurveyConfig> => {
+    try {
+        // Fetch images for all fields in all sections
+        const sectionsWithImages = await Promise.all(
+            config.sections.map(async (section) => {
+                // Fetch images for section fields
+                const fieldsWithImages = await Promise.all(
+                    section.fields.map(async (field) => {
+                        const images = await ImageUploadService.getImages(
+                            config.id,
+                            'field',
+                            field.id
+                        );
+                        return {
+                            ...field,
+                            images
+                        };
+                    })
+                );
+
+                // Fetch images for subsection fields
+                const subsectionsWithImages = await Promise.all(
+                    section.subsections.map(async (subsection) => {
+                        const fieldsWithImages = await Promise.all(
+                            subsection.fields.map(async (field) => {
+                                const images = await ImageUploadService.getImages(
+                                    config.id,
+                                    'field',
+                                    field.id
+                                );
+                                return {
+                                    ...field,
+                                    images
+                                };
+                            })
+                        );
+
+                        return {
+                            ...subsection,
+                            fields: fieldsWithImages
+                        };
+                    })
+                );
+
+                return {
+                    ...section,
+                    fields: fieldsWithImages,
+                    subsections: subsectionsWithImages
+                };
+            })
+        );
+
+        return {
+            ...config,
+            sections: sectionsWithImages
+        };
+    } catch (error) {
+        console.error('Error loading images for survey config:', error);
+        // Return original config if image loading fails
+        return config;
+    }
+};
+
 // Survey Page Component
 const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
     const [surveyConfig, setSurveyConfig] = useState<SurveyConfig | null>(null);
@@ -214,7 +279,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
     const navigate = useNavigate();
     const { showSuccess, showError } = useToast();
     // Data loading handled automatically by survey data context
-    
+
     // Initialize survey session tracking
     const surveySession = useSurveySession({
         surveyInstanceId: instance?.id || '',
@@ -231,7 +296,9 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
 
             const config = await databaseHelpers.getSurveyConfig(instance.configId);
             if (config) {
-                setSurveyConfig(config);
+                // Fetch images for all fields in the survey
+                const configWithImages = await loadImagesForSurveyConfig(config);
+                setSurveyConfig(configWithImages);
             } else {
                 setError('Survey configuration not found');
             }
@@ -255,7 +322,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
         } finally {
             setLoading(false);
         }
-    }, [instance?.id, instance?.configId]); // Add configId to dependencies
+    }, [instance]);
 
     // Load survey config - option sets are loaded automatically by context
     useEffect(() => {
@@ -267,7 +334,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             showError('Survey configuration not found');
             return;
         }
-        
+
         setIsSubmitting(true);
         try {
             // Check network connectivity first
@@ -286,9 +353,9 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             const ipAddress = await getClientIPAddressWithTimeout(3000); // 3 second timeout
 
             // Calculate completion time if session is available
-            const completionTimeSeconds = surveySession.session.sessionId ? 
+            const completionTimeSeconds = surveySession.session.sessionId ?
                 surveySession.getSessionDuration() : null;
-        
+
             const completedAt = getCurrentTimestamp();
             const surveyResponse: SurveyResponse = {
                 id: generateUUID(),
@@ -334,7 +401,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000);
             });
-            
+
             try {
                 await Promise.race([submissionPromise, timeoutPromise]);
             } catch (submissionError) {
@@ -358,7 +425,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 });
                 throw submissionError;
             }
-            
+
             // Add window error handler to catch any silent errors
             const originalHandler = window.onerror;
             window.onerror = async (message, source, lineno, colno, error) => {
@@ -382,7 +449,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 if (originalHandler) originalHandler(message, source, lineno, colno, error);
                 return true;
             };
-            
+
             // Mark session as completed and send email notification
             try {
                 if (surveySession.session.sessionId) {
@@ -410,13 +477,13 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 });
                 // Don't throw - continue with success message even if session completion fails
             }
-            
+
             showSuccess('Survey submitted!');
 
             // Redirect to confirmation page instead of resetting form
             const urlParam = instance.slug || instance.id;
             const confirmationUrl = `${window.location.origin}${routes.confirmation(urlParam)}`;
-            
+
             // Try React Router navigation first, fallback to window.location
             try {
                 navigate(`/survey-confirmation/${urlParam}`);
@@ -457,7 +524,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                     errorType = 'timeout';
                 }
             }
-            
+
             await ErrorLoggingService.logError({
                 severity: 'critical',
                 errorMessage: `Main survey submission error: ${err instanceof Error ? err.message : String(err)}`,
@@ -478,7 +545,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
                 },
                 tags: ['submission', 'critical', 'survey', errorType]
             });
-            
+
             showError(errorMessage);
             throw err; // Re-throw the error so DynamicForm can catch it
         } finally {
@@ -497,8 +564,8 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
 
     if (error || !surveyConfig) {
         return (
-            <NotFoundPage 
-                title="Survey Not Found" 
+            <NotFoundPage
+                title="Survey Not Found"
                 message={error || 'The requested survey could not be loaded.'}
                 homeButtonText="Go to Admin"
                 homeButtonPath={routes.admin}
@@ -542,15 +609,15 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
 // Confirmation Page Component
 const ConfirmationPage = ({ getSurveyInstanceBySlug }: { getSurveyInstanceBySlug: (slug: string) => SurveyInstance | undefined }) => {
     const { slug } = useParams<{ slug: string }>();
-    
+
     // Call all hooks at the top level before any conditional logic
     const instance = slug ? getSurveyInstanceBySlug(slug) : undefined;
-    
+
     // Handle conditional rendering after all hooks have been called
     if (!slug) {
         return <NotFoundPage title="Invalid Survey" message="No survey identifier provided." />;
     }
-    
+
     if (instance) {
         return <SurveyConfirmation surveyTitle={instance.title} />;
     } else {

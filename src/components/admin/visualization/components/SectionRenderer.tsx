@@ -27,12 +27,13 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
   const { filters, state, preferences, toggleSectionCollapsed, openChartModal, hideField } = useVisualization();
 
   const contentItems = getOrderedSectionContent(section);
-  const renderedFieldIds = new Set<string>();
 
   // Collect all charts for this section
-  const allCharts: Array<ChartModalData> = [];
+  const allCharts = useMemo(() => {
+    const charts: Array<ChartModalData> = [];
+    const renderedFieldIds = new Set<string>();
 
-  contentItems.forEach((ci) => {
+    contentItems.forEach((ci) => {
     if (ci.type === 'subsection') {
       const subsection: any = ci.data;
       if (filters.subsectionFilter !== 'all') {
@@ -45,7 +46,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
         .filter((s: any) => !!s && !state.hiddenFields.has(s.fieldId) && !renderedFieldIds.has(s.fieldId) && seriesMatchesSearch(s, { section: section.title, subsection: subsection.title }));
       charts.forEach((s: AggregatedSeries) => {
         renderedFieldIds.add(s.fieldId);
-        allCharts.push({
+        charts.push({
           type: 'subsection',
           data: subsection,
           series: s,
@@ -58,7 +59,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
       const s = fieldIdToSeries[field.id];
       if (!s || !seriesMatchesSearch(s, { section: section.title }) || state.hiddenFields.has(s.fieldId) || renderedFieldIds.has(s.fieldId)) return;
       renderedFieldIds.add(s.fieldId);
-      allCharts.push({
+      charts.push({
         type: 'field',
         data: field,
         series: s,
@@ -66,6 +67,9 @@ export const SectionRenderer: React.FC<SectionRendererProps> = React.memo(({
       });
     }
   });
+
+    return charts;
+  }, [contentItems, filters.subsectionFilter, fieldIdToSeries, state.hiddenFields, section.title, seriesMatchesSearch]);
 
   // Create refs for all charts
   const chartRefs = useMemo(() => {

@@ -77,19 +77,25 @@ const setupPerformanceMonitoring = () => {
       const response = await originalFetch(...args);
       const url = args[0]?.toString() || 'unknown';
       
-      // Log API errors
+      // Log API errors (but skip 406 errors during import operations)
       if (!response.ok) {
-        ErrorLoggingService.logApiError(
-          `HTTP ${response.status}: ${response.statusText}`,
-          url,
-          args[1]?.method || 'GET',
-          response.status,
-          undefined,
-          {
-            componentName: 'ErrorSetupUtils',
-            functionName: 'enhancedFetch'
-          }
-        );
+        const isImportOperation = url.includes('rating_scales') || url.includes('radio_option_sets') || url.includes('checkbox_option_sets');
+        const is406Error = response.status === 406;
+
+        // Skip logging 406 errors for option set lookups during import
+        if (!(isImportOperation && is406Error)) {
+          ErrorLoggingService.logApiError(
+            `HTTP ${response.status}: ${response.statusText}`,
+            url,
+            args[1]?.method || 'GET',
+            response.status,
+            undefined,
+            {
+              componentName: 'ErrorSetupUtils',
+              functionName: 'enhancedFetch'
+            }
+          );
+        }
       }
       
       return response;

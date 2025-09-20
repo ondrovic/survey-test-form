@@ -55,7 +55,7 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
   const loadItemsData = useCallback(async () => {
     const loadedItems = await loadItems(config);
     setItems(loadedItems);
-  }, [selectionMode, loadItems]);
+  }, [config, loadItems]);
 
   // Load items when component becomes visible, but only in selection mode
   // In creation mode, we don't need to load existing items

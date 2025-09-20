@@ -526,3 +526,10 @@ export const parseJsonFile = (file: File): Promise<any> => {
 export const getDataTypeDisplayName = (type: ExportableDataType): string => {
   return DATA_TYPE_CONFIG[type]?.displayName || type;
 };
+
+/**
+ * Get file prefix for data type
+ */
+export const getDataTypeFilePrefix = (type: ExportableDataType): string => {
+  return DATA_TYPE_CONFIG[type]?.filePrefix || type;
+};

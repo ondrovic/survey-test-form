@@ -108,7 +108,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }, 100);
     };
 
-    const handleUpdateSection = (sectionId: string, updates: Partial<SurveySection>) => {
+    const handleUpdateSection = useCallback((sectionId: string, updates: Partial<SurveySection>) => {
         // If title is being updated, consider updating the ID
         if (updates.title) {
             const existingSectionIds = state.config.sections
@@ -122,7 +122,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }
 
         updateSection(sectionId, updates);
-    };
+    }, [state.config.sections, updateSection]);
 
     const handleDeleteSection = (sectionId: string) => {
         deleteSection(sectionId);
@@ -142,9 +142,9 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }, 100);
     };
 
-    const handleUpdateSubsection = (sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => {
+    const handleUpdateSubsection = useCallback((sectionId: string, subsectionId: string, updates: Partial<SurveySubsection>) => {
         updateSubsection(sectionId, subsectionId, updates);
-    };
+    }, [updateSubsection]);
 
     const handleDeleteSubsection = (sectionId: string, subsectionId: string) => {
         deleteSubsection(sectionId, subsectionId);
@@ -202,7 +202,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         handleOpenFieldEditor(newField.id);
     };
 
-    const handleUpdateField = (sectionId: string, fieldId: string, updates: Partial<SurveyField>, subsectionId?: string) => {
+    const handleUpdateField = useCallback((sectionId: string, fieldId: string, updates: Partial<SurveyField>, subsectionId?: string) => {
         // CRITICAL: Prevent any automatic label history additions
         // Only allow label history to be updated through our explicit save function
         if (updates.labelHistory) {
@@ -213,7 +213,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         }
 
         updateField(sectionId, fieldId, updates, subsectionId);
-    };
+    }, [updateField]);
 
     // New function to handle field changes when saving (not on every keystroke)
     const handleSaveFieldChanges = (sectionId: string, fieldId: string, originalLabel: string, currentLabel: string, subsectionId?: string) => {
@@ -415,7 +415,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                 }, 0);
             }
         }
-    }, [reorderFields, deleteField, addField]);
+    }, [state.config.sections, reorderFields, deleteField, addField]);
 
     const handleSortableListMove = useCallback((moveData: SortableListMoveData) => {
         const { droppableId, oldIndex, newIndex } = moveData;

@@ -1,7 +1,8 @@
-import React, { createContext, ReactNode, useContext, useReducer } from 'react';
-import { SurveyConfig, SurveySection, SurveyField, SurveySubsection } from '../../types/framework.types';
+import React, { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
+import { ImageUploadService } from '../../services/image-upload.service';
+import { SurveyConfig, SurveyField, SurveySection, SurveySubsection } from '../../types/framework.types';
 import { createMetadataSync, updateMetadata } from '../../utils/metadata.utils';
-import { ensureContentArray, addContentItem, removeContentItem, reorderContent } from '../../utils/section-content.utils';
+import { addContentItem, ensureContentArray, removeContentItem, reorderContent } from '../../utils/section-content.utils';
 
 interface SurveyBuilderState {
     config: SurveyConfig;
@@ -197,9 +198,9 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
                     ...state.config,
                     sections: state.config.sections.map(section => {
                         if (section.id === action.payload.sectionId) {
-                            const updatedSection = { 
-                                ...section, 
-                                subsections: [...(section.subsections || []), action.payload.subsection] 
+                            const updatedSection = {
+                                ...section,
+                                subsections: [...(section.subsections || []), action.payload.subsection]
                             };
                             // Ensure content array exists before adding to it
                             const sectionWithContent = ensureContentArray(section);
@@ -318,32 +319,32 @@ function surveyBuilderReducer(state: SurveyBuilderState, action: SurveyBuilderAc
             // Use Immer-like approach for better performance with deep updates
             const updatedSections = state.config.sections.map(section => {
                 if (section.id !== action.payload.sectionId) return section;
-                
+
                 if (action.payload.subsectionId) {
                     const updatedSubsections = section.subsections.map(subsection => {
                         if (subsection.id !== action.payload.subsectionId) return subsection;
-                        
-                        const updatedFields = subsection.fields.map(field => 
-                            field.id === action.payload.fieldId 
+
+                        const updatedFields = subsection.fields.map(field =>
+                            field.id === action.payload.fieldId
                                 ? { ...field, ...action.payload.updates }
                                 : field
                         );
-                        
+
                         return { ...subsection, fields: updatedFields };
                     });
-                    
+
                     return { ...section, subsections: updatedSubsections };
                 } else {
-                    const updatedFields = section.fields.map(field => 
-                        field.id === action.payload.fieldId 
+                    const updatedFields = section.fields.map(field =>
+                        field.id === action.payload.fieldId
                             ? { ...field, ...action.payload.updates }
                             : field
                     );
-                    
+
                     return { ...section, fields: updatedFields };
                 }
             });
-            
+
             const updatedFieldConfig = {
                 ...state.config,
                 sections: updatedSections,
@@ -632,6 +633,70 @@ interface SurveyBuilderContextType {
     updateEntireConfig: (config: SurveyConfig) => void;
 }
 
+// Helper function to load images for all fields in a survey config
+const loadImagesForSurveyConfig = async (config: SurveyConfig): Promise<SurveyConfig> => {
+    try {
+        // Fetch images for all fields in all sections
+        const sectionsWithImages = await Promise.all(
+            config.sections.map(async (section) => {
+                // Fetch images for section fields
+                const fieldsWithImages = await Promise.all(
+                    section.fields.map(async (field) => {
+                        const images = await ImageUploadService.getImages(
+                            config.id,
+                            'field',
+                            field.id
+                        );
+                        return {
+                            ...field,
+                            images
+                        };
+                    })
+                );
+
+                // Fetch images for subsection fields
+                const subsectionsWithImages = await Promise.all(
+                    section.subsections.map(async (subsection) => {
+                        const fieldsWithImages = await Promise.all(
+                            subsection.fields.map(async (field) => {
+                                const images = await ImageUploadService.getImages(
+                                    config.id,
+                                    'field',
+                                    field.id
+                                );
+                                return {
+                                    ...field,
+                                    images
+                                };
+                            })
+                        );
+
+                        return {
+                            ...subsection,
+                            fields: fieldsWithImages
+                        };
+                    })
+                );
+
+                return {
+                    ...section,
+                    fields: fieldsWithImages,
+                    subsections: subsectionsWithImages
+                };
+            })
+        );
+
+        return {
+            ...config,
+            sections: sectionsWithImages
+        };
+    } catch (error) {
+        console.error('Error loading images for survey config:', error);
+        // Return original config if image loading fails
+        return config;
+    }
+};
+
 const SurveyBuilderContext = createContext<SurveyBuilderContextType | undefined>(undefined);
 
 export const SurveyBuilderProvider = ({ children, initialConfig }: { children: ReactNode; initialConfig?: SurveyConfig }) => {
@@ -639,6 +704,15 @@ export const SurveyBuilderProvider = ({ children, initialConfig }: { children: R
         ...initialState,
         config: initialConfig || initialState.config
     });
+
+    // Load images when initialConfig is provided
+    useEffect(() => {
+        if (initialConfig) {
+            loadImagesForSurveyConfig(initialConfig).then(configWithImages => {
+                dispatch({ type: 'SET_CONFIG', payload: configWithImages });
+            });
+        }
+    }, [initialConfig]);
 
     const setConfig = (config: SurveyConfig) => {
         dispatch({ type: 'SET_CONFIG', payload: config });

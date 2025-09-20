@@ -1,7 +1,7 @@
 import { Button, Modal } from '@/components/common';
 import { IMPORT_CANCELLED_MESSAGE } from '@/constants/import-export.constants';
 import { useToast } from '@/contexts/toast-context';
-import { ExportableDataType, getDataTypeDisplayName } from '@/utils/generic-import-export.utils';
+import { ExportableDataType, getDataTypeDisplayName, getDataTypeFilePrefix } from '@/utils/generic-import-export.utils';
 import { AlertCircle, FileText, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -31,7 +31,7 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
       setSelectedFile(null);
       setIsDragging(false);
       setIsImporting(false);
-    } 
+    }
   }, [isOpen]);
 
   const displayName = dataType ? getDataTypeDisplayName(dataType) : 'Data';
@@ -77,6 +77,21 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
       return;
     }
 
+    // Validate filename if we have a specific data type
+    if (dataType) {
+      const expectedPrefix = getDataTypeFilePrefix(dataType);
+      const fileName = selectedFile.name.toLowerCase();
+      const expectedPattern = new RegExp(`^${expectedPrefix.toLowerCase()}-.*\\.json$`, 'i');
+
+      if (!expectedPattern.test(fileName)) {
+        const displayName = getDataTypeDisplayName(dataType);
+        showError(
+          `Invalid file type. Please select a ${displayName.toLowerCase()} file that starts with "${expectedPrefix}-"`
+        );
+        return;
+      }
+    }
+
     setIsImporting(true);
     try {
       const success = await onImport(selectedFile);
@@ -89,7 +104,7 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
     } finally {
       setIsImporting(false);
     }
-  }, [selectedFile, onImport, onClose]);
+  }, [selectedFile, onImport, onClose, dataType, showError]);
 
   const handleClose = useCallback(() => {
     if (!isImporting) {
@@ -116,6 +131,11 @@ export const GenericImportModal: React.FC<GenericImportModalProps> = ({
         <div className="mb-4">
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
             Upload a JSON file exported from this system to import {dataType ? `a ${displayName.toLowerCase()}` : 'data'}.
+            {dataType && (
+              <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Expected filename: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{getDataTypeFilePrefix(dataType)}-*.json</code>
+              </span>
+            )}
           </p>
 
           {/* File Drop Zone */}

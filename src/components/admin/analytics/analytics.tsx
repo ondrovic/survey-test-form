@@ -171,6 +171,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         } finally {
             setLoading(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedInstanceId, dateRange, groupBy, surveyInstances]);
 
     useEffect(() => {
@@ -182,7 +183,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         setSelectedInstanceId(instanceId);
     }, [instanceId]);
 
-    const calculateAnalytics = (
+    const calculateAnalytics = useCallback((
         responses: SurveyResponse[],
         sessions: any[],
         config: SurveyConfig | undefined,
@@ -259,7 +260,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
             fieldAnalysis,
             trends
         };
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const groupResponsesByPeriod = (responses: SurveyResponse[], groupBy: string) => {
         const periodCounts: Record<string, number> = {};
@@ -406,7 +408,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
         return fieldAnalysis;
     };
 
-    const calculateTrends = (responses: SurveyResponse[], sessions: any[], groupBy: string) => {
+    const calculateTrends = useCallback((responses: SurveyResponse[], sessions: any[], groupBy: string) => {
         const responsesByPeriod = groupResponsesByPeriod(responses, groupBy);
         const sessionsByPeriod = groupSessionsByPeriod(sessions, groupBy);
 
@@ -435,7 +437,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ instanceId }) => {
                 completionRate
             };
         });
-    };
+    }, []);
 
     if (loading) {
         return (

@@ -50,29 +50,6 @@ CREATE INDEX IF NOT EXISTS idx_survey_images_config_active ON survey_images(conf
 CREATE INDEX IF NOT EXISTS idx_survey_images_storage_path ON survey_images(storage_path);
 CREATE INDEX IF NOT EXISTS idx_survey_images_upload_status ON survey_images(upload_status);
 
--- Add RLS policies for survey_images
-ALTER TABLE survey_images ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can view images for surveys they have access to
-CREATE POLICY "Users can view survey images"
-    ON survey_images
-    FOR SELECT
-    USING (true); -- Allow public read access for now, can be restricted later
-
--- Policy: Authenticated users can insert images
-CREATE POLICY "Authenticated users can insert survey images"
-    ON survey_images
-    FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
-
--- Policy: Authenticated users can update their own uploaded images
-CREATE POLICY "Users can update their own survey images"
-    ON survey_images
-    FOR UPDATE
-    USING (auth.role() = 'authenticated');
-
--- Policy: Authenticated users can delete their own uploaded images
-CREATE POLICY "Users can delete their own survey images"
-    ON survey_images
-    FOR DELETE
-    USING (auth.role() = 'authenticated');
+-- RLS is disabled for now - will be enabled when SSO is integrated
+-- Explicitly disable RLS in case it was previously enabled
+ALTER TABLE survey_images DISABLE ROW LEVEL SECURITY;

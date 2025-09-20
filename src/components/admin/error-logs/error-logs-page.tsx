@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/toast-context';
 import { ErrorLoggingService } from '@/services/error-logging.service';
 import { SupabaseClientService } from '@/services/supabase-client.service';
 import { SimpleErrorLog } from '@/types';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 type SortField = 'occurred_at' | 'severity' | 'error_message' | 'component_name' | 'user_email';
 type SortDirection = 'asc' | 'desc';
@@ -29,7 +29,7 @@ export const ErrorLogsPage: React.FC = () => {
   const { showError, showSuccess } = useToast();
 
   // Fetch all errors from the service
-  const fetchErrors = async () => {
+  const fetchErrors = useCallback(async () => {
     try {
       setLoading(true);
       const data = await ErrorLoggingService.getRecentErrors(1000); // Get more records
@@ -50,11 +50,11 @@ export const ErrorLogsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
 
   useEffect(() => {
     fetchErrors();
-  }, []);
+  }, [fetchErrors]);
 
   // Set up real-time subscription for new error logs
   useEffect(() => {

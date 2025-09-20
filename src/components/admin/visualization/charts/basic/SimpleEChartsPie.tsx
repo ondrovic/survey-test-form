@@ -151,7 +151,7 @@ export const SimpleEChartsPie = forwardRef<ReactECharts, SimpleEChartsPieProps>(
         '#14b8a6', '#f97316', '#0ea5e9', '#84cc16', '#a855f7'
       ]
     };
-  }, [chartData, isLarge, isDonut, padAngle, showPercent, showLegend, counts, total, isDarkMode]);
+  }, [chartData, isLarge, isDonut, padAngle, showLegend, counts, total, isDarkMode, fieldName]);
 
   const containerStyle = {
     height: isLarge ? '650px' : '400px', // Optimized modal size: 650px vs 400px for grid

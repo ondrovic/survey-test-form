@@ -537,7 +537,7 @@ export const useSurveyOperations = () => {
         throw error;
       }
     },
-    [showSuccess, showError, refreshAll]
+    [showSuccess, showError, refreshAll, updateSurveyInstance]
   );
 
   // Helper function to validate individual fields
