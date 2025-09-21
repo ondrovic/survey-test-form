@@ -7,7 +7,6 @@ import { SurveyConfirmation } from '@/components/survey';
 import { databaseHelpers, getDatabaseProviderInfo, initializeDatabase } from '@/config/database';
 import { useSurveySession } from '@/hooks/use-survey-session';
 import { ErrorLoggingService } from '@/services/error-logging.service';
-import { ImageUploadService } from '@/services/image-upload.service';
 
 
 import { AppProvider } from '@/contexts/app-provider';
@@ -205,69 +204,6 @@ const App = () => {
     );
 }
 
-// Helper function to load images for all fields in a survey config
-const loadImagesForSurveyConfig = async (config: SurveyConfig): Promise<SurveyConfig> => {
-    try {
-        // Fetch images for all fields in all sections
-        const sectionsWithImages = await Promise.all(
-            config.sections.map(async (section) => {
-                // Fetch images for section fields
-                const fieldsWithImages = await Promise.all(
-                    section.fields.map(async (field) => {
-                        const images = await ImageUploadService.getImages(
-                            config.id,
-                            'field',
-                            field.id
-                        );
-                        return {
-                            ...field,
-                            images
-                        };
-                    })
-                );
-
-                // Fetch images for subsection fields
-                const subsectionsWithImages = await Promise.all(
-                    section.subsections.map(async (subsection) => {
-                        const fieldsWithImages = await Promise.all(
-                            subsection.fields.map(async (field) => {
-                                const images = await ImageUploadService.getImages(
-                                    config.id,
-                                    'field',
-                                    field.id
-                                );
-                                return {
-                                    ...field,
-                                    images
-                                };
-                            })
-                        );
-
-                        return {
-                            ...subsection,
-                            fields: fieldsWithImages
-                        };
-                    })
-                );
-
-                return {
-                    ...section,
-                    fields: fieldsWithImages,
-                    subsections: subsectionsWithImages
-                };
-            })
-        );
-
-        return {
-            ...config,
-            sections: sectionsWithImages
-        };
-    } catch (error) {
-        console.error('Error loading images for survey config:', error);
-        // Return original config if image loading fails
-        return config;
-    }
-};
 
 // Survey Page Component
 const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
@@ -296,9 +232,7 @@ const SurveyPage = ({ instance }: { instance: SurveyInstance | undefined }) => {
 
             const config = await databaseHelpers.getSurveyConfig(instance.configId);
             if (config) {
-                // Fetch images for all fields in the survey
-                const configWithImages = await loadImagesForSurveyConfig(config);
-                setSurveyConfig(configWithImages);
+                setSurveyConfig(config);
             } else {
                 setError('Survey configuration not found');
             }

@@ -1,9 +1,9 @@
-import React from "react";
 import {
+  DEFAULT_FIELD_LABEL,
   RADIO_OPTION_BUTTON_NAME,
   SELECT_OPTION_BUTTON_NAME,
-  DEFAULT_FIELD_LABEL,
 } from "@/constants/options-sets.constants";
+import React from "react";
 
 interface RadioSelectPreviewProps {
   data: {
@@ -53,6 +53,7 @@ export const RadioSelectPreview: React.FC<RadioSelectPreviewProps> = ({
                 readOnly
                 className="text-amber-600 dark:text-amber-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
               />
+
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 {option.label || `Option ${index + 1}`}
               </span>

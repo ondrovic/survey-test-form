@@ -4,7 +4,6 @@ import React from 'react';
 import { getBadgeLayoutClasses } from '../../../utils/layout.utils';
 import { getOrderedSectionContent } from '../../../utils/section-content.utils';
 import { OptionSetPreview } from '../../admin/survey-builder/shared';
-import { SurveyImageGallery } from '../../common/ui/survey-image-gallery';
 import { PaginatedSectionRendererProps } from './survey-section-paginator.types';
 
 export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> = ({
@@ -273,21 +272,6 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
         </div>
       )}
 
-      {/* Field Images */}
-      {field.images && field.images.length > 0 && (() => {
-        console.log('PaginatedSectionRenderer - field.images:', field.images);
-        return (
-          <div className="mt-4">
-            <SurveyImageGallery
-              images={field.images}
-              showThumbnails={field.images.length > 1}
-              showNav={field.images.length > 1}
-              showFullscreen={true}
-              autoPlay={false}
-            />
-          </div>
-        );
-      })()}
 
       {/* Show placeholder message if no options configured */}
       {((field.type === 'select' || field.type === 'multiselect' || field.type === 'multiselectdropdown' || field.type === 'radio' || field.type === 'checkbox' || field.type === 'rating') &&
@@ -339,18 +323,6 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
           )}>{section.description}</p>
         )}
 
-        {/* Section Images */}
-        {section.images && section.images.length > 0 && (
-          <div className="mt-4">
-            <SurveyImageGallery
-              images={section.images}
-              showThumbnails={section.images.length > 1}
-              showNav={section.images.length > 1}
-              showFullscreen={true}
-              autoPlay={false}
-            />
-          </div>
-        )}
       </div>
 
       {/* Section Content */}
@@ -380,18 +352,6 @@ export const PaginatedSectionRenderer: React.FC<PaginatedSectionRendererProps> =
                     )}>{subsection.description}</p>
                   )}
 
-                  {/* Subsection Images */}
-                  {subsection.images && subsection.images.length > 0 && (
-                    <div className="mt-4">
-                      <SurveyImageGallery
-                        images={subsection.images}
-                        showThumbnails={subsection.images.length > 1}
-                        showNav={subsection.images.length > 1}
-                        showFullscreen={true}
-                        autoPlay={false}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* Subsection Fields */}

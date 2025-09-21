@@ -166,7 +166,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         // Find the section and subsection to get defaults
         const section = state.config.sections.find(s => s.id === sectionId);
         const subsection = subsectionId ? section?.subsections?.find(sub => sub.id === subsectionId) : undefined;
-        
+
         // Determine defaults (subsection overrides section)
         const defaults = subsection?.defaults || section?.defaults;
 
@@ -197,7 +197,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                 multiSelectOptionSetName: defaults.multiSelectOptionSetName
             })
         };
-        
+
         addField(sectionId, newField, subsectionId);
         handleOpenFieldEditor(newField.id);
     };
@@ -217,7 +217,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
 
     // New function to handle field changes when saving (not on every keystroke)
     const handleSaveFieldChanges = (sectionId: string, fieldId: string, originalLabel: string, currentLabel: string, subsectionId?: string) => {
-       // Find the current field to update its metadata
+        // Find the current field to update its metadata
         let currentField: SurveyField | undefined;
         const section = state.config.sections.find(section => section.id === sectionId);
 
@@ -529,7 +529,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
     // Section defaults option set handlers
     const handleSectionRatingScaleSelect = useCallback(async (optionSetId: string) => {
         if (!sectionDefaultsContext) return;
-        
+
         try {
             const scale = await databaseHelpers.getRatingScale(optionSetId);
             if (scale) {
@@ -556,14 +556,14 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         } catch (error) {
             console.error('Error selecting rating scale for defaults:', error);
         }
-        
+
         setSectionDefaultsContext(null);
         showRatingScaleManager(false);
     }, [sectionDefaultsContext, selectedSection, handleUpdateSection, handleUpdateSubsection, showRatingScaleManager]);
 
     const handleSectionRadioOptionSetSelect = useCallback(async (optionSetId: string) => {
         if (!sectionDefaultsContext) return;
-        
+
         try {
             const optionSet = await databaseHelpers.getRadioOptionSet(optionSetId);
             if (optionSet) {
@@ -590,14 +590,14 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         } catch (error) {
             console.error('Error selecting radio option set for defaults:', error);
         }
-        
+
         setSectionDefaultsContext(null);
         showRadioOptionSetManager(false);
     }, [sectionDefaultsContext, selectedSection, handleUpdateSection, handleUpdateSubsection, showRadioOptionSetManager]);
 
     const handleSectionMultiSelectOptionSetSelect = useCallback(async (optionSetId: string) => {
         if (!sectionDefaultsContext) return;
-        
+
         try {
             const optionSet = await databaseHelpers.getMultiSelectOptionSet(optionSetId);
             if (optionSet) {
@@ -624,7 +624,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
         } catch (error) {
             console.error('Error selecting multi-select option set for defaults:', error);
         }
-        
+
         setSectionDefaultsContext(null);
         showMultiSelectOptionSetManager(false);
     }, [sectionDefaultsContext, selectedSection, handleUpdateSection, handleUpdateSubsection, showMultiSelectOptionSetManager]);
@@ -809,13 +809,13 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                                 <>
                                     {/* Mobile: Back to sections button */}
                                     <div className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-3">
-                                        <button 
+                                        <button
                                             onClick={() => selectSection(null)}
                                             className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium text-sm hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left">
-                                                <path d="m12 19-7-7 7-7"/>
-                                                <path d="M19 12H5"/>
+                                                <path d="m12 19-7-7 7-7" />
+                                                <path d="M19 12H5" />
                                             </svg>
                                             Back to Sections
                                         </button>
@@ -944,7 +944,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     {/* Rating Scale Manager Modal */}
                     {state.showRatingScaleManager && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
-                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-6xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
                                 <RatingScaleManager
                                     isVisible={state.showRatingScaleManager}
                                     onClose={handleCloseRatingScaleManager}
@@ -972,7 +972,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     {/* Radio Option Set Manager Modal */}
                     {state.showRadioOptionSetManager && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
-                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-6xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
                                 <RadioOptionSetManager
                                     isVisible={state.showRadioOptionSetManager}
                                     onClose={handleCloseRadioOptionSetManager}
@@ -985,7 +985,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     {/* Multi-Select Option Set Manager Modal */}
                     {state.showMultiSelectOptionSetManager && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
-                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-6xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
                                 <MultiSelectOptionSetManager
                                     isVisible={state.showMultiSelectOptionSetManager}
                                     onClose={handleCloseMultiSelectOptionSetManager}
@@ -998,7 +998,7 @@ const SurveyBuilderContent: React.FC<SurveyBuilderProps> = memo(({ onClose, edit
                     {/* Select Option Set Manager Modal */}
                     {state.showSelectOptionSetManager && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center p-0 md:p-4">
-                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
+                            <div className="w-full h-full md:w-auto md:h-auto md:max-w-6xl md:max-h-[90vh] bg-white dark:bg-gray-800 md:rounded-lg overflow-hidden">
                                 <SelectOptionSetManager
                                     isVisible={state.showSelectOptionSetManager}
                                     onClose={handleCloseSelectOptionSetManager}

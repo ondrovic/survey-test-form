@@ -1,8 +1,8 @@
-import React from 'react';
-import { clsx } from 'clsx';
+import { FormField } from '@/components/common/ui';
 import { colors, transitions, typography } from '@/styles/design-tokens';
 import { getSmartLayoutClasses } from '@/utils/layout.utils';
-import { FormField } from '@/components/common/ui';
+import { clsx } from 'clsx';
+import React from 'react';
 import { CheckboxGroupProps as BaseCheckboxGroupProps } from './checkbox-group.types';
 
 // Re-export types for external use
@@ -63,6 +63,7 @@ const CheckboxOption = <T extends string | number = string>({
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
           )}
         />
+
         <span
           className={clsx(
             typography.text.sm,
@@ -77,6 +78,7 @@ const CheckboxOption = <T extends string | number = string>({
           {option.label}
         </span>
       </label>
+
     </div>
   );
 };
@@ -171,7 +173,7 @@ const CheckboxGroupComponent = <T extends string | number = string>({
   className,
 }: BaseCheckboxGroupProps<T>) => {
   const currentSelectionCount = (selectedValues || []).length;
-  
+
   // Create selection count info for the label
   const selectionInfo = (maxSelections || minSelections) ? (
     <span className={clsx('ml-2', typography.text.sm, `text-${colors.gray[500]} dark:text-gray-400`)}>
@@ -195,7 +197,7 @@ const CheckboxGroupComponent = <T extends string | number = string>({
           <span>{label}{selectionInfo}</span>
         </FormField.Label>
       )}
-      
+
       <CheckboxGroupInternal
         name={name}
         options={options}
@@ -206,7 +208,7 @@ const CheckboxGroupComponent = <T extends string | number = string>({
         minSelections={minSelections}
         data-testid={testId}
       />
-      
+
       <FormField.Error />
     </FormField>
   );
@@ -231,3 +233,4 @@ export const CheckboxGroup = React.memo(CheckboxGroupComponent);
 // Export the individual option component for advanced use cases
 export { CheckboxOption };
 export type { CheckboxOptionProps };
+

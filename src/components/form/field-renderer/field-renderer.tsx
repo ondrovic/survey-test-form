@@ -1,5 +1,4 @@
 import { Input, Portal } from '@/components/common';
-import { SurveyImageGallery } from '@/components/common/ui/survey-image-gallery';
 import { MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '@/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
@@ -30,7 +29,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     radioOptionSets = {},
     multiSelectOptionSets = {},
     selectOptionSets = {},
-    loadingOptionSets = false
+    loadingOptionSets = false,
 }) => {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
@@ -202,286 +201,300 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         return selectedOption?.label || 'Select rating';
     };
 
-    const renderFieldImages = () => {
-        if (!field.images || field.images.length === 0) {
-            return null;
-        }
 
-        return (
-            <div className="mt-4">
-                <SurveyImageGallery
-                    images={field.images}
-                    showThumbnails={field.images.length > 1}
-                    showNav={field.images.length > 1}
-                    showFullscreen={true}
-                    autoPlay={false}
-                />
-            </div>
-        );
-    };
 
     const renderField = () => {
         switch (field.type) {
-        case 'text':
-        case 'email':
-        case 'number':
-            return (
-                <Input
-                    name={field.id}
-                    label={field.label}
-                    value={value || ''}
-                    onChange={(value) => handleFieldChange(field.id, value)}
-                    placeholder={field.placeholder}
-                    error={error}
-                    required={field.required}
-                    type={field.type}
-                />
-            );
-
-        case 'textarea':
-            return (
-                <div className="mb-6">
-                    <label htmlFor={`${field.id}-textarea`} className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                    <textarea
-                        id={`${field.id}-textarea`}
+            case 'text':
+            case 'email':
+            case 'number':
+                return (
+                    <Input
                         name={field.id}
+                        label={field.label}
                         value={value || ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                        onChange={(value) => handleFieldChange(field.id, value)}
                         placeholder={field.placeholder}
-                        className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 resize-y bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400",
-                            error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
-                        )}
-                        rows={4}
+                        error={error}
+                        required={field.required}
+                        type={field.type}
                     />
-                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
-                </div>
-            );
+                );
 
-        case 'select': {
-            // Determine which options to use - select option set or individual options
-            let selectOptions = field.options || [];
-            let isSelectLoading = false;
-
-            if (field.selectOptionSetId) {
-                if (selectOptionSets[field.selectOptionSetId]) {
-                    // Use loaded select option set options
-                    selectOptions = selectOptionSets[field.selectOptionSetId].options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                        color: opt.color,
-                        isDefault: opt.isDefault
-                    }));
-                } else if (loadingOptionSets) {
-                    isSelectLoading = true;
-                }
-            }
-
-            if (isSelectLoading) {
+            case 'textarea':
                 return (
                     <div className="mb-6">
-                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor={`${field.id}-textarea`} className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {field.label}
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="text-gray-500 dark:text-gray-400 text-sm px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">Loading options...</div>
+                        <textarea
+                            id={`${field.id}-textarea`}
+                            name={field.id}
+                            value={value || ''}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                            placeholder={field.placeholder}
+                            className={clsx(
+                                "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 resize-y bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400",
+                                error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
+                            )}
+                            rows={4}
+                        />
+                        {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
                     </div>
                 );
-            }
 
-            return (
-                <div className="mb-6">
-                    <label htmlFor={`${field.id}-select`} className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                    <select
-                        id={`${field.id}-select`}
-                        name={field.id}
-                        value={value || ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                        className={clsx(
-                            "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
-                            error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
-                        )}
-                    >
-                        <option value="">{field.placeholder || 'Select an option...'}</option>
-                        {selectOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
-                </div>
-            );
-        }
+            case 'select': {
+                // Determine which options to use - select option set or individual options
+                let selectOptions = field.options || [];
+                let isSelectLoading = false;
 
-        case 'radio': {
-            // Determine which options to use - radio option set or individual options
-            let radioOptions = field.options || [];
-            let isRadioLoading = false;
-
-            if (field.radioOptionSetId) {
-                if (radioOptionSets[field.radioOptionSetId]) {
-                    // Use loaded radio option set options
-                    radioOptions = radioOptionSets[field.radioOptionSetId].options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                        color: opt.color,
-                        isDefault: opt.isDefault
-                    }));
-                } else if (loadingOptionSets) {
-                    isRadioLoading = true;
+                if (field.selectOptionSetId) {
+                    if (selectOptionSets[field.selectOptionSetId]) {
+                        // Use loaded select option set options
+                        selectOptions = selectOptionSets[field.selectOptionSetId].options.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            color: opt.color,
+                            isDefault: opt.isDefault
+                        }));
+                    } else if (loadingOptionSets) {
+                        isSelectLoading = true;
+                    }
                 }
-            }
 
-            if (isRadioLoading) {
-                return (
-                    <div className="mb-4">
-                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
-                        </label>
-                        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
-                    </div>
-                );
-            }
-
-            return (
-                <RadioGroup
-                    name={field.id}
-                    label={field.label}
-                    options={radioOptions}
-                    selectedValue={value}
-                    onChange={(value) => handleFieldChange(field.id, value)}
-                    error={error}
-                    required={field.required}
-                />
-            );
-        }
-
-        case 'multiselect': {
-            // Determine which options to use - multi-select option set or individual options
-            let multiSelectOptions = field.options || [];
-            let isMultiSelectLoading = false;
-
-            if (field.multiSelectOptionSetId) {
-                if (multiSelectOptionSets[field.multiSelectOptionSetId]) {
-                    // Use loaded multi-select option set options
-                    multiSelectOptions = multiSelectOptionSets[field.multiSelectOptionSetId].options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                        color: opt.color,
-                        isDefault: opt.isDefault
-                    }));
-                } else if (loadingOptionSets) {
-                    isMultiSelectLoading = true;
-                }
-            }
-
-            if (isMultiSelectLoading) {
-                return (
-                    <div className="mb-4">
-                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
-                        </label>
-                        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
-                    </div>
-                );
-            }
-
-            // Extract min/max selections from option set or validation rules
-            let minSelections: number | undefined;
-            let maxSelections: number | undefined;
-
-            if (field.multiSelectOptionSetId && multiSelectOptionSets[field.multiSelectOptionSetId]) {
-                // Use option set constraints
-                const optionSet = multiSelectOptionSets[field.multiSelectOptionSetId];
-                minSelections = optionSet.minSelections;
-                maxSelections = optionSet.maxSelections;
-            } else if (field.validation) {
-                // Use individual field validation rules
-                const minRule = field.validation.find(rule => rule.type === 'minSelections');
-                const maxRule = field.validation.find(rule => rule.type === 'maxSelections');
-                minSelections = minRule?.value;
-                maxSelections = maxRule?.value;
-            }
-
-
-            return (
-                <CheckboxGroup
-                    name={field.id}
-                    label={field.label}
-                    options={multiSelectOptions}
-                    selectedValues={value || []}
-                    onChange={(value) => handleFieldChange(field.id, value)}
-                    error={error}
-                    required={field.required}
-                    minSelections={minSelections}
-                    maxSelections={maxSelections}
-                />
-            );
-        }
-
-        case 'rating': {
-            // Determine which options to use - rating scale or individual options
-            let ratingOptions = field.options || [];
-            let isLoading = false;
-
-            if (field.ratingScaleId) {
-                if (ratingScales[field.ratingScaleId]) {
-                    // Use loaded rating scale options
-                    ratingOptions = ratingScales[field.ratingScaleId].options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                        color: opt.color,
-                        isDefault: opt.isDefault
-                    }));
-                } else if (loadingScales) {
-                    isLoading = true;
-                }
-            }
-
-            return (
-                <div className="mb-6">
-                    <div className="flex items-center justify-between p-4 border border-green-200 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20">
-                        <div className="text-gray-700 dark:text-gray-300 font-medium">
-                            {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                if (isSelectLoading) {
+                    return (
+                        <div className="mb-6">
+                            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {field.label}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <div className="text-gray-500 dark:text-gray-400 text-sm px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">Loading options...</div>
                         </div>
-                        <div className="relative" ref={dropdownRef}>
-                            <button
-                                ref={(el) => {
-                                    if (el) triggerRefs.current[field.id] = el;
-                                }}
-                                type="button"
-                                disabled={isLoading}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDropdownOpen(field.id);
-                                }}
-                                className={clsx(
-                                    "px-3 py-2 rounded text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                                    isLoading ? "opacity-50 cursor-not-allowed" : "",
-                                    getSelectedRatingColor(value, ratingOptions)
-                                )}
-                            >
-                                {isLoading ? "Loading..." : getSelectedRatingLabel(value, ratingOptions)}
-                                <ChevronDown className={clsx(
-                                    "w-4 h-4 transition-transform duration-200",
-                                    openDropdown === field.id ? "rotate-180" : ""
-                                )} />
-                            </button>
+                    );
+                }
 
-                            {openDropdown === field.id && !isLoading && (
-                                isMobile ? (
-                                    <Portal>
+                return (
+                    <div className="mb-6">
+                        <label htmlFor={`${field.id}-select`} className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <select
+                            id={`${field.id}-select`}
+                            name={field.id}
+                            value={value || ''}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                            className={clsx(
+                                "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
+                                error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
+                            )}
+                        >
+                            <option value="">{field.placeholder || 'Select an option...'}</option>
+                            {selectOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
+                    </div>
+                );
+            }
+
+            case 'radio': {
+                // Determine which options to use - radio option set or individual options
+                let radioOptions = field.options || [];
+                let isRadioLoading = false;
+
+                if (field.radioOptionSetId) {
+                    if (radioOptionSets[field.radioOptionSetId]) {
+                        const optionSet = radioOptionSets[field.radioOptionSetId];
+                        // Use loaded radio option set options
+                        radioOptions = optionSet.options.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            color: opt.color,
+                            isDefault: opt.isDefault,
+                        }));
+                    } else if (loadingOptionSets) {
+                        isRadioLoading = true;
+                    }
+                }
+
+                if (isRadioLoading) {
+                    return (
+                        <div className="mb-4">
+                            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {field.label}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <RadioGroup
+                        name={field.id}
+                        label={field.label}
+                        options={radioOptions}
+                        selectedValue={value}
+                        onChange={(value) => handleFieldChange(field.id, value)}
+                        error={error}
+                        required={field.required}
+                    />
+                );
+            }
+
+            case 'multiselect': {
+                // Determine which options to use - multi-select option set or individual options
+                let multiSelectOptions = field.options || [];
+                let isMultiSelectLoading = false;
+
+                if (field.multiSelectOptionSetId) {
+                    if (multiSelectOptionSets[field.multiSelectOptionSetId]) {
+                        const optionSet = multiSelectOptionSets[field.multiSelectOptionSetId];
+                        // Use loaded multi-select option set options
+                        multiSelectOptions = optionSet.options.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            color: opt.color,
+                            isDefault: opt.isDefault,
+                        }));
+                    } else if (loadingOptionSets) {
+                        isMultiSelectLoading = true;
+                    }
+                }
+
+                if (isMultiSelectLoading) {
+                    return (
+                        <div className="mb-4">
+                            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {field.label}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
+                        </div>
+                    );
+                }
+
+                // Extract min/max selections from option set or validation rules
+                let minSelections: number | undefined;
+                let maxSelections: number | undefined;
+
+                if (field.multiSelectOptionSetId && multiSelectOptionSets[field.multiSelectOptionSetId]) {
+                    // Use option set constraints
+                    const optionSet = multiSelectOptionSets[field.multiSelectOptionSetId];
+                    minSelections = optionSet.minSelections;
+                    maxSelections = optionSet.maxSelections;
+                } else if (field.validation) {
+                    // Use individual field validation rules
+                    const minRule = field.validation.find(rule => rule.type === 'minSelections');
+                    const maxRule = field.validation.find(rule => rule.type === 'maxSelections');
+                    minSelections = minRule?.value;
+                    maxSelections = maxRule?.value;
+                }
+
+                return (
+                    <CheckboxGroup
+                        name={field.id}
+                        label={field.label}
+                        options={multiSelectOptions}
+                        selectedValues={value || []}
+                        onChange={(value) => handleFieldChange(field.id, value)}
+                        error={error}
+                        required={field.required}
+                        minSelections={minSelections}
+                        maxSelections={maxSelections}
+                    />
+                );
+            }
+
+            case 'rating': {
+                // Determine which options to use - rating scale or individual options
+                let ratingOptions = field.options || [];
+                let isLoading = false;
+
+                if (field.ratingScaleId) {
+                    if (ratingScales[field.ratingScaleId]) {
+                        // Use loaded rating scale options
+                        ratingOptions = ratingScales[field.ratingScaleId].options.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            color: opt.color,
+                            isDefault: opt.isDefault
+                        }));
+                    } else if (loadingScales) {
+                        isLoading = true;
+                    }
+                }
+
+                return (
+                    <div className="mb-6">
+                        <div className="flex items-center justify-between p-4 border border-green-200 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20">
+                            <div className="text-gray-700 dark:text-gray-300 font-medium">
+                                {field.label}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                            </div>
+                            <div className="relative" ref={dropdownRef}>
+                                <button
+                                    ref={(el) => {
+                                        if (el) triggerRefs.current[field.id] = el;
+                                    }}
+                                    type="button"
+                                    disabled={isLoading}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDropdownOpen(field.id);
+                                    }}
+                                    className={clsx(
+                                        "px-3 py-2 rounded text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                                        isLoading ? "opacity-50 cursor-not-allowed" : "",
+                                        getSelectedRatingColor(value, ratingOptions)
+                                    )}
+                                >
+                                    {isLoading ? "Loading..." : getSelectedRatingLabel(value, ratingOptions)}
+                                    <ChevronDown className={clsx(
+                                        "w-4 h-4 transition-transform duration-200",
+                                        openDropdown === field.id ? "rotate-180" : ""
+                                    )} />
+                                </button>
+
+                                {openDropdown === field.id && !isLoading && (
+                                    isMobile ? (
+                                        <Portal>
+                                            <div
+                                                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                                style={dropdownStyle}
+                                            >
+                                                {ratingOptions.map((option) => (
+                                                    <button
+                                                        key={option.value}
+                                                        type="button"
+                                                        data-dropdown-option
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleFieldChange(field.id, option.value);
+                                                            setOpenDropdown(null);
+                                                        }}
+                                                        className={clsx(
+                                                            'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 rounded touch-manipulation',
+                                                            value === option.value ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'
+                                                        )}
+                                                    >
+                                                        {option.label}
+                                                        {option.isDefault && value !== option.value && (
+                                                            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(Default)</span>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </Portal>
+                                    ) : (
                                         <div
                                             className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
                                             style={dropdownStyle}
@@ -509,119 +522,120 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                                 </button>
                                             ))}
                                         </div>
-                                    </Portal>
-                                ) : (
-                                    <div
-                                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
-                                        style={dropdownStyle}
-                                    >
-                                        {ratingOptions.map((option) => (
-                                            <button
-                                                key={option.value}
-                                                type="button"
-                                                data-dropdown-option
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    handleFieldChange(field.id, option.value);
-                                                    setOpenDropdown(null);
-                                                }}
-                                                className={clsx(
-                                                    'w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 rounded touch-manipulation',
-                                                    value === option.value ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'
-                                                )}
-                                            >
-                                                {option.label}
-                                                {option.isDefault && value !== option.value && (
-                                                    <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(Default)</span>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )
-                            )}
+                                    )
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-                </div>
-            );
-        }
-
-        case 'multiselectdropdown': {
-            // Determine which options to use - select option set (with allowMultiple=true) or individual options
-            let multiDropdownOptions = field.options || [];
-            let isMultiDropdownLoading = false;
-
-            if (field.selectOptionSetId) {
-                if (selectOptionSets[field.selectOptionSetId]) {
-                    // Use loaded select option set options (should have allowMultiple=true)
-                    multiDropdownOptions = selectOptionSets[field.selectOptionSetId].options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                        color: opt.color,
-                        isDefault: opt.isDefault
-                    }));
-                } else if (loadingOptionSets) {
-                    isMultiDropdownLoading = true;
-                }
-            }
-
-            if (isMultiDropdownLoading) {
-                return (
-                    <div className="mb-4">
-                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
-                        </label>
-                        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
+                        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                     </div>
                 );
             }
 
-            const selectedValues = value || [];
-            const selectedLabels = selectedValues
-                .map((val: string) => multiDropdownOptions.find(opt => opt.value === val)?.label)
-                .filter(Boolean);
+            case 'multiselectdropdown': {
+                // Determine which options to use - select option set (with allowMultiple=true) or individual options
+                let multiDropdownOptions = field.options || [];
+                let isMultiDropdownLoading = false;
 
-            return (
-                <div className="mb-6">
-                    <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                    <div className="relative" ref={dropdownRef}>
-                        <button
-                            ref={(el) => {
-                                if (el) triggerRefs.current[field.id] = el;
-                            }}
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDropdownOpen(field.id);
-                            }}
-                            className={clsx(
-                                "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 text-left flex items-center justify-between transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
-                                error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
-                            )}
-                        >
-                            <span className="truncate">
-                                {selectedLabels.length > 0
-                                    ? selectedLabels.length === 1
-                                        ? selectedLabels[0]
-                                        : `${selectedLabels.length} selected`
-                                    : field.placeholder || 'Select options...'
-                                }
-                            </span>
-                            <ChevronDown className={clsx(
-                                "w-4 h-4 text-gray-400 dark:text-gray-300 transition-transform duration-200",
-                                openDropdown === field.id ? "rotate-180" : ""
-                            )} />
-                        </button>
+                if (field.selectOptionSetId) {
+                    if (selectOptionSets[field.selectOptionSetId]) {
+                        // Use loaded select option set options (should have allowMultiple=true)
+                        multiDropdownOptions = selectOptionSets[field.selectOptionSetId].options.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            color: opt.color,
+                            isDefault: opt.isDefault
+                        }));
+                    } else if (loadingOptionSets) {
+                        isMultiDropdownLoading = true;
+                    }
+                }
 
-                        {openDropdown === field.id && (
-                            isMobile ? (
-                                <Portal>
+                if (isMultiDropdownLoading) {
+                    return (
+                        <div className="mb-4">
+                            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {field.label}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <div className="text-gray-500 dark:text-gray-400 text-sm">Loading options...</div>
+                        </div>
+                    );
+                }
+
+                const selectedValues = value || [];
+                const selectedLabels = selectedValues
+                    .map((val: string) => multiDropdownOptions.find(opt => opt.value === val)?.label)
+                    .filter(Boolean);
+
+                return (
+                    <div className="mb-6">
+                        <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                ref={(el) => {
+                                    if (el) triggerRefs.current[field.id] = el;
+                                }}
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDropdownOpen(field.id);
+                                }}
+                                className={clsx(
+                                    "w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 focus:border-blue-500 dark:focus:border-blue-400 text-left flex items-center justify-between transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white",
+                                    error ? "border-red-500 dark:border-red-400" : "border-gray-300 dark:border-gray-600"
+                                )}
+                            >
+                                <span className="truncate">
+                                    {selectedLabels.length > 0
+                                        ? selectedLabels.length === 1
+                                            ? selectedLabels[0]
+                                            : `${selectedLabels.length} selected`
+                                        : field.placeholder || 'Select options...'
+                                    }
+                                </span>
+                                <ChevronDown className={clsx(
+                                    "w-4 h-4 text-gray-400 dark:text-gray-300 transition-transform duration-200",
+                                    openDropdown === field.id ? "rotate-180" : ""
+                                )} />
+                            </button>
+
+                            {openDropdown === field.id && (
+                                isMobile ? (
+                                    <Portal>
+                                        <div
+                                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
+                                            style={dropdownStyle}
+                                        >
+                                            {multiDropdownOptions.map((option) => {
+                                                const isSelected = selectedValues.includes(option.value);
+                                                return (
+                                                    <label
+                                                        key={option.value}
+                                                        className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer touch-manipulation"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                const newValues = isSelected
+                                                                    ? selectedValues.filter((val: string) => val !== option.value)
+                                                                    : [...selectedValues, option.value];
+                                                                handleFieldChange(field.id, newValues);
+                                                            }}
+                                                            className="rounded border-gray-300 text-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                                                        />
+                                                        <span className="ml-3 text-gray-900 dark:text-gray-100">{option.label}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </Portal>
+                                ) : (
                                     <div
                                         className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
                                         style={dropdownStyle}
@@ -650,57 +664,26 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                                             );
                                         })}
                                     </div>
-                                </Portal>
-                            ) : (
-                                <div
-                                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200 mobile-dropdown-override"
-                                    style={dropdownStyle}
-                                >
-                                    {multiDropdownOptions.map((option) => {
-                                        const isSelected = selectedValues.includes(option.value);
-                                        return (
-                                            <label
-                                                key={option.value}
-                                                className="flex items-center px-4 py-3 sm:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer touch-manipulation"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={(e) => {
-                                                        e.stopPropagation();
-                                                        const newValues = isSelected
-                                                            ? selectedValues.filter((val: string) => val !== option.value)
-                                                            : [...selectedValues, option.value];
-                                                        handleFieldChange(field.id, newValues);
-                                                    }}
-                                                    className="rounded border-gray-300 text-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                                                />
-                                                <span className="ml-3 text-gray-900 dark:text-gray-100">{option.label}</span>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            )
-                        )}
+                                )
+                            )}
+                        </div>
+                        {error && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{error}</p>}
                     </div>
-                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{error}</p>}
-                </div>
-            );
-        }
+                );
+            }
 
-        default:
-            return (
-                <div className="mb-4">
-                    <p className="text-red-500 dark:text-red-400">Unsupported field type: {field.type}</p>
-                </div>
-            );
+            default:
+                return (
+                    <div className="mb-4">
+                        <p className="text-red-500 dark:text-red-400">Unsupported field type: {field.type}</p>
+                    </div>
+                );
         }
     };
 
     return (
         <div className="field-renderer">
             {renderField()}
-            {renderFieldImages()}
         </div>
     );
 };

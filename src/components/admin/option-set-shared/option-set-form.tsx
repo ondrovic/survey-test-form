@@ -26,6 +26,7 @@ import {
     VALUE_FIELD_LABEL,
     VALUE_FIELD_PLACEHOLDER
 } from '@/constants/options-sets.constants';
+
 import { Plus, Save, Trash2, X } from 'lucide-react';
 import React from 'react';
 import { Button, ColorSelector, Input, SortableList } from '../../common';
@@ -196,7 +197,7 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                         return (
                             <div className={`p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 ${isDragging ? 'shadow-lg' : ''}`}>
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                                    <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'} gap-3`}>
+                                    <div className={`flex-1 grid ${showDefaultToggle ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'} gap-3`}>
                                         <Input
                                             name={`option-${index}-value`}
                                             label={VALUE_FIELD_LABEL}
@@ -222,6 +223,7 @@ export const OptionSetForm = <TOption extends OptionLike>(props: OptionSetFormPr
                                                 />
                                             </div>
                                         )}
+
                                         {showDefaultToggle && (
                                             <div className="flex items-center mt-6">
                                                 <label className="flex items-center">

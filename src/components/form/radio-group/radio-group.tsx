@@ -1,8 +1,8 @@
-import React from 'react';
-import { clsx } from 'clsx';
+import { FormField } from '@/components/common/ui';
 import { colors, transitions, typography } from '@/styles/design-tokens';
 import { getSmartLayoutClasses } from '@/utils/layout.utils';
-import { FormField } from '@/components/common/ui';
+import { clsx } from 'clsx';
+import React from 'react';
 import { RadioGroupProps as BaseRadioGroupProps } from './radio-group.types';
 
 // Re-export types for external use
@@ -63,6 +63,7 @@ const RadioOption = <T extends string | number = string>({
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
           )}
         />
+
         <span
           className={clsx(
             typography.text.sm,
@@ -77,6 +78,7 @@ const RadioOption = <T extends string | number = string>({
           {option.label}
         </span>
       </label>
+
     </div>
   );
 };
@@ -166,7 +168,7 @@ const RadioGroupComponent = <T extends string | number = string>({
           {label}
         </FormField.Label>
       )}
-      
+
       <RadioGroupInternal
         name={name}
         options={options}
@@ -175,7 +177,7 @@ const RadioGroupComponent = <T extends string | number = string>({
         layout={layout}
         data-testid={testId}
       />
-      
+
       <FormField.Error />
     </FormField>
   );
@@ -200,3 +202,4 @@ export const RadioGroup = React.memo(RadioGroupComponent);
 // Export the individual option component for advanced use cases
 export { RadioOption };
 export type { RadioOptionProps };
+

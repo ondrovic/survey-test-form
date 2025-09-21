@@ -3,16 +3,16 @@ import React, { useCallback } from "react";
 import { useForm } from "../../../contexts/form-context";
 import { useSurveyData } from "../../../contexts/survey-data-context";
 import { useSurveySession } from "../../../hooks/use-survey-session";
+import { ErrorLoggingService } from "../../../services/error-logging.service";
 import { SurveyField, SurveySection } from "../../../types/framework.types";
 import { getOrderedSectionContent } from "../../../utils/section-content.utils";
-import { Button, ScrollableContent, SurveyFooter } from "../../common";
+import { Button, SurveyFooter } from "../../common";
 import { FieldRenderer } from "../field-renderer";
 import { transformFormStateToDescriptiveIds } from "../utils/transform.utils";
 import {
   validateAllFields,
   validateFieldValue,
 } from "../utils/validation.utils";
-import { ErrorLoggingService } from "../../../services/error-logging.service";
 import { DynamicFormProps } from "./dynamic-form.types";
 
 // Removed local helpers in favor of shared utils (DRY)
@@ -40,10 +40,10 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   const surveySession = useSurveySession(
     surveyInstanceId
       ? {
-          surveyInstanceId,
-          totalSections: config.sections?.length || 1,
-          activityTimeoutMs: 24 * 60 * 60 * 1000, // 24 hours
-        }
+        surveyInstanceId,
+        totalSections: config.sections?.length || 1,
+        activityTimeoutMs: 24 * 60 * 60 * 1000, // 24 hours
+      }
       : null
   );
 
@@ -87,7 +87,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         record[set.id] = set;
       });
     }
-    
+
     return record;
   }, [multiSelectOptionSets]);
 
@@ -123,7 +123,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
     config.sections.forEach((section) => {
       processAllFields(section, (field) => {
-        
+
         if (field.type === "rating" && field.ratingScaleId) {
           // Use default value from rating scale if available
           const scale = ratingScalesRecord[field.ratingScaleId];
@@ -137,7 +137,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           } else {
             initialState[field.id] = "Not Important";
           }
-          
+
         } else if (field.type === "radio" && field.radioOptionSetId) {
           // QUESTION: Should this do something??
         } else if (field.type === "radio" && field.options) {
@@ -227,7 +227,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   // Restore answers from session when session data is available
   React.useEffect(() => {
     if (surveySession?.session.sessionId) {
-      
+
       if (surveySession.session.savedAnswers && !answersRestored) {
 
         // Restore saved answers to form state
@@ -266,7 +266,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             setFieldValue(field.id, defaultOption.value);
           }
         }
-        
+
         // Handle radio fields
         else if (
           field.type === "radio" &&
@@ -279,7 +279,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             setFieldValue(field.id, defaultOption.value);
           }
         }
-        
+
         // Handle multiselect fields
         else if (
           field.type === "multiselect" &&
@@ -293,7 +293,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             setFieldValue(field.id, defaultValues);
           }
         }
-        
+
         // Handle select and multiselectdropdown fields
         else if (
           (field.type === "select" || field.type === "multiselectdropdown") &&
@@ -301,7 +301,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           selectOptionSetsRecord[field.selectOptionSetId]
         ) {
           const optionSet = selectOptionSetsRecord[field.selectOptionSetId];
-          
+
           if (field.type === "select") {
             const defaultOption = optionSet.options.find((opt) => opt.isDefault);
             if (defaultOption) {
@@ -469,7 +469,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             componentName: 'DynamicForm',
             functionName: 'handleSubmit',
             surveyInstanceId: surveyInstanceId || undefined,
-            additionalContext: { 
+            additionalContext: {
               configTitle: config?.title,
               formDataKeys: Object.keys(formState.formData)
             }
@@ -489,6 +489,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
       surveyInstanceId,
     ]
   );
+
 
   const renderField = useCallback(
     (field: SurveyField) => {
@@ -576,11 +577,11 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   );
 
   return (
-    <div className={clsx("h-screen bg-blue-50/30 dark:bg-gray-900 flex flex-col", className)}>
-      <main className="flex-1 py-8 flex min-h-0">
-        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/20 flex flex-col w-full h-full">
+    <div className={clsx("min-h-screen bg-blue-50/30 dark:bg-gray-900", className)}>
+      <main className="py-8">
+        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/20">
           {/* Fixed Header Section */}
-          <div className="px-8 pt-8 pb-4 flex-shrink-0">
+          <div className="px-8 pt-8 pb-4">
             <div className="text-center mb-6">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
                 {config.title}
@@ -591,36 +592,20 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             </div>
           </div>
 
-          {/* Scrollable Content Section */}
-          <div className="flex-1 px-8 min-h-0 overflow-hidden sm:dropdown-container-mobile">
-            <ScrollableContent
-              maxHeight="100%"
-              minHeight="200px"
-              showScrollIndicators={true}
-              smoothScroll={true}
-              mobileOptimized={true}
-              className="mb-6 h-full"
-              resetTrigger={config.id}
-              onScroll={(_scrollTop, _scrollHeight, _clientHeight) => {
-                // Optional: Track scroll position for analytics or state
-                // Removed excessive logging to improve performance
-              }}
+          {/* Content Section */}
+          <div className="px-8 py-6">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-8 max-w-4xl mx-auto"
             >
-              <div className="py-6 px-4">
-                <form
-                  onSubmit={handleSubmit}
-                  className="space-y-8 max-w-4xl mx-auto"
-                >
-                  {config.sections
-                    .sort((a, b) => a.order - b.order)
-                    .map(renderSection)}
-                </form>
-              </div>
-            </ScrollableContent>
+              {config.sections
+                .sort((a, b) => a.order - b.order)
+                .map(renderSection)}
+            </form>
           </div>
 
           {/* Fixed Submit Button */}
-          <div className="px-8 pb-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="px-8 pb-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex justify-center max-w-4xl mx-auto">
               <Button
                 type="submit"

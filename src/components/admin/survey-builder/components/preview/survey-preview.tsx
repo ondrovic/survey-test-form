@@ -1,7 +1,6 @@
 import React from 'react';
 import { SurveyConfig } from '../../../../../types/framework.types';
 import { getBadgeLayoutClasses } from '../../../../../utils/layout.utils';
-import { SurveyImageGallery } from '../../../../common/ui/survey-image-gallery';
 import { SurveySectionPaginator } from '../../../../survey/section-paginator/survey-section-paginator';
 import { OptionSetPreview } from '../../shared';
 
@@ -40,18 +39,6 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                         <p className="text-gray-600 dark:text-gray-300 mb-4">{section.description}</p>
                     )}
 
-                    {/* Section Images */}
-                    {section.images && section.images.length > 0 && (
-                        <div className="mb-6">
-                            <SurveyImageGallery
-                                images={section.images}
-                                showThumbnails={section.images.length > 1}
-                                showNav={section.images.length > 1}
-                                showFullscreen={true}
-                                autoPlay={false}
-                            />
-                        </div>
-                    )}
 
                     {/* Subsections */}
                     {section.subsections?.map((subsection) => (
@@ -61,18 +48,6 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                 <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">{subsection.description}</p>
                             )}
 
-                            {/* Subsection Images */}
-                            {subsection.images && subsection.images.length > 0 && (
-                                <div className="mb-4">
-                                    <SurveyImageGallery
-                                        images={subsection.images}
-                                        showThumbnails={subsection.images.length > 1}
-                                        showNav={subsection.images.length > 1}
-                                        showFullscreen={true}
-                                        autoPlay={false}
-                                    />
-                                </div>
-                            )}
                             <div className="space-y-4">
                                 {subsection.fields.map((field) => (
                                     <div key={field.id} className="p-4 border dark:border-gray-600 rounded bg-white dark:bg-gray-700">
@@ -234,18 +209,6 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                             </div>
                                         )}
 
-                                        {/* Field Images */}
-                                        {field.images && field.images.length > 0 && (
-                                            <div className="mt-3">
-                                                <SurveyImageGallery
-                                                    images={field.images}
-                                                    showThumbnails={field.images.length > 1}
-                                                    showNav={field.images.length > 1}
-                                                    showFullscreen={true}
-                                                    autoPlay={false}
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -415,21 +378,6 @@ export const SurveyPreview: React.FC<SurveyPreviewProps> = ({ config }) => {
                                         </div>
                                     )}
 
-                                    {/* Field Images */}
-                                    {field.images && field.images.length > 0 && (() => {
-                                        console.log('SurveyPreview - field.images:', field.images);
-                                        return (
-                                            <div className="mt-3">
-                                                <SurveyImageGallery
-                                                    images={field.images}
-                                                    showThumbnails={field.images.length > 1}
-                                                    showNav={field.images.length > 1}
-                                                    showFullscreen={true}
-                                                    autoPlay={false}
-                                                />
-                                            </div>
-                                        );
-                                    })()}
                                 </div>
                             ))}
                         </div>

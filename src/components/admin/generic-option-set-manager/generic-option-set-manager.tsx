@@ -258,181 +258,181 @@ export const GenericOptionSetManager = <T extends BaseOptionSet>({
       <Modal
         isOpen={isVisible}
         onClose={onClose}
-        size="lg"
-        className="max-h-[90vh]"
+        size="xl"
+        className="max-h-[90vh] max-w-6xl"
       >
         <Modal.Header>
           <Modal.Title>{config.displayName} Manager</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-        <div className="p-6">
-          {!selectionMode ? (
-            <OptionSetForm
-              title={config.displayName}
-              loading={isLoading}
-              isCreating={
-                propIsCreating !== undefined ? propIsCreating : !editingItem?.id
-              }
-              data={
-                (currentEditingData ||
-                  config.defaultItem()) as unknown as OptionSetFormData<any>
-              }
-              onChange={(updated) => setEditingItem(updated as any)}
-              onSave={handleSave}
-              onCancel={handleCancel}
-              showDefaultToggle={
-                config.type === "rating-scale" ||
-                config.type === "radio" ||
-                config.type === "select" ||
-                config.type === "multi-select"
-              }
-              showColor={true}
-              optionSetType={config.type}
-              renderAdditionalFields={renderAdditionalFields}
-            />
-          ) : editingItem || currentEditingData ? (
-            <OptionSetForm
-              title={config.displayName}
-              loading={isLoading}
-              isCreating={!editingItem?.id}
-              data={
-                (editingItem ||
-                  currentEditingData) as unknown as OptionSetFormData<any>
-              }
-              onChange={(updated) => setEditingItem(updated as any)}
-              onSave={handleSave}
-              onCancel={handleCancel}
-              showDefaultToggle={
-                config.type === "rating-scale" ||
-                config.type === "radio" ||
-                config.type === "select" ||
-                config.type === "multi-select"
-              }
-              showColor={true}
-              optionSetType={config.type}
-              renderAdditionalFields={renderAdditionalFields}
-            />
-          ) : (
-            // Items List
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  {config.displayName}s
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Button onClick={handleImport} variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import {config.displayName}
-                  </Button>
-                  <Button onClick={handleCreateNew} variant="primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New {config.displayName}
-                  </Button>
+          <div className="p-6">
+            {!selectionMode ? (
+              <OptionSetForm
+                title={config.displayName}
+                loading={isLoading}
+                isCreating={
+                  propIsCreating !== undefined ? propIsCreating : !editingItem?.id
+                }
+                data={
+                  (currentEditingData ||
+                    config.defaultItem()) as unknown as OptionSetFormData<any>
+                }
+                onChange={(updated) => setEditingItem(updated as any)}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                showDefaultToggle={
+                  config.type === "rating-scale" ||
+                  config.type === "radio" ||
+                  config.type === "select" ||
+                  config.type === "multi-select"
+                }
+                showColor={true}
+                optionSetType={config.type}
+                renderAdditionalFields={renderAdditionalFields}
+              />
+            ) : editingItem || currentEditingData ? (
+              <OptionSetForm
+                title={config.displayName}
+                loading={isLoading}
+                isCreating={!editingItem?.id}
+                data={
+                  (editingItem ||
+                    currentEditingData) as unknown as OptionSetFormData<any>
+                }
+                onChange={(updated) => setEditingItem(updated as any)}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                showDefaultToggle={
+                  config.type === "rating-scale" ||
+                  config.type === "radio" ||
+                  config.type === "select" ||
+                  config.type === "multi-select"
+                }
+                showColor={true}
+                optionSetType={config.type}
+                renderAdditionalFields={renderAdditionalFields}
+              />
+            ) : (
+              // Items List
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {config.displayName}s
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={handleImport} variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import {config.displayName}
+                    </Button>
+                    <Button onClick={handleCreateNew} variant="primary">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New {config.displayName}
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
-                </div>
-              ) : items.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No {config.displayName.toLowerCase()}s found. Create your
-                  first one!
-                </div>
-              ) : (
-                <div className="pt-6 space-y-3">
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">
-                            {item.name}
-                          </h4>
-                          {item.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                              {item.description}
-                            </p>
-                          )}
-                          {/* Multi-select specific info */}
-                          {config.type === "multi-select" &&
-                            (item as any).minSelections && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Min: {(item as any).minSelections}, Max:{" "}
-                                {(item as any).maxSelections || "Unlimited"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
+                  </div>
+                ) : items.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No {config.displayName.toLowerCase()}s found. Create your
+                    first one!
+                  </div>
+                ) : (
+                  <div className="pt-6 space-y-3">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {item.name}
+                            </h4>
+                            {item.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                {item.description}
                               </p>
                             )}
-                          {/* Select specific info */}
-                          {config.type === "select" && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {(item as any).allowMultiple
-                                ? "Multiple selections allowed"
-                                : "Single selection only"}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {selectionMode && (
+                            {/* Multi-select specific info */}
+                            {config.type === "multi-select" &&
+                              (item as any).minSelections && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  Min: {(item as any).minSelections}, Max:{" "}
+                                  {(item as any).maxSelections || "Unlimited"}
+                                </p>
+                              )}
+                            {/* Select specific info */}
+                            {config.type === "select" && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {(item as any).allowMultiple
+                                  ? "Multiple selections allowed"
+                                  : "Single selection only"}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {selectionMode && (
+                              <Button
+                                onClick={() => handleSelectOptionSet(item.id)}
+                                variant="secondary"
+                                size="sm"
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                Use This {config.displayName}
+                              </Button>
+                            )}
                             <Button
-                              onClick={() => handleSelectOptionSet(item.id)}
+                              onClick={() => handleEdit(item)}
                               variant="secondary"
                               size="sm"
                             >
-                              <Check className="h-4 w-4 mr-2" />
-                              Use This {config.displayName}
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
                             </Button>
-                          )}
-                          <Button
-                            onClick={() => handleEdit(item)}
-                            variant="secondary"
-                            size="sm"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            onClick={() => handleExport(item)}
-                            variant="secondary"
-                            size="sm"
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Export
-                          </Button>
-                          <Button
-                            onClick={() => handleDelete(item)}
-                            variant="secondary"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
+                            <Button
+                              onClick={() => handleExport(item)}
+                              variant="secondary"
+                              size="sm"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Export
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(item)}
+                              variant="secondary"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {item.options.map((option: any, index: number) => (
-                          <span
-                            key={index}
-                            className={`px-2 py-1 rounded text-xs font-medium ${option.isDefault
+                        <div className="flex flex-wrap gap-2">
+                          {item.options.map((option: any, index: number) => (
+                            <span
+                              key={index}
+                              className={`px-2 py-1 rounded text-xs font-medium ${option.isDefault
                                 ? "bg-blue-100 dark:bg-blue-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
                                 : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
-                              }`}
-                          >
-                            {option.label}
-                            {option.isDefault && " (Default)"}
-                          </span>
-                        ))}
+                                }`}
+                            >
+                              {option.label}
+                              {option.isDefault && " (Default)"}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </Modal.Body>
       </Modal>
     </DragDropContext>

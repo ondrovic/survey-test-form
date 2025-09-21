@@ -1,6 +1,6 @@
-import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useToast } from '../toast-context';
 import { ErrorLoggingService } from '@/services/error-logging.service';
+import React, { createContext, ReactNode, useCallback, useContext } from 'react';
+import { useToast } from '../toast-context';
 
 // Generic base interface for all option sets
 export interface BaseOptionSet {
@@ -46,7 +46,7 @@ interface OptionSetCrudContextType {
   createItem: <T extends BaseOptionSet>(config: OptionSetConfig<T>, data: Omit<T, 'id'>) => Promise<T | null>;
   updateItem: <T extends BaseOptionSet>(config: OptionSetConfig<T>, id: string, data: Partial<T>) => Promise<boolean>;
   deleteItem: <T extends BaseOptionSet>(config: OptionSetConfig<T>, id: string, name: string) => Promise<boolean>;
-  
+
   // State management
   isLoading: boolean;
   error: string | null;
@@ -93,11 +93,11 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
   }, [showError]);
 
   const createItem = useCallback(async <T extends BaseOptionSet>(
-    config: OptionSetConfig<T>, 
+    config: OptionSetConfig<T>,
     data: Omit<T, 'id'>
   ): Promise<T | null> => {
     setError(null);
-    
+
     // Validate name
     const nameError = config.validation.validateName(data.name);
     if (nameError) {
@@ -154,12 +154,12 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
   }, [showError, showSuccess]);
 
   const updateItem = useCallback(async <T extends BaseOptionSet>(
-    config: OptionSetConfig<T>, 
-    id: string, 
+    config: OptionSetConfig<T>,
+    id: string,
     data: Partial<T>
   ): Promise<boolean> => {
     setError(null);
-    
+
     // Validate name if provided
     if (data.name !== undefined) {
       const nameError = config.validation.validateName(data.name);
@@ -221,14 +221,15 @@ export const OptionSetCrudProvider: React.FC<OptionSetCrudProviderProps> = ({ ch
   }, [showError, showSuccess]);
 
   const deleteItem = useCallback(async <T extends BaseOptionSet>(
-    config: OptionSetConfig<T>, 
-    id: string, 
+    config: OptionSetConfig<T>,
+    id: string,
     name: string
   ): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
+
       await config.databaseHelpers.delete(id);
       showSuccess(`${config.displayName} "${name}" deleted!`);
       return true;

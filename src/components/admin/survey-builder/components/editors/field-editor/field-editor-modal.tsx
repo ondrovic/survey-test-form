@@ -1,13 +1,10 @@
-import { CheckSquare, ChevronDown, ChevronRight, Clock, Image, List, Plus, Star, Trash2 } from 'lucide-react';
+import { CheckSquare, ChevronDown, ChevronRight, Clock, List, Plus, Star, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { databaseHelpers } from '../../../../../../config/database';
 import { useValidation } from '../../../../../../contexts/validation-context';
 import { ErrorLoggingService } from '../../../../../../services/error-logging.service';
-import { ImageUploadService } from '../../../../../../services/image-upload.service';
 import { FieldType, MultiSelectOptionSet, RadioOptionSet, RatingScale, SelectOptionSet, SurveyField } from '../../../../../../types/framework.types';
 import { Button, Input } from '../../../../../common';
-import { ImagePicker } from '../../../../../common/form/image-picker';
-import { IMAGE_PICKER_DEFAULTS } from '../../../../../common/form/image-picker/image-picker.types';
 import Modal from '../../../../../common/ui/modal/Modal';
 import { OptionSetPreview } from '../../../shared';
 import { FIELD_TYPES } from '../../../survey-builder.types';
@@ -67,8 +64,6 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
     const [localLabel, setLocalLabel] = useState<string>('');
     const [localPlaceholder, setLocalPlaceholder] = useState<string>('');
 
-    // State for field images
-    const [fieldImages, setFieldImages] = useState<any[]>([]);
 
     // Debounce refs
     const labelTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -166,24 +161,10 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             setOriginalLabel(field.label);
             setLocalLabel(field.label);
             setLocalPlaceholder(field.placeholder || '');
-
-            // Fetch field images
-            if (field.id && configId) {
-                ImageUploadService.getImages(configId, 'field', field.id)
-                    .then(images => {
-                        console.log('Fetched field images:', images);
-                        setFieldImages(images);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching field images:', error);
-                        setFieldImages([]);
-                    });
-            }
         } else if (!isOpen) {
             setOriginalLabel('');
             setLocalLabel('');
             setLocalPlaceholder('');
-            setFieldImages([]);
         }
     }, [isOpen, field, configId]); // Reset when modal opens or field changes
 
@@ -272,6 +253,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
             validateOptions();
         }
     }, [field?.options, validateOptions, field]);
+
 
     if (!field) return null;
 
@@ -772,6 +754,7 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                                                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">{valueValidation.error}</p>
                                                             )}
                                                         </div>
+
                                                     </div>
                                                     <Button
                                                         size="sm"
@@ -799,36 +782,6 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                         </div>
                     )}
 
-                    {/* Field Images */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 pb-2 flex items-center">
-                            <Image className="w-5 h-5 mr-2" />
-                            Field Images
-                            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">(Optional)</span>
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Add images to display alongside this field question. Images will appear below the field label and help provide visual context for users.
-                        </p>
-
-                        <ImagePicker
-                            multiple={true}
-                            maxFiles={IMAGE_PICKER_DEFAULTS.MAX_FILES}
-                            images={fieldImages}
-                            onImagesChange={(images) => {
-                                setFieldImages(images);
-                                onUpdateField(sectionId, field.id, { images });
-                            }}
-                            uploadOptions={{
-                                configId,
-                                entityType: 'field',
-                                entityId: field.id
-                            }}
-                            showGallery={true}
-                            label="Upload Field Images"
-                            helpText={`Supported formats: ${IMAGE_PICKER_DEFAULTS.ALLOWED_TYPES.map(type => type.replace('image/', '').toUpperCase()).join(', ')}. Maximum file size: ${IMAGE_PICKER_DEFAULTS.MAX_FILE_SIZE / 1024 / 1024}MB each. Up to ${IMAGE_PICKER_DEFAULTS.MAX_FILES} images.`}
-                            className="mt-4"
-                        />
-                    </div>
 
                     {/* Field Preview */}
                     <div className="space-y-3">
@@ -964,31 +917,6 @@ export const FieldEditorModal: React.FC<FieldEditorModalProps> = ({
                                 </div>
                             )}
 
-                            {/* Field Images Preview */}
-                            {field.images && field.images.length > 0 && (
-                                <div className="mt-4">
-                                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Images:</div>
-                                    <div className="space-y-3">
-                                        {field.images.map((image) => (
-                                            <div key={image.id} className="relative">
-                                                <img
-                                                    src={image.storageUrl}
-                                                    alt={image.altText || image.originalFilename}
-                                                    className="w-full h-auto rounded-lg shadow-sm"
-                                                />
-                                                {image.isPrimary && (
-                                                    <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                                                        Primary
-                                                    </div>
-                                                )}
-                                                {image.caption && (
-                                                    <p className="text-sm text-gray-600 mt-2 italic">{image.caption}</p>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
 
